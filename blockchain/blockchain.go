@@ -1,12 +1,8 @@
 package blockchain
 
 import (
-	"context"
 	"fmt"
-	"sync"
-
 	"github.com/KyberNetwork/reserve-data/common"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"math/big"
@@ -19,56 +15,10 @@ type Blockchain struct {
 	rm        ethereum.Address
 	signer    Signer
 	tokens    []common.Token
-
-	mu          sync.Mutex
-	manualNonce *big.Int
 }
 
 func (self *Blockchain) AddToken(t common.Token) {
 	self.tokens = append(self.tokens, t)
-}
-
-func (self *Blockchain) getNonceFromNode() (*big.Int, error) {
-	option := context.Background()
-	nonce, err := self.ethclient.PendingNonceAt(option, self.signer.GetAddress())
-	return big.NewInt(int64(nonce)), err
-}
-
-func (self *Blockchain) getNonce() (*big.Int, error) {
-	nodeNonce, err := self.getNonceFromNode()
-	if err != nil {
-		return nodeNonce, err
-	} else {
-		if nodeNonce.Cmp(self.manualNonce) == 1 {
-			self.manualNonce = big.NewInt(0).Add(nodeNonce, ethereum.Big1)
-			return nodeNonce, nil
-		} else {
-			nextNonce := self.manualNonce
-			self.manualNonce = big.NewInt(0).Add(nextNonce, ethereum.Big1)
-			return nextNonce, nil
-		}
-	}
-}
-
-func (self *Blockchain) getTransactOpts() (*bind.TransactOpts, error) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-	shared := self.signer.GetTransactOpts()
-	nonce, err := self.getNonce()
-	if err != nil {
-		return nil, err
-	} else {
-		result := bind.TransactOpts{
-			shared.From,
-			nonce,
-			shared.Signer,
-			shared.Value,
-			shared.GasPrice,
-			shared.GasLimit,
-			shared.Context,
-		}
-		return &result, nil
-	}
 }
 
 func (self *Blockchain) FetchBalanceData(reserve ethereum.Address) (map[string]common.BalanceEntry, error) {
@@ -155,18 +105,13 @@ func (self *Blockchain) SetRates(
 	rates []*big.Int,
 	expiryBlocks []*big.Int) (ethereum.Hash, error) {
 
-	opts, err := self.getTransactOpts()
+	tx, err := self.reserve.SetRate(
+		self.signer.GetTransactOpts(),
+		sources, dests, rates, expiryBlocks, true)
 	if err != nil {
 		return ethereum.Hash{}, err
 	} else {
-		tx, err := self.reserve.SetRate(
-			opts,
-			sources, dests, rates, expiryBlocks, true)
-		if err != nil {
-			return ethereum.Hash{}, err
-		} else {
-			return tx.Hash(), err
-		}
+		return tx.Hash(), err
 	}
 }
 
@@ -175,19 +120,14 @@ func (self *Blockchain) Send(
 	amount *big.Int,
 	dest ethereum.Address) (ethereum.Hash, error) {
 
-	opts, err := self.getTransactOpts()
+	tx, err := self.reserve.Withdraw(
+		self.signer.GetTransactOpts(),
+		ethereum.HexToAddress(token.Address),
+		amount, dest)
 	if err != nil {
 		return ethereum.Hash{}, err
 	} else {
-		tx, err := self.reserve.Withdraw(
-			opts,
-			ethereum.HexToAddress(token.Address),
-			amount, dest)
-		if err != nil {
-			return ethereum.Hash{}, err
-		} else {
-			return tx.Hash(), err
-		}
+		return tx.Hash(), err
 	}
 }
 
@@ -253,13 +193,11 @@ func NewBlockchain(wrapperAddr, reserveAddr ethereum.Address, signer Signer) (*B
 		return nil, err
 	}
 	return &Blockchain{
-		ethclient:   infura,
-		wrapper:     wrapper,
-		reserve:     reserve,
-		rm:          reserveAddr,
-		signer:      signer,
-		tokens:      []common.Token{},
-		mu:          sync.Mutex{},
-		manualNonce: big.NewInt(0),
+		ethclient: infura,
+		wrapper:   wrapper,
+		reserve:   reserve,
+		rm:        reserveAddr,
+		signer:    signer,
+		tokens:    []common.Token{},
 	}, nil
 }

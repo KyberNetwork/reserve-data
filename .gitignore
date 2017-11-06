@@ -15,3 +15,6 @@
 reserve-data
 config.json
 http
+
+# IDE
+.idea

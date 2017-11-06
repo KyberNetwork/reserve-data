@@ -1,93 +1,52 @@
 package exchange
 
 import (
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"net/http"
 	"sync"
 
 	"github.com/KyberNetwork/reserve-data/common"
+	ethereum "github.com/ethereum/go-ethereum/common"
+
+	"math/big"
 )
 
 type Bittrex struct {
-	pairs []common.TokenPair
+	signer    Signer
+	endpoint  BittrexEndpoint
+	pairs     []common.TokenPair
+	addresses map[string]ethereum.Address
 }
 
-func (self Bittrex) ID() common.ExchangeID {
+func (self *Bittrex) MarshalText() (text []byte, err error) {
+	return []byte(self.ID()), nil
+}
+
+func (self *Bittrex) Address(token common.Token) (ethereum.Address, bool) {
+	addr, supported := self.addresses[token.ID]
+	return addr, supported
+}
+
+func (self *Bittrex) ID() common.ExchangeID {
 	return common.ExchangeID("bittrex")
 }
 
-func (self Bittrex) Name() string {
+func (self *Bittrex) TokenPairs() []common.TokenPair {
+	return self.pairs
+}
+
+func (self *Bittrex) Name() string {
 	return "bittrex"
 }
 
-type bitresp struct {
-	Success bool                            `json:"success"`
-	Msg     string                          `json:"message"`
-	Result  map[string][]map[string]float64 `json:"result"`
+func (self *Bittrex) Trade(tradeType string, base common.Token, quote common.Token, rate float64, amount float64) (done float64, remaining float64, finished bool, err error) {
+	return self.endpoint.Trade(
+		self.signer.GetBittrexKey(),
+		tradeType, base, quote, rate, amount, self.signer)
 }
 
-func (self Bittrex) FetchOnePairData(
-	wg *sync.WaitGroup,
-	pair common.TokenPair,
-	data *sync.Map) {
-
-	defer wg.Done()
-	result := common.ExchangePrice{}
-
-	client := &http.Client{}
-	req, _ := http.NewRequest("GET", "https://bittrex.com/api/v1.1/public/getorderbook", nil)
-	req.Header.Add("Accept", "application/json")
-
-	q := req.URL.Query()
-	q.Add("market", fmt.Sprintf("%s-%s", pair.Quote.ID, pair.Base.ID))
-	q.Add("type", "both")
-	req.URL.RawQuery = q.Encode()
-
-	timestamp := common.GetTimestamp()
-	resp, err := client.Do(req)
-	result.Timestamp = timestamp
-	result.Valid = true
-	if err != nil {
-		result.Valid = false
-		result.Error = err.Error()
-	} else {
-		defer resp.Body.Close()
-		resp_body, err := ioutil.ReadAll(resp.Body)
-		returnTime := common.GetTimestamp()
-		result.ReturnTime = returnTime
-		if err != nil {
-			result.Valid = false
-			result.Error = err.Error()
-		} else {
-			resp_data := bitresp{}
-			json.Unmarshal(resp_body, &resp_data)
-			if !resp_data.Success {
-				result.Valid = false
-			} else {
-				for _, buy := range resp_data.Result["buy"] {
-					result.BuyPrices = append(
-						result.BuyPrices,
-						common.PriceEntry{
-							buy["Quantity"],
-							buy["Rate"],
-						},
-					)
-				}
-				for _, sell := range resp_data.Result["sell"] {
-					result.SellPrices = append(
-						result.SellPrices,
-						common.PriceEntry{
-							sell["Quantity"],
-							sell["Rate"],
-						},
-					)
-				}
-			}
-		}
-	}
-	data.Store(pair.PairID(), result)
+func (self *Bittrex) Withdraw(token common.Token, amount *big.Int, address ethereum.Address) error {
+	return self.endpoint.Withdraw(
+		self.signer.GetBittrexKey(),
+		token, amount, address, self.signer)
 }
 
 func (self Bittrex) FetchPriceData() (map[common.TokenPairID]common.ExchangePrice, error) {
@@ -96,7 +55,7 @@ func (self Bittrex) FetchPriceData() (map[common.TokenPairID]common.ExchangePric
 	pairs := self.pairs
 	for _, pair := range pairs {
 		wait.Add(1)
-		go self.FetchOnePairData(&wait, pair, &data)
+		go self.endpoint.FetchOnePairData(&wait, pair, &data)
 	}
 	wait.Wait()
 	result := map[common.TokenPairID]common.ExchangePrice{}
@@ -104,12 +63,29 @@ func (self Bittrex) FetchPriceData() (map[common.TokenPairID]common.ExchangePric
 		result[key.(common.TokenPairID)] = value.(common.ExchangePrice)
 		return true
 	})
-	// fmt.Printf("result: %v\n", result)
 	return result, nil
 }
 
-func NewBittrex() *Bittrex {
+func (self Bittrex) FetchEBalanceData() (common.EBalanceEntry, error) {
+	result := common.EBalanceEntry{}
+	result.Timestamp = common.GetTimestamp()
+	result.Valid = true
+	//response, err := self.endpoint.GetInfo(
+	//	self.signer.GetBittrexKey(),
+	//	self.signer,
+	//)
+	result.ReturnTime = common.GetTimestamp()
+	//if err != nil {
+	//	result.Valid = false
+	//	result.Error = error.Error()
+	//}
+	return result, nil
+}
+
+func NewBittrex(signer Signer, endpoint BittrexEndpoint) *Bittrex {
 	return &Bittrex{
+		signer,
+		endpoint,
 		[]common.TokenPair{
 			common.MustCreateTokenPair("OMG", "ETH"),
 			common.MustCreateTokenPair("DGD", "ETH"),
@@ -120,6 +96,19 @@ func NewBittrex() *Bittrex {
 			common.MustCreateTokenPair("ADX", "ETH"),
 			common.MustCreateTokenPair("PAY", "ETH"),
 			common.MustCreateTokenPair("BAT", "ETH"),
+		},
+		map[string]ethereum.Address{
+			"ETH": ethereum.HexToAddress("0xce656971fe4fc43a0211b792d380900761b7862c"),
+			"OMG": ethereum.HexToAddress("0xce656971fe4fc43a0211b792d380900761b7862c"),
+			"DGD": ethereum.HexToAddress("0xce656971fe4fc43a0211b792d380900761b7862c"),
+			"CVC": ethereum.HexToAddress("0xce656971fe4fc43a0211b792d380900761b7862c"),
+			"MCO": ethereum.HexToAddress("0xce656971fe4fc43a0211b792d380900761b7862c"),
+			"GNT": ethereum.HexToAddress("0xce656971fe4fc43a0211b792d380900761b7862c"),
+			"ADX": ethereum.HexToAddress("0xce656971fe4fc43a0211b792d380900761b7862c"),
+			"EOS": ethereum.HexToAddress("0xce656971fe4fc43a0211b792d380900761b7862c"),
+			"PAY": ethereum.HexToAddress("0xce656971fe4fc43a0211b792d380900761b7862c"),
+			"BAT": ethereum.HexToAddress("0xce656971fe4fc43a0211b792d380900761b7862c"),
+			"KNC": ethereum.HexToAddress("0xce656971fe4fc43a0211b792d380900761b7862c"),
 		},
 	}
 }
