@@ -8,6 +8,6 @@ ADD . /go/src/github.com/KyberNetwork/reserve-data
 WORKDIR /go/src/github.com/KyberNetwork/reserve-data
 RUN go install github.com/KyberNetwork/reserve-data/http
 
-ENTRYPOINT ["http", "http://simulator:5000"]
+ENTRYPOINT ["http", "http://192.168.24.184:5000"]
 
 EXPOSE 8000
