@@ -68,6 +68,8 @@ func GetConfigForDev() *Config {
 	for tokenID, addr := range addressConfig.Exchanges["bittrex"] {
 		bittrex.UpdateDepositAddress(common.MustGetToken(tokenID), addr)
 	}
+	binance.UpdateFetcherDatabusType("socket")
+	// bittrex := exchange.NewBittrex(bittrex.NewSimulatedBittrexEndpoint(fileSigner))
 	// bitfinex := exchange.NewBitfinex(bitfinex.NewSimulatedBitfinexEndpoint(fileSigner))
 
 	// fetcherExchanges = append(fetcherExchanges, liqui)

@@ -1,10 +1,11 @@
 package exchange
 
 import (
-	"github.com/KyberNetwork/reserve-data/common"
-	ethereum "github.com/ethereum/go-ethereum/common"
 	"math/big"
 	"sync"
+
+	"github.com/KyberNetwork/reserve-data/common"
+	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
 type BinanceInterface interface {
@@ -13,6 +14,24 @@ type BinanceInterface interface {
 		pair common.TokenPair,
 		data *sync.Map,
 		timepoint uint64)
+
+	StoreOrderBookData(
+		wg *sync.WaitGroup,
+		pair common.TokenPair,
+		data *sync.Map,
+		dataChannel chan Orderbook)
+
+	SocketFetchOnePairData(
+		wg *sync.WaitGroup,
+		pair common.TokenPair,
+		data *sync.Map,
+		dataChannel chan Orderbook)
+
+	SocketFetchAggTrade(
+		pair common.TokenPair,
+		dataChannel chan interface{})
+
+	SocketGetUser(dataChannel chan interface{})
 
 	OpenOrdersForOnePair(
 		wg *sync.WaitGroup,

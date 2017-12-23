@@ -47,6 +47,8 @@ func NewTokenPairID(base, quote string) TokenPairID {
 
 type ExchangeID string
 
+type FetcherDatabusType string
+
 type ActivityID struct {
 	Timepoint uint64
 	EID       string

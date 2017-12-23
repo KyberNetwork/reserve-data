@@ -1,11 +1,71 @@
 package exchange
 
+type Orderbook interface {
+	GetBids() [][]string
+	GetAsks() [][]string
+}
+
 type Binaresp struct {
 	LastUpdatedId int64      `json:"lastUpdateId"`
 	Code          int        `json:"code"`
 	Msg           string     `json:"msg"`
 	Bids          [][]string `json:"bids"`
 	Asks          [][]string `json:"asks"`
+}
+
+type Binasocketresp struct {
+	EventType     string     `json:"e"`
+	EventTime     int64      `json:"E"`
+	Symbol        string     `json:"s"`
+	LastUpdatedID int64      `json:"u"`
+	Bids          [][]string `json:"b"`
+	Asks          [][]string `json:"a"`
+}
+
+func (self Binaresp) GetBids() [][]string {
+	return self.Bids
+}
+
+func (self Binaresp) GetAsks() [][]string {
+	return self.Asks
+}
+
+func (self Binasocketresp) GetBids() [][]string {
+	return self.Bids
+}
+
+func (self Binasocketresp) GetAsks() [][]string {
+	return self.Asks
+}
+
+type Binasocketuser struct {
+	EventType        string `json:"e"`
+	EventTime        int64  `json:"E"`
+	MakerCommission  int64  `json:"m"`
+	TakerCommission  int64  `json:"t"`
+	BuyerCommission  int64  `json:"b"`
+	SellerCommission int64  `json:"s"`
+	CanTrade         bool   `json:"T"`
+	CanWithdraw      bool   `json:"W"`
+	CanDeposit       bool   `json:"D"`
+	Balances         []struct {
+		Asset  string `json:"a"`
+		Free   string `json:"f"`
+		Locked string `json:"l"`
+	}
+}
+
+type Binasocketaggtrade struct {
+	EventType        string `json:"e"`
+	EventTime        int64  `json:"E"`
+	Symbol           string `json:"s"`
+	AggregatedID     string `json:"a"`
+	Price            string `json:"p"`
+	Quantity         string `json:"q"`
+	FirstBreakdownID int64  `json:"f"`
+	LastBreakdownID  int64  `json:"l"`
+	TradeTime        int64  `json:"T"`
+	Maker            bool   `json:"m"`
 }
 
 type Binainfo struct {
@@ -23,6 +83,10 @@ type Binainfo struct {
 		Free   string `json:"free"`
 		Locked string `json:"locked`
 	} `json:"balances`
+}
+
+type Binalistenkey struct {
+	ListenKey string `json:"listenKey"`
 }
 
 type Binatrade struct {
@@ -54,6 +118,19 @@ type Binaorder struct {
 	StopPrice     string `json:"stopPrice"`
 	IcebergQty    string `json:"icebergQty"`
 	Time          uint64 `json:"time"`
+}
+
+type Binasocketorder struct {
+	Symbol        string `json:"s"`
+	OrderID       uint64 `json:"i"`
+	ClientOrderID string `json:"c"`
+	Price         string `json:"p"`
+	OrigQty       string `json:"q"`
+	Status        string `json:"X"`
+	TimeInForce   string `json:"f"`
+	Type          string `json:"o"`
+	Side          string `json:"S"`
+	Time          uint64 `json:"T"`
 }
 
 type Binaorders []Binaorder
