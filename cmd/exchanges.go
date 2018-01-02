@@ -54,12 +54,14 @@ func NewDevExchangePool(addressConfig common.AddressConfig, signer *signer.FileS
 			for tokenID, addr := range addressConfig.Exchanges["bittrex"] {
 				bit.UpdateDepositAddress(common.MustGetToken(tokenID), addr)
 			}
+			bit.UpdatePairsPrecision()
 			exchanges[bit.ID()] = bit
 		case "binance":
 			bin := exchange.NewBinance(binance.NewDevBinanceEndpoint(signer))
 			for tokenID, addr := range addressConfig.Exchanges["binance"] {
 				bin.UpdateDepositAddress(common.MustGetToken(tokenID), addr)
 			}
+			bin.UpdatePairsPrecision()
 			exchanges[bin.ID()] = bin
 		}
 	}

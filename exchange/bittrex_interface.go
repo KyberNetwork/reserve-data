@@ -3,15 +3,18 @@ package exchange
 import (
 	"math/big"
 
+	"sync"
+
 	"github.com/KyberNetwork/reserve-data/common"
 	ethereum "github.com/ethereum/go-ethereum/common"
-	"sync"
 )
 
 type BittrexInterface interface {
 	FetchOnePairData(wq *sync.WaitGroup, pair common.TokenPair, data *sync.Map, timepoint uint64)
 
 	GetInfo(timepoint uint64) (Bittinfo, error)
+
+	GetExchangeInfo() (BittExchangeInfo, error)
 
 	Withdraw(
 		token common.Token,

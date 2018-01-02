@@ -2,6 +2,7 @@ package exchange
 
 import (
 	"errors"
+	"log"
 	"strconv"
 	"strings"
 	"sync"
@@ -21,6 +22,7 @@ type Bittrex struct {
 	pairs     []common.TokenPair
 	addresses map[string]ethereum.Address
 	storage   BittrexStorage
+	fees      exchangeFees
 }
 
 func (self *Bittrex) MarshalText() (text []byte, err error) {
@@ -32,6 +34,15 @@ func (self *Bittrex) Address(token common.Token) (ethereum.Address, bool) {
 	return addr, supported
 }
 
+func (self *Bittrex) GetFee(pair string) common.TokenPair {
+	for _, data := range self.pairs {
+		if strings.ToUpper(data.Base.ID+data.Quote.ID) == strings.ToUpper(pair) {
+			return data
+		}
+	}
+	return common.TokenPair{}
+}
+
 func (self *Bittrex) UpdateAllDepositAddresses(address string) {
 	for k, _ := range self.addresses {
 		self.addresses[k] = ethereum.HexToAddress(address)
@@ -40,6 +51,32 @@ func (self *Bittrex) UpdateAllDepositAddresses(address string) {
 
 func (self *Bittrex) UpdateDepositAddress(token common.Token, address string) {
 	self.addresses[token.ID] = ethereum.HexToAddress(address)
+}
+
+func (self *Bittrex) UpdatePrecisionLimit(pair *common.TokenPair, symbols []BittPairInfo) {
+	pairName := strings.ToUpper(pair.Base.ID) + strings.ToUpper(pair.Quote.ID)
+	for _, symbol := range symbols {
+		symbolName := symbol.Base + symbol.Quote
+		if symbolName == pairName {
+			//update precision
+			pair.Precision.Amount = 8
+			pair.Precision.Price = 8
+			// update limit
+			pair.AmountLimit.Min = symbol.MinAmount
+		}
+	}
+}
+
+func (self *Bittrex) UpdatePairsPrecision() {
+	exchangeInfo, err := self.interf.GetExchangeInfo()
+	if err == nil {
+		symbols := exchangeInfo.Pairs
+		for index, _ := range self.pairs {
+			self.UpdatePrecisionLimit(&self.pairs[index], symbols)
+		}
+	} else {
+		log.Printf("Get exchange info failed: %s\n", err)
+	}
 }
 
 func (self *Bittrex) ID() common.ExchangeID {
@@ -238,5 +275,36 @@ func NewBittrex(interf BittrexInterface, storage BittrexStorage) *Bittrex {
 		},
 		map[string]ethereum.Address{},
 		storage,
+		exchangeFees{
+			tradingFee{
+				"taker": 0.0025,
+				"maker": 0.0025,
+			},
+			fundingFee{
+				map[string]float32{
+					"BTC":  0.001,
+					"LTC":  0.01,
+					"DOGE": 2,
+					"VTC":  0.02,
+					"PPC":  0.02,
+					"FTC":  0.2,
+					"RDD":  2,
+					"NXT":  2,
+					"DASH": 0.002,
+					"POT":  0.002},
+				map[string]float32{
+					"BTC":  0,
+					"LTC":  0,
+					"DOGE": 0,
+					"VTC":  0,
+					"PPC":  0,
+					"FTC":  0,
+					"RDD":  0,
+					"NXT":  0,
+					"DASH": 0,
+					"POT":  0,
+				},
+			},
+		},
 	}
 }

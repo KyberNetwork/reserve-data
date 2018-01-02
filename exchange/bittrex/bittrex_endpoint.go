@@ -13,10 +13,11 @@ import (
 	"strings"
 	"time"
 
+	"sync"
+
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/exchange"
 	ethereum "github.com/ethereum/go-ethereum/common"
-	"sync"
 )
 
 const EPSILON float64 = 0.0000000001 // 10e-10
@@ -81,6 +82,21 @@ func (self *BittrexEndpoint) GetResponse(
 		log.Printf("request to %s, got response from bittrex: %s\n", req.URL, common.TruncStr(resp_body))
 		return resp_body, err
 	}
+}
+
+func (self *BittrexEndpoint) GetExchangeInfo() (exchange.BittExchangeInfo, error) {
+	result := exchange.BittExchangeInfo{}
+	timepoint := common.GetTimepoint()
+	resp_body, err := self.GetResponse(
+		addPath(self.interf.PublicEndpoint(timepoint), "getmarkets"),
+		map[string]string{},
+		false,
+		timepoint,
+	)
+	if err == nil {
+		err = json.Unmarshal(resp_body, &result)
+	}
+	return result, err
 }
 
 func (self *BittrexEndpoint) FetchOnePairData(wq *sync.WaitGroup, pair common.TokenPair, data *sync.Map, timepoint uint64) {

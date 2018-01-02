@@ -3,19 +3,34 @@ package exchange
 import (
 	"errors"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"sync"
 
+	"math/big"
+
 	"github.com/KyberNetwork/reserve-data/common"
 	ethereum "github.com/ethereum/go-ethereum/common"
-	"math/big"
 )
+
+type tradingFee map[string]float32
+
+type fundingFee struct {
+	withdraw map[string]float32
+	deposit  map[string]float32
+}
+
+type exchangeFees struct {
+	trading tradingFee
+	funding fundingFee
+}
 
 type Binance struct {
 	interf    BinanceInterface
 	pairs     []common.TokenPair
 	addresses map[string]ethereum.Address
+	fees      exchangeFees
 }
 
 func (self *Binance) MarshalText() (text []byte, err error) {
@@ -35,6 +50,49 @@ func (self *Binance) UpdateAllDepositAddresses(address string) {
 
 func (self *Binance) UpdateDepositAddress(token common.Token, address string) {
 	self.addresses[token.ID] = ethereum.HexToAddress(address)
+}
+
+func (self *Binance) UpdatePrecisionLimit(pair *common.TokenPair, symbols []BinanceSymbol) {
+	pairName := strings.ToUpper(pair.Base.ID) + strings.ToUpper(pair.Quote.ID)
+	for _, symbol := range symbols {
+		if symbol.Symbol == pairName {
+			//update precision
+			pair.Precision.Amount = symbol.BaseAssetPrecision
+			pair.Precision.Price = symbol.QuotePrecision
+			// update limit
+			for _, filter := range symbol.Filters {
+				minQuantity, _ := strconv.ParseFloat(filter.MinQuantity, 32)
+				pair.AmountLimit.Min = float32(minQuantity)
+				maxQuantity, _ := strconv.ParseFloat(filter.MaxQuantity, 32)
+				pair.AmountLimit.Max = float32(maxQuantity)
+				minPrice, _ := strconv.ParseFloat(filter.MinPrice, 32)
+				pair.PriceLimit.Min = float32(minPrice)
+				maxPrice, _ := strconv.ParseFloat(filter.MaxPrice, 32)
+				pair.PriceLimit.Max = float32(maxPrice)
+			}
+		}
+	}
+}
+
+func (self *Binance) UpdatePairsPrecision() {
+	exchangeInfo, err := self.interf.GetExchangeInfo()
+	if err == nil {
+		symbols := exchangeInfo.Symbols
+		for index, _ := range self.pairs {
+			self.UpdatePrecisionLimit(&self.pairs[index], symbols)
+		}
+	} else {
+		log.Printf("Get exchange info failed: %s\n", err)
+	}
+}
+
+func (self *Binance) GetFee(pair string) common.TokenPair {
+	for _, data := range self.pairs {
+		if strings.ToUpper(data.Base.ID+data.Quote.ID) == strings.ToUpper(pair) {
+			return data
+		}
+	}
+	return common.TokenPair{}
 }
 
 func (self *Binance) ID() common.ExchangeID {
@@ -231,5 +289,30 @@ func NewBinance(interf BinanceInterface) *Binance {
 			common.MustCreateTokenPair("LINK", "ETH"),
 		},
 		map[string]ethereum.Address{},
+		exchangeFees{
+			tradingFee{
+				"taker": 0.001,
+				"maker": 0.001,
+			},
+			fundingFee{
+				map[string]float32{
+					"ETH":  0.005,
+					"EOS":  2.0,
+					"MCO":  0.15,
+					"OMG":  0.1,
+					"KNC":  1.0,
+					"FUN":  50.0,
+					"LINK": 5.0},
+				map[string]float32{
+					"ETH":  0,
+					"EOS":  0,
+					"MCO":  0,
+					"OMG":  0,
+					"KNC":  0,
+					"FUN":  0,
+					"LINK": 0,
+				},
+			},
+		},
 	}
 }

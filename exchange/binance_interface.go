@@ -1,10 +1,11 @@
 package exchange
 
 import (
-	"github.com/KyberNetwork/reserve-data/common"
-	ethereum "github.com/ethereum/go-ethereum/common"
 	"math/big"
 	"sync"
+
+	"github.com/KyberNetwork/reserve-data/common"
+	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
 type BinanceInterface interface {
@@ -21,6 +22,8 @@ type BinanceInterface interface {
 		timepoint uint64)
 
 	GetInfo(timepoint uint64) (Binainfo, error)
+
+	GetExchangeInfo() (BinanceExchangeInfo, error)
 
 	Withdraw(
 		token common.Token,

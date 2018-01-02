@@ -5,7 +5,7 @@ FROM golang
 # Copy the local package files to the container's workspace.
 ADD . /go/src/github.com/KyberNetwork/reserve-data
 
-ENV KYBER_EXCHANGES binance
+ENV KYBER_EXCHANGES binance,bittrex
 WORKDIR /go/src/github.com/KyberNetwork/reserve-data
 RUN go install -v github.com/KyberNetwork/reserve-data/cmd
 

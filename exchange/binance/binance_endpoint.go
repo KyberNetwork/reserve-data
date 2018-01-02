@@ -391,6 +391,22 @@ func (self *BinanceEndpoint) GetDepositAddress(asset string) (exchange.Binadepos
 	return result, err
 }
 
+func (self *BinanceEndpoint) GetExchangeInfo() (exchange.BinanceExchangeInfo, error) {
+	result := exchange.BinanceExchangeInfo{}
+	timepoint := common.GetTimepoint()
+	resp_body, err := self.GetResponse(
+		"GET",
+		self.interf.PublicEndpoint()+"/api/v1/exchangeInfo",
+		map[string]string{},
+		false,
+		timepoint,
+	)
+	if err == nil {
+		err = json.Unmarshal(resp_body, &result)
+	}
+	return result, err
+}
+
 func NewBinanceEndpoint(signer Signer, interf Interface) *BinanceEndpoint {
 	return &BinanceEndpoint{signer, interf}
 }

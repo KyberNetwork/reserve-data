@@ -25,6 +25,25 @@ type Binainfo struct {
 	} `json:"balances`
 }
 
+type FilterLimit struct {
+	FilterType  string `json:"filterType"`
+	MinPrice    string `json:"minPrice"`
+	MaxPrice    string `json:"maxPrice"`
+	MinQuantity string `json:"minQty"`
+	MaxQuantity string `json:"maxQty"`
+}
+
+type BinanceSymbol struct {
+	Symbol             string        `json:"symbol"`
+	BaseAssetPrecision int           `json:"baseAssetPrecision"`
+	QuotePrecision     int           `json:"quotePrecision"`
+	Filters            []FilterLimit `json:"filters"`
+}
+
+type BinanceExchangeInfo struct {
+	Symbols []BinanceSymbol
+}
+
 type Binatrade struct {
 	Symbol        string `json:"symbol"`
 	OrderID       uint64 `json:"orderId"`
