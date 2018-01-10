@@ -1,59 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>Wallet - kyber.network</title>
-    <link rel="shortcut icon" href="assets/img/favicon.png?version=60759" type="image/png">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
-    <link rel="stylesheet" href="app.css" />
-  </head>
-  <body>
-    
 
-      <div class="container">
-          <div class="row">
-                <div class="col-md-6 col-xs-12 mx-auto mt-30 mb-30">
-                  <img src="vertical-logo.png" id="logo" alt="" class="mx-auto d-block">
-        
-                </div>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <title>Wallet - kyber.network</title>
+  <link rel="shortcut icon" href="assets/img/favicon.png?version=60759" type="image/png">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ"
+    crossorigin="anonymous">
+  <link rel="stylesheet" href="app.css" />
+</head>
+
+<body>
+
+  <div id="main">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-6 col-xs-12 mx-auto mt-30 mb-30">
+          <img src="vertical-logo.png" id="logo" alt="" class="mx-auto d-block">
+
+        </div>
+      </div>
+      <div class="col-md-8 col-xs-12 mx-auto faucet-info">
+        <div class="row col-lg-12">
+          <div class="col-xs-12 col-md-4 col-lg-2">
+            <strong>Faucet</strong>
           </div>
-          <div class="col-md-8 col-xs-12 mx-auto faucet-info">
-            <div class="row col-lg-12">
-              <div class="col-xs-12 col-md-4 col-lg-2"><strong>Faucet</strong> </div>
-              <div id="faucet-address" class="col-xs-12 col-md-8 col-lg-10">0x12f1d9740f62be0fdd439a4c0ab9f192c39602b1</div>
-            </div>
-            <div class="row col-lg-12">
-              <div class="col-xs-12 col-md-4 col-lg-2"><strong>Balance</strong> </div>
-              <div class="col-xs-12 col-md-8 col-lg-10">
-                <span id="balance"></span>
-                <label class="unit">ETH</label>
-              </div>
-            </div>
+          <div id="faucet-address" class="col-xs-12 col-md-8 col-lg-10">0x12f1d9740f62be0fdd439a4c0ab9f192c39602b1</div>
+        </div>
+        <div class="row col-lg-12">
+          <div class="col-xs-12 col-md-4 col-lg-2">
+            <strong>Balance</strong>
           </div>
-          <div class="row">
-              <div class="col-md-8 col-xs-12 mx-auto">
-              <p class="lead mb-10">Request faucet for 1 ETH</p>
-              <div class="input-group">
-                <input type="text" id="user_address" class="form-control" placeholder="Your address" aria-describedby="user-address">
-                <span class="input-group-addon" id="request">Request</span>
-              </div>
-              <!--
+          <div class="col-xs-12 col-md-8 col-lg-10">
+            <span id="balance"></span>
+            <label class="unit">ETH</label>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-8 col-xs-12 mx-auto">
+          <p class="lead mb-10">Request faucet for 1 ETH</p>
+          <div class="input-group">
+            <input type="text" id="user_address" class="form-control" placeholder="Your address" aria-describedby="user-address">
+            <span class="input-group-addon" id="request">Request</span>
+          </div>
+          <!--
                <div class="search">
                   <input type="text" id="user_address" class="searchTerm" placeholder="Your address">
                   <button type="submit" class="searchButton"  onclick="checkAddress()">
                     Check
                  </button>
               </div> -->
-              <ul class="fa-ul text-left mt-3">
-               <li id="error" class="error" style="display: none;"><i class="fa-li fa fa-exclamation-triangle"></i>Invalid address. Address should start with 0x, followed by exactly 40 hex digits</li>
-               <li id="success" class="success" style="display: none;">Your address has been added to queue successfully</li>
-             </ul>
-            </div>
-        
-         </div>
-        
-         <!-- <div class="row">
+          <ul class="fa-ul text-left mt-3">
+            <li id="error" class="error" style="display: none;">
+              <i class="fa-li fa fa-exclamation-triangle"></i>Invalid address. Address should start with 0x, followed by exactly 40 hex digits</li>
+            <li id="success" class="success" style="display: none;">Your address has been added to queue successfully</li>
+          </ul>
+        </div>
+
+      </div>
+
+      <!-- <div class="row">
             <div class="col-md-8 col-xs-12 mx-auto text-center mt-5">
               <div id="result-yes" style="display: none;">
                 <i class="fa fa-2x fa-check-square-o mb-20" id="check-mark" aria-hidden="true"></i>
@@ -67,9 +75,10 @@
               </div>
             </div>
          </div> -->
-         </div>
+    </div>
+  </div>
+  <script src="jquery-3.2.1.min.js"></script>
+  <script src="app.js?v=3"></script>
+</body>
 
-    <script src="jquery-3.2.1.min.js"></script>
-    <script src="app.js?v=3"></script>
-  </body>
 </html>
