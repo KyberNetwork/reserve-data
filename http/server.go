@@ -814,14 +814,10 @@ func (self *HTTPServer) GetExchangeFee(c *gin.Context) {
 }
 
 func (self *HTTPServer) GetFee(c *gin.Context) {
-	var data []map[string]common.ExchangeFees
-	var exchangeFee map[string]common.ExchangeFees
+	data := map[string]common.ExchangeFees{}
 	for _, exchange := range common.SupportedExchanges {
 		fee := exchange.GetFee()
-		exchangeFee = map[string]common.ExchangeFees{
-			string(exchange.ID()): fee,
-		}
-		data = append(data, exchangeFee)
+		data[string(exchange.ID())] = fee
 	}
 	c.JSON(
 		http.StatusOK,
