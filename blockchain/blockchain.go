@@ -401,3 +401,96 @@ func NewBlockchain(
 		nonce:       nonceCorpus,
 	}, nil
 }
+
+func Convert(logs []types.Log) ([]common.TradeLog) {
+	var tradeLogArray []common.TradeLog
+	init := true
+	mark := 0
+	for index, log := range(logs)	{
+		if(init) {
+			init = false
+		} else {
+			if(!IsEqual(log.TxHash, logs[index - 1].TxHash)) {
+				tradeLogArray = append(tradeLogArray, NewTradeLog(logs[mark:index]))
+				init = true
+				mark = index
+			}
+		}
+	}
+	return tradeLogArray
+}
+
+func IsEqual(tx1 ethereum.Hash, tx2 ethereum.Hash) (bool) {
+	if(tx1.String() == tx2.String()){
+		return true
+	}
+	return false
+}
+
+func NewTradeLog(logGroup []types.Log) (common.TradeLog) {
+	tradeLog := common.TradeLog{}
+	trade, assign, burn := OrderLog(logGroup)
+
+	if(trade.BlockNumber != 0) {
+		tradeLog.BlockNumber = trade.BlockNumber
+		tradeLog.LogIndex    = trade.Index
+		tradeLog.TransactionHash = trade.TxHash
+		tradeLog.TransactionIndex    = trade.TxIndex
+		tradeLog.SrcAddress, tradeLog.DesAddress, tradeLog.SrcAmount, tradeLog.DesAmount = HandleDataTrade(trade.Data)
+	}
+	if(assign.BlockNumber != 0) {
+		tradeLog.ReserveAddress, tradeLog.WallAddress, tradeLog.WallFee = HandleDataAssignFeeToWallet(assign.Data)
+	}
+	if(burn.BlockNumber != 0) {
+		tradeLog.BurnFee = HandleDataBurnFees(burn.Data)
+	}
+	return tradeLog
+}
+
+func OrderLog(logs []types.Log) (types.Log, types.Log, types.Log) {
+	arrayTopics := []string{TradeEvent, FeeToWalletEvent, BurnFeeEvent}
+	var trade, assign, burn types.Log
+	for _, log := range(logs) {
+		topicString := log.Topics[0].String()
+		if(topicString == arrayTopics[0]) {
+			trade = log
+		}
+		if(topicString == arrayTopics[1]) {
+			assign = log
+		}
+		if(topicString == arrayTopics[2]) {
+			burn = log
+		}
+	}
+	return trade, assign, burn
+}
+
+func HandleDataTrade(dataset []byte) (ethereum.Address, ethereum.Address, *big.Int, *big.Int) {
+  src_addr := HandleAddress(dataset[0:32])
+  des_addr := HandleAddress(dataset[32:64])
+  src_amount := HandleValue(dataset[64:96])
+  des_amount := HandleValue(dataset[96:128])
+  return src_addr, des_addr, src_amount, des_amount
+}
+
+func HandleDataAssignFeeToWallet(dataset []byte) (ethereum.Address, ethereum.Address, *big.Int) {
+  reserve_addr := HandleAddress(dataset[0:32])
+  wallet_addr := HandleAddress(dataset[32:64])
+  wallet_fee := HandleValue(dataset[64:96])
+  return reserve_addr, wallet_addr, wallet_fee
+}
+
+func HandleDataBurnFees(dataset []byte) (*big.Int) {
+  burnFees := HandleValue(dataset[32:64])
+  return burnFees
+}
+
+func HandleAddress(address_bytes []byte) (ethereum.Address) {
+  address := ethereum.BytesToAddress(address_bytes)
+  return address
+}
+
+func HandleValue(value_bytes []byte) (*big.Int) {
+  value_hash := ethereum.BytesToHash(value_bytes)
+  return value_hash.Big()
+}
