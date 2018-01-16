@@ -464,19 +464,16 @@ type AllRateResponse struct {
 type TradeLog struct {
 	Timestamp        uint64
 	BlockNumber      uint64
-	GasPrice         *big.Int
-	GasUsed          *big.Int
 	TransactionHash  ethereum.Hash
-	LogIndex         uint64
-	TransactionIndex uint64
+	TransactionIndex uint
 
-	SrcAddress *big.Int
-	DesAddress *big.Int
-	SrcAmount  *big.Int
-	DesAmount  *big.Int
+	SrcAddress  ethereum.Address
+	DestAddress ethereum.Address
+	SrcAmount   *big.Int
+	DestAmount  *big.Int
 
 	ReserveAddress ethereum.Address
-	WallAddress    ethereum.Address
-	WallFee        *big.Int
+	WalletAddress  ethereum.Address
+	WalletFee      *big.Int
 	BurnFee        *big.Int
 }

@@ -65,6 +65,7 @@ func (self *Fetcher) RunBlockAndLogFetcher() {
 		if err == nil {
 			nextBlock := self.FetchLogs(lastBlock+1, timepoint)
 			self.storage.UpdateLogBlock(nextBlock, timepoint)
+			log.Printf("nextBlock: %d", nextBlock)
 		} else {
 			log.Printf("failed to get last fetched log block, err: %+v", err)
 		}
@@ -82,12 +83,18 @@ func (self *Fetcher) FetchLogs(fromBlock uint64, timepoint uint64) uint64 {
 			return fromBlock - 1
 		}
 	} else {
-		log.Printf("TODO: translating logs: %+v", logs)
-		log.Printf("TODO: get blocknumber of the latest log")
+		log.Printf("Got logs: %+v", logs)
 		if len(logs) > 0 {
+			for _, l := range logs {
+				err = self.storage.StoreTradeLog(l, timepoint)
+				if err != nil {
+					log.Printf("storing trade log failed, abort storing process and return latest stored log block number, err: %+v", err)
+					return l.BlockNumber
+				}
+			}
 			return logs[len(logs)-1].BlockNumber
 		} else {
-			return self.currentBlock
+			return fromBlock - 1
 		}
 	}
 }
