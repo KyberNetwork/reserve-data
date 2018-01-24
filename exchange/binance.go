@@ -23,6 +23,10 @@ type Binance struct {
 	fees         common.ExchangeFees
 }
 
+func (self *Binance) TokenAddresses() map[string]ethereum.Address {
+	return self.addresses
+}
+
 func (self *Binance) MarshalText() (text []byte, err error) {
 	return []byte(self.ID()), nil
 }

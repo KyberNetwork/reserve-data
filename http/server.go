@@ -28,6 +28,7 @@ type HTTPServer struct {
 	authEnabled bool
 	auth        Authentication
 	r           *gin.Engine
+	addresses   *common.Addresses
 }
 
 const MAX_TIMESPOT uint64 = 18446744073709551615
@@ -874,6 +875,14 @@ func (self *HTTPServer) GetFee(c *gin.Context) {
 	return
 }
 
+func (self *HTTPServer) GetAddress(c *gin.Context) {
+	c.JSON(
+		http.StatusOK,
+		gin.H{"success": true, "data": self.addresses},
+	)
+	return
+}
+
 func (self *HTTPServer) Run() {
 	self.r.GET("/prices", self.AllPrices)
 	self.r.GET("/prices/:base/:quote", self.Price)
@@ -895,6 +904,7 @@ func (self *HTTPServer) Run() {
 	self.r.GET("/exchangeinfo/:exchangeid/:base/:quote", self.GetPairInfo)
 	self.r.GET("/exchangefees", self.GetFee)
 	self.r.GET("/exchangefees/:exchangeid", self.GetExchangeFee)
+	self.r.GET("/core/addresses", self.GetAddress)
 
 	self.r.Run(self.host)
 }
@@ -905,7 +915,8 @@ func NewHTTPServer(
 	metric metric.MetricStorage,
 	host string,
 	enableAuth bool,
-	authEngine Authentication) *HTTPServer {
+	authEngine Authentication,
+	addresses *common.Addresses) *HTTPServer {
 	raven.SetDSN("https://bf15053001464a5195a81bc41b644751:eff41ac715114b20b940010208271b13@sentry.io/228067")
 
 	r := gin.Default()
@@ -917,6 +928,6 @@ func NewHTTPServer(
 	r.Use(cors.New(corsConfig))
 
 	return &HTTPServer{
-		app, core, metric, host, enableAuth, authEngine, r,
+		app, core, metric, host, enableAuth, authEngine, r, addresses,
 	}
 }

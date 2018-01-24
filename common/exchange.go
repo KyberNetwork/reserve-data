@@ -19,6 +19,7 @@ type Exchange interface {
 	GetInfo() (ExchangeInfo, error)
 	GetExchangeInfo(TokenPairID) (ExchangePrecisionLimit, error)
 	GetFee() ExchangeFees
+	TokenAddresses() map[string]ethereum.Address
 }
 
 var SupportedExchanges = map[ExchangeID]Exchange{}

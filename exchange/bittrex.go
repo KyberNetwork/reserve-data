@@ -25,6 +25,10 @@ type Bittrex struct {
 	fees         common.ExchangeFees
 }
 
+func (self *Bittrex) TokenAddresses() map[string]ethereum.Address {
+	return self.addresses
+}
+
 func (self *Bittrex) MarshalText() (text []byte, err error) {
 	return []byte(self.ID()), nil
 }

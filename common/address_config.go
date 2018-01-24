@@ -3,6 +3,7 @@ package common
 import (
 	"encoding/json"
 	"io/ioutil"
+	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
 type token struct {
@@ -34,3 +35,15 @@ func GetAddressConfigFromFile(path string) (AddressConfig, error) {
 		return result, err
 	}
 }
+
+type Addresses struct {
+	Tokens      map[string]ethereum.Address
+	Exchanges   map[string]TokenAddresses
+	WrapperAddress   ethereum.Address
+	PricingAddress   ethereum.Address
+	ReserveAddress   ethereum.Address
+	FeeBurnerAddress ethereum.Address
+	NetworkAddress   ethereum.Address
+}
+
+type TokenAddresses map[string]ethereum.Address

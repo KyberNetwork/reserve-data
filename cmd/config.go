@@ -43,3 +43,24 @@ func (self *Config) MapTokens() map[string]common.Token {
 	}
 	return result
 }
+
+func (self *Config) GetAddress() *common.Addresses {
+	exchanges := map[string]common.TokenAddresses{}
+	for _, e := range self.Exchanges {
+		exchanges[string(e.ID())] = e.TokenAddresses()
+	}
+	tokens := map[string]ethereum.Address{}
+	for _, t := range self.SupportedTokens {
+		tokens[t.ID] = ethereum.HexToAddress(t.Address)
+	}
+
+	return &common.Addresses{
+		Tokens: tokens,
+		Exchanges: exchanges,
+		WrapperAddress: self.WrapperAddress,
+		PricingAddress: self.PricingAddress,
+		ReserveAddress: self.ReserveAddress,
+		FeeBurnerAddress: self.FeeBurnerAddress,
+		NetworkAddress: self.NetworkAddress,
+	}
+}

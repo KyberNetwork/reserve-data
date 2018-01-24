@@ -67,6 +67,7 @@ func main() {
 		config = GetConfigForDev()
 	}
 
+	addresses := config.GetAddress()
 	logPath := "/go/src/github.com/KyberNetwork/reserve-data/cmd/log.log"
 	f, err := os.OpenFile(logPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
@@ -128,6 +129,7 @@ func main() {
 			":8000",
 			config.EnableAuthentication,
 			config.AuthEngine,
+			addresses,
 		)
 		server.Run()
 	}
