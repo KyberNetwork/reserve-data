@@ -31,17 +31,17 @@ func NewTimeWindow(
 	}
 }
 
-func (self *TimeWindow) GetAddress() ethereum.Address {
-	return self.signer.GetAddress()
+func (self *TimeWindow) GetAddress(transaction string) ethereum.Address {
+	return self.signer.GetAddress(transaction)
 }
 
-func (self *TimeWindow) getNonceFromNode() (*big.Int, error) {
+func (self *TimeWindow) getNonceFromNode(transaction string) (*big.Int, error) {
 	option := context.Background()
-	nonce, err := self.ethclient.PendingNonceAt(option, self.signer.GetAddress())
+	nonce, err := self.ethclient.PendingNonceAt(option, self.signer.GetAddress(transaction))
 	return big.NewInt(int64(nonce)), err
 }
 
-func (self *TimeWindow) GetNextNonce() (*big.Int, error) {
+func (self *TimeWindow) GetNextNonce(transaction string) (*big.Int, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 	t := common.GetTimepoint()
@@ -50,7 +50,7 @@ func (self *TimeWindow) GetNextNonce() (*big.Int, error) {
 		self.manualNonce.Add(self.manualNonce, ethereum.Big1)
 		return self.manualNonce, nil
 	} else {
-		nonce, err := self.getNonceFromNode()
+		nonce, err := self.getNonceFromNode(transaction)
 		if err != nil {
 			return big.NewInt(0), err
 		}

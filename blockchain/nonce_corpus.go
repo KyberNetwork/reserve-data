@@ -6,6 +6,6 @@ import (
 )
 
 type NonceCorpus interface {
-	GetAddress() ethereum.Address
-	GetNextNonce() (*big.Int, error)
+	GetAddress(string) ethereum.Address
+	GetNextNonce(string) (*big.Int, error)
 }

@@ -23,24 +23,26 @@ type FileSigner struct {
 	BittrexSecret   string `json:"bittrex_secret"`
 	BitfinexKey     string `json:"bitfinex_key"`
 	BitfinexSecret  string `json:"bitfinex_secret"`
-	Keystore        string `json:"keystore_path"`
-	Passphrase      string `json:"passphrase"`
+	KeystoreSR      string `json:"keystore_setrate_path"`
+	PassphraseSR    string `json:"passphrase_setrate"`
+	KeystoreD       string `json:"keystore_deposit_path"`
+	PassphraseD     string `json:"passphrase_deposit"`
 	KNSecret        string `json:"kn_secret"`
 	KNReadOnly      string `json:"kn_readonly"`
 	KNConfiguration string `json:"kn_configuration"`
-	opts            *bind.TransactOpts
+	opts            map[string]*bind.TransactOpts
 }
 
-func (self FileSigner) GetAddress() ethereum.Address {
-	return self.opts.From
+func (self FileSigner) GetAddress(transaction string) ethereum.Address {
+	return self.opts[transaction].From
 }
 
-func (self FileSigner) Sign(address ethereum.Address, tx *types.Transaction) (*types.Transaction, error) {
-	return self.opts.Signer(types.HomesteadSigner{}, address, tx)
+func (self FileSigner) Sign(address ethereum.Address, tx *types.Transaction, transaction string) (*types.Transaction, error) {
+	return self.opts[transaction].Signer(types.HomesteadSigner{}, address, tx)
 }
 
-func (self FileSigner) GetTransactOpts() *bind.TransactOpts {
-	return self.opts
+func (self FileSigner) GetTransactOpts(transaction string) *bind.TransactOpts {
+	return self.opts[transaction]
 }
 
 func (self FileSigner) GetLiquiKey() string {
@@ -94,17 +96,27 @@ func NewFileSigner(file string) *FileSigner {
 	if err != nil {
 		panic(err)
 	}
-	keyio, err := os.Open(signer.Keystore)
+	keySetRateIo, err := os.Open(signer.KeystoreSR)
 	if err != nil {
 		panic(err)
 	}
-	auth, err := bind.NewTransactor(keyio, signer.Passphrase)
+	authSetRate, err := bind.NewTransactor(keySetRateIo, signer.PassphraseSR)
 	if err != nil {
 		panic(err)
 	}
-
+	keyDepositIo, err := os.Open(signer.KeystoreD)
+	if err != nil {
+		panic(err)
+	}
+	authDeposit, err := bind.NewTransactor(keyDepositIo, signer.PassphraseD)
+	if err != nil {
+		panic(err)
+	}
 	// auth.GasLimit = big.NewInt(1000000)
 	// auth.GasPrice = big.NewInt(35000000000)
-	signer.opts = auth
+	opts := map[string]*bind.TransactOpts{}
+	opts["setrate"] = authSetRate
+	opts["deposit"] = authDeposit
+	signer.opts = opts
 	return &signer
 }

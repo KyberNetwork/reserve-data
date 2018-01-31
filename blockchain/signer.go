@@ -7,7 +7,7 @@ import (
 )
 
 type Signer interface {
-	GetAddress() ethereum.Address
-	Sign(ethereum.Address, *types.Transaction) (*types.Transaction, error)
-	GetTransactOpts() *bind.TransactOpts
+	GetAddress(string) ethereum.Address
+	Sign(ethereum.Address, *types.Transaction, string) (*types.Transaction, error)
+	GetTransactOpts(string) *bind.TransactOpts
 }

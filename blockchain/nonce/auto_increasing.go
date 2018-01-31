@@ -28,20 +28,20 @@ func NewAutoIncreasing(
 	}
 }
 
-func (self *AutoIncreasing) GetAddress() ethereum.Address {
-	return self.signer.GetAddress()
+func (self *AutoIncreasing) GetAddress(transaction string) ethereum.Address {
+	return self.signer.GetAddress(transaction)
 }
 
-func (self *AutoIncreasing) getNonceFromNode() (*big.Int, error) {
+func (self *AutoIncreasing) getNonceFromNode(transaction string) (*big.Int, error) {
 	option := context.Background()
-	nonce, err := self.ethclient.PendingNonceAt(option, self.signer.GetAddress())
+	nonce, err := self.ethclient.PendingNonceAt(option, self.signer.GetAddress(transaction))
 	return big.NewInt(int64(nonce)), err
 }
 
-func (self *AutoIncreasing) GetNextNonce() (*big.Int, error) {
+func (self *AutoIncreasing) GetNextNonce(transaction string) (*big.Int, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
-	nodeNonce, err := self.getNonceFromNode()
+	nodeNonce, err := self.getNonceFromNode(transaction)
 	if err != nil {
 		return nodeNonce, err
 	} else {

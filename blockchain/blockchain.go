@@ -116,9 +116,9 @@ func (self *Blockchain) IsMined(tx ethereum.Hash) (bool, error) {
 	return receipt != nil, err
 }
 
-func (self *Blockchain) getTransactOpts() (*bind.TransactOpts, error) {
-	shared := self.signer.GetTransactOpts()
-	nonce, err := self.nonce.GetNextNonce()
+func (self *Blockchain) getTransactOpts(transaction string) (*bind.TransactOpts, error) {
+	shared := self.signer.GetTransactOpts(transaction)
+	nonce, err := self.nonce.GetNextNonce(transaction)
 	if err != nil {
 		return nil, err
 	} else {
@@ -214,7 +214,7 @@ func (self *Blockchain) SetRates(
 	sells []*big.Int,
 	block *big.Int) (ethereum.Hash, error) {
 
-	opts, err := self.getTransactOpts()
+	opts, err := self.getTransactOpts("setrate")
 	// fix to 50.1 gwei
 	opts.GasPrice = big.NewInt(50100000000)
 	block.Add(block, big.NewInt(1))
@@ -391,7 +391,7 @@ func (self *Blockchain) Send(
 	amount *big.Int,
 	dest ethereum.Address) (ethereum.Hash, error) {
 
-	opts, err := self.getTransactOpts()
+	opts, err := self.getTransactOpts("deposit")
 	if err != nil {
 		return ethereum.Hash{}, err
 	} else {
@@ -408,7 +408,7 @@ func (self *Blockchain) Send(
 }
 
 func (self *Blockchain) SetImbalanceStepFunction(token ethereum.Address, xBuy []*big.Int, yBuy []*big.Int, xSell []*big.Int, ySell []*big.Int) (*types.Transaction, error) {
-	opts, err := self.getTransactOpts()
+	opts, err := self.getTransactOpts("setrate")
 	if err != nil {
 		log.Printf("Getting transaction opts failed!!!!!!!\n")
 		return &types.Transaction{}, err
@@ -418,7 +418,7 @@ func (self *Blockchain) SetImbalanceStepFunction(token ethereum.Address, xBuy []
 }
 
 func (self *Blockchain) SetQtyStepFunction(token ethereum.Address, xBuy []*big.Int, yBuy []*big.Int, xSell []*big.Int, ySell []*big.Int) (*types.Transaction, error) {
-	opts, err := self.getTransactOpts()
+	opts, err := self.getTransactOpts("setrate")
 	if err != nil {
 		log.Printf("Getting transaction opts failed!!!!!!!\n")
 		return &types.Transaction{}, err
@@ -482,7 +482,7 @@ func NewBlockchain(
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("reserve owner address: %s", signer.GetAddress().Hex())
+	log.Printf("reserve owner address: %s", signer.GetAddress("setrate").Hex())
 	log.Printf("reserve address: %s", reserveAddr.Hex())
 	reserve, err := NewReserveContract(reserveAddr, ethereum)
 	if err != nil {
