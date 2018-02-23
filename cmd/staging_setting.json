@@ -137,6 +137,23 @@
       "SALT": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
       "APPC": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
       "RDN": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547"
+    },
+    "huobi": {
+      "ETH": "0x39e6cc8765a1c911c3333b2834ba7b7e8a56a886",
+      "OMG": "0x39e6cc8765a1c911c3333b2834ba7b7e8a56a886",
+      "KNC": "0x39e6cc8765a1c911c3333b2834ba7b7e8a56a886",
+      "SNT": "0x39e6cc8765a1c911c3333b2834ba7b7e8a56a886",
+      "EOS": "0x39e6cc8765a1c911c3333b2834ba7b7e8a56a886",
+      "ELF": "0x39e6cc8765a1c911c3333b2834ba7b7e8a56a886",
+      "POWR": "0x39e6cc8765a1c911c3333b2834ba7b7e8a56a886",
+      "MANA": "0x39e6cc8765a1c911c3333b2834ba7b7e8a56a886",
+      "BAT": "0x39e6cc8765a1c911c3333b2834ba7b7e8a56a886",
+      "REQ": "0x39e6cc8765a1c911c3333b2834ba7b7e8a56a886",
+      "GTO": "0x39e6cc8765a1c911c3333b2834ba7b7e8a56a886",
+      "ENG": "0x39e6cc8765a1c911c3333b2834ba7b7e8a56a886",
+      "SALT": "0x39e6cc8765a1c911c3333b2834ba7b7e8a56a886",
+      "APPC": "0x39e6cc8765a1c911c3333b2834ba7b7e8a56a886",
+      "RDN": "0x39e6cc8765a1c911c3333b2834ba7b7e8a56a886"
     }
   },
   "reserve": "0x2C5a182d280EeB5824377B98CD74871f78d6b8BC",

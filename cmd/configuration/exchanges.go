@@ -57,7 +57,8 @@ func NewSimulationExchangePool(
 			bin.UpdatePairsPrecision()
 			exchanges[bin.ID()] = bin
 		case "huobi":
-			huobi := exchange.NewHuobi(huobi.NewSimulatedHuobiEndpoint(signer))
+			endpoint := huobi.NewSimulatedHuobiEndpoint(signer)
+			huobi := exchange.NewHuobi(addressConfig.Exchanges["huobi"], feeConfig.Exchanges["huobi"], endpoint)
 			for tokenID, addr := range addressConfig.Exchanges["huobi"] {
 				huobi.UpdateDepositAddress(common.MustGetToken(tokenID), addr)
 			}
@@ -100,10 +101,14 @@ func NewDevExchangePool(
 			bin.UpdatePairsPrecision()
 			exchanges[bin.ID()] = bin
 		case "huobi":
-			huobi := exchange.NewHuobi(huobi.NewDevHuobiEndpoint(signer))
+			endpoint := huobi.NewDevHuobiEndpoint(signer)
+			huobi := exchange.NewHuobi(addressConfig.Exchanges["huobi"], feeConfig.Exchanges["huobi"], endpoint)
+			wait := sync.WaitGroup{}
 			for tokenID, addr := range addressConfig.Exchanges["huobi"] {
-				huobi.UpdateDepositAddress(common.MustGetToken(tokenID), addr)
+				wait.Add(1)
+				go AsyncUpdateDepositAddress(huobi, tokenID, addr, &wait)
 			}
+			wait.Wait()
 			huobi.UpdatePairsPrecision()
 			exchanges[huobi.ID()] = huobi
 		}
@@ -143,7 +148,8 @@ func NewKovanExchangePool(
 			bin.UpdatePairsPrecision()
 			exchanges[bin.ID()] = bin
 		case "huobi":
-			huobi := exchange.NewHuobi(huobi.NewKovanHuobiEndpoint(signer))
+			endpoint := huobi.NewKovanHuobiEndpoint(signer)
+			huobi := exchange.NewHuobi(addressConfig.Exchanges["huobi"], feeConfig.Exchanges["huobi"], endpoint)
 			wait := sync.WaitGroup{}
 			for tokenID, addr := range addressConfig.Exchanges["huobi"] {
 				wait.Add(1)
@@ -189,7 +195,8 @@ func NewRopstenExchangePool(
 			bin.UpdatePairsPrecision()
 			exchanges[bin.ID()] = bin
 		case "huobi":
-			huobi := exchange.NewHuobi(huobi.NewRopstenHuobiEndpoint(signer))
+			endpoint := huobi.NewRopstenHuobiEndpoint(signer)
+			huobi := exchange.NewHuobi(addressConfig.Exchanges["huobi"], feeConfig.Exchanges["huobi"], endpoint)
 			wait := sync.WaitGroup{}
 			for tokenID, addr := range addressConfig.Exchanges["huobi"] {
 				wait.Add(1)
@@ -235,7 +242,8 @@ func NewMainnetExchangePool(
 			bin.UpdatePairsPrecision()
 			exchanges[bin.ID()] = bin
 		case "huobi":
-			huobi := exchange.NewHuobi(huobi.NewRealHuobiEndpoint(signer))
+			endpoint := huobi.NewRealHuobiEndpoint(signer)
+			huobi := exchange.NewHuobi(addressConfig.Exchanges["huobi"], feeConfig.Exchanges["huobi"], endpoint)
 			wait := sync.WaitGroup{}
 			for tokenID, addr := range addressConfig.Exchanges["huobi"] {
 				wait.Add(1)
