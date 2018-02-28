@@ -12,11 +12,13 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/exchange"
 	ethereum "github.com/ethereum/go-ethereum/common"
+	"github.com/gorilla/websocket"
 )
 
 type BinanceEndpoint struct {
@@ -87,8 +89,60 @@ func (self *BinanceEndpoint) GetResponse(
 	}
 }
 
-func (self *BinanceEndpoint) GetDepthOnePair(
-	pair common.TokenPair, timepoint uint64) (exchange.Binaresp, error) {
+func (self *BinanceEndpoint) StoreOrderBookData(
+	wg *sync.WaitGroup,
+	pair common.TokenPair,
+	data *sync.Map,
+	dataChannel chan exchange.Orderbook,
+	result common.ExchangePrice) {
+
+	if wg != nil {
+		defer wg.Done()
+	}
+	if result.Valid {
+		orderBook := <-dataChannel
+		result.ReturnTime = common.GetTimestamp()
+		bids := orderBook.GetBids()
+		asks := orderBook.GetAsks()
+
+		for _, buy := range bids {
+			quantity, _ := strconv.ParseFloat(buy[1], 64)
+			rate, _ := strconv.ParseFloat(buy[0], 64)
+			result.Bids = append(
+				result.Bids,
+				common.PriceEntry{
+					quantity,
+					rate,
+				},
+			)
+		}
+		for _, sell := range asks {
+			quantity, _ := strconv.ParseFloat(sell[1], 64)
+			rate, _ := strconv.ParseFloat(sell[0], 64)
+			result.Asks = append(
+				result.Asks,
+				common.PriceEntry{
+					quantity,
+					rate,
+				},
+			)
+		}
+		log.Printf("Data to store on storage: %s\n", result)
+	}
+	data.Store(pair.PairID(), result)
+}
+
+func (self *BinanceEndpoint) FetchOnePairData(
+	wg *sync.WaitGroup,
+	pair common.TokenPair,
+	data *sync.Map,
+	timepoint uint64) {
+
+	result := common.ExchangePrice{}
+
+	timestamp := common.Timestamp(fmt.Sprintf("%d", timepoint))
+	result.Timestamp = timestamp
+	result.Valid = true
 
 	resp_body, err := self.GetResponse(
 		"GET", self.interf.PublicEndpoint()+"/api/v1/depth",
@@ -100,7 +154,10 @@ func (self *BinanceEndpoint) GetDepthOnePair(
 		common.GetTimepoint(),
 	)
 
-	resp_data := exchange.Binaresp{}
+	returnTime := common.GetTimestamp()
+	result.ReturnTime = returnTime
+	dataChannel := make(chan exchange.Orderbook)
+
 	if err != nil {
 		return resp_data, err
 	} else {
@@ -109,12 +166,13 @@ func (self *BinanceEndpoint) GetDepthOnePair(
 			log.Printf("failed to unmarshal response from binance: %s, Response: %s", err, resp_body)
 			return resp_data, err
 		} else {
-			if resp_data.Code != 0 {
-				return resp_data, errors.New(fmt.Sprintf("Getting depth from Binance failed: %s", resp_data.Msg))
-			}
+			go func() {
+				dataChannel <- resp_data
+			}()
 		}
 		return resp_data, nil
 	}
+	self.StoreOrderBookData(wg, pair, data, dataChannel, result)
 }
 
 // Relevant params:
@@ -327,6 +385,103 @@ func (self *BinanceEndpoint) GetInfo(timepoint uint64) (exchange.Binainfo, error
 		return result, errors.New(fmt.Sprintf("Getting account info from Binance failed: %s", result.Msg))
 	}
 	return result, err
+}
+
+func (self *BinanceEndpoint) GetListenKey(timepoint uint64) (exchange.Binalistenkey, error) {
+	result := exchange.Binalistenkey{}
+	resp, err := self.GetResponse(
+		"POST",
+		self.interf.AuthenticatedEndpoint()+"/api/v1/userDataStream",
+		map[string]string{},
+		true,
+		timepoint)
+	if err == nil {
+		json.Unmarshal(resp, &result)
+	}
+	return result, err
+}
+
+// SocketFetchOnePairData fetch one pair data from socket
+func (self *BinanceEndpoint) SocketFetchOnePairData(
+	pair common.TokenPair,
+	data *sync.Map,
+	exchangePriceChan chan *sync.Map) {
+
+	URL := self.interf.SocketPublicEndpoint() + strings.ToLower(pair.Base.ID) + strings.ToLower(pair.Quote.ID) + "@depth"
+
+	var dialer *websocket.Dialer
+
+	conn, _, error := dialer.Dial(URL, nil)
+	if error != nil {
+		log.Printf("Cannot connect with socket %s\n", error)
+		return
+	}
+	dataChannel := make(chan exchange.Orderbook)
+	result := common.ExchangePrice{}
+	result.Valid = true
+	result.Timestamp = common.GetTimestamp()
+	go func() {
+		for {
+			res := exchange.Binasocketresp{}
+			_, message, err := conn.ReadMessage()
+			if err != nil {
+				log.Println(err)
+				return
+			}
+			json.Unmarshal(message, &res)
+			dataChannel <- res
+		}
+	}()
+	for {
+		self.StoreOrderBookData(nil, pair, data, dataChannel, result)
+		exchangePriceChan <- data
+	}
+}
+
+func (self *BinanceEndpoint) SocketFetchAggTrade(
+	pair common.TokenPair,
+	dataChannel chan interface{}) {
+
+	URL := self.interf.SocketPublicEndpoint() + strings.ToLower(pair.Base.ID) + strings.ToLower(pair.Quote.ID) + "@aggTrade"
+	var dialer *websocket.Dialer
+	conn, _, error := dialer.Dial(URL, nil)
+	if error != nil {
+		log.Printf("Cannot connect with socket %s\n", error)
+		return
+	}
+	for {
+		res := exchange.Binasocketaggtrade{}
+		_, message, err := conn.ReadMessage()
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		json.Unmarshal(message, &res)
+		dataChannel <- res
+	}
+}
+
+func (self *BinanceEndpoint) SocketGetUser(dataChannel chan interface{}) {
+	var dialer *websocket.Dialer
+	timepoint := common.GetTimepoint()
+	userStream, _ := self.GetListenKey(timepoint)
+	URL := self.interf.SocketAuthenticatedEndpoint() + userStream.ListenKey
+	conn, _, error := dialer.Dial(URL, nil)
+	if error != nil {
+		log.Printf("Cannot connect with socket %s\n", error)
+		return
+	}
+
+	for {
+		res := exchange.Binasocketuser{}
+		_, message, err := conn.ReadMessage()
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		json.Unmarshal(message, &res)
+		dataChannel <- res
+	}
 }
 
 func (self *BinanceEndpoint) OpenOrdersForOnePair(

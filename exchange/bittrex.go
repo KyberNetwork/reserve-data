@@ -19,6 +19,11 @@ const BITTREX_EPSILON float64 = 0.000001
 type Bittrex struct {
 	interf       BittrexInterface
 	pairs        []common.TokenPair
+	addresses    map[string]ethereum.Address
+	storage      BittrexStorage
+	databusType  string
+	interf       BittrexInterface
+	pairs        []common.TokenPair
 	addresses    *common.ExchangeAddresses
 	storage      BittrexStorage
 	exchangeInfo *common.ExchangeInfo
@@ -96,8 +101,16 @@ func (self *Bittrex) UpdatePairsPrecision() {
 	}
 }
 
+func (self *Bittrex) UpdateFetcherDatabusType(databusType string) {
+	self.databusType = databusType
+}
+
 func (self *Bittrex) ID() common.ExchangeID {
 	return common.ExchangeID("bittrex")
+}
+
+func (self *Bittrex) DatabusType() string {
+	return self.databusType
 }
 
 func (self *Bittrex) TokenPairs() []common.TokenPair {
@@ -321,6 +334,11 @@ func (self *Bittrex) FetchPriceData(timepoint uint64) (map[common.TokenPairID]co
 	return result, nil
 }
 
+func (self *Bittrex) FetchPriceDataUsingSocket(exchangePriceChan chan *sync.Map) {
+	// TODO: add support for socket later
+	panic("Socket has not impletmented yet")
+}
+
 func (self *Bittrex) FetchEBalanceData(timepoint uint64) (common.EBalanceEntry, error) {
 	result := common.EBalanceEntry{}
 	result.Timestamp = common.Timestamp(fmt.Sprintf("%d", timepoint))
@@ -407,6 +425,7 @@ func NewBittrex(addressConfig map[string]string, feeConfig common.ExchangeFees, 
 		pairs,
 		common.NewExchangeAddresses(),
 		storage,
+		"http",
 		common.NewExchangeInfo(),
 		fees,
 	}

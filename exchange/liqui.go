@@ -10,7 +10,7 @@ import (
 
 	"github.com/KyberNetwork/reserve-data/common"
 	ethereum "github.com/ethereum/go-ethereum/common"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 )
 
 const (
@@ -19,9 +19,10 @@ const (
 )
 
 type Liqui struct {
-	interf    LiquiInterface
-	pairs     []common.TokenPair
-	addresses map[string]ethereum.Address
+	interf      LiquiInterface
+	pairs       []common.TokenPair
+	addresses   map[string]ethereum.Address
+	databusType string
 }
 
 func (self *Liqui) MarshalText() (text []byte, err error) {
@@ -43,8 +44,16 @@ func (self *Liqui) UpdateDepositAddress(token common.Token, address string) {
 	self.addresses[token.ID] = ethereum.HexToAddress(address)
 }
 
+func (self *Liqui) UpdateFetcherDatabusType(databusType string) {
+	self.databusType = databusType
+}
+
 func (self *Liqui) ID() common.ExchangeID {
 	return common.ExchangeID("liqui")
+}
+
+func (self *Liqui) DatabusType() string {
+	return self.databusType
 }
 
 func (self *Liqui) TokenPairs() []common.TokenPair {
@@ -200,6 +209,11 @@ func (self *Liqui) FetchPriceData(timepoint uint64) (map[common.TokenPairID]comm
 	return result, err
 }
 
+func (self *Liqui) FetchPriceDataUsingSocket() (map[common.TokenPairID]common.ExchangePrice, error) {
+	// Liqui not support for socket
+	panic("Liqui does not support socket")
+}
+
 func (self *Liqui) DepositStatus(id common.ActivityID, timepoint uint64) (string, error) {
 	timestamp := id.Timepoint
 	if timepoint-timestamp/uint64(time.Millisecond) > DEPOSIT_WAITING_TIME {
@@ -261,5 +275,6 @@ func NewLiqui(interf LiquiInterface) *Liqui {
 			common.MustCreateTokenPair("KNC", "ETH"),
 		},
 		map[string]ethereum.Address{},
+		"http",
 	}
 }

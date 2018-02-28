@@ -2,6 +2,7 @@ package exchange
 
 import (
 	"math/big"
+	"sync"
 
 	"github.com/KyberNetwork/reserve-data/common"
 	ethereum "github.com/ethereum/go-ethereum/common"
@@ -10,6 +11,24 @@ import (
 type BinanceInterface interface {
 	GetDepthOnePair(
 		pair common.TokenPair, timepoint uint64) (Binaresp, error)
+
+	StoreOrderBookData(
+		wg *sync.WaitGroup,
+		pair common.TokenPair,
+		data *sync.Map,
+		dataChannel chan Orderbook,
+		result common.ExchangePrice)
+
+	SocketFetchOnePairData(
+		pair common.TokenPair,
+		data *sync.Map,
+		exchangePriceChan chan *sync.Map)
+
+	SocketFetchAggTrade(
+		pair common.TokenPair,
+		dataChannel chan interface{})
+
+	SocketGetUser(dataChannel chan interface{})
 
 	OpenOrdersForOnePair(
 		pair common.TokenPair, timepoint uint64) (Binaorders, error)

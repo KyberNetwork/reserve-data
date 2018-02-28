@@ -3,6 +3,8 @@ package binance
 type Interface interface {
 	PublicEndpoint() string
 	AuthenticatedEndpoint() string
+	SocketPublicEndpoint() string
+	SocketAuthenticatedEndpoint() string
 }
 
 type RealInterface struct{}
@@ -22,6 +24,14 @@ func (self *RealInterface) PublicEndpoint() string {
 
 func (self *RealInterface) AuthenticatedEndpoint() string {
 	return "https://api.binance.com"
+}
+
+func (self *RealInterface) SocketPublicEndpoint() string {
+	return "wss://stream.binance.com:9443/ws/"
+}
+
+func (self *RealInterface) SocketAuthenticatedEndpoint() string {
+	return "wss://stream.binance.com:9443/ws/"
 }
 
 func NewRealInterface() *RealInterface {
@@ -44,28 +54,16 @@ func (self *SimulatedInterface) AuthenticatedEndpoint() string {
 	return self.baseurl()
 }
 
-func NewSimulatedInterface(flagVariable string) *SimulatedInterface {
-	return &SimulatedInterface{base_url: flagVariable}
+func (self *SimulatedInterface) SocketPublicEndpoint() string {
+	return "wss://stream.binance.com:9443/ws/"
 }
 
-type RopstenInterface struct {
-	base_url string
+func (self *SimulatedInterface) SocketAuthenticatedEndpoint() string {
+	return "wss://stream.binance.com:9443/ws/"
 }
 
-func (self *RopstenInterface) baseurl() string {
-	return getOrSetDefaultURL(self.base_url)
-}
-
-func (self *RopstenInterface) PublicEndpoint() string {
-	return "https://api.binance.com"
-}
-
-func (self *RopstenInterface) AuthenticatedEndpoint() string {
-	return self.baseurl()
-}
-
-func NewRopstenInterface(flagVariable string) *RopstenInterface {
-	return &RopstenInterface{base_url: flagVariable}
+func NewSimulatedInterface() *SimulatedInterface {
+	return &SimulatedInterface{}
 }
 
 type KovanInterface struct {
@@ -84,8 +82,16 @@ func (self *KovanInterface) AuthenticatedEndpoint() string {
 	return self.baseurl()
 }
 
-func NewKovanInterface(flagVariable string) *KovanInterface {
-	return &KovanInterface{base_url: flagVariable}
+func (self *KovanInterface) SocketPublicEndpoint() string {
+	return "wss://stream.binance.com:9443/ws/"
+}
+
+func (self *KovanInterface) SocketAuthenticatedEndpoint() string {
+	return "wss://stream.binance.com:9443/ws/"
+}
+
+func NewKovanInterface() *KovanInterface {
+	return &KovanInterface{}
 }
 
 type DevInterface struct{}
@@ -100,6 +106,36 @@ func (self *DevInterface) AuthenticatedEndpoint() string {
 	// return "http://192.168.25.16:5100"
 }
 
+func (self *DevInterface) SocketPublicEndpoint() string {
+	return "wss://stream.binance.com:9443/ws/"
+}
+
+func (self *DevInterface) SocketAuthenticatedEndpoint() string {
+	return "wss://stream.binance.com:9443/ws/"
+}
+
 func NewDevInterface() *DevInterface {
 	return &DevInterface{}
+}
+
+type SocketInterface struct{}
+
+func (self *SocketInterface) PuclicEndpoint() string {
+	return "wss://stream.binance.com:9443/ws/"
+}
+
+func (self *SocketInterface) AuthenticatedEndpoint() string {
+	return "wss://stream.binance.com:9443/ws/"
+}
+
+func (self *SocketInterface) SocketPublicEndpoint() string {
+	return "wss://stream.binance.com:9443/ws/"
+}
+
+func (self *SocketInterface) SocketAuthenticatedEndpoint() string {
+	return "wss://stream.binance.com:9443/ws/"
+}
+
+func NewSocketInterface() *SocketInterface {
+	return &SocketInterface{}
 }

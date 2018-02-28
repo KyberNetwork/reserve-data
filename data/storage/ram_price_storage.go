@@ -2,8 +2,9 @@ package storage
 
 import (
 	"errors"
-	"github.com/KyberNetwork/reserve-data/common"
 	"sync"
+
+	"github.com/KyberNetwork/reserve-data/common"
 )
 
 type RamPriceStorage struct {
@@ -56,6 +57,9 @@ func (self *RamPriceStorage) GetOnePrice(pair common.TokenPairID, version int64)
 func (self *RamPriceStorage) StoreNewData(data common.AllPriceEntry, timepoint uint64) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
+	if len(data) == 0 {
+		return nil
+	}
 	self.version = self.version + 1
 	self.data[self.version] = data
 	delete(self.data, self.version-1)

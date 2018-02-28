@@ -10,6 +10,8 @@ import (
 	"strings"
 	"sync"
 
+	"math/big"
+
 	"github.com/KyberNetwork/reserve-data/common"
 	ethereum "github.com/ethereum/go-ethereum/common"
 )
@@ -132,6 +134,14 @@ func (self *Binance) ID() common.ExchangeID {
 	return common.ExchangeID("binance")
 }
 
+func (self *Binance) DatabusType() string {
+	return self.databusType
+}
+
+func (self *Binance) UpdateFetcherDatabusType(databusType string) {
+	self.databusType = databusType
+}
+
 func (self *Binance) TokenPairs() []common.TokenPair {
 	return self.pairs
 }
@@ -241,12 +251,13 @@ func (self *Binance) FetchPriceData(timepoint uint64) (map[common.TokenPairID]co
 	wait := sync.WaitGroup{}
 	data := sync.Map{}
 	pairs := self.pairs
+	result := map[common.TokenPairID]common.ExchangePrice{}
+
 	for _, pair := range pairs {
 		wait.Add(1)
 		go self.FetchOnePairData(&wait, pair, &data, timepoint)
 	}
 	wait.Wait()
-	result := map[common.TokenPairID]common.ExchangePrice{}
 	data.Range(func(key, value interface{}) bool {
 		result[key.(common.TokenPairID)] = value.(common.ExchangePrice)
 		return true
@@ -254,41 +265,12 @@ func (self *Binance) FetchPriceData(timepoint uint64) (map[common.TokenPairID]co
 	return result, nil
 }
 
-func (self *Binance) OpenOrdersForOnePair(
-	wg *sync.WaitGroup,
-	pair common.TokenPair,
-	data *sync.Map,
-	timepoint uint64) {
+func (self Binance) FetchPriceDataUsingSocket(exchangePriceChan chan *sync.Map) {
+	data := sync.Map{}
+	pairs := self.pairs
 
-	defer wg.Done()
-
-	result, err := self.interf.OpenOrdersForOnePair(pair, timepoint)
-
-	if err == nil {
-		orders := []common.Order{}
-		for _, order := range result {
-			price, _ := strconv.ParseFloat(order.Price, 64)
-			orgQty, _ := strconv.ParseFloat(order.OrigQty, 64)
-			executedQty, _ := strconv.ParseFloat(order.ExecutedQty, 64)
-			orders = append(orders, common.Order{
-				ID:          fmt.Sprintf("%s_%s%s", order.OrderId, strings.ToUpper(pair.Base.ID), strings.ToUpper(pair.Quote.ID)),
-				Base:        strings.ToUpper(pair.Base.ID),
-				Quote:       strings.ToUpper(pair.Quote.ID),
-				OrderId:     fmt.Sprintf("%d", order.OrderId),
-				Price:       price,
-				OrigQty:     orgQty,
-				ExecutedQty: executedQty,
-				TimeInForce: order.TimeInForce,
-				Type:        order.Type,
-				Side:        order.Side,
-				StopPrice:   order.StopPrice,
-				IcebergQty:  order.IcebergQty,
-				Time:        order.Time,
-			})
-		}
-		data.Store(pair.PairID(), orders)
-	} else {
-		log.Printf("Unsuccessful response from Binance: %s", err)
+	for _, pair := range pairs {
+		go self.interf.SocketFetchOnePairData(pair, &data, exchangePriceChan)
 	}
 }
 

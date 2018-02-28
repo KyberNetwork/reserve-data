@@ -9,9 +9,10 @@ import (
 )
 
 type Bitfinex struct {
-	interf    BitfinexInterface
-	pairs     []common.TokenPair
-	addresses map[string]ethereum.Address
+	interf      BitfinexInterface
+	pairs       []common.TokenPair
+	addresses   map[string]ethereum.Address
+	databusType string
 }
 
 func (self *Bitfinex) MarshalText() (text []byte, err error) {
@@ -33,8 +34,16 @@ func (self *Bitfinex) UpdateDepositAddress(token common.Token, address string) {
 	self.addresses[token.ID] = ethereum.HexToAddress(address)
 }
 
+func (self *Bitfinex) UpdateFetcherDatabusType(databusType string) {
+	self.databusType = databusType
+}
+
 func (self *Bitfinex) ID() common.ExchangeID {
 	return common.ExchangeID("bitfinex")
+}
+
+func (self *Bitfinex) DatabusType() string {
+	return self.databusType
 }
 
 func (self *Bitfinex) TokenPairs() []common.TokenPair {
@@ -70,6 +79,11 @@ func (self *Bitfinex) FetchPriceData(timepoint uint64) (map[common.TokenPairID]c
 	return result, nil
 }
 
+func (self *Bitfinex) FetchPriceDataUsingSocket() (map[common.TokenPairID]common.ExchangePrice, error) {
+	// TODO: add support for socket later
+	panic("Socket has not implemented yet")
+}
+
 func (self *Bitfinex) FetchEBalanceData(timepoint uint64) (common.EBalanceEntry, error) {
 	result := common.EBalanceEntry{}
 	return result, nil
@@ -95,5 +109,6 @@ func NewBitfinex(interf BitfinexInterface) *Bitfinex {
 			"BAT": ethereum.HexToAddress("0x5b082bc7928e1fd5b757426fe7225cc7a6a75c55"),
 			"KNC": ethereum.HexToAddress("0x5b082bc7928e1fd5b757426fe7225cc7a6a75c55"),
 		},
+		"http",
 	}
 }
