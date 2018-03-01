@@ -408,40 +408,13 @@ func (self *Huobi) OrderStatus(id common.ActivityID, timepoint uint64) (string, 
 	}
 }
 
-func NewHuobi(interf HuobiInterface) *Huobi {
+func NewHuobi(addressConfig map[string]string, feeConfig common.ExchangeFees, interf HuobiInterface) *Huobi {
+	pairs, fees := getExchangePairsAndFeesFromConfig(addressConfig, feeConfig, "huobi")
 	return &Huobi{
 		interf,
-		[]common.TokenPair{
-			common.MustCreateTokenPair("OMG", "ETH"),
-			// common.MustCreateTokenPair("EOS", "ETH"),
-			// common.MustCreateTokenPair("KNC", "ETH"),
-			// common.MustCreateTokenPair("SNT", "ETH"),
-			// common.MustCreateTokenPair("SALT", "ETH"),
-		},
+		pairs,
 		common.NewExchangeAddresses(),
 		common.NewExchangeInfo(),
-		common.NewExchangeFee(
-			common.TradingFee{
-				"taker": 0.002,
-				"maker": 0.002,
-			},
-			common.NewFundingFee(
-				map[string]float64{
-					// "ETH":  0.01,
-					// "EOS":  0.5,
-					"OMG": 0.1,
-					// "KNC": 1.0,
-					// "SNT":  50.0,
-				},
-				map[string]float64{
-					"ETH": 0,
-					// "EOS":  0,
-					"OMG": 0,
-					// "KNC": 0,
-					// "SNT":  0,
-				},
-			),
-		),
-		true,
+		fees,
 	}
 }
