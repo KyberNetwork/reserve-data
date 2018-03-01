@@ -4,6 +4,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/blockchain"
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/core"
+	"github.com/KyberNetwork/reserve-data/core/intermediator"
 	"github.com/KyberNetwork/reserve-data/data"
 	"github.com/KyberNetwork/reserve-data/data/fetcher"
 	"github.com/KyberNetwork/reserve-data/exchange/binance"
@@ -55,6 +56,8 @@ type Config struct {
 	FeeBurnerAddress ethereum.Address
 	NetworkAddress   ethereum.Address
 	WhitelistAddress ethereum.Address
+	ImtorAddress     ethereum.Address
+	ImtorRunner      intermediator.IntermediatorRunner
 }
 
 func (self *Config) MapTokens() map[string]common.Token {

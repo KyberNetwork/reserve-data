@@ -15,6 +15,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/cmd/configuration"
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/core"
+	"github.com/KyberNetwork/reserve-data/core/intermediator"
 	"github.com/KyberNetwork/reserve-data/data"
 	"github.com/KyberNetwork/reserve-data/data/fetcher"
 	"github.com/KyberNetwork/reserve-data/http"
@@ -185,6 +186,10 @@ func serverStart(cmd *cobra.Command, args []string) {
 				config.DataStorage,
 				dataFetcher,
 			)
+
+			imtor := intermediator.NewIntermediator(config.FetcherStorage, config.ImtorRunner, config.ImtorAddress)
+			imtor.Run()
+
 			rData.Run()
 			rCore = core.NewReserveCore(bc, config.ActivityStorage, config.ReserveAddress)
 		}
@@ -196,6 +201,7 @@ func serverStart(cmd *cobra.Command, args []string) {
 			)
 			rStat.Run()
 		}
+
 		servPortStr := fmt.Sprintf(":%d", servPort)
 		server := http.NewHTTPServer(
 			rData, rCore, rStat,

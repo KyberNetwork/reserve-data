@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/KyberNetwork/reserve-data/common"
+	"github.com/KyberNetwork/reserve-data/core/intermediator"
 	"github.com/KyberNetwork/reserve-data/data/fetcher"
 	"github.com/KyberNetwork/reserve-data/data/fetcher/http_runner"
 	"github.com/KyberNetwork/reserve-data/data/storage"
@@ -60,6 +61,7 @@ func GetConfig(kyberENV string, authEnbl bool, endpointOW string) *Config {
 	burnerAddr := ethereum.HexToAddress(addressConfig.FeeBurner)
 	networkAddr := ethereum.HexToAddress(addressConfig.Network)
 	whitelistAddr := ethereum.HexToAddress(addressConfig.Whitelist)
+	imtorAddr := ethereum.HexToAddress(addressConfig.Imtor)
 
 	common.SupportedTokens = map[string]common.Token{}
 	tokens := []common.Token{}
@@ -90,7 +92,7 @@ func GetConfig(kyberENV string, authEnbl bool, endpointOW string) *Config {
 		fetcherRunner = fetcher.NewTickerRunner(3*time.Second, 2*time.Second, 3*time.Second, 5*time.Second, 5*time.Second)
 		statFetcherRunner = fetcher.NewTickerRunner(3*time.Second, 2*time.Second, 3*time.Second, 5*time.Second, 5*time.Second)
 	}
-
+	imrunner := intermediator.NewTickerRunner(5 * time.Second)
 	fileSigner, depositSigner := signer.NewFileSigner(setPath.signerPath)
 
 	exchangePool := NewExchangePool(feeConfig, addressConfig, fileSigner, dataStorage, kyberENV)
@@ -144,5 +146,7 @@ func GetConfig(kyberENV string, authEnbl bool, endpointOW string) *Config {
 		FeeBurnerAddress:        burnerAddr,
 		NetworkAddress:          networkAddr,
 		WhitelistAddress:        whitelistAddr,
+		ImtorAddress:            imtorAddr,
+		ImtorRunner:             imrunner,
 	}
 }

@@ -21,6 +21,11 @@ type Huobi struct {
 	addresses    *common.ExchangeAddresses
 	exchangeInfo *common.ExchangeInfo
 	fees         common.ExchangeFees
+	imtorMode    bool
+}
+
+func (self *Huobi) GetImtorMode() bool {
+	return self.imtorMode
 }
 
 func (self *Huobi) MarshalText() (text []byte, err error) {
@@ -437,5 +442,6 @@ func NewHuobi(interf HuobiInterface) *Huobi {
 				},
 			),
 		),
+		true,
 	}
 }

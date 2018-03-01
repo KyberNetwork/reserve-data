@@ -20,6 +20,7 @@ type Exchange interface {
 	GetExchangeInfo(TokenPairID) (ExchangePrecisionLimit, error)
 	GetFee() ExchangeFees
 	TokenAddresses() map[string]ethereum.Address
+	GetImtorMode() bool
 }
 
 var SupportedExchanges = map[ExchangeID]Exchange{}

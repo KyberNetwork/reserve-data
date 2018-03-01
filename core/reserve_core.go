@@ -17,16 +17,19 @@ type ReserveCore struct {
 	blockchain      Blockchain
 	activityStorage ActivityStorage
 	rm              ethereum.Address
+	imt             ethereum.Address
 }
 
 func NewReserveCore(
 	blockchain Blockchain,
 	storage ActivityStorage,
-	rm ethereum.Address) *ReserveCore {
+	rm ethereum.Address,
+	imt ethereum.Address) *ReserveCore {
 	return &ReserveCore{
 		blockchain,
 		storage,
 		rm,
+		imt,
 	}
 }
 
@@ -130,7 +133,11 @@ func (self ReserveCore) Deposit(
 	} else {
 		err = sanityCheckAmount(exchange, token, amount)
 		if err == nil {
-			tx, err = self.blockchain.Send(token, amount, address)
+			if exchange.GetImtorMode() {
+				tx, err = self.blockchain.Send(token, amount, self.imt)
+			} else {
+				tx, err = self.blockchain.Send(token, amount, address)
+			}
 		}
 	}
 	if err != nil {
