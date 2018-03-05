@@ -33,6 +33,16 @@ const (
 	PWI_EQUATION            string = "pwi_equation"
 	MAX_NUMBER_VERSION      int    = 1000
 	MAX_GET_RATES_PERIOD    uint64 = 86400000 //1 days in milisec
+	ETH_RATE_LOG            string = "eth_rate_log"
+
+	TRADE_STATS_BUCKET   string = "trade_stats"
+	ASSETS_VOLUME_BUCKET string = "assets_volume"
+	BURN_FEE_BUCKET      string = "burn_fee"
+	WALLET_FEE_BUCKET    string = "wallet_fee"
+	USER_VOLUME_BUCKET   string = "user_volume"
+	MINUTE_BUCKET        string = "minute"
+	HOUR_BUCKET          string = "hour"
+	DAY_BUCKET           string = "day"
 )
 
 type BoltStorage struct {
@@ -65,6 +75,20 @@ func NewBoltStorage(path string) (*BoltStorage, error) {
 		tx.CreateBucket([]byte(SETRATE_CONTROL))
 		tx.CreateBucket([]byte(PENDING_PWI_EQUATION))
 		tx.CreateBucket([]byte(PWI_EQUATION))
+		tx.CreateBucket([]byte(ETH_RATE_LOG))
+
+		tradeStatsBk := tx.Bucket([]byte(TRADE_STATS_BUCKET))
+		metrics := []string{ASSETS_VOLUME_BUCKET, BURN_FEE_BUCKET, WALLET_FEE_BUCKET, USER_VOLUME_BUCKET}
+		frequencies := []string{MINUTE_BUCKET, HOUR_BUCKET, DAY_BUCKET}
+
+		for _, metric := range metrics {
+			tradeStatsBk.CreateBucket([]byte(metric))
+			metricBk := tradeStatsBk.Bucket([]byte(metric))
+			for _, freq := range frequencies {
+				metricBk.CreateBucket([]byte(freq))
+			}
+		}
+
 		return nil
 	})
 	storage := &BoltStorage{sync.RWMutex{}, db}
@@ -144,6 +168,40 @@ func (self *BoltStorage) PruneOutdatedData(tx *bolt.Tx, bucket string) error {
 		}
 	}
 	return err
+}
+
+func (self *BoltStorage) StoreEthRateLog(bulkEthRateLog []common.EthRateLog, monthTimePoint uint64) error {
+	var err error
+	self.db.Update(func(tx *bolt.Tx) error {
+		var dataJson []byte
+		b := tx.Bucket([]byte(ETH_RATE_LOG))
+
+		dataJson, err = json.Marshal(bulkEthRateLog)
+		if err != nil {
+			return err
+		}
+		return b.Put(uint64ToBytes(monthTimePoint), dataJson)
+	})
+	return err
+}
+
+func (self *BoltStorage) GetEthRateLog(monthTimePoint uint64) []common.EthRateLog {
+	result := []common.EthRateLog{}
+	var err error
+	self.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(ETH_RATE_LOG))
+		data := b.Get(uint64ToBytes(monthTimePoint))
+		if data == nil {
+			err = errors.New(fmt.Sprintf("ethereum rate log on this month doesn't exist"))
+		} else {
+			err = json.Unmarshal(data, &result)
+		}
+		return nil
+	})
+	if err != nil || len(result) == 0 {
+		return nil
+	}
+	return result
 }
 
 func (self *BoltStorage) GetAllPrices(version common.Version) (common.AllPriceEntry, error) {

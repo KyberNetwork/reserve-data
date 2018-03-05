@@ -582,3 +582,8 @@ type AllTradeHistory struct {
 	Timestamp Timestamp
 	Data      map[ExchangeID]ExchangeTradeHistory
 }
+
+type EthRateLog struct {
+	Timepoint uint64
+	Usd       float64
+}

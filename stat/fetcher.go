@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/KyberNetwork/reserve-data/common"
+	"github.com/KyberNetwork/reserve-data/stat/ratelog"
 )
 
 type CoinCapRateResponse []struct {
@@ -27,7 +28,7 @@ type EthRate struct {
 }
 
 type Fetcher struct {
-	storage                Storage
+	Storage                Storage
 	blockchain             Blockchain
 	runner                 FetcherRunner
 	ethRate                *EthRate
@@ -39,7 +40,7 @@ func NewFetcher(
 	storage Storage,
 	runner FetcherRunner) *Fetcher {
 	return &Fetcher{
-		storage:    storage,
+		Storage:    storage,
 		blockchain: nil,
 		runner:     runner,
 		ethRate: &EthRate{
@@ -77,12 +78,19 @@ func (self *Fetcher) FetchEthRate() (err error) {
 	}
 
 	return nil
-
 }
 
-func (self *Fetcher) GetEthRate() float64 {
+func (self *Fetcher) GetEthRate(timePoint uint64) float64 {
 	self.ethRate.Mu.Lock()
 	defer self.ethRate.Mu.Unlock()
+
+	rateLog := ratelog.NewRateLog(self.Storage)
+	ethRate, err := rateLog.GetEthRate(timePoint)
+	if err == nil && ethRate != 0 {
+		return ethRate
+	} else {
+		log.Println(err)
+	}
 	return self.ethRate.Usd
 }
 
@@ -121,10 +129,10 @@ func (self *Fetcher) RunBlockAndLogFetcher() {
 		timepoint := common.TimeToTimepoint(t)
 		self.FetchCurrentBlock(timepoint)
 		log.Printf("fetched block from blockchain")
-		lastBlock, err := self.storage.LastBlock()
+		lastBlock, err := self.Storage.LastBlock()
 		if err == nil {
 			nextBlock := self.FetchLogs(lastBlock+1, timepoint)
-			self.storage.UpdateLogBlock(nextBlock, timepoint)
+			self.Storage.UpdateLogBlock(nextBlock, timepoint)
 			log.Printf("nextBlock: %d", nextBlock)
 		} else {
 			log.Printf("failed to get last fetched log block, err: %+v", err)
@@ -135,7 +143,7 @@ func (self *Fetcher) RunBlockAndLogFetcher() {
 // return block number that we just fetched the logs
 func (self *Fetcher) FetchLogs(fromBlock uint64, timepoint uint64) uint64 {
 	log.Printf("fetching logs data from block %d", fromBlock)
-	logs, err := self.blockchain.GetLogs(fromBlock, timepoint, self.GetEthRate())
+	logs, err := self.blockchain.GetLogs(fromBlock, timepoint, self.GetEthRate(timepoint))
 	if err != nil {
 		log.Printf("fetching logs data from block %d failed, error: %v", fromBlock, err)
 		if fromBlock == 0 {
@@ -234,7 +242,7 @@ func (self *Fetcher) aggregateTradeLog(trade common.TradeLog) (err error) {
 	}
 	for _, update := range updates {
 		for _, freq := range []string{"M", "H", "D"} {
-			err = self.storage.SetTradeStats(update.metric, freq, trade.Timestamp, update.tradeStats)
+			err = self.Storage.SetTradeStats(update.metric, freq, trade.Timestamp, update.tradeStats)
 			if err != nil {
 				return
 			}
