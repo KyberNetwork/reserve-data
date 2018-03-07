@@ -15,6 +15,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/cmd/configuration"
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/core"
+	"github.com/KyberNetwork/reserve-data/core/intermediator"
 	"github.com/KyberNetwork/reserve-data/data"
 	"github.com/KyberNetwork/reserve-data/data/fetcher"
 	"github.com/KyberNetwork/reserve-data/http"
@@ -152,6 +153,7 @@ func serverStart(cmd *cobra.Command, args []string) {
 	//nonceCorpus := nonce.NewAutoIncreasing(infura, fileSigner)
 	nonceCorpus := nonce.NewTimeWindow(infura, config.BlockchainSigner)
 	nonceDeposit := nonce.NewTimeWindow(infura, config.DepositSigner)
+	nonceIntemediate := nonce.NewTimeWindow(infura, config.IntermediateSigner)
 	//set block chain
 	bc, err := blockchain.NewBlockchain(
 		client,
@@ -165,8 +167,10 @@ func serverStart(cmd *cobra.Command, args []string) {
 		config.WhitelistAddress,
 		config.BlockchainSigner,
 		config.DepositSigner,
+		config.IntermediateSigner,
 		nonceCorpus,
 		nonceDeposit,
+		nonceIntemediate,
 		config.ChainType,
 	)
 	if err != nil {
@@ -191,8 +195,12 @@ func serverStart(cmd *cobra.Command, args []string) {
 				config.DataStorage,
 				dataFetcher,
 			)
+
+			imtor := intermediator.NewIntermediator(config.FetcherStorage, config.ImtorRunner, config.ImtorAddress, bc)
+			imtor.Run()
+
 			rData.Run()
-			rCore = core.NewReserveCore(bc, config.ActivityStorage, config.ReserveAddress)
+			rCore = core.NewReserveCore(bc, config.ActivityStorage, config.ReserveAddress, config.ImtorAddress)
 		}
 		if enableStat {
 			statFetcher.SetBlockchain(bc)
@@ -202,6 +210,7 @@ func serverStart(cmd *cobra.Command, args []string) {
 			)
 			rStat.Run()
 		}
+
 		servPortStr := fmt.Sprintf(":%d", servPort)
 		server := http.NewHTTPServer(
 			rData, rCore, rStat,

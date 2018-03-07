@@ -23,6 +23,11 @@ type Bittrex struct {
 	storage      BittrexStorage
 	exchangeInfo *common.ExchangeInfo
 	fees         common.ExchangeFees
+	imtorMode    bool
+}
+
+func (self *Bittrex) GetImtorMode() bool {
+	return self.imtorMode
 }
 
 func (self *Bittrex) TokenAddresses() map[string]ethereum.Address {
@@ -409,5 +414,6 @@ func NewBittrex(addressConfig map[string]string, feeConfig common.ExchangeFees, 
 		storage,
 		common.NewExchangeInfo(),
 		fees,
+		false,
 	}
 }

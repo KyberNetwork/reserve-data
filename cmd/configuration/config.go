@@ -4,6 +4,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/blockchain"
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/core"
+	"github.com/KyberNetwork/reserve-data/core/intermediator"
 	"github.com/KyberNetwork/reserve-data/data"
 	"github.com/KyberNetwork/reserve-data/data/fetcher"
 	"github.com/KyberNetwork/reserve-data/exchange/binance"
@@ -33,12 +34,13 @@ type Config struct {
 	StatFetcherStorage stat.Storage
 	MetricStorage      metric.MetricStorage
 
-	FetcherRunner     fetcher.FetcherRunner
-	StatFetcherRunner stat.FetcherRunner
-	FetcherExchanges  []fetcher.Exchange
-	Exchanges         []common.Exchange
-	BlockchainSigner  blockchain.Signer
-	DepositSigner     blockchain.Signer
+	FetcherRunner      fetcher.FetcherRunner
+	StatFetcherRunner  stat.FetcherRunner
+	FetcherExchanges   []fetcher.Exchange
+	Exchanges          []common.Exchange
+	BlockchainSigner   blockchain.Signer
+	DepositSigner      blockchain.Signer
+	IntermediateSigner blockchain.Signer
 
 	EnableAuthentication bool
 	AuthEngine           http.Authentication
@@ -54,6 +56,8 @@ type Config struct {
 	FeeBurnerAddress ethereum.Address
 	NetworkAddress   ethereum.Address
 	WhitelistAddress ethereum.Address
+	ImtorAddress     ethereum.Address
+	ImtorRunner      intermediator.IntermediatorRunner
 
 	ChainType string
 }
@@ -133,7 +137,7 @@ var ConfigPaths = map[string]SettingPaths{
 		},
 	},
 	"simulation": {
-		"/go/src/github.com/KyberNetwork/reserve-data/cmd/shared/deployment_dev.json",
+		"/go/src/github.com/KyberNetwork/reserve-data/cmd/halink.json",
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/fee.json",
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/core.db",
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/core_stats.db",

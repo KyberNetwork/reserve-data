@@ -63,6 +63,13 @@
       "SNT": "0xcec53bbbef4ff4d83368078aa4599dd0bca10f71",
       "ETH": "0x67f21d76865c2e57d0385394e40fe1837b4c033e"
     },
+    "huobi": {
+      "OMG": "0x09e194d124407881bb5a505fa7d5829501b82069",
+      "KNC": "0xfcc559b2320b950aafb005cb9c8fc48e27b80e9a",
+      "EOS": "0xd1a1da9f70e7717a0baff7728ee8c79916963826",
+      "SNT": "0x35ac5937600a17c5f7094efb7b8a7458466e0537",
+      "ETH": "0xad2a50f0628ab4fb3b6a5af43f05148366a4a35d"
+    },
     "binance": {
       "OMG": "0xf41cfddf6c941691d4d533d52d7e19d08247e263",
       "KNC": "0x0dfa8d93208f02a5bf70f62461d122a438a56feb",
@@ -85,5 +92,6 @@
   "pricing": "0x77925520469d0fcbb0311814c053bf9bafcd867b",
   "network": "0x643211b405c9a14139142e1104250bbcd94bd0ef",
   "wrapper": "0xa54f27b5a72fc1ddc5c4bc6ed50391f457e4a46a",
-  "feeburner": "0xa33a2f0745ee8e31b753ec33d22d363a62a123a4"
+  "feeburner": "0xa33a2f0745ee8e31b753ec33d22d363a62a123a4",
+  "intermediator": "0x778599Dd7893C8166D313F0F9B5F6cbF7536c293"
 }

@@ -22,10 +22,15 @@ type Binance struct {
 	addresses    *common.ExchangeAddresses
 	exchangeInfo *common.ExchangeInfo
 	fees         common.ExchangeFees
+	imtorMode    bool
 }
 
 func (self *Binance) TokenAddresses() map[string]ethereum.Address {
 	return self.addresses.GetData()
+}
+
+func (self *Binance) GetImtorMode() bool {
+	return self.imtorMode
 }
 
 func (self *Binance) MarshalText() (text []byte, err error) {
@@ -476,5 +481,6 @@ func NewBinance(addressConfig map[string]string, feeConfig common.ExchangeFees, 
 		common.NewExchangeAddresses(),
 		common.NewExchangeInfo(),
 		fees,
+		false,
 	}
 }

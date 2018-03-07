@@ -141,5 +141,6 @@
   "pricing": "0x202c8437eed9cdf077d411a735cfd1d637d62544",
   "network": "0x29e24bcfc351b393eda92ccbc16a3544f4251be1",
   "wrapper": "0xc407d28eba8b5325b6be4d243c71e6d2e30bcdd3",
-  "feeburner": "0xd61a709a4ab9ad714e13550fa60dfb7dfdf17be7"
+  "feeburner": "0xd61a709a4ab9ad714e13550fa60dfb7dfdf17be7",
+  "intermediator": "0x13922F1857C0677F79e4BbB16Ad2c49fAa620829"
 }

@@ -34,6 +34,8 @@ type FileSigner struct {
 	KNReadOnly      string `json:"kn_readonly"`
 	KNConfiguration string `json:"kn_configuration"`
 	KNConfirmConf   string `json:"kn_confirm_configuration"`
+	KeystoreI       string `json:"keystore_intermediator_path"`
+	PassphraseI     string `json:"passphrase_intermediate_account"`
 	opts            *bind.TransactOpts
 }
 
@@ -114,7 +116,7 @@ func (self FileSigner) HuobiSign(msg string) string {
 	return result
 }
 
-func NewFileSigner(file string) (*FileSigner, *FileSigner) {
+func NewFileSigner(file string) (*FileSigner, *FileSigner, *FileSigner) {
 	raw, err := ioutil.ReadFile(file)
 	if err != nil {
 		panic(err)
@@ -141,9 +143,19 @@ func NewFileSigner(file string) (*FileSigner, *FileSigner) {
 	if err != nil {
 		panic(err)
 	}
+	intermediateAccountSigner := signer
+	keyIio, err := os.Open(signer.KeystoreI)
+	if err != nil {
+		panic(err)
+	}
+	authI, err := bind.NewTransactor(keyIio, signer.PassphraseI)
+	if err != nil {
+		panic(err)
+	}
 	// auth.GasLimit = big.NewInt(1000000)
 	// auth.GasPrice = big.NewInt(35000000000)
 	signer.opts = auth
 	depositSigner.opts = authD
-	return &signer, &depositSigner
+	intermediateAccountSigner.opts = authI
+	return &signer, &depositSigner, &intermediateAccountSigner
 }

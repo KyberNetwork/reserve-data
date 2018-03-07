@@ -1,0 +1,20 @@
+{
+  "liqui_key": "S7KWMSCU-U6MYVPJH-47EVO234-Y2UXW61T-RAXBY17F",
+  "liqui_secret": "b736abdbb3d49d26b79018463e02e28d0ed2eb50d15f95f568066fcb2368a646",
+  "binance_key": "oS0YLBjQOdoR9bwLrcC5uNcLusvLUeX9dM9TFd8OncckJ0j9khfIMGEH8GVk19KL",
+  "binance_secret": "TUPqsOijLkoyTHA5LGz3DwZz8a3XvKlsAYN6UzWnUX7vYvLbVzFxQ33VseT1Feds",
+  "bittrex_key": "665ab1c6a04d4e4b855bd13639520c0a",
+  "bittrex_secret": "f376ba30a3454c2683df2e4d5fb76986",
+  "okex_key": "37ed6665-c08a-4aae-af4a-70067f2d7373",
+  "okex_secret": "359EB555265310DB26A3A7DEF96BE45F",
+  "huobi_key": "48c32ba6-a86f961a-48fa19f1-bdbdc",
+  "huobi_secret": "9d88951e-27a75683-97fa80cf-84260",
+  "kn_secret": "vtHpz1l0kxLyGc4R1qJBkFlQre5352xGJU9h8UQTwUTz5p6VrxcEslF4KnDI21s1",
+  "kn_readonly": "readonlyvtHpz1l0kxLyGc4R1qJBkFlQre5352xGJU9h8UQTwUTz5p6VrxcEslF4KnDI21s1",
+  "kn_configuration": "configurationvtHpz1l0kxLyGc4R1qJBkFlQre5352xGJU9h8UQTwUTz5p6VrxcEslF4KnDI21s1",
+  "kn_confirm_configuration": "confirmconfigurationvtHpz1l0kxLyGc4R1qJBkFlQre5352xGJU9h8UQTwUTz5p6VrxcEslF4KnDI21s1",
+  "keystore_path": "/go/src/github.com/KyberNetwork/reserve-data/cmd/keystore",
+  "keystore_deposit_path": "/go/src/github.com/KyberNetwork/reserve-data/cmd/deposit_keystore",
+  "passphrase_deposit": "123456789",
+  "passphrase": "kyber"
+}

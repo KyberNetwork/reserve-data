@@ -99,6 +99,19 @@
       "BAT": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
       "REQ": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
       "GTO": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90"
+    },
+    "huobi": {
+      "ETH": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
+      "OMG": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
+      "KNC": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
+      "SNT": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
+      "EOS": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
+      "ELF": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
+      "POWR": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
+      "MANA": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
+      "BAT": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
+      "REQ": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
+      "GTO": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90"
     }
   },
   "permission": {

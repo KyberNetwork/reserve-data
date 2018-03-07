@@ -2,13 +2,14 @@ package http_runner
 
 import (
 	"errors"
+	"log"
+	"net/http"
+	"strconv"
+
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/getsentry/raven-go"
 	"github.com/gin-contrib/sentry"
 	"github.com/gin-gonic/gin"
-	"log"
-	"net/http"
-	"strconv"
 )
 
 const MAX_TIMESPOT uint64 = 18446744073709551615
@@ -81,6 +82,17 @@ func (self *HttpRunnerServer) btick(c *gin.Context) {
 	)
 }
 
+func (self *HttpRunnerServer) stick(c *gin.Context) {
+	timepoint := getTimePoint(c)
+	self.runner.sticker <- common.TimepointToTime(timepoint)
+	c.JSON(
+		http.StatusOK,
+		gin.H{
+			"success": true,
+		},
+	)
+}
+
 func (self *HttpRunnerServer) ttick(c *gin.Context) {
 	timepoint := getTimePoint(c)
 	self.runner.tticker <- common.TimepointToTime(timepoint)
@@ -98,6 +110,7 @@ func (self *HttpRunnerServer) init() {
 	self.r.GET("/rtick", self.rtick)
 	self.r.GET("/btick", self.btick)
 	self.r.GET("/ttick", self.ttick)
+	self.r.GET("/stick", self.stick)
 }
 
 func (self *HttpRunnerServer) Start() error {
