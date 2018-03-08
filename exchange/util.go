@@ -23,7 +23,7 @@ func getExchangePairsAndFeesFromConfig(
 			pairs = append(pairs, pair)
 		}
 		if _, exist := feeConfig.Funding.Withdraw[tokenID]; exist {
-			fees.Funding.Withdraw[tokenID] = feeConfig.Funding.Withdraw[tokenID]
+			fees.Funding.Withdraw[tokenID] = feeConfig.Funding.Withdraw[tokenID] * 2
 		} else {
 			panic(tokenID + " is not found in " + exchange + " withdraw fee config file")
 		}
