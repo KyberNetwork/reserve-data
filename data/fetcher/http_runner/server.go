@@ -2,13 +2,14 @@ package http_runner
 
 import (
 	"errors"
-	"github.com/KyberNetwork/reserve-data/common"
-	"github.com/getsentry/raven-go"
-	"github.com/gin-contrib/sentry"
-	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/KyberNetwork/reserve-data/common"
+	raven "github.com/getsentry/raven-go"
+	"github.com/gin-contrib/sentry"
+	"github.com/gin-gonic/gin"
 )
 
 const MAX_TIMESPOT uint64 = 18446744073709551615
