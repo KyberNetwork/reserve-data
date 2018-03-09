@@ -1,5 +1,7 @@
 package huobi
 
+import "log"
+
 type Interface interface {
 	PublicEndpoint() string
 	AuthenticatedEndpoint() string
@@ -7,9 +9,9 @@ type Interface interface {
 
 func getOrSetDefaultURL(base_url string) string {
 	if len(base_url) > 1 {
-		return base_url + ":5100"
+		return base_url + ":5200"
 	} else {
-		return "http://127.0.0.1:5100"
+		return "http://127.0.0.1:5200"
 	}
 
 }
@@ -33,6 +35,7 @@ type SimulatedInterface struct {
 }
 
 func (self *SimulatedInterface) baseurl() string {
+	log.Printf("base url is %v ", self.base_url)
 	return getOrSetDefaultURL(self.base_url)
 }
 

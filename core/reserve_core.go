@@ -125,7 +125,7 @@ func (self ReserveCore) Deposit(
 	var txprice string = "0"
 	var err error
 	var status string
-
+	var dest string
 	if !supported {
 		err = errors.New(fmt.Sprintf("Exchange %s doesn't support token %s", exchange.ID(), token.ID))
 	} else if self.activityStorage.HasPendingDeposit(token, exchange) {
@@ -134,8 +134,11 @@ func (self ReserveCore) Deposit(
 		err = sanityCheckAmount(exchange, token, amount)
 		if err == nil {
 			if exchange.GetImtorMode() {
+				log.Printf("Using intermediator mode ....")
+				dest = "intermediator"
 				tx, err = self.blockchain.Send(token, amount, self.imt)
 			} else {
+				dest = string(exchange.ID())
 				tx, err = self.blockchain.Send(token, amount, address)
 			}
 		}
@@ -153,7 +156,7 @@ func (self ReserveCore) Deposit(
 	self.activityStorage.Record(
 		"deposit",
 		uid,
-		string(exchange.ID()),
+		dest,
 		map[string]interface{}{
 			"exchange":  exchange,
 			"token":     token,

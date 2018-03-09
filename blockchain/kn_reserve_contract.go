@@ -1,6 +1,7 @@
 package blockchain
 
 import (
+	"log"
 	"math/big"
 	"os"
 
@@ -16,6 +17,7 @@ type KNReserveContract struct {
 }
 
 func (self *KNReserveContract) Withdraw(opts *bind.TransactOpts, token ethereum.Address, amount *big.Int, destination ethereum.Address) (*types.Transaction, error) {
+	log.Printf("Intermediator: Withdrawing...")
 	return self.KNContractBase.BuildTx(opts, "withdraw", token, amount, destination)
 }
 

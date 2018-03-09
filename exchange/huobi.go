@@ -355,11 +355,30 @@ func (self *Huobi) FetchTradeHistory(timepoint uint64) (map[common.TokenPairID][
 func (self *Huobi) DepositStatus(id common.ActivityID, timepoint uint64) (string, error) {
 	idParts := strings.Split(id.EID, "|")
 	txID := idParts[0]
+	//log
+	addr, err := self.interf.GetDepositAddress("KNC")
+	if err != nil {
+		log.Printf("Intermediator: can't get deposit address for KNC %v", err)
+	}
+	log.Printf("Intermediator: Deposit address for KNC is %s", addr.Address)
+	x := self.addresses.GetData()
+	for k, v := range x {
+		log.Printf("Intermediator: Deposit address for %v is %v", k, v.Hex())
+	}
+	inf, err := self.interf.GetInfo(common.GetTimepoint())
+	if err != nil {
+		log.Printf("Intermediator: can't get info %v", err)
+	}
+	log.Printf("Intermediator: info is %v", inf)
+
+	//get deposit history
 	deposits, err := self.interf.DepositHistory()
+	log.Printf("Intermediator: txID is %v", txID)
 	if err != nil && deposits.Status != "ok" {
 		return "", err
 	}
 	for _, deposit := range deposits.Data {
+		log.Printf("Intermediator: deposit tx is %v", deposit.TxHash)
 		if deposit.TxHash == txID {
 			if deposit.State == "safe" {
 				return "done", nil

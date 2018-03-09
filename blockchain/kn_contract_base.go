@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"math/big"
 
 	ether "github.com/ethereum/go-ethereum"
@@ -63,6 +64,7 @@ func (self *KNContractBase) Call(opts *bind.CallOpts, atBlock *big.Int, result i
 
 func (self *KNContractBase) BuildTx(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
 	input, err := self.abi.Pack(method, params...)
+	log.Printf("Intermediator: messagie is %x", input)
 	if err != nil {
 		return nil, err
 	}

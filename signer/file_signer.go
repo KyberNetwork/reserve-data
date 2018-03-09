@@ -126,7 +126,8 @@ func NewFileSigner(file string) (*FileSigner, *FileSigner, *FileSigner) {
 	if err != nil {
 		panic(err)
 	}
-	depositSigner := signer
+	log.Println("Intermediator: signer is %v", signer)
+
 	keyio, err := os.Open(signer.Keystore)
 	if err != nil {
 		panic(err)
@@ -135,6 +136,9 @@ func NewFileSigner(file string) (*FileSigner, *FileSigner, *FileSigner) {
 	if err != nil {
 		panic(err)
 	}
+	signer.opts = auth
+	//create deposit signer
+	depositSigner := signer
 	keyDIo, err := os.Open(signer.KeystoreD)
 	if err != nil {
 		panic(err)
@@ -143,6 +147,8 @@ func NewFileSigner(file string) (*FileSigner, *FileSigner, *FileSigner) {
 	if err != nil {
 		panic(err)
 	}
+	depositSigner.opts = authD
+	//create intermediatorSigner
 	intermediateAccountSigner := signer
 	keyIio, err := os.Open(signer.KeystoreI)
 	if err != nil {
@@ -154,8 +160,6 @@ func NewFileSigner(file string) (*FileSigner, *FileSigner, *FileSigner) {
 	}
 	// auth.GasLimit = big.NewInt(1000000)
 	// auth.GasPrice = big.NewInt(35000000000)
-	signer.opts = auth
-	depositSigner.opts = authD
 	intermediateAccountSigner.opts = authI
 	return &signer, &depositSigner, &intermediateAccountSigner
 }

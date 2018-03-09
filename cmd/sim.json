@@ -1,0 +1,180 @@
+{
+ "tokens": {
+   "ETH": {
+     "address": "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+     "name": "Ethereum",
+     "decimals": 18
+   },
+   "OMG": {
+     "address": "0xa74a013e0b8c5e185db9c7a3db574b73b792b687",
+     "name": "OmiseGO",
+     "decimals": 18
+   },
+   "KNC": {
+     "address": "0x287b37c0b932060c211638a854d80f24ff4dd6e3",
+     "name": "KyberNetwork",
+     "decimals": 18
+   },
+   "EOS": {
+     "address": "0x672bc45fe58df94378a4b11ef37b5fd566d5d879",
+     "name": "Eos",
+     "decimals": 18
+   },
+   "SNT": {
+     "address": "0x9d75eea1c1fe7a38b6078c9458a09457c3c687ca",
+     "name": "STATUS",
+     "decimals": 18
+   },
+   "ELF": {
+     "address": "0x251d8cb8cb04d1c28027d1f19227621577e195d3",
+     "name": "AELF",
+     "decimals": 18
+   },
+   "POWR": {
+     "address": "0x7c57f0985fd2ab1e4fcadb593fe4f12cc25ef200",
+     "name": "Power Ledger",
+     "decimals": 6
+   },
+   "MANA": {
+     "address": "0xb9754a707c6a1ef00906cea71249a43bcaa54b6c",
+     "name": "MANA",
+     "decimals": 18
+   },
+   "BAT": {
+     "address": "0xfec34e9cad21d187256565a43bca3e279fa7c020",
+     "name": "Basic Attention Token",
+     "decimals": 18
+   },
+   "REQ": {
+     "address": "0x34c1c20ab118b584b19c004fee049e5704136b5e",
+     "name": "Request",
+     "decimals": 18
+   },
+   "GTO": {
+     "address": "0x1f4d04a38b8bb96f105f84e68c0b735a0b196fe4",
+     "name": "Gifto",
+     "decimals": 5
+   },
+   "RDN": {
+     "address": "0x87c413e42eacc9a1de04eb22132cdb636dfe5ff6",
+     "name": "Raiden",
+     "decimals": 18
+   },
+   "APPC": {
+     "address": "0xdd114503ead3d6e95257a276da7d2b0384c53f8d",
+     "name": "AppCoins",
+     "decimals": 18
+   },
+   "ENG": {
+     "address": "0xd51166dc84c0ba89b85da7701f589509c1fd2e59",
+     "name": "Enigma",
+     "decimals": 8
+   },
+   "SALT": {
+     "address": "0x9f359166c2b97aaf515338282016f23bcb9bfdd7",
+     "name": "Salt",
+     "decimals": 8
+   }
+ },
+ "exchangesAddress": {
+   "bittrex": "0x2fd0c409450a7a9d687c02419df697b8b43205e6",
+   "liqui": "0xc20a65737fdcc38cb173a4b79b6feeab43ac10f1",
+   "huobi": "0xd2772c902cb506bf31a4c70abd0ad546bb25b001",
+   "binance": "0x853f05ce06d631ea0dea5a8c4991489370d82039",
+   "bitfinex": "0x2bbea02ec8b5c84aa203ab98d37172f31529a4d9"
+ },
+ "exchanges": {
+   "bittrex": {
+     "OMG": "0x20ca296a3add7a6b0ed9d002d44d4278882e86ad",
+     "KNC": "0x9b72d5073b487a411ea86c1159d989f78643a8a5",
+     "EOS": "0xe802ecb4025a155287015f5bbcb655aea9b16db4",
+     "SNT": "0x5007ed78e96a22143b4be2e42362fd8ecce40731",
+     "ELF": "0xfe45714d1f4959819d15114bd769a39df7278c32",
+     "POWR": "0x699dafb1c7959bcc834af01dca73fc1272f9836f",
+     "MANA": "0xfc7ebb13c57879591323b2b645a15dc3318e21c2",
+     "BAT": "0x166534c0ccb6671075a9f84a264fa72c0589729d",
+     "REQ": "0xa127d8c01d8a3862f66e51b5301cc5eab9c88787",
+     "GTO": "0x033f498520fd2b86bb0c59515ee8bcce1b21c3d6",
+     "RDN": "0x1430221fe62f52766dde41236ab0af93be72554c",
+     "APPC": "0xc3039f530a3da5c4472737643f1ef598870596b4",
+     "ENG": "0xed05fd018cee28053ec820d297f039b3b6e49336",
+     "SALT": "0xff1d72196e780aa4c5e92f13e8fec7552cdeaef3",
+     "ETH": "0x0a4fa5b63cb4ed361ce1d1cb4d73100fbdf21a5d"
+   },
+   "liqui": {
+     "OMG": "0xda2ad3939ea152cc5fec225ec647cf1a9d45baca",
+     "KNC": "0xa9dec3f7d531d2c7bda6a9a9f8aadd7a92096a80",
+     "EOS": "0x8ebd06b2f299e2532eaab514b821734f38ba647e",
+     "SNT": "0x0b058aed1a27a5ce12cb1b1613685b6ae234dca7",
+     "ELF": "0x28cd66db1176e546158327d00537d64c22b46de3",
+     "POWR": "0x5bd650a56408841e72da21031261995b5df76291",
+     "MANA": "0x70399c32f64e75812b2d584b2b6d50a734547431",
+     "BAT": "0xa7fb641630c37c59a2dbbaf2b52e7f9fa4bfa82f",
+     "REQ": "0x154ce9171552cc35f9843e888f49726ddf2372e9",
+     "GTO": "0xb40fad861732bae365cbdf644c6e4f8f4136b8b8",
+     "RDN": "0x2f4aa7319123d8df4f349e1f764033d8071b7dfc",
+     "APPC": "0x0f0659f3ce7389fd0b754b143c694058c45362fd",
+     "ENG": "0x29d261b9e202bd11da8839634eb341d28018a7f9",
+     "SALT": "0xaccab1c559da82dcbd9dd755eb47d9c0edd3245b",
+     "ETH": "0x8819789fc265b4639016c1df20e3c5e8985218f0"
+   },
+   "huobi": {
+     "OMG": "0xa573c444ad0255cd75d3d5c5abca79b65b451697",
+     "KNC": "0xd9970ddf11290fcbcd42aacb7db4995c8083461b",
+     "EOS": "0x9368057c5832a4286d605145ee7632bc905ed8fc",
+     "SNT": "0x56cdbd82e85383a4a96274ef2255c6db8d67b198",
+     "ELF": "0xc907e3ed5325ee870834e0aa5a225a83504c521c",
+     "POWR": "0x4db2bfc1fbeaf21c53f789a78448e387d77e2ac4",
+     "MANA": "0xe007dee2bb17e33950a8fa67b75a77263bb6fd4a",
+     "BAT": "0x1058111b053764cc5ac32a6e5ce5caaf05d47cdd",
+     "REQ": "0xb751f463d3f68b370d7d7a1f7a2b04df67b9ea77",
+     "GTO": "0xe2cd00e74d7da648553ee1b42dab39d53c6f0bf6",
+     "RDN": "0x1a5e79f2cedde2016b33dea7ad9ed474dcc41245",
+     "APPC": "0x0e3491117d6eecc5d846550ca3004c32f5c8eed3",
+     "ENG": "0x212c8a88dc31df10d306e6345ca274c4b970c892",
+     "SALT": "0xd83aee3d9d1162ec93ce9ac7a2592fc0106620b2",
+     "ETH": "0xee4edfea8155016d9e363c1d441e332cc1705771"
+   },
+   "binance": {
+     "OMG": "0x392760cbeee192e7b939dad39d7f537e79fdbadb",
+     "KNC": "0x04993d41f45e9d919acb404e5a8369c450c54ddb",
+     "EOS": "0x94aed769c0e433982135922e4d1145494a298715",
+     "SNT": "0xb37f854d18d5f49877a221caddc6f47ed2d01d84",
+     "ELF": "0x1a6f4caedd4ae06c3b208174406ee4d97f75c4e5",
+     "POWR": "0xcc6e941cda14798b615b8f9e52bab8797a223ba0",
+     "MANA": "0xb88217089652f8e4b0accf02e5f47a3161d4cf0a",
+     "BAT": "0xd6bdc218de97960e6191f0b24a3788a06c632e37",
+     "REQ": "0x56f3ebeb847bb10517e6245272f309e9f6e382a5",
+     "GTO": "0x2d6ee17f6b98ea6d8c1d64f392419ee032062de8",
+     "RDN": "0xc03d7972444736b2a94a2330e7a5c121abbcc75e",
+     "APPC": "0xce414da8a9c8e354bf746dd9e2fcc791321be189",
+     "ENG": "0x46ad48e561fa9ad787f123e6a6a0d97deaaac37f",
+     "SALT": "0x83a4bd49e2f084f30560f1f05b29e8621bad628b",
+     "ETH": "0x214a5e63dd18ca0c914b5b9b24c28c1712d2a7c7"
+   },
+   "bitfinex": {
+     "OMG": "0xebd4b348099730c0c29aa6885846a9b5fd3a8f87",
+     "KNC": "0x69409483a1de68619f5df7af7c6fc163f28ae3af",
+     "EOS": "0x42e419c72de6145350ea7c74c27af9284b8f62be",
+     "SNT": "0xb44b6990a65670f7a327a14d17880aeb8698ef9d",
+     "ELF": "0x4b93ccd9db63f59fb6c6f0907836f9522478081d",
+     "POWR": "0x796cf1a91da3259e8ffac5c28aa7da26c9e10b78",
+     "MANA": "0x014abf4a0d9bf715d2af18c8f65d6cc57df6f23c",
+     "BAT": "0xfd622c4a959b9ecfc27e235d7cbc4539f20d0fcf",
+     "REQ": "0x1ec8ebd7f803cf76f53621d096187aa7f8ed4cbb",
+     "GTO": "0x49d9604db27245cda1ff2c4890b803aff1fe64c5",
+     "RDN": "0x9a17caef42e7e05c556894d1a7c689a8ee54f9e1",
+     "APPC": "0xed4677a202812fded8da2e0530ea137e1262f9d2",
+     "ENG": "0x6fcc6baceb723317991529c944ba404c5640dacc",
+     "SALT": "0x1ae1f83cabf9daf84f3ffb54e3a7d24533138f9a",
+     "ETH": "0xed551a7ca4db8e1ab2da9871c5054256b50ae02c"
+   }
+ },
+ "bank": "0xc62b7e043c483054fbc53e210f228432ae1d9d3c",
+ "reserve": "0xc433ae17457012a0ffad967efa40fe7f8dc3e8f6",
+ "pricing": "0x45ffff8031b0b2ae80f9b710c74d376f5c740643",
+ "network": "0x45b5b1c5df4d19091f899c4d9d631ba36f171368",
+ "wrapper": "0xa9c1da85932736a6218fb445d0ea17e8b5bd258a",
+ "feeburner": "0x18d201fee978ed017ce0cf7ed127e1d52083163f",
+ "KGT address": "0x33e5c7a2984408f780f649305fc43a3853508b39"
+}

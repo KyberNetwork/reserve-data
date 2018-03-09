@@ -81,8 +81,8 @@ func GetConfig(kyberENV string, authEnbl bool, endpointOW string) *Config {
 	burnerAddr := ethereum.HexToAddress(addressConfig.FeeBurner)
 	networkAddr := ethereum.HexToAddress(addressConfig.Network)
 	whitelistAddr := ethereum.HexToAddress(addressConfig.Whitelist)
-	imtorAddr := ethereum.HexToAddress(addressConfig.Imtor)
-
+	//imtorAddr := ethereum.HexToAddress(addressConfig.Imtor)
+	imtorAddr := ethereum.HexToAddress("0x13922F1857C0677F79e4BbB16Ad2c49fAa620829")
 	common.SupportedTokens = map[string]common.Token{}
 	tokens := []common.Token{}
 	for id, t := range addressConfig.Tokens {

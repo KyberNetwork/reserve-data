@@ -2,6 +2,7 @@ package fetcher
 
 import (
 	"github.com/KyberNetwork/reserve-data/common"
+	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
 type Exchange interface {
@@ -15,4 +16,5 @@ type Exchange interface {
 	OrderStatus(id common.ActivityID, timepoint uint64) (string, error)
 	DepositStatus(id common.ActivityID, timepoint uint64) (string, error)
 	WithdrawStatus(id common.ActivityID, timepoint uint64) (string, string, error)
+	TokenAddresses() map[string]ethereum.Address
 }

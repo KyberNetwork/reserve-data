@@ -453,12 +453,11 @@ func (self *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []commo
 				status, err = exchange.OrderStatus(id, timepoint)
 			} else if activity.Action == "deposit" {
 				status, err = exchange.DepositStatus(id, timepoint)
-				log.Printf("Got deposit status for %v: (%s), error(%v)", activity, status, err)
+				log.Printf("From exchange: Got deposit status for %v: (%s), error(%v)", activity, status, err)
 			} else if activity.Action == "withdraw" {
-				log.Printf("Activity: %+v", activity)
+				log.Printf("From exchange: Activity: %+v", activity)
 				tx = activity.Result["tx"].(string)
 				status, tx, err = exchange.WithdrawStatus(id, timepoint)
-				log.Printf("Got withdraw status for %v: (%s), error(%v)", activity, status, err)
 			} else {
 				continue
 			}
