@@ -347,7 +347,7 @@ func (self *Huobi) FetchTradeHistory(timepoint uint64) (map[common.TokenPairID][
 	return result, nil
 }
 
-func (self *Huobi) DepositStatus(id common.ActivityID, timepoint uint64) (string, error) {
+func (self *Huobi) DepositStatus(id common.ActivityID) (string, error) {
 	idParts := strings.Split(id.EID, "|")
 	txID := idParts[0]
 	deposits, err := self.interf.DepositHistory()
@@ -365,7 +365,7 @@ func (self *Huobi) DepositStatus(id common.ActivityID, timepoint uint64) (string
 	return "", errors.New("Deposit doesn't exist. This shouldn't happen unless tx returned from huobi and activity ID are not consistently designed")
 }
 
-func (self *Huobi) WithdrawStatus(id common.ActivityID, timepoint uint64) (string, string, error) {
+func (self *Huobi) WithdrawStatus(id common.ActivityID) (string, string, error) {
 	withdrawID, _ := strconv.ParseUint(id.EID, 10, 64)
 	withdraws, err := self.interf.WithdrawHistory()
 	if err != nil {

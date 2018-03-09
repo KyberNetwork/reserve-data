@@ -52,7 +52,7 @@ func (self *Fetcher) GetEthRate(timepoint uint64) float64 {
 
 func (self *Fetcher) SetBlockchain(blockchain Blockchain) {
 	self.blockchain = blockchain
-	self.FetchCurrentBlock(common.GetTimepoint())
+	self.FetchCurrentBlock()
 }
 
 func (self *Fetcher) Run() error {
@@ -69,7 +69,7 @@ func (self *Fetcher) RunBlockAndLogFetcher() {
 		t := <-self.runner.GetBlockTicker()
 		log.Printf("got signal in block channel with timestamp %d", common.TimeToTimepoint(t))
 		timepoint := common.TimeToTimepoint(t)
-		self.FetchCurrentBlock(timepoint)
+		self.FetchCurrentBlock()
 		log.Printf("fetched block from blockchain")
 		lastBlock, err := self.storage.LastBlock()
 		if lastBlock == 0 {
@@ -101,7 +101,7 @@ func (self *Fetcher) RunBlockAndLogFetcher() {
 // return block number that we just fetched the logs
 func (self *Fetcher) FetchLogs(fromBlock uint64, toBlock uint64, timepoint uint64) uint64 {
 	log.Printf("fetching logs data from block %d", fromBlock)
-	logs, err := self.blockchain.GetLogs(fromBlock, toBlock, timepoint, self.GetEthRate(common.GetTimepoint()))
+	logs, err := self.blockchain.GetLogs(fromBlock, toBlock, self.GetEthRate(common.GetTimepoint()))
 	if err != nil {
 		log.Printf("fetching logs data from block %d failed, error: %v", fromBlock, err)
 		if fromBlock == 0 {
@@ -209,7 +209,7 @@ func (self *Fetcher) aggregateTradeLog(trade common.TradeLog) (err error) {
 	return
 }
 
-func (self *Fetcher) FetchCurrentBlock(timepoint uint64) {
+func (self *Fetcher) FetchCurrentBlock() {
 	block, err := self.blockchain.CurrentBlock()
 	if err != nil {
 		log.Printf("Fetching current block failed: %v. Ignored.", err)

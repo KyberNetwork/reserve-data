@@ -53,7 +53,7 @@ func (self *BittrexEndpoint) fillRequest(req *http.Request, signNeeded bool) {
 }
 
 func (self *BittrexEndpoint) GetResponse(
-	url string, params map[string]string, signNeeded bool, timepoint uint64) ([]byte, error) {
+	url string, params map[string]string, signNeeded bool) ([]byte, error) {
 	client := &http.Client{
 		Timeout: time.Duration(30 * time.Second),
 	}
@@ -87,7 +87,6 @@ func (self *BittrexEndpoint) GetExchangeInfo() (exchange.BittExchangeInfo, error
 		addPath(self.interf.PublicEndpoint(timepoint), "getmarkets"),
 		map[string]string{},
 		false,
-		timepoint,
 	)
 	if err == nil {
 		err = json.Unmarshal(resp_body, &result)
@@ -106,7 +105,6 @@ func (self *BittrexEndpoint) FetchOnePairData(
 			"type":   "both",
 		},
 		false,
-		timepoint,
 	)
 
 	if err != nil {
@@ -136,7 +134,7 @@ func (self *BittrexEndpoint) Trade(
 		"rate":     strconv.FormatFloat(rate, 'f', -1, 64),
 	}
 	resp_body, err := self.GetResponse(
-		url, params, true, timepoint)
+		url, params, true)
 
 	if err != nil {
 		return result, err
@@ -154,7 +152,6 @@ func (self *BittrexEndpoint) OrderStatus(uuid string, timepoint uint64) (exchang
 			"uuid": uuid,
 		},
 		true,
-		timepoint,
 	)
 	if err != nil {
 		return result, err
@@ -173,7 +170,6 @@ func (self *BittrexEndpoint) GetDepositAddress(currency string) (exchange.Bittre
 			"currency": currency,
 		},
 		true,
-		timepoint,
 	)
 	if err == nil {
 		json.Unmarshal(resp_body, &result)
@@ -189,7 +185,6 @@ func (self *BittrexEndpoint) WithdrawHistory(currency string, timepoint uint64) 
 			"currency": currency,
 		},
 		true,
-		timepoint,
 	)
 	if err != nil {
 		return result, err
@@ -207,7 +202,6 @@ func (self *BittrexEndpoint) DepositHistory(currency string, timepoint uint64) (
 			"currency": currency,
 		},
 		true,
-		timepoint,
 	)
 	if err != nil {
 		return result, err
@@ -227,7 +221,6 @@ func (self *BittrexEndpoint) Withdraw(token common.Token, amount *big.Int, addre
 			"address":  address.Hex(),
 		},
 		true,
-		timepoint,
 	)
 	if err != nil {
 		return result, err
@@ -243,7 +236,6 @@ func (self *BittrexEndpoint) GetInfo(timepoint uint64) (exchange.Bittinfo, error
 		addPath(self.interf.AccountEndpoint(timepoint), "getbalances"),
 		map[string]string{},
 		true,
-		timepoint,
 	)
 	if err != nil {
 		return result, err
@@ -261,7 +253,6 @@ func (self *BittrexEndpoint) CancelOrder(uuid string, timepoint uint64) (exchang
 			"uuid": uuid,
 		},
 		true,
-		timepoint,
 	)
 	if err != nil {
 		return result, err
@@ -282,7 +273,6 @@ func (self *BittrexEndpoint) GetAccountTradeHistory(base, quote common.Token, ti
 		addPath(self.interf.AccountEndpoint(timepoint), "getorderhistory"),
 		params,
 		true,
-		timepoint,
 	)
 	if err == nil {
 		json.Unmarshal(resp_body, &result)

@@ -33,18 +33,18 @@ func NewRamStorage() *RamStorage {
 	}
 }
 
-func (self *RamStorage) CurrentPriceVersion(timepoint uint64) (common.Version, error) {
-	version, err := self.price.CurrentVersion(timepoint)
+func (self *RamStorage) CurrentPriceVersion() (common.Version, error) {
+	version, err := self.price.CurrentVersion()
 	return common.Version(version), err
 }
 
-func (self *RamStorage) CurrentAuthDataVersion(timepoint uint64) (common.Version, error) {
-	version, err := self.auth.CurrentVersion(timepoint)
+func (self *RamStorage) CurrentAuthDataVersion() (common.Version, error) {
+	version, err := self.auth.CurrentVersion()
 	return common.Version(version), err
 }
 
-func (self *RamStorage) CurrentRateVersion(timepoint uint64) (common.Version, error) {
-	version, err := self.rate.CurrentVersion(timepoint)
+func (self *RamStorage) CurrentRateVersion() (common.Version, error) {
+	version, err := self.rate.CurrentVersion()
 	return common.Version(version), err
 }
 
@@ -68,18 +68,17 @@ func (self *RamStorage) GetRates(fromTime, toTime uint64) ([]common.AllRateEntry
 	return self.rate.GetRates(fromTime, toTime)
 }
 
-func (self *RamStorage) StorePrice(data common.AllPriceEntry, timepoint uint64) error {
-	return self.price.StoreNewData(data, timepoint)
+func (self *RamStorage) StorePrice(data common.AllPriceEntry) error {
+	return self.price.StoreNewData(data)
 }
 
 func (self *RamStorage) StoreAuthSnapshot(
-	data *common.AuthDataSnapshot,
-	timepoint uint64) error {
-	return self.auth.StoreNewSnapshot(data, timepoint)
+	data *common.AuthDataSnapshot) error {
+	return self.auth.StoreNewSnapshot(data)
 }
 
-func (self *RamStorage) StoreRate(data common.AllRateEntry, timepoint uint64) error {
-	return self.rate.StoreNewData(data, timepoint)
+func (self *RamStorage) StoreRate(data common.AllRateEntry) error {
+	return self.rate.StoreNewData(data)
 }
 
 func (self *RamStorage) UpdateActivity(id common.ActivityID, activity common.ActivityRecord) error {
@@ -145,10 +144,10 @@ func (self *RamStorage) StoreTradeLog(stat common.TradeLog, timepoint uint64) er
 	return self.log.StoreTradeLog(stat, timepoint)
 }
 
-func (self *RamStorage) GetTradeHistory(timepoint uint64) (common.AllTradeHistory, error) {
-	return self.tradeHistory.GetTradeHistory(timepoint)
+func (self *RamStorage) GetTradeHistory() (common.AllTradeHistory, error) {
+	return self.tradeHistory.GetTradeHistory()
 }
 
-func (self *RamStorage) StoreTradeHistory(data common.AllTradeHistory, timepoint uint64) error {
-	return self.tradeHistory.StoreTradeHistory(data, timepoint)
+func (self *RamStorage) StoreTradeHistory(data common.AllTradeHistory) error {
+	return self.tradeHistory.StoreTradeHistory(data)
 }

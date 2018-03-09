@@ -38,7 +38,7 @@ func GetActivitiesResponse(url string, params map[string]string, config configur
 	nonce := strconv.FormatUint(timepoint, 10)
 	var allActionRep AllActionHTTPReply
 	params["nonce"] = nonce
-	data, err := GetResponse("GET", fmt.Sprintf("%s/%s", url, "activities"), params, true, uint64(timepoint), config)
+	data, err := GetResponse("GET", fmt.Sprintf("%s/%s", url, "activities"), params, true, config)
 
 	if err != nil {
 		fmt.Println("can't get response", err)
@@ -52,9 +52,8 @@ func GetActivitiesResponse(url string, params map[string]string, config configur
 }
 
 func GetAllRateResponse(url string, params map[string]string, config configuration.Config) (AllRateHTTPReply, error) {
-	timepoint := common.GetTimepoint()
 	var allRateRep AllRateHTTPReply
-	data, err := GetResponse("GET", fmt.Sprintf("%s/%s", url, "get-all-rates"), params, false, uint64(timepoint), config)
+	data, err := GetResponse("GET", fmt.Sprintf("%s/%s", url, "get-all-rates"), params, false, config)
 
 	if err != nil {
 		fmt.Println("can't get response", err)

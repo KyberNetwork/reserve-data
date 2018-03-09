@@ -20,21 +20,17 @@ func getOrSetDefaultURL(base_url string) string {
 	} else {
 		return "http://127.0.0.1:5300"
 	}
-
 }
 
 func (self *RealInterface) PublicEndpoint(timepoint uint64) string {
-	// ignore timepoint because timepoint is only relevant in simulation
 	return "https://bittrex.com/api/" + apiVersion + "/public"
 }
 
 func (self *RealInterface) MarketEndpoint(timepoint uint64) string {
-	// ignore timepoint because timepoint is only relevant in simulation
 	return "https://bittrex.com/api/" + apiVersion + "/market"
 }
 
 func (self *RealInterface) AccountEndpoint(timepoint uint64) string {
-	// ignore timepoint because timepoint is only relevant in simulation
 	return "https://bittrex.com/api/" + apiVersion + "/account"
 }
 
@@ -69,17 +65,14 @@ func NewSimulatedInterface(flagVariable string) *SimulatedInterface {
 type DevInterface struct{}
 
 func (self *DevInterface) PublicEndpoint(timepoint uint64) string {
-	// ignore timepoint because timepoint is only relevant in simulation
 	return "https://bittrex.com/api/" + apiVersion + "/public"
 }
 
 func (self *DevInterface) MarketEndpoint(timepoint uint64) string {
-	// ignore timepoint because timepoint is only relevant in simulation
 	return "https://bittrex.com/api/" + apiVersion + "/market"
 }
 
 func (self *DevInterface) AccountEndpoint(timepoint uint64) string {
-	// ignore timepoint because timepoint is only relevant in simulation
 	return "https://bittrex.com/api/" + apiVersion + "/account"
 }
 
@@ -96,7 +89,6 @@ func (self *RopstenInterface) baseurl() string {
 }
 
 func (self *RopstenInterface) PublicEndpoint(timepoint uint64) string {
-	// ignore timepoint because timepoint is only relevant in simulation
 	return "https://bittrex.com/api/" + apiVersion + "/public"
 }
 
@@ -121,7 +113,6 @@ func (self *KovanInterface) baseurl() string {
 }
 
 func (self *KovanInterface) PublicEndpoint(timepoint uint64) string {
-	// ignore timepoint because timepoint is only relevant in simulation
 	return "https://bittrex.com/api/" + apiVersion + "/public"
 }
 

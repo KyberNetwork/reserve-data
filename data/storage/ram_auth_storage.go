@@ -20,7 +20,7 @@ func NewRamAuthStorage() *RamAuthStorage {
 	}
 }
 
-func (self *RamAuthStorage) CurrentVersion(timepoint uint64) (int64, error) {
+func (self *RamAuthStorage) CurrentVersion() (int64, error) {
 	self.mu.RLock()
 	defer self.mu.RUnlock()
 	return self.version, nil
@@ -37,7 +37,7 @@ func (self *RamAuthStorage) GetSnapshot(version int64) (common.AuthDataSnapshot,
 	}
 }
 
-func (self *RamAuthStorage) StoreNewSnapshot(data *common.AuthDataSnapshot, timepoint uint64) error {
+func (self *RamAuthStorage) StoreNewSnapshot(data *common.AuthDataSnapshot) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 	self.version = self.version + 1

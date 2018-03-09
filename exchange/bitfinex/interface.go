@@ -12,12 +12,10 @@ type Interface interface {
 type RealInterface struct{}
 
 func (self *RealInterface) PublicEndpoint() string {
-	// ignore timepoint because timepoint is only relevant in simulation
 	return "https://api.bitfinex.com/v1"
 }
 
 func (self *RealInterface) AuthenticatedEndpoint() string {
-	// ignore timepoint because timepoint is only relevant in simulation
 	return "https://api.bitfinex.com/v1"
 }
 

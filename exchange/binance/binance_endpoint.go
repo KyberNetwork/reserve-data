@@ -88,7 +88,8 @@ func (self *BinanceEndpoint) GetResponse(
 }
 
 func (self *BinanceEndpoint) GetDepthOnePair(
-	pair common.TokenPair, timepoint uint64) (exchange.Binaresp, error) {
+	pair common.TokenPair,
+	timepoint uint64) (exchange.Binaresp, error) {
 
 	resp_body, err := self.GetResponse(
 		"GET", self.interf.PublicEndpoint()+"/api/v1/depth",

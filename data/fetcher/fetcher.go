@@ -90,9 +90,9 @@ func (self *Fetcher) FetchRate(timepoint uint64) {
 	var err error
 	var data common.AllRateEntry
 	if self.simulationMode {
-		data, err = self.blockchain.FetchRates(timepoint, 0, self.currentBlock)
+		data, err = self.blockchain.FetchRates(0, self.currentBlock)
 	} else {
-		data, err = self.blockchain.FetchRates(timepoint, self.currentBlock-1, self.currentBlock)
+		data, err = self.blockchain.FetchRates(self.currentBlock-1, self.currentBlock)
 	}
 	if err != nil {
 		log.Printf("Fetching rates from blockchain failed: %s\n", err)
@@ -142,7 +142,7 @@ func (self *Fetcher) FetchAllAuthData(timepoint uint64) {
 	}
 	wait.Wait()
 	self.FetchAuthDataFromBlockchain(
-		bbalances, &bstatuses, pendings, timepoint)
+		bbalances, &bstatuses, pendings)
 	snapshot.Block = self.currentBlock
 	snapshot.ReturnTime = common.GetTimestamp()
 	err = self.PersistSnapshot(
@@ -205,8 +205,7 @@ func (self *Fetcher) RunTradeHistoryFetcher() {
 func (self *Fetcher) FetchAuthDataFromBlockchain(
 	allBalances map[string]common.BalanceEntry,
 	allStatuses *sync.Map,
-	pendings []common.ActivityRecord,
-	timepoint uint64) {
+	pendings []common.ActivityRecord) {
 	// we apply double check strategy to mitigate race condition on exchange side like this:
 	// 1. Get list of pending activity status (A)
 	// 2. Get list of balances (B)
@@ -217,7 +216,7 @@ func (self *Fetcher) FetchAuthDataFromBlockchain(
 	var err error
 	for {
 		preStatuses := self.FetchStatusFromBlockchain(pendings)
-		balances, err = self.FetchBalanceFromBlockchain(timepoint)
+		balances, err = self.FetchBalanceFromBlockchain()
 		if err != nil {
 			log.Printf("Fetching blockchain balances failed: %v\n", err)
 			break
@@ -249,8 +248,8 @@ func (self *Fetcher) FetchCurrentBlock(timepoint uint64) {
 	}
 }
 
-func (self *Fetcher) FetchBalanceFromBlockchain(timepoint uint64) (map[string]common.BalanceEntry, error) {
-	return self.blockchain.FetchBalanceData(self.rmaddr, nil, timepoint)
+func (self *Fetcher) FetchBalanceFromBlockchain() (map[string]common.BalanceEntry, error) {
+	return self.blockchain.FetchBalanceData(self.rmaddr, nil)
 }
 
 func (self *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord) map[common.ActivityID]common.ActivityStatus {

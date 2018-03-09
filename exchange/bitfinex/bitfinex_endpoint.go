@@ -121,7 +121,7 @@ func (self *BitfinexEndpoint) FetchOnePairData(
 	data.Store(pair.PairID(), result)
 }
 
-func (self *BitfinexEndpoint) Trade(tradeType string, base, quote common.Token, rate, amount float64, timepoint uint64) (done float64, remaining float64, finished bool, err error) {
+func (self *BitfinexEndpoint) Trade(tradeType string, base, quote common.Token, rate, amount float64) (done float64, remaining float64, finished bool, err error) {
 	result := exchange.Bitftrade{}
 	client := &http.Client{
 		Timeout: time.Duration(30 * time.Second)}
@@ -156,7 +156,7 @@ func (self *BitfinexEndpoint) Trade(tradeType string, base, quote common.Token, 
 	return
 }
 
-func (self *BitfinexEndpoint) Withdraw(token common.Token, amount *big.Int, address ethereum.Address, timepoint uint64) error {
+func (self *BitfinexEndpoint) Withdraw(token common.Token, amount *big.Int, address ethereum.Address) error {
 	// ignoring timepoint because it's only relevant in simulation
 	result := exchange.Bitfwithdraw{}
 	client := &http.Client{

@@ -70,7 +70,7 @@ func (self *Bitfinex) FetchPriceData(timepoint uint64) (map[common.TokenPairID]c
 	return result, nil
 }
 
-func (self *Bitfinex) FetchEBalanceData(timepoint uint64) (common.EBalanceEntry, error) {
+func (self *Bitfinex) FetchEBalanceData() (common.EBalanceEntry, error) {
 	result := common.EBalanceEntry{}
 	return result, nil
 }

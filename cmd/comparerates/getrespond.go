@@ -36,7 +36,7 @@ func MakeSign(req *http.Request, message string, nonce string, config configurat
 }
 
 func GetResponse(method string, url string,
-	params map[string]string, signNeeded bool, timepoint uint64, config configuration.Config) ([]byte, error) {
+	params map[string]string, signNeeded bool, config configuration.Config) ([]byte, error) {
 	params = SortByKey(params)
 	client := &http.Client{
 		Timeout: time.Duration(30 * time.Second),

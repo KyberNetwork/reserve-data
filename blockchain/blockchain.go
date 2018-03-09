@@ -470,7 +470,7 @@ func (self *Blockchain) TxStatus(hash ethereum.Hash) (string, uint64, error) {
 	}
 }
 
-func (self *Blockchain) FetchBalanceData(reserve ethereum.Address, atBlock *big.Int, timepoint uint64) (map[string]common.BalanceEntry, error) {
+func (self *Blockchain) FetchBalanceData(reserve ethereum.Address, atBlock *big.Int) (map[string]common.BalanceEntry, error) {
 	result := map[string]common.BalanceEntry{}
 	tokens := []ethereum.Address{}
 	for _, tok := range self.tokens {
@@ -513,7 +513,7 @@ func (self *Blockchain) FetchBalanceData(reserve ethereum.Address, atBlock *big.
 	return result, nil
 }
 
-func (self *Blockchain) FetchRates(timepoint uint64, atBlock uint64, currentBlock uint64) (common.AllRateEntry, error) {
+func (self *Blockchain) FetchRates(atBlock uint64, currentBlock uint64) (common.AllRateEntry, error) {
 	result := common.AllRateEntry{}
 	tokenAddrs := []ethereum.Address{}
 	validTokens := []common.Token{}
@@ -559,7 +559,7 @@ func (self *Blockchain) GetPrice(token ethereum.Address, block *big.Int, priceTy
 	}
 }
 
-func (self *Blockchain) GetRawLogs(fromBlock uint64, toBlock uint64, timepoint uint64) ([]types.Log, error) {
+func (self *Blockchain) GetRawLogs(fromBlock uint64, toBlock uint64) ([]types.Log, error) {
 	result := []types.Log{}
 	var to *big.Int
 	if toBlock != 0 {
@@ -589,10 +589,10 @@ func (self *Blockchain) GetRawLogs(fromBlock uint64, toBlock uint64, timepoint u
 }
 
 // return timestamp increasing array of trade log
-func (self *Blockchain) GetLogs(fromBlock uint64, toBlock uint64, timepoint uint64, ethRate float64) ([]common.KNLog, error) {
+func (self *Blockchain) GetLogs(fromBlock uint64, toBlock uint64, ethRate float64) ([]common.KNLog, error) {
 	result := []common.KNLog{}
 	// get all logs from fromBlock to best block
-	logs, err := self.GetRawLogs(fromBlock, toBlock, timepoint)
+	logs, err := self.GetRawLogs(fromBlock, toBlock)
 	if err != nil {
 		return result, err
 	}
