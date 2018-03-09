@@ -1,0 +1,25 @@
+Attaching to reservedata_collector_1
+[36mcollector_1  |[0m 2018/03/09 08:07:46.922520 startserver.go:53: Running in production mode 
+[36mcollector_1  |[0m panic: open /go/src/github.com/KyberNetwork/reserve-data/cmd/mainnet_config.json: no such file or directory
+[36mcollector_1  |[0m 
+[36mcollector_1  |[0m goroutine 1 [running]:
+[36mcollector_1  |[0m github.com/KyberNetwork/reserve-data/signer.NewFileSigner(0xca5c6f, 0x44, 0xc4202befc0, 0xa, 0x0)
+[36mcollector_1  |[0m 	/go/src/github.com/KyberNetwork/reserve-data/signer/file_signer.go:122 +0x58d
+[36mcollector_1  |[0m github.com/KyberNetwork/reserve-data/cmd/configuration.GetConfig(0xc42002402a, 0xa, 0xc420061701, 0x0, 0x0, 0x10)
+[36mcollector_1  |[0m 	/go/src/github.com/KyberNetwork/reserve-data/cmd/configuration/getconfig.go:117 +0x984
+[36mcollector_1  |[0m github.com/KyberNetwork/reserve-data/cmd/clicmd.GetConfigFromENV(0xc42002402a, 0xa, 0xc42002402a)
+[36mcollector_1  |[0m 	/go/src/github.com/KyberNetwork/reserve-data/cmd/clicmd/startserver.go:55 +0xde
+[36mcollector_1  |[0m github.com/KyberNetwork/reserve-data/cmd/clicmd.serverStart(0x1310380, 0xc4202e19a0, 0x0, 0x2)
+[36mcollector_1  |[0m 	/go/src/github.com/KyberNetwork/reserve-data/cmd/clicmd/startserver.go:98 +0xb7
+[36mcollector_1  |[0m github.com/KyberNetwork/reserve-data/vendor/github.com/spf13/cobra.(*Command).execute(0x1310380, 0xc4202e1960, 0x2, 0x2, 0x1310380, 0xc4202e1960)
+[36mcollector_1  |[0m 	/go/src/github.com/KyberNetwork/reserve-data/vendor/github.com/spf13/cobra/command.go:757 +0x2c1
+[36mcollector_1  |[0m github.com/KyberNetwork/reserve-data/vendor/github.com/spf13/cobra.(*Command).ExecuteC(0x1310120, 0x4, 0x0, 0xc4203c6f00)
+[36mcollector_1  |[0m 	/go/src/github.com/KyberNetwork/reserve-data/vendor/github.com/spf13/cobra/command.go:843 +0x30a
+[36mcollector_1  |[0m github.com/KyberNetwork/reserve-data/vendor/github.com/spf13/cobra.(*Command).Execute(0x1310120, 0xc420076058, 0x0)
+[36mcollector_1  |[0m 	/go/src/github.com/KyberNetwork/reserve-data/vendor/github.com/spf13/cobra/command.go:791 +0x2b
+[36mcollector_1  |[0m github.com/KyberNetwork/reserve-data/cmd/clicmd.Execute()
+[36mcollector_1  |[0m 	/go/src/github.com/KyberNetwork/reserve-data/cmd/clicmd/root.go:20 +0x2d
+[36mcollector_1  |[0m main.main()
+[36mcollector_1  |[0m 	/go/src/github.com/KyberNetwork/reserve-data/cmd/main.go:8 +0x20
+[36mreservedata_collector_1 exited with code 2
+[0m
