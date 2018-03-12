@@ -16,19 +16,18 @@ import (
 )
 
 const (
-	KYC_CATEGORY         string = "0x0000000000000000000000000000000000000000000000000000000000000004"
-	MAX_NUMBER_VERSION   int    = 1000
-	MAX_GET_RATES_PERIOD uint64 = 86400000 //1 days in milisec
+	KYC_CATEGORY       string = "0x0000000000000000000000000000000000000000000000000000000000000004"
+	MAX_NUMBER_VERSION int    = 1000
 
-	LOG_BUCKET           string = "logs"
-	TRADE_STATS_BUCKET   string = "trade_stats"
-	ASSETS_VOLUME_BUCKET string = "assets_volume"
-	BURN_FEE_BUCKET      string = "burn_fee"
-	WALLET_FEE_BUCKET    string = "wallet_fee"
-	USER_VOLUME_BUCKET   string = "user_volume"
-	MINUTE_BUCKET        string = "minute"
-	HOUR_BUCKET          string = "hour"
-	DAY_BUCKET           string = "day"
+	LOG_BUCKET         string = "logs"
+	TRADE_STATS_BUCKET string = "trade_stats"
+	MINUTE_BUCKET      string = "minute"
+	HOUR_BUCKET        string = "hour"
+	DAY_BUCKET         string = "day"
+
+	ADDRESS_BUCKET       string = "address"
+	DAILY_ADDRESS_BUCKET string = "daily_address"
+	DAILY_USER_BUCKET    string = "daily_user"
 
 	ADDRESS_CATEGORY  string = "address_category"
 	ADDRESS_ID        string = "address_id"
@@ -61,17 +60,15 @@ func NewBoltStorage(path string) (*BoltStorage, error) {
 		tx.CreateBucket([]byte(TRADE_STATS_BUCKET))
 		tx.CreateBucket([]byte(PENDING_ADDRESSES))
 		tx.CreateBucket([]byte(RESERVE_RATES))
+		tx.CreateBucket([]byte(ADDRESS_BUCKET))
+		tx.CreateBucket([]byte(DAILY_ADDRESS_BUCKET))
+		tx.CreateBucket([]byte(DAILY_USER_BUCKET))
 
 		tradeStatsBk := tx.Bucket([]byte(TRADE_STATS_BUCKET))
-		metrics := []string{ASSETS_VOLUME_BUCKET, BURN_FEE_BUCKET, WALLET_FEE_BUCKET, USER_VOLUME_BUCKET}
 		frequencies := []string{MINUTE_BUCKET, HOUR_BUCKET, DAY_BUCKET}
 
-		for _, metric := range metrics {
-			tradeStatsBk.CreateBucket([]byte(metric))
-			metricBk := tradeStatsBk.Bucket([]byte(metric))
-			for _, freq := range frequencies {
-				metricBk.CreateBucket([]byte(freq))
-			}
+		for _, freq := range frequencies {
+			tradeStatsBk.CreateBucket([]byte(freq))
 		}
 
 		return nil
@@ -181,9 +178,6 @@ func (self *BoltStorage) LoadLastLogIndex(tx *bolt.Tx) (uint64, uint, error) {
 func (self *BoltStorage) GetTradeLogs(fromTime uint64, toTime uint64) ([]common.TradeLog, error) {
 	result := []common.TradeLog{}
 	var err error
-	if toTime-fromTime > MAX_GET_RATES_PERIOD {
-		return result, errors.New(fmt.Sprintf("Time range is too broad, it must be smaller or equal to %d miliseconds", MAX_GET_RATES_PERIOD))
-	}
 	self.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(LOG_BUCKET))
 		c := b.Cursor()
@@ -249,18 +243,18 @@ func getTimestampByFreq(t uint64, freq string) (result []byte) {
 	return
 }
 
-func (self *BoltStorage) SetTradeStats(metric, freq string, t uint64, tradeStats common.TradeStats) (err error) {
+func (self *BoltStorage) SetTradeStats(freq string, t uint64, tradeStats common.TradeStats) (err error) {
 	self.db.Update(func(tx *bolt.Tx) error {
 		tradeStatsBk := tx.Bucket([]byte(TRADE_STATS_BUCKET))
-		metricBk := tradeStatsBk.Bucket([]byte(metric))
 
 		freqBkName, err := getBucketNameByFreq(freq)
 		if err != nil {
 			return err
 		}
-		freqBk := metricBk.Bucket([]byte(freqBkName))
+		freqBk := tradeStatsBk.Bucket([]byte(freqBkName))
 
 		timestamp := getTimestampByFreq(t, freq)
+
 		rawStats := freqBk.Get(timestamp)
 		var stats common.TradeStats
 		if rawStats != nil {
@@ -270,7 +264,6 @@ func (self *BoltStorage) SetTradeStats(metric, freq string, t uint64, tradeStats
 		}
 
 		for key, value := range tradeStats {
-
 			sum, ok := stats[key]
 			if ok {
 				stats[key] = sum + value
@@ -293,25 +286,19 @@ func (self *BoltStorage) SetTradeStats(metric, freq string, t uint64, tradeStats
 	return
 }
 
-func (self *BoltStorage) getTradeStats(fromTime, toTime uint64, freq, metric, key string) (common.StatTicks, error) {
-	result := common.StatTicks{}
+func (self *BoltStorage) getTradeStats(fromTime, toTime uint64, freq string) (map[uint64]common.TradeStats, error) {
+	result := map[uint64]common.TradeStats{}
 	var err error
 	self.db.View(func(tx *bolt.Tx) error {
 		// Get trade stats bucket
 		tradeStatsBk := tx.Bucket([]byte(TRADE_STATS_BUCKET))
-		metricBk := tradeStatsBk.Bucket([]byte(metric))
-		// metricStats := metricBk.Stats()
-		// log.Printf("metric %s bucket stats %+v", metric, metricStats)
 
 		var freqBkName string
 		freqBkName, err = getBucketNameByFreq(freq)
 		if err != nil {
 			return err
 		}
-
-		freqBk := metricBk.Bucket([]byte(freqBkName))
-		// freqStats := freqBk.Stats()
-		// log.Printf("freq %s bucket stats %+v", freqBkName, freqStats)
+		freqBk := tradeStatsBk.Bucket([]byte(freqBkName))
 		c := freqBk.Cursor()
 		// min := getTimestampByFreq(fromTime, freq)
 		// max := getTimestampByFreq(toTime, freq)
@@ -328,44 +315,189 @@ func (self *BoltStorage) getTradeStats(fromTime, toTime uint64, freq, metric, ke
 				return err
 			}
 
-			_, ok := stats[key]
-			// log.Printf("key: %s", key)
-			if ok {
-				timestamp := bytesToUint64(k) / 1000000 // to milis
-				result[timestamp] = stats[key]
-			}
+			timestamp := bytesToUint64(k) / 1000000 // to milis
+			result[timestamp] = stats
 		}
 		return nil
 	})
 	return result, err
 }
 
-func (self *BoltStorage) GetAssetVolume(
-	fromTime, toTime uint64, freq, asset string) (common.StatTicks, error) {
-	result, err := self.getTradeStats(fromTime, toTime, freq, ASSETS_VOLUME_BUCKET, asset)
+func (self *BoltStorage) SaveUserAddress(timestamp uint64, addr string) (common.TradeStats, error) {
+	stats := common.TradeStats{}
+	var err error
+	var kycEd bool
+
+	self.db.Update(func(tx *bolt.Tx) error {
+		// CHECK IF USER HAD TRADED EVER BEFORE
+		addrBk := tx.Bucket([]byte(ADDRESS_BUCKET))
+		v := addrBk.Get([]byte(addr))
+		if v == nil {
+			stats["first_trade_ever"] = 1
+			stats["first_trade_in_day"] = 1
+
+			if err := addrBk.Put([]byte(addr), []byte("1")); err != nil {
+				return err
+			}
+		} else {
+			// IF USER HAD TRADED, CHECK IF USER HAD TRADED IN DAY BEFORE
+			dailyAddrBk := tx.Bucket([]byte(DAILY_ADDRESS_BUCKET))
+
+			timestamp := getTimestampByFreq(timestamp, "D")
+			raw := dailyAddrBk.Get(timestamp)
+
+			var addrTradedInDay map[string]bool
+			if raw != nil {
+				json.Unmarshal(raw, &addrTradedInDay)
+			} else {
+				addrTradedInDay = map[string]bool{}
+			}
+
+			if _, traded := addrTradedInDay[addr]; !traded {
+				stats["first_trade_in_day"] = 1
+
+				addrTradedInDay[addr] = true
+				dataJSON, err := json.Marshal(addrTradedInDay)
+				if err != nil {
+					return err
+				}
+
+				if err := dailyAddrBk.Put(timestamp, dataJSON); err != nil {
+					return err
+				}
+			}
+		}
+
+		// CHECK IF KYCED USER HAD TRADED IN DAY BEFORE
+		// MEANS: first trade from addr in day, user is kyced and also first trade from user in day
+		if stats["first_trade_in_day"] == 1 {
+			user, err := self.GetUserOfAddress(addr)
+			if err != nil {
+				return err
+			}
+			kycEd = (user != addr && user != "")
+
+			if kycEd {
+				dailyUserBk := tx.Bucket([]byte(DAILY_USER_BUCKET))
+
+				timestamp := getTimestampByFreq(timestamp, "D")
+				raw := dailyUserBk.Get(timestamp)
+
+				var userTradedInDay map[string]bool
+				if raw != nil {
+					json.Unmarshal(raw, &userTradedInDay)
+				} else {
+					userTradedInDay = map[string]bool{}
+				}
+
+				if _, traded := userTradedInDay[user]; !traded {
+					stats["kyced_in_day"] = 1
+
+					userTradedInDay[user] = true
+					dataJSON, err := json.Marshal(userTradedInDay)
+					if err != nil {
+						return err
+					}
+
+					if err := dailyUserBk.Put(timestamp, dataJSON); err != nil {
+						return err
+					}
+				}
+			}
+		}
+
+		return nil
+	})
+
+	return stats, err
+}
+
+func (self *BoltStorage) GetAssetVolume(fromTime uint64, toTime uint64, freq string, asset string) (common.StatTicks, error) {
+	result := common.StatTicks{}
+
+	stats, err := self.getTradeStats(fromTime, toTime, freq)
+	eth := common.SupportedTokens["ETH"]
+
+	for timestamp, stat := range stats {
+		if strings.ToLower(eth.Address) == asset {
+			result[timestamp] = map[string]float64{
+				"volume":     stat[strings.Join([]string{"assets_volume", asset}, "_")],
+				"usd_amount": stat[strings.Join([]string{"assets_usd_amount", asset}, "_")],
+			}
+		} else {
+			result[timestamp] = map[string]float64{
+				"volume":     stat[strings.Join([]string{"assets_volume", asset}, "_")],
+				"eth_amount": stat[strings.Join([]string{"assets_eth_amount", asset}, "_")],
+				"usd_amount": stat[strings.Join([]string{"assets_usd_amount", asset}, "_")],
+			}
+		}
+	}
+
 	return result, err
 }
 
-func (self *BoltStorage) GetBurnFee(
-	fromTime, toTime uint64, freq, reserveAddr string) (result common.StatTicks, err error) {
-	result, err = self.getTradeStats(fromTime, toTime, freq, BURN_FEE_BUCKET, strings.ToLower(reserveAddr))
-	return
+func (self *BoltStorage) GetBurnFee(fromTime uint64, toTime uint64, freq string, reserveAddr string) (common.StatTicks, error) {
+	result := common.StatTicks{}
+
+	stats, err := self.getTradeStats(fromTime, toTime, freq)
+	for timestamp, stat := range stats {
+		result[timestamp] = stat[strings.Join([]string{"burn_fee", reserveAddr}, "_")]
+	}
+
+	return result, err
 }
 
-func (self *BoltStorage) GetWalletFee(
-	fromTime, toTime uint64, freq, reserveAddr, walletAddr string) (result common.StatTicks, err error) {
-	key := strings.Join([]string{
-		strings.ToLower(reserveAddr),
-		strings.ToLower(walletAddr),
-	}, "_")
-	result, err = self.getTradeStats(fromTime, toTime, freq, WALLET_FEE_BUCKET, key)
-	return
+func (self *BoltStorage) GetWalletFee(fromTime uint64, toTime uint64, freq string, reserveAddr string, walletAddr string) (common.StatTicks, error) {
+	result := common.StatTicks{}
+
+	stats, err := self.getTradeStats(fromTime, toTime, freq)
+	for timestamp, stat := range stats {
+		result[timestamp] = stat[strings.Join([]string{"wallet_fee", reserveAddr, walletAddr}, "_")]
+	}
+
+	return result, err
 }
 
-func (self *BoltStorage) GetUserVolume(
-	fromTime, toTime uint64, freq, userAddr string) (result common.StatTicks, err error) {
-	result, err = self.getTradeStats(fromTime, toTime, freq, USER_VOLUME_BUCKET, strings.ToLower(userAddr))
-	return
+func (self *BoltStorage) GetUserVolume(fromTime uint64, toTime uint64, freq string, userAddr string) (common.StatTicks, error) {
+	result := common.StatTicks{}
+
+	stats, err := self.getTradeStats(fromTime, toTime, freq)
+	for timestamp, stat := range stats {
+		result[timestamp] = stat[strings.Join([]string{"user_volume", userAddr}, "_")]
+	}
+	return result, err
+}
+
+func (self *BoltStorage) GetTradeSummary(fromTime uint64, toTime uint64) (common.StatTicks, error) {
+	result := common.StatTicks{}
+
+	stats, err := self.getTradeStats(fromTime, toTime, "D")
+	if err != nil {
+		return result, err
+	}
+
+	for timestamp, stat := range stats {
+		tradeCount := float64(stat["trade_count"])
+		var avgEth, avgUsd float64
+		if tradeCount > 0 {
+			avgEth = float64(stat["eth_volume"]) / tradeCount
+			avgUsd = float64(stat["usd_volume"]) / tradeCount
+		}
+
+		result[timestamp] = map[string]float64{
+			"total_eth_volume":     stat["eth_volume"],
+			"total_usd_amount":     stat["usd_volume"],
+			"total_burn_fee":       stat["burn_fee"],
+			"unique_addresses":     stat["first_trade_in_day"],
+			"new_unique_addresses": stat["first_trade_ever"],
+			"kyced_addresses":      stat["kyced_in_day"],
+			"total_trade":          tradeCount,
+			"eth_per_trade":        avgEth,
+			"usd_per_trade":        avgUsd,
+		}
+	}
+
+	return result, err
 }
 
 func (self *BoltStorage) GetAddressesOfUser(user string) ([]string, error) {
@@ -392,6 +524,9 @@ func (self *BoltStorage) GetUserOfAddress(addr string) (string, error) {
 	self.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(ADDRESS_ID))
 		id := b.Get([]byte(addr))
+		if id == nil {
+			log.Println("Get user = nil for user address %s", addr)
+		}
 		result = string(id)
 		return nil
 	})
@@ -534,9 +669,6 @@ func (self *BoltStorage) StoreReserveRates(reserveAddr string, reserveRates comm
 func (self *BoltStorage) GetReserveRates(fromTime, toTime uint64, reserveAddr string) ([]common.ReserveRates, error) {
 	var err error
 	var result []common.ReserveRates
-	if toTime-fromTime > MAX_GET_RATES_PERIOD {
-		return result, errors.New(fmt.Sprintf("Time range is too broad, it must be smaller or equal to %d miliseconds", MAX_GET_RATES_PERIOD))
-	}
 	self.db.Update(func(tx *bolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte(reserveAddr))
 		if err != nil {

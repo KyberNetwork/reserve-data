@@ -581,7 +581,7 @@ type ReserveRates struct {
 func (self TradeLog) BlockNo() uint64 { return self.BlockNumber }
 func (self TradeLog) Type() string    { return "TradeLog" }
 
-type StatTicks map[uint64]float64
+type StatTicks map[uint64]interface{}
 
 type TradeStats map[string]float64
 

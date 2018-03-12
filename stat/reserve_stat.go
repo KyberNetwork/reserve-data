@@ -11,6 +11,10 @@ import (
 	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
+const (
+	MAX_GET_RATES_PERIOD uint64 = 86400000 //7 days in milisec
+)
+
 type ReserveStats struct {
 	storage Storage
 	fetcher *Fetcher
@@ -99,8 +103,27 @@ func (self ReserveStats) GetUserVolume(fromTime, toTime uint64, freq, userAddr s
 	return data, err
 }
 
+func (self ReserveStats) GetTradeSummary(fromTime, toTime uint64) (common.StatTicks, error) {
+	data := common.StatTicks{}
+
+	fromTime, toTime, err := validateTimeWindow(fromTime, toTime, "D")
+	if err != nil {
+		return data, err
+	}
+
+	data, err = self.storage.GetTradeSummary(fromTime, toTime)
+	return data, err
+}
+
 func (self ReserveStats) GetTradeLogs(fromTime uint64, toTime uint64) ([]common.TradeLog, error) {
-	return self.storage.GetTradeLogs(fromTime, toTime)
+	result := []common.TradeLog{}
+
+	if toTime-fromTime > MAX_GET_RATES_PERIOD {
+		return result, errors.New(fmt.Sprintf("Time range is too broad, it must be smaller or equal to %d miliseconds", MAX_GET_RATES_PERIOD))
+	}
+
+	result, err := self.storage.GetTradeLogs(fromTime, toTime)
+	return result, err
 }
 
 func (self ReserveStats) GetPendingAddresses() ([]string, error) {
@@ -202,7 +225,7 @@ func (self ReserveStats) ExceedDailyLimit(address ethereum.Address) (bool, error
 				log.Printf("Got more than 1 day stats. This is a bug in GetUserVolume")
 			} else {
 				for _, volume := range volumeStats {
-					totalVolume += volume
+					totalVolume += volume.(float64)
 					break
 				}
 			}

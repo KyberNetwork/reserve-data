@@ -14,6 +14,7 @@ type ReserveStats interface {
 	GetBurnFee(fromTime, toTime uint64, freq, reserveAddr string) (common.StatTicks, error)
 	GetWalletFee(fromTime, toTime uint64, freq, reserveAddr, walletAddr string) (common.StatTicks, error)
 	GetUserVolume(fromTime, toTime uint64, freq, userAddr string) (common.StatTicks, error)
+	GetTradeSummary(fromTime, toTime uint64) (common.StatTicks, error)
 
 	GetCapByUser(userID string) (*common.UserCap, error)
 	GetCapByAddress(addr ethereum.Address) (*common.UserCap, error)

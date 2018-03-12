@@ -12,6 +12,7 @@ type Storage interface {
 	GetBurnFee(fromTime uint64, toTime uint64, freq string, reserveAddr string) (common.StatTicks, error)
 	GetWalletFee(fromTime uint64, toTime uint64, freq string, reserveAddr string, walletAddr string) (common.StatTicks, error)
 	GetUserVolume(fromTime uint64, toTime uint64, freq string, userAddr string) (common.StatTicks, error)
+	GetTradeSummary(fromTime uint64, toTime uint64) (common.StatTicks, error)
 
 	// all addr and user are case insensitive here
 	StoreCatLog(l common.SetCatLog) error
@@ -27,7 +28,8 @@ type Storage interface {
 
 	UpdateLogBlock(block uint64, timepoint uint64) error
 	StoreTradeLog(stat common.TradeLog, timepoint uint64) error
-	SetTradeStats(metric, freq string, t uint64, tradeStats common.TradeStats) error
+	SetTradeStats(freq string, t uint64, tradeStats common.TradeStats) error
+	SaveUserAddress(timestamp uint64, addr string) (common.TradeStats, error)
 	StoreReserveRates(reserveAddr string, rate common.ReserveRates, timepoint uint64) error
 
 	GetReserveRates(fromTime, toTime uint64, reserveAddr string) ([]common.ReserveRates, error)
