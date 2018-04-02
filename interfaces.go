@@ -57,6 +57,8 @@ type ReserveData interface {
 	GetExchangeStatus() (common.ExchangesStatus, error)
 	UpdateExchangeStatus(exchange string, status bool, timestamp uint64) error
 
+	GetNotifications() (common.ExchangeNotifications, error)
+
 	Run() error
 	Stop() error
 }
