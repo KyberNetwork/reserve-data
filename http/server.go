@@ -1936,7 +1936,7 @@ func (self *HTTPServer) GetExchangesStatus(c *gin.Context) {
 }
 
 func (self *HTTPServer) UpdateExchangeStatus(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{}, []Permission{ConfirmConfPermission, RebalancePermission})
+	postForm, ok := self.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
 	if !ok {
 		return
 	}
@@ -2021,7 +2021,6 @@ func (self *HTTPServer) GetCountryStats(c *gin.Context) {
 		)
 		return
 	}
-
 	c.JSON(
 		http.StatusOK,
 		gin.H{
@@ -2209,6 +2208,8 @@ func (self *HTTPServer) Run() {
 		self.r.GET("/get-exchange-status", self.GetExchangesStatus)
 		self.r.POST("/update-exchange-status", self.UpdateExchangeStatus)
 
+		self.r.POST("/exchange-notification", self.ExchangeNotification)
+		self.r.GET("/notifications", self.GetNotifications)
 	}
 
 	if self.stat != nil {
