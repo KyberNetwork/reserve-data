@@ -229,9 +229,7 @@ func (self ReserveData) GetTradeHistory(timepoint uint64) (common.AllTradeHistor
 }
 
 func (self ReserveData) GetNotifications() (common.ExchangeNotifications, error) {
-	result := common.ExchangeNotifications{}
-	var err error
-	return result, err
+	return self.storage.GetExchangeNotifications()
 }
 
 func (self ReserveData) Run() error {

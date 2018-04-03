@@ -1031,32 +1031,37 @@ func (self *BoltStorage) UpdateExchangeStatus(data common.ExchangesStatus) error
 }
 
 func (self *BoltStorage) UpdateExchangeNotification(
-	exchange, action, tokenPair string, fromTime, toTime uint64, isWarning bool, msg string) error {
+	exchange, action, token string, fromTime, toTime uint64, isWarning bool, msg string) error {
 	var err error
-	var notifications common.ExchangeNotifications
+	notifications := common.ExchangeNotifications{}
 	self.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(EXCHANGE_NOTIFICATIONS))
 		c := b.Cursor()
 		k, v := c.Last()
-		if v == nil {
-			err = errors.New("Notifications not found")
-		}
-		err = json.Unmarshal(v, &notifications)
+		json.Unmarshal(v, &notifications)
 
 		// build data
-		exchangeTokenPair := common.ExchangeTokenPairNoti{}
-		exchangeTokenPair[tokenPair] = common.ExchangeNotiContent{
+		exchangeAction, exist := notifications[exchange]
+		if !exist {
+			exchangeAction = common.ExchangeActionNoti{}
+		}
+		exchangeToken, exist := exchangeAction[action]
+		if !exist {
+			exchangeToken = common.ExchangeTokenPairNoti{}
+		}
+		exchangeToken[token] = common.ExchangeNotiContent{
 			FromTime:  fromTime,
 			ToTime:    toTime,
 			IsWarning: isWarning,
 			Message:   msg,
 		}
-		exchangeAction := common.ExchangeActionNoti{}
-		exchangeAction[action] = exchangeTokenPair
+		exchangeAction[action] = exchangeToken
 		notifications[exchange] = exchangeAction
 
-		// remove old noti
-		b.Delete(k)
+		// remove old data
+		if k != nil {
+			b.Delete(k)
+		}
 
 		// update new value
 		idBytes := uint64ToBytes(common.GetTimepoint())
@@ -1064,7 +1069,8 @@ func (self *BoltStorage) UpdateExchangeNotification(
 		if err != nil {
 			return err
 		}
-		return b.Put(idBytes, dataJSON)
+		err = b.Put(idBytes, dataJSON)
+		return err
 	})
 	return err
 }

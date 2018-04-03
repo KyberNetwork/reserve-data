@@ -2264,7 +2264,7 @@ func (self *HTTPServer) Run() {
 		self.r.POST("/update-exchange-status", self.UpdateExchangeStatus)
 
 		self.r.POST("/exchange-notification", self.ExchangeNotification)
-		self.r.GET("/notifications", self.GetNotifications)
+		self.r.GET("/exchange-notifications", self.GetNotifications)
 	}
 
 	if self.stat != nil {

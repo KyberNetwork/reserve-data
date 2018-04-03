@@ -983,7 +983,6 @@ params:
 example:
 curl -x GET \
   http://localhost:8000/get-price-analytic-data?fromTime=1522753160000&toTime=1522755792000
-```
  
 response:
 ```
@@ -1018,6 +1017,39 @@ response:
   "success": true
 }
 ```
+
+### Update exchange notifications 
+```
+<host>:8000/exchange-notification
+POST request
+params:
+ - exchange (string) - exchange name
+ - action (string) - action name
+ - token (string) - token pair
+ - fromTime (integer) - from timestamp
+ - toTime (integer) - to timestamp
+ - isWarning (bool) - is exchange warning or not
+ - msg (string) - message for the notification
+```
+
+response:
+```
+  {
+    "success": true
+  }
+```
+
+### Get exchange notifications
+```
+<host>:8000/exchange-notifications
+GET request
+```
+
+response:
+```
+{"data":{"binance":{"trade":{"OMG":{"fromTime":123,"toTime":125,"isWarning":true,"msg":"3 times"}}}},"success":true}
+```
+
 
 ## Authentication
 All APIs that are marked with (signing required) must follow authentication mechanism below:
