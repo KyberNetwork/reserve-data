@@ -222,6 +222,7 @@ func (self *BoltStatStorage) SetTradeStats(freq string, t uint64, tradeStats com
 		}
 		freqBk := tradeStatsBk.Bucket([]byte(freqBkName))
 		timestamp := getTimestampByFreq(t, freq)
+		log.Printf("AGGREGATE SetTradeStats, getting raw stat")
 		rawStats := freqBk.Get(timestamp)
 		var stats common.TradeStats
 
@@ -230,6 +231,7 @@ func (self *BoltStatStorage) SetTradeStats(freq string, t uint64, tradeStats com
 		} else {
 			stats = common.TradeStats{}
 		}
+		log.Printf("AGGREGATE SetTradeStats, unmarshaled stat, len(raw)=%d", len(rawStats))
 		for key, value := range tradeStats {
 			sum, ok := stats[key]
 			if ok {
@@ -239,6 +241,7 @@ func (self *BoltStatStorage) SetTradeStats(freq string, t uint64, tradeStats com
 			}
 		}
 		dataJSON, err := json.Marshal(stats)
+		log.Printf("AGGREGATE SetTradeStats, marshal updated stat, len(raw)=%d", len(dataJSON))
 		if err != nil {
 			return err
 		}
@@ -246,9 +249,11 @@ func (self *BoltStatStorage) SetTradeStats(freq string, t uint64, tradeStats com
 		if err := freqBk.Put(timestamp, dataJSON); err != nil {
 			return err
 		}
+		log.Printf("AGGREGATE SetTradeStats, finish")
 
 		return err
 	})
+	log.Printf("AGGREGATE SetTradeStats, updated the db")
 	return
 }
 

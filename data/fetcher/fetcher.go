@@ -379,6 +379,7 @@ func (self *Fetcher) PersistSnapshot(
 					// update old auth to current
 					newEbalance := oldAuth.ExchangeBalances[key.(common.ExchangeID)]
 					newEbalance.Error = v.Error
+					newEbalance.Status = false
 					allEBalances[key.(common.ExchangeID)] = newEbalance
 				}
 			}

@@ -34,7 +34,7 @@ func IpToCountry(IP string) (string, error) {
 		return country, err
 	}
 
-	country = record.Country.Names["en"] //name of country in english
+	country = record.Country.IsoCode //iso code of country
 	if country == "" {
 		return country, errors.New(fmt.Sprintf("Can't find country of the given IP: %s", IP))
 	}
