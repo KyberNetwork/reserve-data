@@ -209,7 +209,11 @@ func (self ReserveData) UpdateExchangeStatus(exchange string, status bool, times
 	return self.storage.UpdateExchangeStatus(currentExchangeStatus)
 }
 
-func (self ReserveData) UpdateExchangeNotifications()
+func (self ReserveData) UpdateExchangeNotification(
+	exchange, action, tokenPair string, fromTime, toTime uint64, isWarning bool, msg string) error {
+	err := self.storage.UpdateExchangeNotification(exchange, action, tokenPair, fromTime, toTime, isWarning, msg)
+	return err
+}
 
 func (self ReserveData) GetRecords(fromTime, toTime uint64) ([]common.ActivityRecord, error) {
 	return self.storage.GetAllRecords(fromTime, toTime)
