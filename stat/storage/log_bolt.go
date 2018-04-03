@@ -238,7 +238,7 @@ func (self *BoltLogStorage) GetTradeLogs(fromTime uint64, toTime uint64) ([]comm
 			if err != nil {
 				return err
 			}
-			result = append([]common.TradeLog{record}, result...)
+			result = append(result, record)
 		}
 		return nil
 	})
