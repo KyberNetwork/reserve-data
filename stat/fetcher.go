@@ -10,8 +10,6 @@ import (
 	"strings"
 	"sync"
 
-	// "sync"
-
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/stat/util"
 	ethereum "github.com/ethereum/go-ethereum/common"
@@ -331,7 +329,7 @@ func (self *Fetcher) GetTradeGeo(txHash string) (string, string, error) {
 		if response.Data.Country != "" {
 			return response.Data.IP, response.Data.Country, err
 		}
-		country, err := util.IpToCountry(response.Data.IP)
+		country, err := util.IPToCountry(response.Data.IP)
 		if err != nil {
 			return "", "", err
 		}

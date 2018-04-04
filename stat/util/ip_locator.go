@@ -1,42 +1,55 @@
 package util
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"net"
+	"path"
 
 	"github.com/oschwald/geoip2-golang"
+
+	"github.com/KyberNetwork/reserve-data/common"
 )
 
-const GEO_DATABASE string = "/go/src/github.com/KyberNetwork/reserve-data/stat/util/GeoLite2-Country.mmdb"
-
-var IPLocator *geoip2.Reader
-
-func init() {
-	var err error
-	IPLocator, err = geoip2.Open(GEO_DATABASE)
+// IPToCountry initializes a new ipLocator and resolve the given IP address.
+func IPToCountry(ip string) (string, error) {
+	il, err := newIPLocator()
 	if err != nil {
-		panic(err)
+		return "", err
 	}
+	return il.ipToCountry(ip)
 }
 
-func IpToCountry(IP string) (string, error) {
-	var country string
+// ipLocator is a resolver that query data of IP from MaxMind's GeoLite2 database.
+type ipLocator struct {
+	r *geoip2.Reader
+}
 
-	IPParsed := net.ParseIP(IP)
-	if IPParsed == nil {
-		return country, errors.New(fmt.Sprintf("IP %s is not valid!", IP))
+// newIPLocator returns an instance of ipLocator.
+func newIPLocator() (*ipLocator, error) {
+	dbPath := path.Join(common.CurrentDir(), "GeoLite2-Country.mmdb")
+	r, err := geoip2.Open(dbPath)
+	if err != nil {
+		return nil, err
 	}
-	record, err := IPLocator.Country(IPParsed)
+	return &ipLocator{r: r}, nil
+}
+
+// ipToCountry returns the country of given IP address.
+func (il *ipLocator) ipToCountry(ip string) (string, error) {
+	IPParsed := net.ParseIP(ip)
+	if IPParsed == nil {
+		return "", fmt.Errorf("ip %s is not valid!", ip)
+	}
+	record, err := il.r.Country(IPParsed)
 	if err != nil {
 		log.Printf("failed to query data from geo-database!")
-		return country, err
+		return "", err
 	}
 
-	country = record.Country.IsoCode //iso code of country
+	country := record.Country.IsoCode //iso code of country
 	if country == "" {
-		return country, errors.New(fmt.Sprintf("Can't find country of the given IP: %s", IP))
+		return "", fmt.Errorf("Can't find country of the given ip: %s", ip)
 	}
 	return country, nil
 }
