@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/boltdb/bolt"
@@ -12,7 +13,8 @@ import (
 
 const (
 	PRICE_ANALYTIC_BUCKET   string = "price_analytic"
-	MAX_GET_ANALYTIC_PERIOD uint64 = 86400000 //1 sec in milisecond
+	MAX_GET_ANALYTIC_PERIOD uint64 = 86400000 //1 day in milisecond
+	PRICE_ANALYTIC_EXPIRED  uint64 = 1        //30 days in milisecond
 )
 
 type BoltAnalyticStorage struct {
@@ -49,6 +51,42 @@ func (self *BoltAnalyticStorage) UpdatePriceAnalyticData(timestamp uint64, value
 		return err
 	})
 	return err
+}
+
+func (self *BoltAnalyticStorage) ExportPruneExpired(currentTime uint64) (nRecord uint64, err error) {
+	expiredTimestampByte := uint64ToBytes(currentTime - PRICE_ANALYTIC_EXPIRED)
+	outFile, err := os.Open(fmt.Sprintf("%dExpiredPriceAnalytic", nRecord))
+	if err != nil {
+		return 0, err
+	}
+	self.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(PRICE_ANALYTIC_BUCKET))
+		c := b.Cursor()
+		for k, v := c.First(); k != nil && bytes.Compare(k, expiredTimestampByte) <= 0; k, v = c.Next() {
+			timestamp := bytesToUint64(k)
+			temp := make(map[string]interface{})
+			err = json.Unmarshal(v, &temp)
+			if err != nil {
+				return err
+			}
+			record := common.AnalyticPriceResponse{
+				timestamp,
+				temp,
+			}
+			var output []byte
+			output, err = json.Marshal(record)
+			if err != nil {
+				return err
+			}
+			_, err = outFile.Write(output)
+			if err != nil {
+				return err
+			}
+			nRecord++
+		}
+		return nil
+	})
+	return
 }
 
 func (self *BoltAnalyticStorage) GetPriceAnalyticData(fromTime uint64, toTime uint64) ([]common.AnalyticPriceResponse, error) {

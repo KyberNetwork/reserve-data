@@ -188,6 +188,7 @@ func serverStart(cmd *cobra.Command, args []string) {
 				config.LogStorage,
 				config.RateStorage,
 				config.UserStorage,
+				config.StatMonitorRunner,
 				statFetcher,
 			)
 			rStat.Run()

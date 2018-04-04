@@ -23,6 +23,7 @@ type ReserveStats struct {
 	userStorage     UserStorage
 	rateStorage     RateStorage
 	fetcher         *Fetcher
+	monitorRunner   MonitorRunner
 }
 
 func NewReserveStats(
@@ -31,7 +32,8 @@ func NewReserveStats(
 	logStorage LogStorage,
 	rateStorage RateStorage,
 	userStorage UserStorage,
-	fetcher *Fetcher) *ReserveStats {
+	fetcher *Fetcher,
+	monitorRunner MonitorRunner) *ReserveStats {
 	return &ReserveStats{
 		analyticStorage: analyticStorage,
 		statStorage:     statStorage,
@@ -39,6 +41,7 @@ func NewReserveStats(
 		rateStorage:     rateStorage,
 		userStorage:     userStorage,
 		fetcher:         fetcher,
+		monitorRunner:   monitorRunner,
 	}
 }
 
@@ -206,7 +209,27 @@ func (self ReserveStats) GetPendingAddresses() ([]string, error) {
 	return self.userStorage.GetPendingAddresses()
 }
 
+func (self ReserveStats) RunAnalyticStorageController() {
+	for {
+		log.Printf("waiting for signal from analytic storage control channel")
+		t := <-self.monitorRunner.GetAnalyticStorageControlTicker()
+		timepoint := common.TimeToTimepoint(t)
+		log.Printf("got signal in analytic storage control channel with timestamp %d", timepoint)
+		nRecord, err := self.analyticStorage.ExportPruneExpired(common.GetTimepoint())
+		if err != nil {
+			log.Println("export and prune operation failed: %v", err)
+		} else {
+			log.Printf("exported and pruned %d expired records from storage controll block from blockchain", nRecord)
+		}
+	}
+}
+
 func (self ReserveStats) Run() error {
+	err := self.monitorRunner.Start()
+	if err != nil {
+		return err
+	}
+	go self.RunAnalyticStorageController()
 	return self.fetcher.Run()
 }
 

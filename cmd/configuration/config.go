@@ -50,6 +50,7 @@ type Config struct {
 
 	FetcherRunner     fetcher.FetcherRunner
 	StatFetcherRunner stat.FetcherRunner
+	StatMonitorRunner stat.MonitorRunner
 	FetcherExchanges  []fetcher.Exchange
 	Exchanges         []common.Exchange
 	BlockchainSigner  blockchain.Signer
@@ -113,11 +114,12 @@ func (self *Config) AddStatConfig(settingPath SettingPaths, addressConfig common
 	}
 
 	var statFetcherRunner stat.FetcherRunner
-
+	var monitorRunner stat.MonitorRunner
 	if os.Getenv("KYBER_ENV") == "simulation" {
 		statFetcherRunner = http_runner.NewHttpRunner(8002)
 	} else {
 		statFetcherRunner = fetcher.NewTickerRunner(7*time.Second, 5*time.Second, 3*time.Second, 5*time.Second, 5*time.Second, 10*time.Second, 7*time.Second, 2*time.Second, 2*time.Second)
+		monitorRunner = stat.NewTickerRunner(24 * time.Hour)
 	}
 
 	self.StatStorage = statStorage
@@ -125,6 +127,7 @@ func (self *Config) AddStatConfig(settingPath SettingPaths, addressConfig common
 	self.UserStorage = userStorage
 	self.LogStorage = logStorage
 	self.RateStorage = rateStorage
+	self.StatMonitorRunner = monitorRunner
 	self.StatFetcherRunner = statFetcherRunner
 	self.ThirdPartyReserves = thirdpartyReserves
 	self.FeeBurnerAddress = burnerAddr
