@@ -1,0 +1,6 @@
+go_import_path: github.com/KyberNetwork/reserve-data
+
+language: go
+
+go:
+  - "1.10.x"
