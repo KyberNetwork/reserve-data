@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/KyberNetwork/reserve-data/common"
@@ -68,7 +69,6 @@ func NewBoltStorage(path string) (*BoltStorage, error) {
 		tx.CreateBucket([]byte(PWI_EQUATION))
 		tx.CreateBucket([]byte(INTERMEDIATE_TX))
 		tx.CreateBucket([]byte(EXCHANGE_STATUS))
-		tx.CreateBucket([]byte(EXCHANGE_NOTIFICATIONS))
 		return nil
 	})
 	storage := &BoltStorage{sync.RWMutex{}, db}
@@ -1033,43 +1033,25 @@ func (self *BoltStorage) UpdateExchangeStatus(data common.ExchangesStatus) error
 func (self *BoltStorage) UpdateExchangeNotification(
 	exchange, action, token string, fromTime, toTime uint64, isWarning bool, msg string) error {
 	var err error
-	notifications := common.ExchangeNotifications{}
 	self.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(EXCHANGE_NOTIFICATIONS))
-		c := b.Cursor()
-		k, v := c.Last()
-		json.Unmarshal(v, &notifications)
-
-		// build data
-		exchangeAction, exist := notifications[exchange]
-		if !exist {
-			exchangeAction = common.ExchangeActionNoti{}
+		b, err := tx.CreateBucketIfNotExists([]byte(fmt.Sprintf("%s_%s", EXCHANGE_NOTIFICATIONS, exchange)))
+		if err != nil {
+			return err
 		}
-		exchangeToken, exist := exchangeAction[action]
-		if !exist {
-			exchangeToken = common.ExchangeTokenPairNoti{}
-		}
-		exchangeToken[token] = common.ExchangeNotiContent{
+		key := fmt.Sprintf("%s_%s", action, token)
+		noti := common.ExchangeNotiContent{
 			FromTime:  fromTime,
 			ToTime:    toTime,
 			IsWarning: isWarning,
 			Message:   msg,
 		}
-		exchangeAction[action] = exchangeToken
-		notifications[exchange] = exchangeAction
-
-		// remove old data
-		if k != nil {
-			b.Delete(k)
-		}
 
 		// update new value
-		idBytes := uint64ToBytes(common.GetTimepoint())
-		dataJSON, err := json.Marshal(notifications)
+		dataJSON, err := json.Marshal(noti)
 		if err != nil {
 			return err
 		}
-		err = b.Put(idBytes, dataJSON)
+		err = b.Put([]byte(key), dataJSON)
 		return err
 	})
 	return err
@@ -1079,10 +1061,38 @@ func (self *BoltStorage) GetExchangeNotifications() (common.ExchangeNotification
 	result := common.ExchangeNotifications{}
 	var err error
 	self.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(EXCHANGE_NOTIFICATIONS))
-		c := b.Cursor()
-		_, v := c.Last()
-		err := json.Unmarshal(v, &result)
+		bucketNames := []string{}
+		// get all buckets name
+		tx.ForEach(func(name []byte, _ *bolt.Bucket) error {
+			bucketNames = append(bucketNames, string(name))
+			return nil
+		})
+
+		// scan all bucket name
+		for _, name := range bucketNames {
+			// if it is a notification bucket then get all notifications
+			if strings.Contains(name, EXCHANGE_NOTIFICATIONS) {
+				b := tx.Bucket([]byte(name))
+				c := b.Cursor()
+				actionContent := common.ExchangeActionNoti{}
+				for k, v := c.First(); k != nil; k, v = c.Next() {
+					actionToken := strings.Split(string(k), "_")
+					action := actionToken[0]
+					token := actionToken[1]
+					notiContent := common.ExchangeNotiContent{}
+					json.Unmarshal(v, &notiContent)
+					tokenContent, exist := actionContent[action]
+					if !exist {
+						tokenContent = common.ExchangeTokenNoti{}
+					}
+					tokenContent[token] = notiContent
+					actionContent[action] = tokenContent
+				}
+				arrName := strings.Split(name, "_")
+				exchange := arrName[len(arrName)-1]
+				result[exchange] = actionContent
+			}
+		}
 		return err
 	})
 	return result, err

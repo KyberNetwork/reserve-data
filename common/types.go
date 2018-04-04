@@ -678,8 +678,8 @@ type ExchangeNotiContent struct {
 	Message   string `json:"msg"`
 }
 
-type ExchangeTokenPairNoti map[string]ExchangeNotiContent
+type ExchangeTokenNoti map[string]ExchangeNotiContent
 
-type ExchangeActionNoti map[string]ExchangeTokenPairNoti
+type ExchangeActionNoti map[string]ExchangeTokenNoti
 
 type ExchangeNotifications map[string]ExchangeActionNoti

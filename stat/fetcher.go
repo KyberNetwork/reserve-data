@@ -185,13 +185,11 @@ func (self *Fetcher) RunTradeLogProcessor() {
 		if len(tradeLogs) > 0 {
 			var last uint64
 			for _, trade := range tradeLogs {
-				log.Printf("AGGREGATE going to aggregate log %d", i)
 				if err := self.aggregateTradeLog(trade); err == nil {
 					if trade.Timestamp > last {
 						last = trade.Timestamp
 					}
 				}
-				log.Printf("AGGREGATE aggregated log %d", i)
 			}
 			self.statStorage.SetLastProcessedTradeLogTimepoint(last)
 			log.Printf("AGGREGATE finished all logs in the batch")
