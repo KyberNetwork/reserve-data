@@ -647,21 +647,20 @@ func (self *BoltStorage) StorePendingTargetQty(data, dataType string) error {
 		if lastPending != nil {
 			err = errors.New("There is another pending target quantity. Please confirm or cancel it before setting new target.")
 			return err
-		} else {
-			tokenTargetQty.ID = timepoint
-			tokenTargetQty.Status = "unconfirmed"
-			tokenTargetQty.Data = data
-			tokenTargetQty.Type, _ = strconv.ParseInt(dataType, 10, 64)
-			idByte := uint64ToBytes(timepoint)
-			var dataJson []byte
-			dataJson, err = json.Marshal(tokenTargetQty)
-			if err != nil {
-				return err
-			}
-			log.Printf("Target to save: %v", dataJson)
-			return b.Put(idByte, dataJson)
 		}
-		return err
+
+		tokenTargetQty.ID = timepoint
+		tokenTargetQty.Status = "unconfirmed"
+		tokenTargetQty.Data = data
+		tokenTargetQty.Type, _ = strconv.ParseInt(dataType, 10, 64)
+		idByte := uint64ToBytes(timepoint)
+		var dataJson []byte
+		dataJson, err = json.Marshal(tokenTargetQty)
+		if err != nil {
+			return err
+		}
+		log.Printf("Target to save: %v", dataJson)
+		return b.Put(idByte, dataJson)
 	})
 	return err
 }
@@ -674,11 +673,10 @@ func (self *BoltStorage) RemovePendingTargetQty() error {
 		log.Printf("Last key: %s", k)
 		if lastPending == nil {
 			return errors.New("There is no pending target quantity.")
-		} else {
-			b.Delete([]byte(k))
-			return nil
 		}
-		return err
+
+		b.Delete([]byte(k))
+		return nil
 	})
 	return err
 }

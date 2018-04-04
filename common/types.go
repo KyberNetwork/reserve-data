@@ -421,16 +421,16 @@ type AllBalanceResponse struct {
 }
 
 type Order struct {
-	ID          string `standard id across multiple exchanges`
+	ID          string // standard id across multiple exchanges
 	Base        string
 	Quote       string
 	OrderId     string
 	Price       float64
-	OrigQty     float64 `original quantity`
-	ExecutedQty float64 `matched quantity`
+	OrigQty     float64 // original quantity
+	ExecutedQty float64 // matched quantity
 	TimeInForce string
-	Type        string `market or limit`
-	Side        string `buy or sell`
+	Type        string // market or limit
+	Side        string // buy or sell
 	StopPrice   string
 	IcebergQty  string
 	Time        uint64
@@ -486,7 +486,7 @@ type AuthDataResponse struct {
 	Version    Version
 	Timestamp  Timestamp
 	ReturnTime Timestamp
-	Data       struct {
+	Data struct {
 		Valid             bool
 		Error             string
 		Timestamp         Timestamp
@@ -639,7 +639,7 @@ type ExchangesStatus map[string]ExStatus
 
 type TradeLogGeoInfoResp struct {
 	Success bool `json:"success"`
-	Data    struct {
+	Data struct {
 		IP      string `json:"IP"`
 		Country string `json:"Country"`
 	} `json:"data"`

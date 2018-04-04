@@ -35,11 +35,11 @@ type Binainfo struct {
 	CanTrade         bool   `json:"canTrade"`
 	CanWithdraw      bool   `json:"canWithdraw"`
 	CanDeposit       bool   `json:"canDeposit"`
-	Balances         []struct {
+	Balances []struct {
 		Asset  string `json:"asset"`
 		Free   string `json:"free"`
-		Locked string `json:"locked`
-	} `json:"balances`
+		Locked string `json:"locked"`
+	} `json:"balances"`
 }
 
 type FilterLimit struct {
@@ -213,5 +213,5 @@ type BinaAccountTradeHistory []struct {
 	Time        uint64 `json:"time"`
 	IsBuyer     bool   `json:"isBuyer"`
 	IsMaker     bool   `json:"isMaker"`
-	isBestMatch bool   `json:"isBestMatch"`
+	isBestMatch bool
 }

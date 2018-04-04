@@ -34,7 +34,7 @@ func (self *Liqui) Address(token common.Token) (ethereum.Address, bool) {
 }
 
 func (self *Liqui) UpdateAllDepositAddresses(address string) {
-	for k, _ := range self.addresses {
+	for k := range self.addresses {
 		self.addresses[k] = ethereum.HexToAddress(address)
 	}
 }
@@ -126,7 +126,7 @@ func (self *Liqui) FetchEBalanceData(timepoint uint64) (common.EBalanceEntry, er
 			result.AvailableBalance = map[string]float64{}
 			result.LockedBalance = map[string]float64{}
 			result.DepositBalance = map[string]float64{}
-			for tokenID, _ := range common.SupportedTokens {
+			for tokenID := range common.SupportedTokens {
 				result.AvailableBalance[tokenID] = balances[strings.ToLower(tokenID)]
 				// TODO: need to take open order into account
 				result.LockedBalance[tokenID] = 0
@@ -204,10 +204,8 @@ func (self *Liqui) DepositStatus(id common.ActivityID, timepoint uint64) (string
 	timestamp := id.Timepoint
 	if timepoint-timestamp/uint64(time.Millisecond) > DEPOSIT_WAITING_TIME {
 		return "done", nil
-	} else {
-		return "", nil
 	}
-	return "", errors.New("Not implemented yet")
+	return "", nil
 }
 
 // Liqui should not work properly because of lack of txid
@@ -215,10 +213,8 @@ func (self *Liqui) WithdrawStatus(id common.ActivityID, timepoint uint64) (strin
 	timestamp := id.Timepoint
 	if timepoint-timestamp/uint64(time.Millisecond) > WITHDRAW_WAITING_TIME {
 		return "done", "", nil
-	} else {
-		return "", "", nil
 	}
-	return "", "", errors.New("Not implemented yet")
+	return "", "", nil
 }
 
 func (self *Liqui) OrderStatus(id common.ActivityID, timepoint uint64) (string, error) {
