@@ -3,6 +3,7 @@ package fetcher
 import (
 	"log"
 	"os"
+	"path"
 	"sync"
 	"testing"
 
@@ -104,8 +105,7 @@ func TestUnchangedFunc(t *testing.T) {
 
 func TestExchangeDown(t *testing.T) {
 	// mock fetcher
-	// TODO: no test_fetcher.db found in repo, where is it?
-	testFetcherStoragePath := "/go/src/github.com/KyberNetwork/reserve-data/data/fetcher/test_fetcher.db"
+	testFetcherStoragePath := path.Join(common.CurrentDir(), "test_fetcher.db")
 	fstorage, err := storage.NewBoltStorage(testFetcherStoragePath)
 	if err != nil {
 		log.Fatal(err.Error())
