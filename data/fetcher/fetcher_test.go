@@ -16,15 +16,15 @@ import (
 func TestUnchangedFunc(t *testing.T) {
 	// test different len
 	a1 := map[common.ActivityID]common.ActivityStatus{
-		common.ActivityID{1, "1"}: common.ActivityStatus{
+		{1, "1"}: {
 			"done", "0x123", 0, "mined", nil,
 		},
 	}
 	b1 := map[common.ActivityID]common.ActivityStatus{
-		common.ActivityID{1, "1"}: common.ActivityStatus{
+		{1, "1"}: {
 			"done", "0x123", 0, "mined", nil,
 		},
-		common.ActivityID{2, "1"}: common.ActivityStatus{
+		{2, "1"}: {
 			"done", "0x123", 0, "mined", nil,
 		},
 	}
@@ -33,12 +33,12 @@ func TestUnchangedFunc(t *testing.T) {
 	}
 	// test different id
 	a1 = map[common.ActivityID]common.ActivityStatus{
-		common.ActivityID{1, "1"}: common.ActivityStatus{
+		{1, "1"}: {
 			"done", "0x123", 0, "mined", nil,
 		},
 	}
 	b1 = map[common.ActivityID]common.ActivityStatus{
-		common.ActivityID{2, "1"}: common.ActivityStatus{
+		{2, "1"}: {
 			"done", "0x123", 0, "mined", nil,
 		},
 	}
@@ -47,12 +47,12 @@ func TestUnchangedFunc(t *testing.T) {
 	}
 	// test different exchange status
 	a1 = map[common.ActivityID]common.ActivityStatus{
-		common.ActivityID{1, "1"}: common.ActivityStatus{
+		{1, "1"}: {
 			"", "0x123", 0, "mined", nil,
 		},
 	}
 	b1 = map[common.ActivityID]common.ActivityStatus{
-		common.ActivityID{1, "1"}: common.ActivityStatus{
+		{1, "1"}: {
 			"done", "0x123", 0, "mined", nil,
 		},
 	}
@@ -61,12 +61,12 @@ func TestUnchangedFunc(t *testing.T) {
 	}
 	// test different mining status
 	a1 = map[common.ActivityID]common.ActivityStatus{
-		common.ActivityID{1, "1"}: common.ActivityStatus{
+		{1, "1"}: {
 			"done", "0x123", 0, "mined", nil,
 		},
 	}
 	b1 = map[common.ActivityID]common.ActivityStatus{
-		common.ActivityID{1, "1"}: common.ActivityStatus{
+		{1, "1"}: {
 			"done", "0x123", 0, "", nil,
 		},
 	}
@@ -75,12 +75,12 @@ func TestUnchangedFunc(t *testing.T) {
 	}
 	// test different tx
 	a1 = map[common.ActivityID]common.ActivityStatus{
-		common.ActivityID{1, "1"}: common.ActivityStatus{
+		{1, "1"}: {
 			"done", "0x123", 0, "mined", nil,
 		},
 	}
 	b1 = map[common.ActivityID]common.ActivityStatus{
-		common.ActivityID{1, "1"}: common.ActivityStatus{
+		{1, "1"}: {
 			"done", "0x124", 0, "mined", nil,
 		},
 	}
@@ -89,12 +89,12 @@ func TestUnchangedFunc(t *testing.T) {
 	}
 	// test identical statuses
 	a1 = map[common.ActivityID]common.ActivityStatus{
-		common.ActivityID{1, "1"}: common.ActivityStatus{
+		{1, "1"}: {
 			"done", "0x123", 0, "mined", nil,
 		},
 	}
 	b1 = map[common.ActivityID]common.ActivityStatus{
-		common.ActivityID{1, "1"}: common.ActivityStatus{
+		{1, "1"}: {
 			"done", "0x123", 0, "mined", nil,
 		},
 	}
