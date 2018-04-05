@@ -1,6 +1,7 @@
 package fetcher
 
 import (
+	"io/ioutil"
 	"log"
 	"os"
 	"path"
@@ -105,12 +106,17 @@ func TestUnchangedFunc(t *testing.T) {
 
 func TestExchangeDown(t *testing.T) {
 	// mock fetcher
-	testFetcherStoragePath := path.Join(common.CurrentDir(), "test_fetcher.db")
+	tmpDir, err := ioutil.TempDir("", "test_fetcher")
+	if err != nil {
+		t.Fatal(err)
+	}
+	testFetcherStoragePath := path.Join(tmpDir, "test_fetcher.db")
+
 	fstorage, err := storage.NewBoltStorage(testFetcherStoragePath)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	defer os.Remove(testFetcherStoragePath)
+	defer os.Remove(tmpDir)
 	runner := http_runner.NewHttpRunner(9000)
 	fetcher := NewFetcher(fstorage, runner, ethereum.Address{}, true)
 
