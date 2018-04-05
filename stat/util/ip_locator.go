@@ -13,9 +13,11 @@ import (
 
 // IPToCountry initializes a new ipLocator and resolve the given IP address.
 func IPToCountry(ip string) (string, error) {
-	il, err := newIPLocator()
+	dbPath := path.Join(common.CurrentDir(), "GeoLite2-Country.mmdb")
+	il, err := newIPLocator(dbPath)
 	if err != nil {
-		return "", err
+		// MaxMind's DB is stored in source tree
+		panic(err)
 	}
 	return il.ipToCountry(ip)
 }
@@ -26,8 +28,7 @@ type ipLocator struct {
 }
 
 // newIPLocator returns an instance of ipLocator.
-func newIPLocator() (*ipLocator, error) {
-	dbPath := path.Join(common.CurrentDir(), "GeoLite2-Country.mmdb")
+func newIPLocator(dbPath string) (*ipLocator, error) {
 	r, err := geoip2.Open(dbPath)
 	if err != nil {
 		return nil, err
