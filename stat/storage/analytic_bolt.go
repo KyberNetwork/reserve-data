@@ -30,10 +30,10 @@ func NewBoltAnalyticStorage(path, awsPath string) (*BoltAnalyticStorage, error) 
 	var err error
 	var db *bolt.DB
 	db, err = bolt.Open(path, 0600, nil)
-	awsConf, err := archive.GetAWSconfigFromFile(awsPath)
 	if err != nil {
 		panic(err)
 	}
+	awsConf, err := archive.GetAWSconfigFromFile(awsPath)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,6 @@ func (self *BoltAnalyticStorage) ExportPruneExpired(currentTime uint64) (nRecord
 	expiredTimestampByte := uint64ToBytes(currentTime - PRICE_ANALYTIC_EXPIRED)
 	fileName := fmt.Sprintf("ExpiredPriceAnalyticAt%d", currentTime)
 	outFile, err := os.Create(fileName)
-	defer outFile.Close()
 	if err != nil {
 		return 0, err
 	}
@@ -104,6 +103,7 @@ func (self *BoltAnalyticStorage) ExportPruneExpired(currentTime uint64) (nRecord
 		}
 		return nil
 	})
+	outFile.Close()
 	if nRecord > 0 {
 		log.Printf("AnalyticPriceData: uploading file... ")
 		uploaderr := self.arch.UploadFile("", fileName, EXPIRED_PRICE_ANALYTIC_S3_BUCKET_NAME)

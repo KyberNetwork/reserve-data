@@ -12,10 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
-const (
-	REGION = "ap-southeast-1"
-)
-
 type s3Archive struct {
 	uploader *s3manager.Uploader
 	svc      *s3.S3
