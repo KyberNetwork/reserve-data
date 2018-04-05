@@ -120,7 +120,7 @@ func (self *Config) AddStatConfig(settingPath SettingPaths, addressConfig common
 		statFetcherRunner = http_runner.NewHttpRunner(8002)
 	} else {
 		statFetcherRunner = fetcher.NewTickerRunner(7*time.Second, 5*time.Second, 3*time.Second, 5*time.Second, 5*time.Second, 10*time.Second, 7*time.Second, 2*time.Second, 2*time.Second)
-		monitorRunner = stat.NewTickerRunner(5 * time.Second)
+		monitorRunner = stat.NewTickerRunner(24 * time.Hour)
 	}
 
 	self.StatStorage = statStorage
