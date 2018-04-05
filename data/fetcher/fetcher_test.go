@@ -1,8 +1,10 @@
 package fetcher
 
 import (
+	"io/ioutil"
 	"log"
 	"os"
+	"path"
 	"sync"
 	"testing"
 
@@ -15,15 +17,15 @@ import (
 func TestUnchangedFunc(t *testing.T) {
 	// test different len
 	a1 := map[common.ActivityID]common.ActivityStatus{
-		common.ActivityID{1, "1"}: common.ActivityStatus{
+		{1, "1"}: {
 			"done", "0x123", 0, "mined", nil,
 		},
 	}
 	b1 := map[common.ActivityID]common.ActivityStatus{
-		common.ActivityID{1, "1"}: common.ActivityStatus{
+		{1, "1"}: {
 			"done", "0x123", 0, "mined", nil,
 		},
-		common.ActivityID{2, "1"}: common.ActivityStatus{
+		{2, "1"}: {
 			"done", "0x123", 0, "mined", nil,
 		},
 	}
@@ -32,12 +34,12 @@ func TestUnchangedFunc(t *testing.T) {
 	}
 	// test different id
 	a1 = map[common.ActivityID]common.ActivityStatus{
-		common.ActivityID{1, "1"}: common.ActivityStatus{
+		{1, "1"}: {
 			"done", "0x123", 0, "mined", nil,
 		},
 	}
 	b1 = map[common.ActivityID]common.ActivityStatus{
-		common.ActivityID{2, "1"}: common.ActivityStatus{
+		{2, "1"}: {
 			"done", "0x123", 0, "mined", nil,
 		},
 	}
@@ -46,12 +48,12 @@ func TestUnchangedFunc(t *testing.T) {
 	}
 	// test different exchange status
 	a1 = map[common.ActivityID]common.ActivityStatus{
-		common.ActivityID{1, "1"}: common.ActivityStatus{
+		{1, "1"}: {
 			"", "0x123", 0, "mined", nil,
 		},
 	}
 	b1 = map[common.ActivityID]common.ActivityStatus{
-		common.ActivityID{1, "1"}: common.ActivityStatus{
+		{1, "1"}: {
 			"done", "0x123", 0, "mined", nil,
 		},
 	}
@@ -60,12 +62,12 @@ func TestUnchangedFunc(t *testing.T) {
 	}
 	// test different mining status
 	a1 = map[common.ActivityID]common.ActivityStatus{
-		common.ActivityID{1, "1"}: common.ActivityStatus{
+		{1, "1"}: {
 			"done", "0x123", 0, "mined", nil,
 		},
 	}
 	b1 = map[common.ActivityID]common.ActivityStatus{
-		common.ActivityID{1, "1"}: common.ActivityStatus{
+		{1, "1"}: {
 			"done", "0x123", 0, "", nil,
 		},
 	}
@@ -74,12 +76,12 @@ func TestUnchangedFunc(t *testing.T) {
 	}
 	// test different tx
 	a1 = map[common.ActivityID]common.ActivityStatus{
-		common.ActivityID{1, "1"}: common.ActivityStatus{
+		{1, "1"}: {
 			"done", "0x123", 0, "mined", nil,
 		},
 	}
 	b1 = map[common.ActivityID]common.ActivityStatus{
-		common.ActivityID{1, "1"}: common.ActivityStatus{
+		{1, "1"}: {
 			"done", "0x124", 0, "mined", nil,
 		},
 	}
@@ -88,12 +90,12 @@ func TestUnchangedFunc(t *testing.T) {
 	}
 	// test identical statuses
 	a1 = map[common.ActivityID]common.ActivityStatus{
-		common.ActivityID{1, "1"}: common.ActivityStatus{
+		{1, "1"}: {
 			"done", "0x123", 0, "mined", nil,
 		},
 	}
 	b1 = map[common.ActivityID]common.ActivityStatus{
-		common.ActivityID{1, "1"}: common.ActivityStatus{
+		{1, "1"}: {
 			"done", "0x123", 0, "mined", nil,
 		},
 	}
@@ -103,14 +105,18 @@ func TestUnchangedFunc(t *testing.T) {
 }
 
 func TestExchangeDown(t *testing.T) {
-
 	// mock fetcher
-	testFetcherStoragePath := "/go/src/github.com/KyberNetwork/reserve-data/data/fetcher/test_fetcher.db"
+	tmpDir, err := ioutil.TempDir("", "test_fetcher")
+	if err != nil {
+		t.Fatal(err)
+	}
+	testFetcherStoragePath := path.Join(tmpDir, "test_fetcher.db")
+
 	fstorage, err := storage.NewBoltStorage(testFetcherStoragePath)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	defer os.Remove(testFetcherStoragePath)
+	defer os.Remove(tmpDir)
 	runner := http_runner.NewHttpRunner(9000)
 	fetcher := NewFetcher(fstorage, runner, ethereum.Address{}, true)
 

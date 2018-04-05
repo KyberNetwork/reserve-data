@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/KyberNetwork/reserve-data/common"
@@ -32,6 +33,7 @@ const (
 	PWI_EQUATION            string = "pwi_equation"
 	INTERMEDIATE_TX         string = "intermediate_tx"
 	EXCHANGE_STATUS         string = "exchange_status"
+	EXCHANGE_NOTIFICATIONS  string = "exchange_notifications"
 	MAX_NUMBER_VERSION      int    = 1000
 	MAX_GET_RATES_PERIOD    uint64 = 86400000 //1 days in milisec
 )
@@ -51,22 +53,23 @@ func NewBoltStorage(path string) (*BoltStorage, error) {
 	}
 	// init buckets
 	db.Update(func(tx *bolt.Tx) error {
-		tx.CreateBucket([]byte(PRICE_BUCKET))
-		tx.CreateBucket([]byte(RATE_BUCKET))
-		tx.CreateBucket([]byte(ORDER_BUCKET))
-		tx.CreateBucket([]byte(ACTIVITY_BUCKET))
-		tx.CreateBucket([]byte(PENDING_ACTIVITY_BUCKET))
-		tx.CreateBucket([]byte(AUTH_DATA_BUCKET))
-		tx.CreateBucket([]byte(METRIC_BUCKET))
-		tx.CreateBucket([]byte(METRIC_TARGET_QUANTITY))
-		tx.CreateBucket([]byte(PENDING_TARGET_QUANTITY))
-		tx.CreateBucket([]byte(TRADE_HISTORY))
-		tx.CreateBucket([]byte(ENABLE_REBALANCE))
-		tx.CreateBucket([]byte(SETRATE_CONTROL))
-		tx.CreateBucket([]byte(PENDING_PWI_EQUATION))
-		tx.CreateBucket([]byte(PWI_EQUATION))
-		tx.CreateBucket([]byte(INTERMEDIATE_TX))
-		tx.CreateBucket([]byte(EXCHANGE_STATUS))
+		tx.CreateBucketIfNotExists([]byte(PRICE_BUCKET))
+		tx.CreateBucketIfNotExists([]byte(RATE_BUCKET))
+		tx.CreateBucketIfNotExists([]byte(ORDER_BUCKET))
+		tx.CreateBucketIfNotExists([]byte(ACTIVITY_BUCKET))
+		tx.CreateBucketIfNotExists([]byte(PENDING_ACTIVITY_BUCKET))
+		tx.CreateBucketIfNotExists([]byte(AUTH_DATA_BUCKET))
+		tx.CreateBucketIfNotExists([]byte(METRIC_BUCKET))
+		tx.CreateBucketIfNotExists([]byte(METRIC_TARGET_QUANTITY))
+		tx.CreateBucketIfNotExists([]byte(PENDING_TARGET_QUANTITY))
+		tx.CreateBucketIfNotExists([]byte(TRADE_HISTORY))
+		tx.CreateBucketIfNotExists([]byte(ENABLE_REBALANCE))
+		tx.CreateBucketIfNotExists([]byte(SETRATE_CONTROL))
+		tx.CreateBucketIfNotExists([]byte(PENDING_PWI_EQUATION))
+		tx.CreateBucketIfNotExists([]byte(PWI_EQUATION))
+		tx.CreateBucketIfNotExists([]byte(INTERMEDIATE_TX))
+		tx.CreateBucketIfNotExists([]byte(EXCHANGE_STATUS))
+		tx.CreateBucketIfNotExists([]byte(EXCHANGE_NOTIFICATIONS))
 		return nil
 	})
 	storage := &BoltStorage{sync.RWMutex{}, db}
@@ -644,21 +647,20 @@ func (self *BoltStorage) StorePendingTargetQty(data, dataType string) error {
 		if lastPending != nil {
 			err = errors.New("There is another pending target quantity. Please confirm or cancel it before setting new target.")
 			return err
-		} else {
-			tokenTargetQty.ID = timepoint
-			tokenTargetQty.Status = "unconfirmed"
-			tokenTargetQty.Data = data
-			tokenTargetQty.Type, _ = strconv.ParseInt(dataType, 10, 64)
-			idByte := uint64ToBytes(timepoint)
-			var dataJson []byte
-			dataJson, err = json.Marshal(tokenTargetQty)
-			if err != nil {
-				return err
-			}
-			log.Printf("Target to save: %v", dataJson)
-			return b.Put(idByte, dataJson)
 		}
-		return err
+
+		tokenTargetQty.ID = timepoint
+		tokenTargetQty.Status = "unconfirmed"
+		tokenTargetQty.Data = data
+		tokenTargetQty.Type, _ = strconv.ParseInt(dataType, 10, 64)
+		idByte := uint64ToBytes(timepoint)
+		var dataJson []byte
+		dataJson, err = json.Marshal(tokenTargetQty)
+		if err != nil {
+			return err
+		}
+		log.Printf("Target to save: %v", dataJson)
+		return b.Put(idByte, dataJson)
 	})
 	return err
 }
@@ -671,11 +673,10 @@ func (self *BoltStorage) RemovePendingTargetQty() error {
 		log.Printf("Last key: %s", k)
 		if lastPending == nil {
 			return errors.New("There is no pending target quantity.")
-		} else {
-			b.Delete([]byte(k))
-			return nil
 		}
-		return err
+
+		b.Delete([]byte(k))
+		return nil
 	})
 	return err
 }
@@ -1026,4 +1027,65 @@ func (self *BoltStorage) UpdateExchangeStatus(data common.ExchangesStatus) error
 		return b.Put(idByte, dataJson)
 	})
 	return err
+}
+
+func (self *BoltStorage) UpdateExchangeNotification(
+	exchange, action, token string, fromTime, toTime uint64, isWarning bool, msg string) error {
+	var err error
+	self.db.Update(func(tx *bolt.Tx) error {
+		exchangeBk := tx.Bucket([]byte(EXCHANGE_NOTIFICATIONS))
+		b, err := exchangeBk.CreateBucketIfNotExists([]byte(exchange))
+		if err != nil {
+			return err
+		}
+		key := fmt.Sprintf("%s_%s", action, token)
+		noti := common.ExchangeNotiContent{
+			FromTime:  fromTime,
+			ToTime:    toTime,
+			IsWarning: isWarning,
+			Message:   msg,
+		}
+
+		// update new value
+		dataJSON, err := json.Marshal(noti)
+		if err != nil {
+			return err
+		}
+		err = b.Put([]byte(key), dataJSON)
+		return err
+	})
+	return err
+}
+
+func (self *BoltStorage) GetExchangeNotifications() (common.ExchangeNotifications, error) {
+	result := common.ExchangeNotifications{}
+	var err error
+	self.db.View(func(tx *bolt.Tx) error {
+		exchangeBks := tx.Bucket([]byte(EXCHANGE_NOTIFICATIONS))
+		c := exchangeBks.Cursor()
+		for name, bucket := c.First(); name != nil; name, bucket = c.Next() {
+			// if bucket == nil, then name is a child bucket name (according to bolt docs)
+			if bucket == nil {
+				b := exchangeBks.Bucket(name)
+				c := b.Cursor()
+				actionContent := common.ExchangeActionNoti{}
+				for k, v := c.First(); k != nil; k, v = c.Next() {
+					actionToken := strings.Split(string(k), "_")
+					action := actionToken[0]
+					token := actionToken[1]
+					notiContent := common.ExchangeNotiContent{}
+					json.Unmarshal(v, &notiContent)
+					tokenContent, exist := actionContent[action]
+					if !exist {
+						tokenContent = common.ExchangeTokenNoti{}
+					}
+					tokenContent[token] = notiContent
+					actionContent[action] = tokenContent
+				}
+				result[string(name)] = actionContent
+			}
+		}
+		return err
+	})
+	return result, err
 }

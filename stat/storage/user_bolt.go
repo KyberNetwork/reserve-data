@@ -33,12 +33,12 @@ func NewBoltUserStorage(path string) (*BoltUserStorage, error) {
 
 	// init buckets
 	db.Update(func(tx *bolt.Tx) error {
-		tx.CreateBucket([]byte(ADDRESS_CATEGORY))
-		tx.CreateBucket([]byte(ADDRESS_ID))
-		tx.CreateBucket([]byte(ID_ADDRESSES))
-		tx.CreateBucket([]byte(ADDRESS_TIME))
-		tx.CreateBucket([]byte(PENDING_ADDRESSES))
-		tx.CreateBucket([]byte(CATLOG_PROCESSOR_STATE))
+		tx.CreateBucketIfNotExists([]byte(ADDRESS_CATEGORY))
+		tx.CreateBucketIfNotExists([]byte(ADDRESS_ID))
+		tx.CreateBucketIfNotExists([]byte(ID_ADDRESSES))
+		tx.CreateBucketIfNotExists([]byte(ADDRESS_TIME))
+		tx.CreateBucketIfNotExists([]byte(PENDING_ADDRESSES))
+		tx.CreateBucketIfNotExists([]byte(CATLOG_PROCESSOR_STATE))
 		return nil
 	})
 	storage := &BoltUserStorage{db}

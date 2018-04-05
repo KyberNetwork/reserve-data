@@ -1936,7 +1936,7 @@ func (self *HTTPServer) GetExchangesStatus(c *gin.Context) {
 }
 
 func (self *HTTPServer) UpdateExchangeStatus(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{}, []Permission{ConfirmConfPermission, RebalancePermission})
+	postForm, ok := self.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
 	if !ok {
 		return
 	}
@@ -2021,7 +2021,6 @@ func (self *HTTPServer) GetCountryStats(c *gin.Context) {
 		)
 		return
 	}
-
 	c.JSON(
 		http.StatusOK,
 		gin.H{
@@ -2157,6 +2156,61 @@ func (self *HTTPServer) GetPriceAnalyticData(c *gin.Context) {
 	)
 }
 
+func (self *HTTPServer) ExchangeNotification(c *gin.Context) {
+	postForm, ok := self.Authenticated(c, []string{
+		"exchange", "action", "token", "fromTime", "toTime", "isWarning", "msg"}, []Permission{RebalancePermission})
+	if !ok {
+		return
+	}
+
+	exchange := postForm.Get("exchange")
+	action := postForm.Get("action")
+	tokenPair := postForm.Get("token")
+	from, _ := strconv.ParseUint(postForm.Get("fromTime"), 10, 64)
+	to, _ := strconv.ParseUint(postForm.Get("toTime"), 10, 64)
+	isWarning, _ := strconv.ParseBool(postForm.Get("isWarning"))
+	msg := postForm.Get("msg")
+
+	err := self.app.UpdateExchangeNotification(exchange, action, tokenPair, from, to, isWarning, msg)
+	if err != nil {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  err.Error(),
+			},
+		)
+		return
+	}
+	c.JSON(
+		http.StatusOK,
+		gin.H{
+			"success": true,
+		},
+	)
+}
+
+func (self *HTTPServer) GetNotifications(c *gin.Context) {
+	data, err := self.app.GetNotifications()
+	if err != nil {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  err.Error(),
+			},
+		)
+		return
+	}
+	c.JSON(
+		http.StatusOK,
+		gin.H{
+			"success": true,
+			"data":    data,
+		},
+	)
+}
+
 func (self *HTTPServer) Run() {
 	if self.core != nil && self.app != nil {
 		self.r.GET("/prices-version", self.AllPricesVersion)
@@ -2209,6 +2263,8 @@ func (self *HTTPServer) Run() {
 		self.r.GET("/get-exchange-status", self.GetExchangesStatus)
 		self.r.POST("/update-exchange-status", self.UpdateExchangeStatus)
 
+		self.r.POST("/exchange-notification", self.ExchangeNotification)
+		self.r.GET("/exchange-notifications", self.GetNotifications)
 	}
 
 	if self.stat != nil {

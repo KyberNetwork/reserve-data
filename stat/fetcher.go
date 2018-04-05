@@ -10,8 +10,6 @@ import (
 	"strings"
 	"sync"
 
-	// "sync"
-
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/stat/util"
 	ethereum "github.com/ethereum/go-ethereum/common"
@@ -184,8 +182,7 @@ func (self *Fetcher) RunTradeLogProcessor() {
 		log.Printf("AGGREGATE %d trades from %d to %d", len(tradeLogs), fromTime, toTime)
 		if len(tradeLogs) > 0 {
 			var last uint64
-			for i := len(tradeLogs) - 1; i >= 0; i-- {
-				trade := tradeLogs[i]
+			for _, trade := range tradeLogs {
 				if err := self.aggregateTradeLog(trade); err == nil {
 					if trade.Timestamp > last {
 						last = trade.Timestamp
@@ -193,6 +190,7 @@ func (self *Fetcher) RunTradeLogProcessor() {
 				}
 			}
 			self.statStorage.SetLastProcessedTradeLogTimepoint(last)
+			log.Printf("AGGREGATE finished all logs in the batch")
 		} else {
 			l, err := self.logStorage.GetLastTradeLog()
 			if err != nil {
@@ -331,7 +329,7 @@ func (self *Fetcher) GetTradeGeo(txHash string) (string, string, error) {
 		if response.Data.Country != "" {
 			return response.Data.IP, response.Data.Country, err
 		}
-		country, err := util.IpToCountry(response.Data.IP)
+		country, err := util.IPToCountry(response.Data.IP)
 		if err != nil {
 			return "", "", err
 		}
@@ -391,13 +389,16 @@ func (self *Fetcher) FetchLogs(fromBlock uint64, toBlock uint64, timepoint uint6
 
 func (self *Fetcher) updateTimeZoneBuckets(timestamp uint64, updates common.TradeStats) (err error) {
 	//update to timezone buckets
+	log.Printf("AGGREGATE start updaing timezone buckets")
 	for i := START_TIMEZONE; i <= END_TIMEZONE; i++ {
+		log.Printf("AGGREGATE updaing timezone buckets: %d", i)
 		freq := fmt.Sprintf("%s%d", TIMEZONE_BUCKET_PREFIX, i)
 		err = self.statStorage.SetTradeStats(freq, timestamp, updates)
 		if err != nil {
 			return err
 		}
 	}
+	log.Printf("AGGREGATE finish updaing timezone buckets")
 	return nil
 }
 
@@ -419,12 +420,14 @@ func (self *Fetcher) aggregateTradeLog(trade common.TradeLog) (err error) {
 	userAddr := common.AddrToString(trade.UserAddress)
 	country := trade.Country
 
+	log.Printf("AGGREGATE step 1")
 	if checkWalletAddress(walletAddr) {
 		self.statStorage.SetWalletAddress(walletAddr)
 	}
 
 	var srcAmount, destAmount, ethAmount, burnFee, walletFee float64
 	var tokenAddr string
+	log.Printf("AGGREGATE step 2")
 	for _, token := range common.SupportedTokens {
 		if strings.ToLower(token.Address) == srcAddr {
 			srcAmount = common.BigToFloat(trade.SrcAmount, token.Decimal)
@@ -444,6 +447,7 @@ func (self *Fetcher) aggregateTradeLog(trade common.TradeLog) (err error) {
 			}
 		}
 	}
+	log.Printf("AGGREGATE step 3")
 
 	eth := common.SupportedTokens["ETH"]
 	if trade.BurnFee != nil {
@@ -464,15 +468,18 @@ func (self *Fetcher) aggregateTradeLog(trade common.TradeLog) (err error) {
 		fmt.Sprintf("user_volume_%s", userAddr):                  trade.FiatAmount,
 	}
 
+	log.Printf("AGGREGATE step 4")
 	for _, freq := range []string{"M", "H", "D"} {
 		err = self.statStorage.SetTradeStats(freq, trade.Timestamp, updates)
 		if err != nil {
 			return
 		}
 	}
+	log.Printf("AGGREGATE step 5")
 	if err = self.updateTimeZoneBuckets(trade.Timestamp, updates); err != nil {
 		return
 	}
+	log.Printf("AGGREGATE step 6")
 	// total stats on trading
 	updates = common.TradeStats{
 		"eth_volume":  ethAmount,
@@ -484,6 +491,7 @@ func (self *Fetcher) aggregateTradeLog(trade common.TradeLog) (err error) {
 	if err = self.updateTimeZoneBuckets(trade.Timestamp, updates); err != nil {
 		return
 	}
+	log.Printf("AGGREGATE step 7")
 
 	// stats on user
 	userAddr = strings.ToLower(trade.UserAddress.String())
@@ -492,6 +500,7 @@ func (self *Fetcher) aggregateTradeLog(trade common.TradeLog) (err error) {
 		return
 	}
 
+	log.Printf("AGGREGATE step 8")
 	var kycEd bool
 	if email != "" && email != userAddr && trade.Timestamp > regTime {
 		kycEd = true
@@ -509,6 +518,7 @@ func (self *Fetcher) aggregateTradeLog(trade common.TradeLog) (err error) {
 			}
 		}
 	}
+	log.Printf("AGGREGATE step 9")
 
 	//stats on wallet address
 	updates = common.TradeStats{
@@ -521,6 +531,7 @@ func (self *Fetcher) aggregateTradeLog(trade common.TradeLog) (err error) {
 	if err = self.updateTimeZoneBuckets(trade.Timestamp, updates); err != nil {
 		return
 	}
+	log.Printf("AGGREGATE step 10")
 
 	// update geo stats
 	updates = common.TradeStats{
@@ -533,6 +544,7 @@ func (self *Fetcher) aggregateTradeLog(trade common.TradeLog) (err error) {
 	if err = self.updateTimeZoneBuckets(trade.Timestamp, updates); err != nil {
 		return
 	}
+	log.Printf("AGGREGATE step 11")
 
 	return
 }

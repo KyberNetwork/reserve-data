@@ -29,7 +29,7 @@ func NewBoltRateStorage(path string) (*BoltRateStorage, error) {
 	}
 	// init buckets
 	db.Update(func(tx *bolt.Tx) error {
-		tx.CreateBucket([]byte(RESERVE_RATES))
+		tx.CreateBucketIfNotExists([]byte(RESERVE_RATES))
 		return nil
 	})
 	storage := &BoltRateStorage{db}

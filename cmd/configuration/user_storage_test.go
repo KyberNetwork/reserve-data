@@ -1,36 +1,39 @@
 package configuration
 
 import (
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/KyberNetwork/reserve-data/stat"
 	statstorage "github.com/KyberNetwork/reserve-data/stat/storage"
 )
 
-func SetupBoltUserStorageTester(name string) (*stat.UserStorageTest, error) {
-	storage, err := statstorage.NewBoltUserStorage(
-		"/go/src/github.com/KyberNetwork/reserve-data/cmd/configuration/" + name,
-	)
+// SetupBoltUserStorageTester returns a UserStorageTest instance
+// and its tearDown function to cleanup after test.
+func SetupBoltUserStorageTester(name string) (*stat.UserStorageTest, func() error, error) {
+	tmpDir, err := ioutil.TempDir("", "test_fetcher")
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return stat.NewUserStorageTest(storage), nil
-}
-
-func TearDownBolt(name string) {
-	os.Remove(
-		"/go/src/github.com/KyberNetwork/reserve-data/cmd/configuration/" + name,
-	)
+	storage, err := statstorage.NewBoltUserStorage(filepath.Join(tmpDir, name))
+	if err != nil {
+		return nil, nil, err
+	}
+	tearDownFn := func() error {
+		return os.Remove(tmpDir)
+	}
+	return stat.NewUserStorageTest(storage), tearDownFn, nil
 }
 
 func doOneTest(f func(tester *stat.UserStorageTest, t *testing.T), t *testing.T) {
 	dbname := "test1.db"
-	tester, err := SetupBoltUserStorageTester(dbname)
+	tester, tearDownFn, err := SetupBoltUserStorageTester(dbname)
 	if err != nil {
 		t.Fatalf("Testing bolt as a stat storage: init failed(%s)", err)
 	}
-	defer TearDownBolt(dbname)
+	defer tearDownFn()
 	f(tester, t)
 }
 

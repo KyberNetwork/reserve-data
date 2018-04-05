@@ -64,27 +64,27 @@ func NewBoltStatStorage(path string) (*BoltStatStorage, error) {
 	}
 	// init buckets
 	db.Update(func(tx *bolt.Tx) error {
-		tx.CreateBucket([]byte(TRADE_STATS_BUCKET))
-		tx.CreateBucket([]byte(TRADELOG_PROCESSOR_STATE))
-		tx.CreateBucket([]byte(WALLET_ADDRESS_BUCKET))
-		tx.CreateBucket([]byte(COUNTRY_BUCKET))
+		tx.CreateBucketIfNotExists([]byte(TRADE_STATS_BUCKET))
+		tx.CreateBucketIfNotExists([]byte(TRADELOG_PROCESSOR_STATE))
+		tx.CreateBucketIfNotExists([]byte(WALLET_ADDRESS_BUCKET))
+		tx.CreateBucketIfNotExists([]byte(COUNTRY_BUCKET))
 		//create timezone buckets
 		tradeStatsBk := tx.Bucket([]byte(TRADE_STATS_BUCKET))
 		frequencies := []string{MINUTE_BUCKET, HOUR_BUCKET, DAY_BUCKET}
 
 		for _, freq := range frequencies {
-			tradeStatsBk.CreateBucket([]byte(freq))
+			tradeStatsBk.CreateBucketIfNotExists([]byte(freq))
 		}
 		for i := START_TIMEZONE; i <= END_TIMEZONE; i++ {
 			tzstring := fmt.Sprintf("%s%d", TIMEZONE_BUCKET_PREFIX, i)
-			tx.CreateBucket([]byte(tzstring))
-			tradeStatsBk.CreateBucket([]byte(tzstring))
+			tx.CreateBucketIfNotExists([]byte(tzstring))
+			tradeStatsBk.CreateBucketIfNotExists([]byte(tzstring))
 			dailyAddrBkname := fmt.Sprintf("%s%d", DAILY_ADDRESS_BUCKET_PREFIX, i)
-			tx.CreateBucket([]byte(dailyAddrBkname))
+			tx.CreateBucketIfNotExists([]byte(dailyAddrBkname))
 			dailyUserBkname := fmt.Sprintf("%s%d", DAILY_USER_BUCKET_PREFIX, i)
-			tx.CreateBucket([]byte(dailyUserBkname))
+			tx.CreateBucketIfNotExists([]byte(dailyUserBkname))
 			addrBucketName := fmt.Sprintf("%s%d", ADDRESS_BUCKET_PREFIX, i)
-			tx.CreateBucket([]byte(addrBucketName))
+			tx.CreateBucketIfNotExists([]byte(addrBucketName))
 		}
 
 		return nil
@@ -222,6 +222,7 @@ func (self *BoltStatStorage) SetTradeStats(freq string, t uint64, tradeStats com
 		}
 		freqBk := tradeStatsBk.Bucket([]byte(freqBkName))
 		timestamp := getTimestampByFreq(t, freq)
+		log.Printf("AGGREGATE SetTradeStats, getting raw stat")
 		rawStats := freqBk.Get(timestamp)
 		var stats common.TradeStats
 
@@ -230,6 +231,7 @@ func (self *BoltStatStorage) SetTradeStats(freq string, t uint64, tradeStats com
 		} else {
 			stats = common.TradeStats{}
 		}
+		log.Printf("AGGREGATE SetTradeStats, unmarshaled stat, len(raw)=%d", len(rawStats))
 		for key, value := range tradeStats {
 			sum, ok := stats[key]
 			if ok {
@@ -239,6 +241,7 @@ func (self *BoltStatStorage) SetTradeStats(freq string, t uint64, tradeStats com
 			}
 		}
 		dataJSON, err := json.Marshal(stats)
+		log.Printf("AGGREGATE SetTradeStats, marshal updated stat, len(raw)=%d", len(dataJSON))
 		if err != nil {
 			return err
 		}
@@ -246,9 +249,11 @@ func (self *BoltStatStorage) SetTradeStats(freq string, t uint64, tradeStats com
 		if err := freqBk.Put(timestamp, dataJSON); err != nil {
 			return err
 		}
+		log.Printf("AGGREGATE SetTradeStats, finish")
 
 		return err
 	})
+	log.Printf("AGGREGATE SetTradeStats, updated the db")
 	return
 }
 

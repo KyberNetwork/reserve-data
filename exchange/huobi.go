@@ -274,6 +274,7 @@ func (self *Huobi) FetchEBalanceData(timepoint uint64) (common.EBalanceEntry, er
 	result := common.EBalanceEntry{}
 	result.Timestamp = common.Timestamp(fmt.Sprintf("%d", timepoint))
 	result.Valid = true
+	result.Error = ""
 	resp_data, err := self.interf.GetInfo()
 	result.ReturnTime = common.GetTimestamp()
 	if err != nil {
@@ -288,6 +289,7 @@ func (self *Huobi) FetchEBalanceData(timepoint uint64) (common.EBalanceEntry, er
 		if resp_data.Status != "ok" {
 			result.Valid = false
 			result.Error = fmt.Sprintf("Cannot fetch ebalance")
+			result.Status = false
 		} else {
 			balances := resp_data.Data.List
 			for _, b := range balances {

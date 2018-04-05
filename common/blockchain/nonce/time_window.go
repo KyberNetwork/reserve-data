@@ -15,7 +15,7 @@ type TimeWindow struct {
 	address     ethereum.Address
 	mu          sync.Mutex
 	manualNonce *big.Int
-	time        uint64 `last time nonce was requested`
+	time        uint64 // last time nonce was requested
 }
 
 func NewTimeWindow(address ethereum.Address) *TimeWindow {

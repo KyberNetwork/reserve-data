@@ -319,6 +319,7 @@ func (self *Binance) FetchEBalanceData(timepoint uint64) (common.EBalanceEntry, 
 	result := common.EBalanceEntry{}
 	result.Timestamp = common.Timestamp(fmt.Sprintf("%d", timepoint))
 	result.Valid = true
+	result.Error = ""
 	resp_data, err := self.interf.GetInfo()
 	result.ReturnTime = common.GetTimestamp()
 	if err != nil {
@@ -333,6 +334,7 @@ func (self *Binance) FetchEBalanceData(timepoint uint64) (common.EBalanceEntry, 
 		if resp_data.Code != 0 {
 			result.Valid = false
 			result.Error = fmt.Sprintf("Code: %d, Msg: %s", resp_data.Code, resp_data.Msg)
+			result.Status = false
 		} else {
 			for _, b := range resp_data.Balances {
 				tokenID := b.Asset

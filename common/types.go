@@ -421,16 +421,16 @@ type AllBalanceResponse struct {
 }
 
 type Order struct {
-	ID          string `standard id across multiple exchanges`
+	ID          string // standard id across multiple exchanges
 	Base        string
 	Quote       string
 	OrderId     string
 	Price       float64
-	OrigQty     float64 `original quantity`
-	ExecutedQty float64 `matched quantity`
+	OrigQty     float64 // original quantity
+	ExecutedQty float64 // matched quantity
 	TimeInForce string
-	Type        string `market or limit`
-	Side        string `buy or sell`
+	Type        string // market or limit
+	Side        string // buy or sell
 	StopPrice   string
 	IcebergQty  string
 	Time        uint64
@@ -671,3 +671,15 @@ type AnalyticPriceResponse struct {
 	Timestamp uint64
 	Data      map[string]interface{}
 }
+type ExchangeNotiContent struct {
+	FromTime  uint64 `json:"fromTime"`
+	ToTime    uint64 `json:"toTime"`
+	IsWarning bool   `json:"isWarning"`
+	Message   string `json:"msg"`
+}
+
+type ExchangeTokenNoti map[string]ExchangeNotiContent
+
+type ExchangeActionNoti map[string]ExchangeTokenNoti
+
+type ExchangeNotifications map[string]ExchangeActionNoti

@@ -51,16 +51,14 @@ func NewBoltAnalyticStorage(path, awsPath string) (*BoltAnalyticStorage, error) 
 func (self *BoltAnalyticStorage) UpdatePriceAnalyticData(timestamp uint64, value []byte) error {
 	var err error
 	k := uint64ToBytes(timestamp)
-	self.db.Update(func(tx *bolt.Tx) error {
+	err = self.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(PRICE_ANALYTIC_BUCKET))
 		c := b.Cursor()
 		existedKey, _ := c.Seek(k)
 		if existedKey != nil {
-			err = errors.New("The timestamp is already existed.")
-			return err
+			return errors.New("The timestamp is already existed.")
 		}
-		err = b.Put(k, value)
-		return err
+		return b.Put(k, value)
 	})
 	return err
 }
@@ -136,19 +134,19 @@ func (self *BoltAnalyticStorage) GetPriceAnalyticData(fromTime uint64, toTime ui
 		return result, errors.New(fmt.Sprintf("Time range is too broad, it must be smaller or equal to %d miliseconds", MAX_GET_RATES_PERIOD))
 	}
 
-	self.db.View(func(tx *bolt.Tx) error {
+	err = self.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(PRICE_ANALYTIC_BUCKET))
 		c := b.Cursor()
 		for k, v := c.Seek(min); k != nil && bytes.Compare(k, max) <= 0; k, v = c.Next() {
 			timestamp := bytesToUint64(k)
 			temp := make(map[string]interface{})
-			err = json.Unmarshal(v, &temp)
-			if err != nil {
-				return err
+			vErr := json.Unmarshal(v, &temp)
+			if vErr != nil {
+				return vErr
 			}
 			record := common.AnalyticPriceResponse{
-				timestamp,
-				temp,
+				Timestamp: timestamp,
+				Data:      temp,
 			}
 			result = append(result, record)
 		}
