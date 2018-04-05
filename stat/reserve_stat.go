@@ -17,13 +17,13 @@ const (
 )
 
 type ReserveStats struct {
-	analyticStorage AnalyticStorage
-	statStorage     StatStorage
-	logStorage      LogStorage
-	userStorage     UserStorage
-	rateStorage     RateStorage
-	fetcher         *Fetcher
-	monitorRunner   MonitorRunner
+	analyticStorage  AnalyticStorage
+	statStorage      StatStorage
+	logStorage       LogStorage
+	userStorage      UserStorage
+	rateStorage      RateStorage
+	fetcher          *Fetcher
+	controllerRunner ControllerRunner
 }
 
 func NewReserveStats(
@@ -32,16 +32,16 @@ func NewReserveStats(
 	logStorage LogStorage,
 	rateStorage RateStorage,
 	userStorage UserStorage,
-	monitorRunner MonitorRunner,
+	controllerRunner ControllerRunner,
 	fetcher *Fetcher) *ReserveStats {
 	return &ReserveStats{
-		analyticStorage: analyticStorage,
-		statStorage:     statStorage,
-		logStorage:      logStorage,
-		rateStorage:     rateStorage,
-		userStorage:     userStorage,
-		fetcher:         fetcher,
-		monitorRunner:   monitorRunner,
+		analyticStorage:  analyticStorage,
+		statStorage:      statStorage,
+		logStorage:       logStorage,
+		rateStorage:      rateStorage,
+		userStorage:      userStorage,
+		fetcher:          fetcher,
+		controllerRunner: controllerRunner,
 	}
 }
 
@@ -212,7 +212,7 @@ func (self ReserveStats) GetPendingAddresses() ([]string, error) {
 func (self ReserveStats) RunAnalyticStorageController() {
 	for {
 		log.Printf("waiting for signal from analytic storage control channel")
-		t := <-self.monitorRunner.GetAnalyticStorageControlTicker()
+		t := <-self.controllerRunner.GetAnalyticStorageControlTicker()
 		timepoint := common.TimeToTimepoint(t)
 		log.Printf("got signal in analytic storage control channel with timestamp %d", timepoint)
 		nRecord, err := self.analyticStorage.ExportPruneExpired(common.GetTimepoint())
@@ -225,7 +225,7 @@ func (self ReserveStats) RunAnalyticStorageController() {
 }
 
 func (self ReserveStats) Run() error {
-	err := self.monitorRunner.Start()
+	err := self.controllerRunner.Start()
 	if err != nil {
 		return err
 	}

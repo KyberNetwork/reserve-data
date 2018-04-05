@@ -49,13 +49,13 @@ type Config struct {
 	MetricStorage   metric.MetricStorage
 	//ExchangeStorage exchange.Storage
 
-	FetcherRunner     fetcher.FetcherRunner
-	StatFetcherRunner stat.FetcherRunner
-	StatMonitorRunner stat.MonitorRunner
-	FetcherExchanges  []fetcher.Exchange
-	Exchanges         []common.Exchange
-	BlockchainSigner  blockchain.Signer
-	DepositSigner     blockchain.Signer
+	FetcherRunner        fetcher.FetcherRunner
+	StatFetcherRunner    stat.FetcherRunner
+	StatControllerRunner stat.ControllerRunner
+	FetcherExchanges     []fetcher.Exchange
+	Exchanges            []common.Exchange
+	BlockchainSigner     blockchain.Signer
+	DepositSigner        blockchain.Signer
 	//IntermediatorSigner blockchain.Signer
 
 	EnableAuthentication bool
@@ -115,12 +115,12 @@ func (self *Config) AddStatConfig(settingPath SettingPaths, addressConfig common
 	}
 
 	var statFetcherRunner stat.FetcherRunner
-	var monitorRunner stat.MonitorRunner
+	var ControllerRunner stat.ControllerRunner
 	if os.Getenv("KYBER_ENV") == "simulation" {
 		statFetcherRunner = http_runner.NewHttpRunner(8002)
 	} else {
 		statFetcherRunner = fetcher.NewTickerRunner(7*time.Second, 5*time.Second, 3*time.Second, 5*time.Second, 5*time.Second, 10*time.Second, 7*time.Second, 2*time.Second, 2*time.Second)
-		monitorRunner = stat.NewTickerRunner(24 * time.Hour)
+		ControllerRunner = stat.NewTickerRunner(24 * time.Hour)
 	}
 
 	self.StatStorage = statStorage
@@ -128,7 +128,7 @@ func (self *Config) AddStatConfig(settingPath SettingPaths, addressConfig common
 	self.UserStorage = userStorage
 	self.LogStorage = logStorage
 	self.RateStorage = rateStorage
-	self.StatMonitorRunner = monitorRunner
+	self.StatControllerRunner = ControllerRunner
 	self.StatFetcherRunner = statFetcherRunner
 	self.ThirdPartyReserves = thirdpartyReserves
 	self.FeeBurnerAddress = burnerAddr
