@@ -32,8 +32,8 @@ func NewReserveStats(
 	logStorage LogStorage,
 	rateStorage RateStorage,
 	userStorage UserStorage,
-	fetcher *Fetcher,
-	monitorRunner MonitorRunner) *ReserveStats {
+	monitorRunner MonitorRunner,
+	fetcher *Fetcher) *ReserveStats {
 	return &ReserveStats{
 		analyticStorage: analyticStorage,
 		statStorage:     statStorage,
