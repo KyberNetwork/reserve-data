@@ -77,7 +77,6 @@ func (self *BoltAnalyticStorage) ExportPruneExpired(currentTime uint64) (nRecord
 		b := tx.Bucket([]byte(PRICE_ANALYTIC_BUCKET))
 		c := b.Cursor()
 		for k, v := c.First(); k != nil && bytes.Compare(k, expiredTimestampByte) <= 0; k, v = c.Next() {
-			log.Printf("you cunt")
 			timestamp := bytesToUint64(k)
 			temp := make(map[string]interface{})
 			err = json.Unmarshal(v, &temp)
@@ -93,7 +92,6 @@ func (self *BoltAnalyticStorage) ExportPruneExpired(currentTime uint64) (nRecord
 			if err != nil {
 				return err
 			}
-			log.Printf("filename is %s", fileName)
 			_, err = outFile.WriteString(string(output) + "\n")
 			if err != nil {
 				return err
@@ -123,6 +121,8 @@ func (self *BoltAnalyticStorage) ExportPruneExpired(currentTime uint64) (nRecord
 		} else {
 			log.Printf("ERROR: File uploading corrupted")
 		}
+	} else {
+		return 0, os.Remove(fileName)
 	}
 	return
 }

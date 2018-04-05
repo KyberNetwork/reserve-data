@@ -58,7 +58,7 @@ func (archive *s3Archive) CheckFileIntergrity(awsfilePath string, filename strin
 	}
 	for _, item := range resp.Contents {
 		if (*item.Key == filename) && (*item.Size == fi.Size()) {
-			log.Printf("file size is %d", *item.Size)
+			log.Printf("AnalyticPriceData: file size comparision is equal(%d bytes). The file intergrity is valid", *item.Size)
 			return true, nil
 		}
 	}
