@@ -32,6 +32,7 @@ type SettingPaths struct {
 	rateStoragePath     string
 	userStoragePath     string
 	secretPath          string
+	awsPath             string
 	endPoint            string
 	bkendpoints         []string
 }
@@ -88,7 +89,7 @@ func (self *Config) AddStatConfig(settingPath SettingPaths, addressConfig common
 		thirdpartyReserves = append(thirdpartyReserves, ethereum.HexToAddress(address))
 	}
 
-	analyticStorage, err := statstorage.NewBoltAnalyticStorage(settingPath.analyticStoragePath)
+	analyticStorage, err := statstorage.NewBoltAnalyticStorage(settingPath.analyticStoragePath, settingPath.awsPath)
 	if err != nil {
 		panic(err)
 	}
@@ -217,6 +218,7 @@ var ConfigPaths = map[string]SettingPaths{
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/dev_rates.db",
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/dev_users.db",
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/config.json",
+		"/go/src/github.com/KyberNetwork/reserve-data/cmd/dev_awsconfig.json",
 		"https://semi-node.kyber.network",
 		[]string{
 			"https://semi-node.kyber.network",
@@ -236,6 +238,7 @@ var ConfigPaths = map[string]SettingPaths{
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/kovan_rates.db",
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/kovan_users.db",
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/config.json",
+		"/go/src/github.com/KyberNetwork/reserve-data/cmd/kovan_awsconfig.json",
 		"https://kovan.infura.io",
 		[]string{},
 	},
@@ -249,6 +252,7 @@ var ConfigPaths = map[string]SettingPaths{
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/mainnet_rates.db",
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/mainnet_users.db",
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/mainnet_config.json",
+		"/go/src/github.com/KyberNetwork/reserve-data/cmd/mainnet_awsconfig.json",
 		"https://semi-node.kyber.network",
 		[]string{
 			"https://semi-node.kyber.network",
@@ -268,6 +272,7 @@ var ConfigPaths = map[string]SettingPaths{
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/mainnet_rates.db",
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/mainnet_users.db",
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/mainnet_config.json",
+		"/go/src/github.com/KyberNetwork/reserve-data/cmd/mainnet_awsconfig.json",
 		"https://semi-node.kyber.network",
 		[]string{
 			"https://semi-node.kyber.network",
@@ -287,6 +292,7 @@ var ConfigPaths = map[string]SettingPaths{
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/staging_logs.db",
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/staging_rates.db",
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/staging_users.db",
+		"/go/src/github.com/KyberNetwork/reserve-data/cmd/mainnet_awsconfig.json",
 		"https://semi-node.kyber.network",
 		[]string{
 			"https://semi-node.kyber.network",
@@ -306,6 +312,7 @@ var ConfigPaths = map[string]SettingPaths{
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/core_rates.db",
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/core_users.db",
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/config.json",
+		"/go/src/github.com/KyberNetwork/reserve-data/cmd/core_awsconfig.json",
 		"http://blockchain:8545",
 		[]string{
 			"http://blockchain:8545",
@@ -321,6 +328,7 @@ var ConfigPaths = map[string]SettingPaths{
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/ropsten_rates.db",
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/ropsten_users.db",
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/config.json",
+		"/go/src/github.com/KyberNetwork/reserve-data/cmd/ropsten_awsconfig.json",
 		"https://ropsten.infura.io",
 		[]string{
 			"https://api.myetherapi.com/rop",

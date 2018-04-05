@@ -1,7 +1,6 @@
 package archive
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -22,7 +21,7 @@ type s3Archive struct {
 	svc      *s3.S3
 }
 
-func (archive *s3Archive) UploadFile(filepath string, filename string, bucketName string) error {
+func (archive *s3Archive) UploadFile(awsfolderPath string, filename string, bucketName string) error {
 	file, err := os.Open(filename)
 	defer file.Close()
 	if err != nil {
@@ -30,32 +29,40 @@ func (archive *s3Archive) UploadFile(filepath string, filename string, bucketNam
 	}
 	_, err = archive.uploader.Upload(&s3manager.UploadInput{
 		Bucket: aws.String(bucketName),
-		Key:    aws.String(filepath),
+		Key:    aws.String(awsfolderPath + filename),
 		Body:   file,
 	})
 
+	return err
+}
+
+func (archive *s3Archive) CheckFileIntergrity(awsfilePath string, filename string, bucketName string) (bool, error) {
+	//get File info
+	file, err := os.Open(filename)
+	defer file.Close()
+	if err != nil {
+		return false, err
+	}
+	fi, err := file.Stat()
+	if err != nil {
+		return false, err
+	}
+	//get AWS's file info
 	x := s3.ListObjectsInput{
 		Bucket: aws.String(bucketName),
-		Prefix: aws.String(filepath),
+		Prefix: aws.String(awsfilePath + filename),
 	}
 	resp, err := archive.svc.ListObjects(&x)
 	if err != nil {
-		return err
+		return false, err
 	}
 	for _, item := range resp.Contents {
-		fmt.Println("Name:         ", *item.Key)
-		fmt.Println("Last modified:", *item.LastModified)
-		fmt.Println("Size:         ", *item.Size)
-		fmt.Println("Storage class:", *item.StorageClass)
-		fmt.Println("")
+		if (*item.Key == filename) && (*item.Size == fi.Size()) {
+			log.Printf("file size is %d", *item.Size)
+			return true, nil
+		}
 	}
-
-	fi, err := file.Stat()
-	if err != nil {
-		log.Printf("cunt")
-	}
-	log.Printf("\n\n\n\n\n%d\n\n\n\n", fi.Size())
-	return err
+	return false, nil
 }
 
 func (archive *s3Archive) RemoveFile(filePath string, bucketName string) error {
@@ -63,13 +70,11 @@ func (archive *s3Archive) RemoveFile(filePath string, bucketName string) error {
 	return err
 }
 
-func NewS3Archive() Archive {
+func NewS3Archive(conf AWSConfig) Archive {
 
-	crdtl := credentials.NewStaticCredentials("AKIAIOEEV6TUEYCP4N6Q",
-		"eKusKOt4aM/0fpAoaSzX/SyW0wpN6Hjc9biWPHjO",
-		"")
+	crdtl := credentials.NewStaticCredentials(conf.AccessKeyID, conf.SecretKey, conf.Token)
 	sess := session.Must(session.NewSession(&aws.Config{
-		Region:      aws.String(REGION),
+		Region:      aws.String(conf.Region),
 		Credentials: crdtl,
 	}))
 	uploader := s3manager.NewUploader(sess)

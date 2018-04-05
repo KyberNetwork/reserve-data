@@ -26,10 +26,14 @@ type BoltAnalyticStorage struct {
 	arch archive.Archive
 }
 
-func NewBoltAnalyticStorage(path string) (*BoltAnalyticStorage, error) {
+func NewBoltAnalyticStorage(path, awsPath string) (*BoltAnalyticStorage, error) {
 	var err error
 	var db *bolt.DB
 	db, err = bolt.Open(path, 0600, nil)
+	awsConf, err := archive.GetAWSconfigFromFile(awsPath)
+	if err != nil {
+		panic(err)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +42,7 @@ func NewBoltAnalyticStorage(path string) (*BoltAnalyticStorage, error) {
 		return nil
 	})
 
-	s3archive := archive.NewS3Archive()
+	s3archive := archive.NewS3Archive(awsConf)
 	storage := BoltAnalyticStorage{db, s3archive}
 
 	return &storage, nil
@@ -102,9 +106,23 @@ func (self *BoltAnalyticStorage) ExportPruneExpired(currentTime uint64) (nRecord
 		}
 		return nil
 	})
-	uploaderr := self.arch.UploadFile(fileName, fileName, EXPIRED_PRICE_ANALYTIC_S3_BUCKET_NAME)
-	if uploaderr != nil {
-		return nRecord, uploaderr
+	if nRecord > 0 {
+		log.Printf("AnalyticPriceData: uploading file... ")
+		uploaderr := self.arch.UploadFile("", fileName, EXPIRED_PRICE_ANALYTIC_S3_BUCKET_NAME)
+		if uploaderr != nil {
+			return nRecord, uploaderr
+		}
+
+		intergrity, err := self.arch.CheckFileIntergrity("", fileName, EXPIRED_PRICE_ANALYTIC_S3_BUCKET_NAME)
+		if err != nil {
+			return nRecord, err
+		}
+		if intergrity {
+			log.Printf("AnalyticPriceData: file uploaded with intergrity")
+			return nRecord, os.Remove(fileName)
+		} else {
+			log.Printf("ERROR: File uploading corrupted")
+		}
 	}
 	return
 }
