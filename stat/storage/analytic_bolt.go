@@ -17,8 +17,9 @@ import (
 const (
 	PRICE_ANALYTIC_BUCKET                 string = "price_analytic"
 	EXPIRED_PRICE_ANALYTIC_S3_BUCKET_NAME string = "kn-data-collector"
-	MAX_GET_ANALYTIC_PERIOD               uint64 = 86400000      //1 day in milisecond
-	PRICE_ANALYTIC_EXPIRED                uint64 = 30 * 86400000 //30 days in milisecond
+	MAX_GET_ANALYTIC_PERIOD               uint64 = 86400000 //1 day in milisecond
+	PRICE_ANALYTIC_EXPIRED                uint64 = 30       //30 days in milisecond
+	EXPIRED_PRICE_ANALYTIC_AWSFOLDER_PATH string = ""
 )
 
 type BoltAnalyticStorage struct {
@@ -37,14 +38,15 @@ func NewBoltAnalyticStorage(path, awsPath string) (*BoltAnalyticStorage, error) 
 	if err != nil {
 		return nil, err
 	}
-	db.Update(func(tx *bolt.Tx) error {
-		tx.CreateBucket([]byte(PRICE_ANALYTIC_BUCKET))
-		return nil
+	err = db.Update(func(tx *bolt.Tx) error {
+		_, uErr := tx.CreateBucketIfNotExists([]byte(PRICE_ANALYTIC_BUCKET))
+		return uErr
 	})
-
+	if err != nil {
+		return nil, err
+	}
 	s3archive := archive.NewS3Archive(awsConf)
 	storage := BoltAnalyticStorage{db, s3archive}
-
 	return &storage, nil
 }
 
@@ -63,14 +65,35 @@ func (self *BoltAnalyticStorage) UpdatePriceAnalyticData(timestamp uint64, value
 	return err
 }
 
-func (self *BoltAnalyticStorage) ExportPruneExpired(currentTime uint64) (nRecord uint64, err error) {
+func (self *BoltAnalyticStorage) BackupFile(fileName string) error {
+	log.Printf("AnalyticPriceData: uploading file... ")
+	err := self.arch.UploadFile(EXPIRED_PRICE_ANALYTIC_AWSFOLDER_PATH, fileName, EXPIRED_PRICE_ANALYTIC_S3_BUCKET_NAME)
+	if err != nil {
+		return err
+	}
+
+	intergrity, err := self.arch.CheckFileIntergrity(EXPIRED_PRICE_ANALYTIC_AWSFOLDER_PATH, fileName, EXPIRED_PRICE_ANALYTIC_S3_BUCKET_NAME)
+	if err != nil {
+		return err
+	}
+	if intergrity {
+		log.Printf("AnalyticPriceData: file uploaded with intergrity")
+		return os.Remove(fileName)
+	} else {
+		return errors.New("AnalyticPriceData: File uploading corrupted")
+	}
+
+	return nil
+}
+
+func (self *BoltAnalyticStorage) ExportPruneExpired(currentTime uint64, fileName string) (nRecord uint64, err error) {
 	expiredTimestampByte := uint64ToBytes(currentTime - PRICE_ANALYTIC_EXPIRED)
-	fileName := fmt.Sprintf("ExpiredPriceAnalyticAt%d", currentTime)
 	outFile, err := os.Create(fileName)
+	defer outFile.Close()
 	if err != nil {
 		return 0, err
 	}
-	self.db.Update(func(tx *bolt.Tx) error {
+	err = self.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(PRICE_ANALYTIC_BUCKET))
 		c := b.Cursor()
 		for k, v := c.First(); k != nil && bytes.Compare(k, expiredTimestampByte) <= 0; k, v = c.Next() {
@@ -101,27 +124,6 @@ func (self *BoltAnalyticStorage) ExportPruneExpired(currentTime uint64) (nRecord
 		}
 		return nil
 	})
-	outFile.Close()
-	if nRecord > 0 {
-		log.Printf("AnalyticPriceData: uploading file... ")
-		uploaderr := self.arch.UploadFile("", fileName, EXPIRED_PRICE_ANALYTIC_S3_BUCKET_NAME)
-		if uploaderr != nil {
-			return nRecord, uploaderr
-		}
-
-		intergrity, err := self.arch.CheckFileIntergrity("", fileName, EXPIRED_PRICE_ANALYTIC_S3_BUCKET_NAME)
-		if err != nil {
-			return nRecord, err
-		}
-		if intergrity {
-			log.Printf("AnalyticPriceData: file uploaded with intergrity")
-			return nRecord, os.Remove(fileName)
-		} else {
-			log.Printf("ERROR: File uploading corrupted")
-		}
-	} else {
-		return 0, os.Remove(fileName)
-	}
 	return
 }
 
