@@ -17,8 +17,8 @@ import (
 const (
 	PRICE_ANALYTIC_BUCKET                 string = "price_analytic"
 	EXPIRED_PRICE_ANALYTIC_S3_BUCKET_NAME string = "kn-data-collector"
-	MAX_GET_ANALYTIC_PERIOD               uint64 = 86400000 //1 day in milisecond
-	PRICE_ANALYTIC_EXPIRED                uint64 = 30       //30 days in milisecond
+	MAX_GET_ANALYTIC_PERIOD               uint64 = 86400000      //1 day in milisecond
+	PRICE_ANALYTIC_EXPIRED                uint64 = 30 * 86400000 //30 days in milisecond
 	EXPIRED_PRICE_ANALYTIC_AWSFOLDER_PATH string = ""
 )
 
@@ -77,7 +77,6 @@ func (self *BoltAnalyticStorage) BackupFile(fileName string) error {
 		return err
 	}
 	if intergrity {
-		log.Printf("AnalyticPriceData: file uploaded with intergrity")
 		return os.Remove(fileName)
 	} else {
 		return errors.New("AnalyticPriceData: File uploading corrupted")

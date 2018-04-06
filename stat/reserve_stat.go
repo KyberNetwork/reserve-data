@@ -216,7 +216,7 @@ func (self ReserveStats) RunAnalyticStorageController() {
 		t := <-self.controllerRunner.GetAnalyticStorageControlTicker()
 		timepoint := common.TimeToTimepoint(t)
 		log.Printf("got signal in analytic storage control channel with timestamp %d", timepoint)
-		fileName := fmt.Sprintf("ExpiredPriceAnalyticData_%d", timepoint)
+		fileName := fmt.Sprintf("ExpiredPriceAnalyticData_%s", time.Unix(int64(timepoint/1000), 0).UTC())
 		nRecord, err := self.analyticStorage.ExportPruneExpired(common.GetTimepoint(), fileName)
 		if err != nil {
 			log.Printf("export and prune operation failed: %s", err)
@@ -230,6 +230,7 @@ func (self ReserveStats) RunAnalyticStorageController() {
 				}
 
 			} else {
+				//remove the empty file
 				os.Remove(fileName)
 			}
 			log.Printf("AnalyticPriceData: exported and pruned %d expired records from storage controll block from blockchain", nRecord)
