@@ -55,6 +55,9 @@ func NewBoltLogStorage(path string) (*BoltLogStorage, error) {
 		storage.block = block
 		return nil
 	})
+	if err != nil {
+		return nil, err
+	}
 	return storage, nil
 }
 

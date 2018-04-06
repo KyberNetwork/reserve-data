@@ -32,7 +32,7 @@ func (archive *s3Archive) UploadFile(awsfolderPath string, filename string, buck
 	return err
 }
 
-func (archive *s3Archive) CheckFileIntergrity(awsfilePath string, filename string, bucketName string) (bool, error) {
+func (archive *s3Archive) CheckFileIntergrity(awsfolderPath string, filename string, bucketName string) (bool, error) {
 	//get File info
 	file, err := os.Open(filename)
 	defer file.Close()
@@ -46,7 +46,7 @@ func (archive *s3Archive) CheckFileIntergrity(awsfilePath string, filename strin
 	//get AWS's file info
 	x := s3.ListObjectsInput{
 		Bucket: aws.String(bucketName),
-		Prefix: aws.String(awsfilePath + filename),
+		Prefix: aws.String(awsfolderPath + filename),
 	}
 	resp, err := archive.svc.ListObjects(&x)
 	if err != nil {

@@ -38,7 +38,7 @@ func NewBoltRateStorage(path string) (*BoltRateStorage, error) {
 
 func (self *BoltRateStorage) StoreReserveRates(reserveAddr string, rate common.ReserveRates, timepoint uint64) error {
 	var err error
-	self.db.Update(func(tx *bolt.Tx) error {
+	err = self.db.Update(func(tx *bolt.Tx) error {
 		b, _ := tx.CreateBucketIfNotExists([]byte(reserveAddr))
 		c := b.Cursor()
 		var prevDataJSON common.ReserveRates
@@ -68,7 +68,7 @@ func (self *BoltRateStorage) GetReserveRates(fromTime, toTime uint64, reserveAdd
 	if toTime-fromTime > MAX_GET_RATES_PERIOD {
 		return result, errors.New(fmt.Sprintf("Time range is too broad, it must be smaller or equal to %d miliseconds", MAX_GET_RATES_PERIOD))
 	}
-	self.db.Update(func(tx *bolt.Tx) error {
+	err = self.db.Update(func(tx *bolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte(reserveAddr))
 		if err != nil {
 			log.Println("Cannot get bucket: ", err.Error())

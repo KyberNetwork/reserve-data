@@ -63,11 +63,23 @@ func NewBoltStatStorage(path string) (*BoltStatStorage, error) {
 		return nil, err
 	}
 	// init buckets
-	db.Update(func(tx *bolt.Tx) error {
-		tx.CreateBucketIfNotExists([]byte(TRADE_STATS_BUCKET))
-		tx.CreateBucketIfNotExists([]byte(TRADELOG_PROCESSOR_STATE))
-		tx.CreateBucketIfNotExists([]byte(WALLET_ADDRESS_BUCKET))
-		tx.CreateBucketIfNotExists([]byte(COUNTRY_BUCKET))
+	err = db.Update(func(tx *bolt.Tx) error {
+		_, err = tx.CreateBucketIfNotExists([]byte(TRADE_STATS_BUCKET))
+		if err != nil {
+			return err
+		}
+		_, err = tx.CreateBucketIfNotExists([]byte(TRADELOG_PROCESSOR_STATE))
+		if err != nil {
+			return err
+		}
+		_, err = tx.CreateBucketIfNotExists([]byte(WALLET_ADDRESS_BUCKET))
+		if err != nil {
+			return err
+		}
+		_, err = tx.CreateBucketIfNotExists([]byte(COUNTRY_BUCKET))
+		if err != nil {
+			return err
+		}
 		//create timezone buckets
 		tradeStatsBk := tx.Bucket([]byte(TRADE_STATS_BUCKET))
 		frequencies := []string{MINUTE_BUCKET, HOUR_BUCKET, DAY_BUCKET}
@@ -77,18 +89,33 @@ func NewBoltStatStorage(path string) (*BoltStatStorage, error) {
 		}
 		for i := START_TIMEZONE; i <= END_TIMEZONE; i++ {
 			tzstring := fmt.Sprintf("%s%d", TIMEZONE_BUCKET_PREFIX, i)
-			tx.CreateBucketIfNotExists([]byte(tzstring))
+			_, err = tx.CreateBucketIfNotExists([]byte(tzstring))
+			if err != nil {
+				return err
+			}
 			tradeStatsBk.CreateBucketIfNotExists([]byte(tzstring))
 			dailyAddrBkname := fmt.Sprintf("%s%d", DAILY_ADDRESS_BUCKET_PREFIX, i)
-			tx.CreateBucketIfNotExists([]byte(dailyAddrBkname))
+			_, err = tx.CreateBucketIfNotExists([]byte(dailyAddrBkname))
+			if err != nil {
+				return err
+			}
 			dailyUserBkname := fmt.Sprintf("%s%d", DAILY_USER_BUCKET_PREFIX, i)
-			tx.CreateBucketIfNotExists([]byte(dailyUserBkname))
+			_, err = tx.CreateBucketIfNotExists([]byte(dailyUserBkname))
+			if err != nil {
+				return err
+			}
 			addrBucketName := fmt.Sprintf("%s%d", ADDRESS_BUCKET_PREFIX, i)
-			tx.CreateBucketIfNotExists([]byte(addrBucketName))
+			_, err = tx.CreateBucketIfNotExists([]byte(addrBucketName))
+			if err != nil {
+				return err
+			}
 		}
 
-		return nil
+		return err
 	})
+	if err != nil {
+		return nil, err
+	}
 	storage := &BoltStatStorage{db}
 	return storage, nil
 }
@@ -119,7 +146,7 @@ func reverseSeek(timepoint uint64, c *bolt.Cursor) (uint64, error) {
 
 func (self *BoltStatStorage) SetLastProcessedTradeLogTimepoint(timepoint uint64) error {
 	var err error
-	self.db.Update(func(tx *bolt.Tx) error {
+	err = self.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(TRADELOG_PROCESSOR_STATE))
 		err = b.Put([]byte("last_timepoint"), uint64ToBytes(timepoint))
 		return err
@@ -129,12 +156,16 @@ func (self *BoltStatStorage) SetLastProcessedTradeLogTimepoint(timepoint uint64)
 
 func (self *BoltStatStorage) GetLastProcessedTradeLogTimepoint() (uint64, error) {
 	var result uint64
-	self.db.View(func(tx *bolt.Tx) error {
+	var err error
+	err = self.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(TRADELOG_PROCESSOR_STATE))
+		if b == nil {
+			return (errors.New("Can not find such bucket"))
+		}
 		result = bytesToUint64(b.Get([]byte("last_timepoint")))
 		return nil
 	})
-	return result, nil
+	return result, err
 }
 
 // GetNumberOfVersion return number of version storing in a bucket
@@ -213,9 +244,8 @@ func getTimestampByFreq(t uint64, freq string) (result []byte) {
 }
 
 func (self *BoltStatStorage) SetTradeStats(freq string, t uint64, tradeStats common.TradeStats) (err error) {
-	self.db.Update(func(tx *bolt.Tx) error {
+	err = self.db.Update(func(tx *bolt.Tx) error {
 		tradeStatsBk := tx.Bucket([]byte(TRADE_STATS_BUCKET))
-
 		freqBkName, err := getBucketNameByFreq(freq)
 		if err != nil {
 			return err
@@ -254,13 +284,13 @@ func (self *BoltStatStorage) SetTradeStats(freq string, t uint64, tradeStats com
 		return err
 	})
 	//log.Printf("AGGREGATE SetTradeStats, updated the db")
-	return
+	return err
 }
 
 func (self *BoltStatStorage) getTradeStats(fromTime, toTime uint64, freq string) (map[uint64]common.TradeStats, error) {
 	result := map[uint64]common.TradeStats{}
 	var err error
-	self.db.View(func(tx *bolt.Tx) error {
+	err = self.db.View(func(tx *bolt.Tx) error {
 		// Get trade stats bucket
 		tradeStatsBk := tx.Bucket([]byte(TRADE_STATS_BUCKET))
 
@@ -289,7 +319,7 @@ func (self *BoltStatStorage) getTradeStats(fromTime, toTime uint64, freq string)
 			timestamp := bytesToUint64(k) / 1000000 // to milis
 			result[timestamp] = stats
 		}
-		return nil
+		return err
 	})
 	return result, err
 }
@@ -323,7 +353,7 @@ func (self *BoltStatStorage) GetUserStats(timestamp uint64,
 	stats := common.TradeStats{}
 	var err error
 
-	self.db.View(func(tx *bolt.Tx) error {
+	err = self.db.View(func(tx *bolt.Tx) error {
 		freq := fmt.Sprintf("%s%d", TIMEZONE_BUCKET_PREFIX, timezone)
 		dailyTimestamp := string(getTimestampByFreq(timestamp, freq))
 		dailyAddrKey := fmt.Sprintf("%s_%s", dailyTimestamp, addr)
@@ -369,7 +399,7 @@ func (self *BoltStatStorage) PruneDailyBucket(timepoint uint64, timezone int64) 
 
 	//update daily Address bucket
 	dailyAddrBkname := fmt.Sprintf("%s%d", DAILY_ADDRESS_BUCKET_PREFIX, timezone)
-	self.db.Update(func(tx *bolt.Tx) error {
+	err = self.db.Update(func(tx *bolt.Tx) error {
 		dailyAddrBk := tx.Bucket([]byte(dailyAddrBkname))
 		c := dailyAddrBk.Cursor()
 		for k, _ := c.First(); k != nil && isEalier(k, expiredByteTimeStamp); k, _ = c.Next() {
@@ -377,6 +407,9 @@ func (self *BoltStatStorage) PruneDailyBucket(timepoint uint64, timezone int64) 
 		}
 		return err
 	})
+	if err != nil {
+		return err
+	}
 	//update daily User bucket
 	dailyUserBkname := fmt.Sprintf("%s%d", DAILY_USER_BUCKET_PREFIX, timezone)
 	self.db.Update(func(tx *bolt.Tx) error {
@@ -387,7 +420,7 @@ func (self *BoltStatStorage) PruneDailyBucket(timepoint uint64, timezone int64) 
 		}
 		return err
 	})
-	return
+	return err
 }
 
 func setUserBucket(tx *bolt.Tx,
@@ -426,7 +459,7 @@ func (self *BoltStatStorage) SetUserStats(timestamp uint64,
 	}
 	self.PruneDailyBucket(timestamp, timezone)
 
-	self.db.Update(func(tx *bolt.Tx) error {
+	err = self.db.Update(func(tx *bolt.Tx) error {
 
 		dailyTimestamp := string(getTimestampByFreq(timestamp, freq))
 		dailyAddrBkname := fmt.Sprintf("%s%d", DAILY_ADDRESS_BUCKET_PREFIX, timezone)
@@ -458,7 +491,7 @@ func (self *BoltStatStorage) SetUserStats(timestamp uint64,
 }
 
 func (self *BoltStatStorage) SetWalletAddress(walletAddr string) (err error) {
-	self.db.Update(func(tx *bolt.Tx) error {
+	err = self.db.Update(func(tx *bolt.Tx) error {
 		walletBucket := tx.Bucket([]byte(WALLET_ADDRESS_BUCKET))
 
 		if err := walletBucket.Put([]byte(walletAddr), []byte("1")); err != nil {
@@ -472,7 +505,8 @@ func (self *BoltStatStorage) SetWalletAddress(walletAddr string) (err error) {
 
 func (self *BoltStatStorage) GetWalletAddress() ([]string, error) {
 	var result []string
-	self.db.View(func(tx *bolt.Tx) error {
+	var err error
+	err = self.db.View(func(tx *bolt.Tx) error {
 		walletBucket := tx.Bucket([]byte(WALLET_ADDRESS_BUCKET))
 		c := walletBucket.Cursor()
 		for k, _ := c.First(); k != nil; k, _ = c.Next() {
@@ -480,7 +514,7 @@ func (self *BoltStatStorage) GetWalletAddress() ([]string, error) {
 		}
 		return nil
 	})
-	return result, nil
+	return result, err
 }
 
 func (self *BoltStatStorage) GetWalletStats(fromTime uint64, toTime uint64, walletAddr string, timezone int64) (common.StatTicks, error) {
@@ -522,7 +556,7 @@ func (self *BoltStatStorage) GetWalletStats(fromTime uint64, toTime uint64, wall
 
 func (self *BoltStatStorage) SetCountry(country string) error {
 	var err error
-	self.db.Update(func(tx *bolt.Tx) error {
+	err = self.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(COUNTRY_BUCKET))
 		err = b.Put([]byte(country), []byte("1"))
 		return err
@@ -533,7 +567,7 @@ func (self *BoltStatStorage) SetCountry(country string) error {
 func (self *BoltStatStorage) GetCountries() ([]string, error) {
 	countries := []string{}
 	var err error
-	self.db.View(func(tx *bolt.Tx) error {
+	err = self.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(COUNTRY_BUCKET))
 		c := b.Cursor()
 		for k, _ := c.First(); k != nil; k, _ = c.Next() {
