@@ -143,15 +143,19 @@ func (self *BoltUserStorage) UpdateUserAddresses(user string, addrs []string, ti
 			oldID := b.Get([]byte(address))
 			// remove the addresses bucket assocciated to this temp user
 			b = tx.Bucket([]byte(ID_ADDRESSES))
-			err = b.DeleteBucket(oldID)
+			if oldID != nil {
+				err = b.DeleteBucket(oldID)
+				if err != nil {
+					return err
+				}
+			}
+			err = timeBucket.Delete([]byte(address))
 			if err != nil {
 				return err
 			}
-			timeBucket.Delete([]byte(address))
 			// update user to each address => user
 			b = tx.Bucket([]byte(ADDRESS_ID))
-			err = b.Put([]byte(address), []byte(user))
-			if err != nil {
+			if err = b.Put([]byte(address), []byte(user)); err != nil {
 				return err
 			}
 		}
@@ -175,7 +179,6 @@ func (self *BoltUserStorage) UpdateUserAddresses(user string, addrs []string, ti
 		}
 		catBk := tx.Bucket([]byte(ADDRESS_CATEGORY))
 		for i, address := range addresses {
-
 			if err = b.Put([]byte(address), []byte{1}); err != nil {
 				return err
 			}
@@ -186,7 +189,9 @@ func (self *BoltUserStorage) UpdateUserAddresses(user string, addrs []string, ti
 				}
 			}
 			log.Printf("storing timestamp for %s - %d", address, timestamps[i])
-			timeBucket.Put([]byte(address), uint64ToBytes(timestamps[i]))
+			if err = timeBucket.Put([]byte(address), uint64ToBytes(timestamps[i])); err != nil {
+				return err
+			}
 		}
 		return nil
 	})

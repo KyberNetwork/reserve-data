@@ -108,11 +108,11 @@ func (self testActivityStorage) PendingSetrate(minedNonce uint64) (*common.Activ
 }
 
 func (self testActivityStorage) HasPendingDeposit(
-	token common.Token, exchange common.Exchange) bool {
+	token common.Token, exchange common.Exchange) (bool, error) {
 	if token.ID == "OMG" && exchange.ID() == "bittrex" {
-		return self.PendingDeposit
+		return self.PendingDeposit, nil
 	} else {
-		return false
+		return false, nil
 	}
 }
 

@@ -78,9 +78,12 @@ func (self *UserStorageTest) TestUpdateUserAddressesThenUpdateAddressCategory() 
 	time3 := uint64(1520825136558)
 	cat := "0x0000000000000000000000000000000000000000000000000000000000000004"
 
-	self.storage.UpdateUserAddresses(
+	err := self.storage.UpdateUserAddresses(
 		email, []string{addr1, addr3}, []uint64{time1, time3},
 	)
+	if err != nil {
+		return err
+	}
 	// test if pending addresses are correct
 	pendingAddrs, err := self.storage.GetPendingAddresses()
 	if err != nil {

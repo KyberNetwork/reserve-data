@@ -17,7 +17,10 @@ func TestHasPendingDepositBoltStorage(t *testing.T) {
 	token := common.Token{"OMG", "0x1111111111111111111111111111111111111111", 18}
 	exchange := common.TestExchange{}
 	timepoint := common.GetTimepoint()
-	out := storage.HasPendingDeposit(token, exchange)
+	out, err := storage.HasPendingDeposit(token, exchange)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
 	if out != false {
 		t.Fatalf("Expected ram storage to return true false there is no pending deposit for the same currency and exchange")
 	}
@@ -38,7 +41,10 @@ func TestHasPendingDepositBoltStorage(t *testing.T) {
 		"",
 		"submitted",
 		common.GetTimepoint())
-	out = storage.HasPendingDeposit(token, exchange)
+	out, err = storage.HasPendingDeposit(token, exchange)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
 	if out != true {
 		t.Fatalf("Expected ram storage to return true when there is pending deposit")
 	}

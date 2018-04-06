@@ -219,7 +219,7 @@ func (self ReserveStats) RunAnalyticStorageController() {
 		fileName := fmt.Sprintf("ExpiredPriceAnalyticData_%d", timepoint)
 		nRecord, err := self.analyticStorage.ExportPruneExpired(common.GetTimepoint(), fileName)
 		if err != nil {
-			log.Println("export and prune operation failed: %v", err)
+			log.Printf("export and prune operation failed: %s", err)
 		} else {
 			if nRecord > 0 {
 				err := self.analyticStorage.BackupFile(fileName)
