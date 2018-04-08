@@ -84,7 +84,7 @@ func (self *BoltLogStorage) LoadLastLogIndex(tx *bolt.Tx) (uint64, uint, error) 
 	k, v := c.Last()
 
 	if k == nil {
-		return 0, 0, errors.New("Database is empty")
+		return 0, 0, nil
 
 	}
 
