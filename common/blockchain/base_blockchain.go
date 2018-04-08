@@ -7,9 +7,11 @@ import (
 	"log"
 	"math/big"
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
+	"github.com/KyberNetwork/reserve-data/common"
 	ether "github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -423,7 +425,7 @@ func NewBaseBlockchain(
 	contractcaller *ContractCaller) *BaseBlockchain {
 
 	file, err := os.Open(
-		"/go/src/github.com/KyberNetwork/reserve-data/blockchain/ERC20.abi")
+		filepath.Join(common.CurrentDir(), "ERC20.abi"))
 	if err != nil {
 		panic(err)
 	}
