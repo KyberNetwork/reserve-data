@@ -240,13 +240,16 @@ func (self ReserveStats) RunAnalyticStorageController() {
 		}
 	}
 }
-
-func (self ReserveStats) Run() error {
+func (self ReserveStats) RunDBController() error {
 	err := self.controllerRunner.Start()
 	if err != nil {
 		return err
 	}
 	go self.RunAnalyticStorageController()
+	return err
+}
+
+func (self ReserveStats) Run() error {
 	return self.fetcher.Run()
 }
 

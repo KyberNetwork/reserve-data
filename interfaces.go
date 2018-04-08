@@ -31,7 +31,7 @@ type ReserveStats interface {
 	GetGeoData(fromTime, toTime uint64, country string, tzparam int64) (common.StatTicks, error)
 	GetHeatMap(fromTime, toTime uint64, tzparam int64) (common.HeatmapResponse, error)
 	GetCountries() ([]string, error)
-
+	RunDBController() error
 	Run() error
 	Stop() error
 }
