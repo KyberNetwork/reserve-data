@@ -191,6 +191,9 @@ func serverStart(cmd *cobra.Command, args []string) {
 				config.StatControllerRunner,
 				statFetcher,
 			)
+			if kyberENV != "simulation" {
+				rStat.RunDBController()
+			}
 			rStat.Run()
 		}
 		servPortStr := fmt.Sprintf(":%d", servPort)
