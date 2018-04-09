@@ -396,29 +396,30 @@ func (self *Fetcher) PersistSnapshot(
 		if status != nil {
 			activityStatus := status.(common.ActivityStatus)
 			log.Printf("In PersistSnapshot: exchange activity status for %+v: %+v", activity.ID, activityStatus)
-			if activityStatus.Error == nil {
-				if activity.IsExchangePending() {
-					activity.ExchangeStatus = activityStatus.ExchangeStatus
-				}
-				if activity.Result["tx"] != nil && activity.Result["tx"].(string) == "" {
-					activity.Result["tx"] = activityStatus.Tx
-				}
-			} else {
+			if activity.IsExchangePending() {
+				activity.ExchangeStatus = activityStatus.ExchangeStatus
+			}
+			if activity.Result["tx"] != nil && activity.Result["tx"].(string) == "" {
+				activity.Result["tx"] = activityStatus.Tx
+			}
+			if activityStatus.Error != nil {
 				snapshot.Valid = false
 				snapshot.Error = activityStatus.Error.Error()
+				activity.Result["error"] = activityStatus.Error.Error()
 			}
 		}
 		status, _ = bstatuses.Load(activity.ID)
 		if status != nil {
 			activityStatus = status.(common.ActivityStatus)
 			log.Printf("In PersistSnapshot: blockchain activity status for %+v: %+v", activity.ID, activityStatus)
-			if activityStatus.Error == nil {
-				if activity.IsBlockchainPending() {
-					activity.MiningStatus = activityStatus.MiningStatus
-				}
-			} else {
+
+			if activity.IsBlockchainPending() {
+				activity.MiningStatus = activityStatus.MiningStatus
+			}
+			if activityStatus.Error != nil {
 				snapshot.Valid = false
 				snapshot.Error = activityStatus.Error.Error()
+				activity.Result["error"] = activityStatus.Error.Error()
 			}
 		}
 		log.Printf("Aggregate statuses, final activity: %+v", activity)

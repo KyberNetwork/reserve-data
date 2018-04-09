@@ -160,7 +160,7 @@ func (self ReserveCore) Deposit(
 			"tx":       txhex,
 			"nonce":    txnonce,
 			"gasPrice": txprice,
-			"error":    err,
+			"error":    err.Error(),
 		},
 		"",
 		status,
