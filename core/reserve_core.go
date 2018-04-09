@@ -137,8 +137,10 @@ func (self ReserveCore) Deposit(
 			tx, err = self.blockchain.Send(token, amount, address)
 		}
 	}
+	var errstr string
 	if err != nil {
 		status = "failed"
+		errstr = err.Error()
 	} else {
 		status = "submitted"
 		txhex = tx.Hash().Hex()
@@ -160,7 +162,7 @@ func (self ReserveCore) Deposit(
 			"tx":       txhex,
 			"nonce":    txnonce,
 			"gasPrice": txprice,
-			"error":    err.Error(),
+			"error":    errstr,
 		},
 		"",
 		status,
