@@ -35,7 +35,17 @@ func timebasedID(id string) common.ActivityID {
 }
 
 func (self ReserveCore) CancelOrder(id common.ActivityID, exchange common.Exchange) error {
-	return exchange.CancelOrder(id)
+	activity, err := self.activityStorage.GetActivity(id)
+	if err != nil {
+		return err
+	}
+	if activity.Action != "trade" {
+		return errors.New("This is not an order activity so cannot cancel")
+	}
+	base := activity.Params["base"].(string)
+	quote := activity.Params["quote"].(string)
+	orderId := id.EID
+	return exchange.CancelOrder(orderId, base, quote)
 }
 
 func (self ReserveCore) GetAddresses() *common.Addresses {

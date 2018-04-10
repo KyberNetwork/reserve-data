@@ -210,9 +210,8 @@ func (self *Bittrex) DepositStatus(
 	}
 }
 
-func (self *Bittrex) CancelOrder(id common.ActivityID) error {
-	uuid := id.EID
-	resp, err := self.interf.CancelOrder(uuid)
+func (self *Bittrex) CancelOrder(id, base, quote string) error {
+	resp, err := self.interf.CancelOrder(id)
 	if err != nil {
 		return err
 	} else {

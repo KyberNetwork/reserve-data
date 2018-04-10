@@ -171,13 +171,12 @@ func (self *Binance) Withdraw(token common.Token, amount *big.Int, address ether
 	return tx, err
 }
 
-func (self *Binance) CancelOrder(id common.ActivityID) error {
-	idParts := strings.Split(id.EID, "_")
-	idNo, err := strconv.ParseUint(idParts[0], 10, 64)
+func (self *Binance) CancelOrder(id string, base, quote string) error {
+	idNo, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
 		return err
 	}
-	symbol := idParts[1]
+	symbol := base + quote
 	_, err = self.interf.CancelOrder(symbol, idNo)
 	if err != nil {
 		return err
