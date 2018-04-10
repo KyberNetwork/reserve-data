@@ -1946,7 +1946,7 @@ func (self *HTTPServer) GetExchangesStatus(c *gin.Context) {
 }
 
 func (self *HTTPServer) UpdateExchangeStatus(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
+	postForm, ok := self.Authenticated(c, []string{"exchange", "status", "timestamp"}, []Permission{ConfirmConfPermission})
 	if !ok {
 		return
 	}
@@ -2201,6 +2201,10 @@ func (self *HTTPServer) ExchangeNotification(c *gin.Context) {
 }
 
 func (self *HTTPServer) GetNotifications(c *gin.Context) {
+	_, ok := self.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
+	if !ok {
+		return
+	}
 	data, err := self.app.GetNotifications()
 	if err != nil {
 		c.JSON(
