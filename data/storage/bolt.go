@@ -468,8 +468,7 @@ func (self *BoltStorage) GetActivity(id common.ActivityID) (common.ActivityRecor
 		if v == nil {
 			return errors.New("Cannot find that activity")
 		}
-		json.Unmarshal(v, &result)
-		return nil
+		return json.Unmarshal(v, &result)
 	})
 	return result, err
 }
