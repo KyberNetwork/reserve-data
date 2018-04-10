@@ -20,8 +20,6 @@ func (self *BaseBlockchain) InterpretTimestamp(blockno uint64, txindex uint) (ui
 		block = CachedBlockHeader
 	} else {
 		block, err = self.client.HeaderByNumber(timeout, big.NewInt(int64(blockno)))
-		CachedBlockno = blockno
-		CachedBlockHeader = block
 	}
 	if err != nil {
 		if block == nil {
@@ -29,6 +27,8 @@ func (self *BaseBlockchain) InterpretTimestamp(blockno uint64, txindex uint) (ui
 		} else {
 			// error because parity and geth are not compatible in mix hash
 			// so we ignore it
+			CachedBlockno = blockno
+			CachedBlockHeader = block
 			err = nil
 		}
 	}
