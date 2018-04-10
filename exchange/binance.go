@@ -441,12 +441,12 @@ func (self *Binance) WithdrawStatus(id, currency string, amount float64, timepoi
 	}
 }
 
-func (self *Binance) OrderStatus(id string, base, quote common.Token) (string, error) {
+func (self *Binance) OrderStatus(id string, base, quote string) (string, error) {
 	orderID, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
 		panic(err)
 	}
-	symbol := base.ID + quote.ID
+	symbol := base + quote
 	order, err := self.interf.OrderStatus(symbol, orderID)
 	if err != nil {
 		return "", err
