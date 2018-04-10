@@ -458,6 +458,22 @@ func formatTimepointToActivityID(timepoint uint64, id []byte) []byte {
 	}
 }
 
+func (self *BoltStorage) GetActivity(id common.ActivityID) (common.ActivityRecord, error) {
+	result := common.ActivityRecord{}
+
+	err := self.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(ACTIVITY_BUCKET))
+		idBytes := id.ToBytes()
+		v := b.Get(idBytes[:])
+		if v == nil {
+			return errors.New("Cannot find that activity")
+		}
+		json.Unmarshal(v, &result)
+		return nil
+	})
+	return result, err
+}
+
 func (self *BoltStorage) GetAllRecords(fromTime, toTime uint64) ([]common.ActivityRecord, error) {
 	result := []common.ActivityRecord{}
 	var err error
