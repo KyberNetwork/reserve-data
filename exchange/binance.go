@@ -14,7 +14,10 @@ import (
 	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
-const BINANCE_EPSILON float64 = 0.0000001 // 10e-7
+const (
+	BINANCE_EPSILON float64 = 0.0000001 // 10e-7
+	BATCH_SIZE      int     = 4
+)
 
 type Binance struct {
 	interf       BinanceInterface
@@ -238,11 +241,17 @@ func (self *Binance) FetchPriceData(timepoint uint64) (map[common.TokenPairID]co
 	wait := sync.WaitGroup{}
 	data := sync.Map{}
 	pairs := self.pairs
-	for _, pair := range pairs {
-		wait.Add(1)
-		go self.FetchOnePairData(&wait, pair, &data, timepoint)
+	var i int = 0
+	var x int = 0
+	for i < len(pairs) {
+		for x = i; x < len(pairs) && x < i+BATCH_SIZE; x++ {
+			wait.Add(1)
+			pair := pairs[x]
+			go self.FetchOnePairData(&wait, pair, &data, timepoint)
+		}
+		i = x + 1
+		wait.Wait()
 	}
-	wait.Wait()
 	result := map[common.TokenPairID]common.ExchangePrice{}
 	data.Range(func(key, value interface{}) bool {
 		result[key.(common.TokenPairID)] = value.(common.ExchangePrice)
@@ -298,11 +307,17 @@ func (self *Binance) FetchOrderData(timepoint uint64) (common.OrderEntry, error)
 	wait := sync.WaitGroup{}
 	data := sync.Map{}
 	pairs := self.pairs
-	for _, pair := range pairs {
-		wait.Add(1)
-		go self.OpenOrdersForOnePair(&wait, pair, &data, timepoint)
+	var i int = 0
+	var x int = 0
+	for i < len(pairs) {
+		for x = i; x < len(pairs) && x < i+BATCH_SIZE; x++ {
+			wait.Add(1)
+			pair := pairs[x]
+			go self.OpenOrdersForOnePair(&wait, pair, &data, timepoint)
+		}
+		i = x + 1
+		wait.Wait()
 	}
-	wait.Wait()
 
 	result.ReturnTime = common.GetTimestamp()
 
@@ -388,11 +403,17 @@ func (self *Binance) FetchTradeHistory(timepoint uint64) (map[common.TokenPairID
 	data := sync.Map{}
 	pairs := self.pairs
 	wait := sync.WaitGroup{}
-	for _, pair := range pairs {
-		wait.Add(1)
-		go self.FetchOnePairTradeHistory(&wait, &data, pair, timepoint)
+	var i int = 0
+	var x int = 0
+	for i < len(pairs) {
+		for x = i; x < len(pairs) && x < i+BATCH_SIZE; x++ {
+			wait.Add(1)
+			pair := pairs[x]
+			go self.FetchOnePairTradeHistory(&wait, &data, pair, timepoint)
+		}
+		i = x + 1
+		wait.Wait()
 	}
-	wait.Wait()
 	data.Range(func(key, value interface{}) bool {
 		result[key.(common.TokenPairID)] = value.([]common.TradeHistory)
 		return true
