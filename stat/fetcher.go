@@ -148,6 +148,14 @@ func (self *Fetcher) RunCatLogProcessor() {
 	}
 }
 
+func (self *Fetcher) RunCountryStatAggregation() {
+
+}
+
+func (self *Fetcher) RunWalletStatAggregation() {
+
+}
+
 func (self *Fetcher) RunTradeLogProcessor() {
 	for {
 		log.Printf("TradeLogProcessor - waiting for signal from trade log processor channel")
@@ -208,9 +216,10 @@ func (self *Fetcher) RunTradeLogProcessor() {
 			self.statStorage.SetCountryStat(countryStats)
 			self.statStorage.SetWalletStat(walletStats)
 			self.statStorage.SetTradeSummary(tradeSummary)
-			self.statStorage.SetLastProcessedTradeLogTimepoint(last)
 			self.statStorage.SetVolumeStat(volumeStats)
 			self.statStorage.SetBurnFeeStat(burnFeeStats)
+
+			self.statStorage.SetLastProcessedTradeLogTimepoint(last)
 			log.Printf("AGGREGATE finished all logs in the batch")
 		} else {
 			l, err := self.logStorage.GetLastTradeLog()
