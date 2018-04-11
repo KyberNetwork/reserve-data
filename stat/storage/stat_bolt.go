@@ -244,18 +244,18 @@ func (self *BoltStatStorage) SetBurnFeeStat(burnFeeStats map[string]common.BurnF
 			for _, freq := range []string{"M", "H", "D"} {
 				stats := timezoneData[freq]
 				freqBkName, _ := getBucketNameByFreq(freq)
-				timezoneBk, _ := burnFeeBk.CreateBucketIfNotExists([]byte(freqBkName))
+				freqBk, _ := burnFeeBk.CreateBucketIfNotExists([]byte(freqBkName))
 				for timepoint, stat := range stats {
 					timestamp := uint64ToBytes(timepoint)
 					currentData := common.BurnFeeStats{}
-					v := timezoneBk.Get(timestamp)
+					v := freqBk.Get(timestamp)
 					if v != nil {
 						json.Unmarshal(v, &currentData)
 					}
 					currentData.TotalBurnFee += stat.TotalBurnFee
 
 					dataJSON, _ := json.Marshal(currentData)
-					timezoneBk.Put(timestamp, dataJSON)
+					freqBk.Put(timestamp, dataJSON)
 				}
 			}
 		}
@@ -266,16 +266,16 @@ func (self *BoltStatStorage) SetBurnFeeStat(burnFeeStats map[string]common.BurnF
 
 func (self *BoltStatStorage) SetVolumeStat(volumeStats map[string]common.VolumeStatsTimeZone) error {
 	err := self.db.Update(func(tx *bolt.Tx) error {
-		for asset, timezoneData := range volumeStats {
+		for asset, freqData := range volumeStats {
 			volumeBk, _ := tx.CreateBucketIfNotExists([]byte(asset))
 			for _, freq := range []string{"M", "H", "D"} {
-				stats := timezoneData[freq]
+				stats := freqData[freq]
 				freqBkName, _ := getBucketNameByFreq(freq)
-				timezoneBk, _ := volumeBk.CreateBucketIfNotExists([]byte(freqBkName))
+				freqBk, _ := volumeBk.CreateBucketIfNotExists([]byte(freqBkName))
 				for timepoint, stat := range stats {
 					timestamp := uint64ToBytes(timepoint)
 					currentData := common.VolumeStats{}
-					v := timezoneBk.Get(timestamp)
+					v := freqBk.Get(timestamp)
 					if v != nil {
 						json.Unmarshal(v, &currentData)
 					}
@@ -284,7 +284,7 @@ func (self *BoltStatStorage) SetVolumeStat(volumeStats map[string]common.VolumeS
 					currentData.Volume += stat.Volume
 
 					dataJSON, _ := json.Marshal(currentData)
-					timezoneBk.Put(timestamp, dataJSON)
+					freqBk.Put(timestamp, dataJSON)
 				}
 			}
 		}
