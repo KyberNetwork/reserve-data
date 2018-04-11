@@ -409,19 +409,6 @@ func (self *Fetcher) FetchLogs(fromBlock uint64, toBlock uint64, timepoint uint6
 	}
 }
 
-func (self *Fetcher) updateTimeZoneBuckets(timestamp uint64, updates common.TradeStats) (err error) {
-	//update to timezone buckets
-	for i := START_TIMEZONE; i <= END_TIMEZONE; i++ {
-		//log.Printf("AGGREGATE updaing timezone buckets: %d", i)
-		freq := fmt.Sprintf("%s%d", TIMEZONE_BUCKET_PREFIX, i)
-		err = self.statStorage.SetTradeStats(freq, timestamp, updates)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func checkWalletAddress(wallet string) bool {
 	walletAddr := ethereum.HexToAddress(wallet)
 	cap := big.NewInt(0)

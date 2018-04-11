@@ -16,7 +16,6 @@ type StatStorage interface {
 	SetVolumeStat(volumeStat map[string]common.VolumeStatsTimeZone) error
 	SetBurnFeeStat(burnFeeStat map[string]common.BurnFeeStatsTimeZone) error
 
-	SetTradeStats(freq string, t uint64, tradeStats common.TradeStats) error
 	SetWalletAddress(walletAddr string) error
 	GetWalletAddress() ([]string, error)
 	SetLastProcessedTradeLogTimepoint(timepoint uint64) error
