@@ -633,7 +633,7 @@ type FeeStats map[int64]map[uint64]float64
 
 type MetricStats struct {
 	ETHVolume          float64 `json:"total_eth_volume"`
-	USDVolume          float64 `json:"total_usd_volume"`
+	USDVolume          float64 `json:"total_usd_amount"`
 	BurnFee            float64 `json:"total_burn_fee"`
 	TradeCount         int     `json:"total_trade"`
 	UniqueAddr         int     `json:"unique_addresses"`
