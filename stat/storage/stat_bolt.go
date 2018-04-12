@@ -111,25 +111,25 @@ func reverseSeek(timepoint uint64, c *bolt.Cursor) (uint64, error) {
 	}
 }
 
-func (self *BoltStatStorage) SetLastProcessedTradeLogTimepoint(timepoint uint64) error {
+func (self *BoltStatStorage) SetLastProcessedTradeLogTimepoint(statType string, timepoint uint64) error {
 	var err error
 	err = self.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(TRADELOG_PROCESSOR_STATE))
-		err = b.Put([]byte("last_timepoint"), uint64ToBytes(timepoint))
+		err = b.Put([]byte(statType), uint64ToBytes(timepoint))
 		return err
 	})
 	return err
 }
 
-func (self *BoltStatStorage) GetLastProcessedTradeLogTimepoint() (uint64, error) {
+func (self *BoltStatStorage) GetLastProcessedTradeLogTimepoint(statType string) (uint64, error) {
 	var result uint64
 	var err error
 	err = self.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(TRADELOG_PROCESSOR_STATE))
 		if b == nil {
-			return (errors.New("Can not find such bucket"))
+			return (errors.New("Can not find last processed bucket"))
 		}
-		result = bytesToUint64(b.Get([]byte("last_timepoint")))
+		result = bytesToUint64(b.Get([]byte(statType)))
 		return nil
 	})
 	return result, err
