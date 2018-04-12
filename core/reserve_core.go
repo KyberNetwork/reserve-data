@@ -82,10 +82,6 @@ func (self ReserveCore) Trade(
 		}
 	}
 	uid := timebasedID(id)
-	var errstr string
-	if err != nil {
-		errstr = err.Error()
-	}
 	self.activityStorage.Record(
 		"trade",
 		uid,
@@ -103,7 +99,7 @@ func (self ReserveCore) Trade(
 			"done":      done,
 			"remaining": remaining,
 			"finished":  finished,
-			"error":     errstr,
+			"error":     common.ErrorToString(err),
 		},
 		status,
 		"",
@@ -151,10 +147,8 @@ func (self ReserveCore) Deposit(
 			tx, err = self.blockchain.Send(token, amount, address)
 		}
 	}
-	var errstr string
 	if err != nil {
 		status = "failed"
-		errstr = err.Error()
 	} else {
 		status = "submitted"
 		txhex = tx.Hash().Hex()
@@ -176,7 +170,7 @@ func (self ReserveCore) Deposit(
 			"tx":       txhex,
 			"nonce":    txnonce,
 			"gasPrice": txprice,
-			"error":    errstr,
+			"error":    common.ErrorToString(err),
 		},
 		"",
 		status,
@@ -211,10 +205,6 @@ func (self ReserveCore) Withdraw(
 		status = "submitted"
 	}
 	uid := timebasedID(id)
-	var errstr string
-	if err != nil {
-		errstr = err.Error()
-	}
 	self.activityStorage.Record(
 		"withdraw",
 		uid,
@@ -225,7 +215,7 @@ func (self ReserveCore) Withdraw(
 			"amount":    strconv.FormatFloat(common.BigToFloat(amount, token.Decimal), 'f', -1, 64),
 			"timepoint": timepoint,
 		}, map[string]interface{}{
-			"error": errstr,
+			"error": common.ErrorToString(err),
 			"id":    id,
 			// this field will be updated with real tx when data fetcher can fetch it
 			// from exchanges
@@ -324,10 +314,6 @@ func (self ReserveCore) SetRates(
 		txprice = tx.GasPrice().Text(10)
 	}
 	uid := timebasedID(txhex)
-	var errstr string
-	if err != nil {
-		errstr = err.Error()
-	}
 	self.activityStorage.Record(
 		"set_rates",
 		uid,
@@ -342,7 +328,7 @@ func (self ReserveCore) SetRates(
 			"tx":       txhex,
 			"nonce":    txnonce,
 			"gasPrice": txprice,
-			"error":    errstr,
+			"error":    common.ErrorToString(err),
 		},
 		"",
 		status,

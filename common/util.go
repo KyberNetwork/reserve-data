@@ -24,3 +24,10 @@ func CurrentDir() string {
 	_, current, _, _ := runtime.Caller(1)
 	return filepath.Join(path.Dir(current))
 }
+
+func ErrorToString(err error) string {
+	if err == nil {
+		return ""
+	}
+	return err.Error()
+}
