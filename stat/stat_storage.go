@@ -9,16 +9,17 @@ type StatStorage interface {
 	GetBurnFee(fromTime, toTime uint64, freq, reserveAddr string) (common.StatTicks, error)
 	GetWalletFee(fromTime, toTime uint64, freq, reserveAddr string, walletAddr string) (common.StatTicks, error)
 	GetUserVolume(fromTime, toTime uint64, freq, userAddr string) (common.StatTicks, error)
-	GetLastProcessedTradeLogTimepoint() (timepoint uint64, err error)
 	GetWalletStats(fromTime, toTime uint64, walletAddr string, timezone int64) (common.StatTicks, error)
 	SetWalletStat(walletStats map[string]common.MetricStatsTimeZone) error
+
+	GetLastProcessedTradeLogTimepoint(statType string) (timepoint uint64, err error)
+	SetLastProcessedTradeLogTimepoint(statType string, timepoint uint64) error
 
 	SetVolumeStat(volumeStat map[string]common.VolumeStatsTimeZone) error
 	SetBurnFeeStat(burnFeeStat map[string]common.BurnFeeStatsTimeZone) error
 
 	SetWalletAddress(walletAddr string) error
 	GetWalletAddress() ([]string, error)
-	SetLastProcessedTradeLogTimepoint(timepoint uint64) error
 
 	SetCountry(country string) error
 	GetCountries() ([]string, error)
