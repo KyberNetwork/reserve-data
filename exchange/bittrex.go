@@ -210,9 +210,8 @@ func (self *Bittrex) DepositStatus(
 	}
 }
 
-func (self *Bittrex) CancelOrder(id common.ActivityID) error {
-	uuid := id.EID
-	resp, err := self.interf.CancelOrder(uuid)
+func (self *Bittrex) CancelOrder(id, base, quote string) error {
+	resp, err := self.interf.CancelOrder(id)
 	if err != nil {
 		return err
 	} else {
@@ -242,7 +241,7 @@ func (self *Bittrex) WithdrawStatus(id, currency string, amount float64, timepoi
 	}
 }
 
-func (self *Bittrex) OrderStatus(uuid string, base, quote common.Token) (string, error) {
+func (self *Bittrex) OrderStatus(uuid string, base, quote string) (string, error) {
 	resp_data, err := self.interf.OrderStatus(uuid)
 	if err != nil {
 		return "", err

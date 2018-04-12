@@ -24,7 +24,7 @@ func (self testExchange) Withdraw(token common.Token, amount *big.Int, address e
 func (self testExchange) Trade(tradeType string, base common.Token, quote common.Token, rate float64, amount float64, timepoint uint64) (id string, done float64, remaining float64, finished bool, err error) {
 	return "tradeid", 10, 5, false, nil
 }
-func (self testExchange) CancelOrder(id common.ActivityID) error {
+func (self testExchange) CancelOrder(id string, base, quote string) error {
 	return nil
 }
 func (self testExchange) MarshalText() (text []byte, err error) {
@@ -101,6 +101,10 @@ func (self testActivityStorage) Record(
 	mstatus string,
 	timepoint uint64) error {
 	return nil
+}
+
+func (self testActivityStorage) GetActivity(id common.ActivityID) (common.ActivityRecord, error) {
+	return common.ActivityRecord{}, nil
 }
 
 func (self testActivityStorage) PendingSetrate(minedNonce uint64) (*common.ActivityRecord, error) {

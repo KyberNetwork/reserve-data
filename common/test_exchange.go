@@ -21,7 +21,7 @@ func (self TestExchange) Withdraw(token Token, amount *big.Int, address ethereum
 func (self TestExchange) Trade(tradeType string, base Token, quote Token, rate float64, amount float64, timepoint uint64) (id string, done float64, remaining float64, finished bool, err error) {
 	return "tradeid", 10, 5, false, nil
 }
-func (self TestExchange) CancelOrder(id ActivityID) error {
+func (self TestExchange) CancelOrder(id, base, quote string) error {
 	return nil
 }
 func (self TestExchange) MarshalText() (text []byte, err error) {

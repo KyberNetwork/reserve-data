@@ -149,19 +149,18 @@ func (self *Huobi) Withdraw(token common.Token, amount *big.Int, address ethereu
 	return result, err
 }
 
-func (self *Huobi) CancelOrder(id common.ActivityID) error {
-	idParts := strings.Split(id.EID, "_")
-	idNo, err := strconv.ParseUint(idParts[0], 10, 64)
+func (self *Huobi) CancelOrder(id, base, quote string) error {
+	idNo, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
 		return err
 	}
-	symbol := idParts[1]
+	symbol := base + quote
 	result, err := self.interf.CancelOrder(symbol, idNo)
 	if err != nil {
 		return err
 	}
 	if result.Status != "ok" {
-		return errors.New("Couldn't cancel order id " + id.EID)
+		return errors.New("Couldn't cancel order id " + id)
 	}
 	return nil
 }
@@ -536,12 +535,12 @@ func (self *Huobi) WithdrawStatus(
 	return "", "", errors.New("Withdrawal doesn't exist. This shouldn't happen unless tx returned from withdrawal from huobi and activity ID are not consistently designed")
 }
 
-func (self *Huobi) OrderStatus(id string, base, quote common.Token) (string, error) {
+func (self *Huobi) OrderStatus(id string, base, quote string) (string, error) {
 	orderID, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
 		panic(err)
 	}
-	symbol := base.ID + quote.ID
+	symbol := base + quote
 	order, err := self.interf.OrderStatus(symbol, orderID)
 	if err != nil {
 		return "", err
