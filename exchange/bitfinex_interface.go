@@ -10,7 +10,7 @@ import (
 
 type BitfinexInterface interface {
 
-	GetInfo(timepoint uint64) (Bitfinfo, error)
+	GetInfo() (Bitfinfo, error)
 
 	FetchOnePairData(
 		wg *sync.WaitGroup,

@@ -10,18 +10,29 @@ import (
 // all of the functions must support concurrency
 type ReserveStats interface {
 	GetTradeLogs(fromTime uint64, toTime uint64) ([]common.TradeLog, error)
+	GetCatLogs(fromTime uint64, toTime uint64) ([]common.SetCatLog, error)
 	GetAssetVolume(fromTime, toTime uint64, freq, asset string) (common.StatTicks, error)
 	GetBurnFee(fromTime, toTime uint64, freq, reserveAddr string) (common.StatTicks, error)
 	GetWalletFee(fromTime, toTime uint64, freq, reserveAddr, walletAddr string) (common.StatTicks, error)
+	GetWalletAddress() ([]string, error)
 	GetUserVolume(fromTime, toTime uint64, freq, userAddr string) (common.StatTicks, error)
+	GetTradeSummary(fromTime, toTime uint64, timezone int64) (common.StatTicks, error)
 
 	GetCapByUser(userID string) (*common.UserCap, error)
 	GetCapByAddress(addr ethereum.Address) (*common.UserCap, error)
 	ExceedDailyLimit(addr ethereum.Address) (bool, error)
 	GetPendingAddresses() ([]string, error)
+	GetWalletStats(fromTime uint64, toTime uint64, walletAddr string, timezone int64) (common.StatTicks, error)
+	GetReserveRates(fromTime, toTime uint64, reserveAddr ethereum.Address) ([]common.ReserveRates, error)
+	UpdateUserAddresses(userID string, addresses []ethereum.Address, timestamps []uint64) error
+	UpdatePriceAnalyticData(timestamp uint64, value []byte) error
+	GetPriceAnalyticData(fromTime uint64, toTime uint64) ([]common.AnalyticPriceResponse, error)
 
-	UpdateUserAddresses(userID string, addresses []ethereum.Address) error
+	GetGeoData(fromTime, toTime uint64, country string, tzparam int64) (common.StatTicks, error)
+	GetHeatMap(fromTime, toTime uint64, tzparam int64) (common.HeatmapResponse, error)
+	GetCountries() ([]string, error)
 
+	RunDBController() error
 	Run() error
 	Stop() error
 }
@@ -43,6 +54,12 @@ type ReserveData interface {
 	GetPendingActivities() ([]common.ActivityRecord, error)
 
 	GetTradeHistory(timepoint uint64) (common.AllTradeHistory, error)
+
+	GetExchangeStatus() (common.ExchangesStatus, error)
+	UpdateExchangeStatus(exchange string, status bool, timestamp uint64) error
+
+	UpdateExchangeNotification(exchange, action, tokenPair string, from, to uint64, isWarning bool, msg string) error
+	GetNotifications() (common.ExchangeNotifications, error)
 
 	Run() error
 	Stop() error

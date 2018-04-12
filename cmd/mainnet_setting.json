@@ -371,5 +371,8 @@
   "network": "0x964F35fAe36d75B1e72770e244F6595B68508CF5",
   "wrapper": "0x6172AFC8c00c46E0D07ce3AF203828198194620a",
   "feeburner": "0x07f6e905f2a1559cd9fd43cb92f8a1062a3ca706",
-  "whitelist" : "0x6e106a75d369d09a9ea1dcc16da844792aa669a3"
+  "whitelist" : "0x6e106a75d369d09a9ea1dcc16da844792aa669a3",
+  "third_party_reserves": [
+    "0x2aab2b157a03915c8a73adae735d0cf51c872f31"
+  ]
 }

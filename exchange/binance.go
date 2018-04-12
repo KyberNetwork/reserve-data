@@ -14,7 +14,10 @@ import (
 	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
-const BINANCE_EPSILON float64 = 0.0000001 // 10e-7
+const (
+	BINANCE_EPSILON float64 = 0.0000001 // 10e-7
+	BATCH_SIZE      int     = 4
+)
 
 type Binance struct {
 	interf       BinanceInterface
@@ -140,8 +143,8 @@ func (self *Binance) Name() string {
 	return "binance"
 }
 
-func (self *Binance) QueryOrder(symbol string, id uint64, timepoint uint64) (done float64, remaining float64, finished bool, err error) {
-	result, err := self.interf.OrderStatus(symbol, id, timepoint)
+func (self *Binance) QueryOrder(symbol string, id uint64) (done float64, remaining float64, finished bool, err error) {
+	result, err := self.interf.OrderStatus(symbol, id)
 	if err != nil {
 		return 0, 0, false, err
 	} else {
@@ -152,8 +155,7 @@ func (self *Binance) QueryOrder(symbol string, id uint64, timepoint uint64) (don
 }
 
 func (self *Binance) Trade(tradeType string, base common.Token, quote common.Token, rate float64, amount float64, timepoint uint64) (id string, done float64, remaining float64, finished bool, err error) {
-	result, err := self.interf.Trade(tradeType, base, quote, rate, amount, timepoint)
-	symbol := base.ID + quote.ID
+	result, err := self.interf.Trade(tradeType, base, quote, rate, amount)
 
 	if err != nil {
 		return "", 0, 0, false, err
@@ -161,25 +163,23 @@ func (self *Binance) Trade(tradeType string, base common.Token, quote common.Tok
 		done, remaining, finished, err := self.QueryOrder(
 			base.ID+quote.ID,
 			result.OrderID,
-			timepoint+20,
 		)
-		id := fmt.Sprintf("%s_%s", strconv.FormatUint(result.OrderID, 10), symbol)
+		id := strconv.FormatUint(result.OrderID, 10)
 		return id, done, remaining, finished, err
 	}
 }
 
 func (self *Binance) Withdraw(token common.Token, amount *big.Int, address ethereum.Address, timepoint uint64) (string, error) {
-	tx, err := self.interf.Withdraw(token, amount, address, timepoint)
+	tx, err := self.interf.Withdraw(token, amount, address)
 	return tx, err
 }
 
-func (self *Binance) CancelOrder(id common.ActivityID) error {
-	idParts := strings.Split(id.EID, "_")
-	idNo, err := strconv.ParseUint(idParts[0], 10, 64)
+func (self *Binance) CancelOrder(id string, base, quote string) error {
+	idNo, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
 		return err
 	}
-	symbol := idParts[1]
+	symbol := base + quote
 	_, err = self.interf.CancelOrder(symbol, idNo)
 	if err != nil {
 		return err
@@ -199,7 +199,7 @@ func (self *Binance) FetchOnePairData(
 	timestamp := common.Timestamp(fmt.Sprintf("%d", timepoint))
 	result.Timestamp = timestamp
 	result.Valid = true
-	resp_data, err := self.interf.GetDepthOnePair(pair, timepoint)
+	resp_data, err := self.interf.GetDepthOnePair(pair)
 	returnTime := common.GetTimestamp()
 	result.ReturnTime = returnTime
 	if err != nil {
@@ -241,11 +241,17 @@ func (self *Binance) FetchPriceData(timepoint uint64) (map[common.TokenPairID]co
 	wait := sync.WaitGroup{}
 	data := sync.Map{}
 	pairs := self.pairs
-	for _, pair := range pairs {
-		wait.Add(1)
-		go self.FetchOnePairData(&wait, pair, &data, timepoint)
+	var i int = 0
+	var x int = 0
+	for i < len(pairs) {
+		for x = i; x < len(pairs) && x < i+BATCH_SIZE; x++ {
+			wait.Add(1)
+			pair := pairs[x]
+			go self.FetchOnePairData(&wait, pair, &data, timepoint)
+		}
+		wait.Wait()
+		i = x
 	}
-	wait.Wait()
 	result := map[common.TokenPairID]common.ExchangePrice{}
 	data.Range(func(key, value interface{}) bool {
 		result[key.(common.TokenPairID)] = value.(common.ExchangePrice)
@@ -262,7 +268,7 @@ func (self *Binance) OpenOrdersForOnePair(
 
 	defer wg.Done()
 
-	result, err := self.interf.OpenOrdersForOnePair(pair, timepoint)
+	result, err := self.interf.OpenOrdersForOnePair(pair)
 
 	if err == nil {
 		orders := []common.Order{}
@@ -271,7 +277,7 @@ func (self *Binance) OpenOrdersForOnePair(
 			orgQty, _ := strconv.ParseFloat(order.OrigQty, 64)
 			executedQty, _ := strconv.ParseFloat(order.ExecutedQty, 64)
 			orders = append(orders, common.Order{
-				ID:          fmt.Sprintf("%s_%s%s", order.OrderId, strings.ToUpper(pair.Base.ID), strings.ToUpper(pair.Quote.ID)),
+				ID:          fmt.Sprintf("%d_%s%s", order.OrderId, strings.ToUpper(pair.Base.ID), strings.ToUpper(pair.Quote.ID)),
 				Base:        strings.ToUpper(pair.Base.ID),
 				Quote:       strings.ToUpper(pair.Quote.ID),
 				OrderId:     fmt.Sprintf("%d", order.OrderId),
@@ -301,11 +307,17 @@ func (self *Binance) FetchOrderData(timepoint uint64) (common.OrderEntry, error)
 	wait := sync.WaitGroup{}
 	data := sync.Map{}
 	pairs := self.pairs
-	for _, pair := range pairs {
-		wait.Add(1)
-		go self.OpenOrdersForOnePair(&wait, pair, &data, timepoint)
+	var i int = 0
+	var x int = 0
+	for i < len(pairs) {
+		for x = i; x < len(pairs) && x < i+BATCH_SIZE; x++ {
+			wait.Add(1)
+			pair := pairs[x]
+			go self.OpenOrdersForOnePair(&wait, pair, &data, timepoint)
+		}
+		i = x
+		wait.Wait()
 	}
-	wait.Wait()
 
 	result.ReturnTime = common.GetTimestamp()
 
@@ -321,18 +333,22 @@ func (self *Binance) FetchEBalanceData(timepoint uint64) (common.EBalanceEntry, 
 	result := common.EBalanceEntry{}
 	result.Timestamp = common.Timestamp(fmt.Sprintf("%d", timepoint))
 	result.Valid = true
-	resp_data, err := self.interf.GetInfo(timepoint)
+	result.Error = ""
+	resp_data, err := self.interf.GetInfo()
 	result.ReturnTime = common.GetTimestamp()
 	if err != nil {
 		result.Valid = false
 		result.Error = err.Error()
+		result.Status = false
 	} else {
 		result.AvailableBalance = map[string]float64{}
 		result.LockedBalance = map[string]float64{}
 		result.DepositBalance = map[string]float64{}
+		result.Status = true
 		if resp_data.Code != 0 {
 			result.Valid = false
-			result.Error = fmt.Sprintf("Code: %s, Msg: %s", resp_data.Code, resp_data.Msg)
+			result.Error = fmt.Sprintf("Code: %d, Msg: %s", resp_data.Code, resp_data.Msg)
+			result.Status = false
 		} else {
 			for _, b := range resp_data.Balances {
 				tokenID := b.Asset
@@ -358,7 +374,7 @@ func (self *Binance) FetchOnePairTradeHistory(
 
 	defer wait.Done()
 	result := []common.TradeHistory{}
-	resp, err := self.interf.GetAccountTradeHistory(pair.Base, pair.Quote, 0, timepoint)
+	resp, err := self.interf.GetAccountTradeHistory(pair.Base, pair.Quote, 0)
 	if err != nil {
 		log.Printf("Cannot fetch data for pair %s%s: %s", pair.Base.ID, pair.Quote.ID, err.Error())
 	}
@@ -387,11 +403,17 @@ func (self *Binance) FetchTradeHistory(timepoint uint64) (map[common.TokenPairID
 	data := sync.Map{}
 	pairs := self.pairs
 	wait := sync.WaitGroup{}
-	for _, pair := range pairs {
-		wait.Add(1)
-		go self.FetchOnePairTradeHistory(&wait, &data, pair, timepoint)
+	var i int = 0
+	var x int = 0
+	for i < len(pairs) {
+		for x = i; x < len(pairs) && x < i+BATCH_SIZE; x++ {
+			wait.Add(1)
+			pair := pairs[x]
+			go self.FetchOnePairTradeHistory(&wait, &data, pair, timepoint)
+		}
+		i = x
+		wait.Wait()
 	}
-	wait.Wait()
 	data.Range(func(key, value interface{}) bool {
 		result[key.(common.TokenPairID)] = value.([]common.TradeHistory)
 		return true
@@ -399,15 +421,7 @@ func (self *Binance) FetchTradeHistory(timepoint uint64) (map[common.TokenPairID
 	return result, nil
 }
 
-func (self *Binance) DepositStatus(id common.ActivityID, timepoint uint64) (string, error) {
-	idParts := strings.Split(id.EID, "|")
-	if len(idParts) != 3 {
-		// here, the exchange id part in id is malformed
-		// 1. because analytic didn't pass original ID
-		// 2. id is not constructed correctly in a form of uuid + "|" + token
-		return "", errors.New("Invalid deposit id")
-	}
-	txID := idParts[0]
+func (self *Binance) DepositStatus(id common.ActivityID, txHash, currency string, amount float64, timepoint uint64) (string, error) {
 	startTime := timepoint - 86400000
 	endTime := timepoint
 	deposits, err := self.interf.DepositHistory(startTime, endTime)
@@ -415,7 +429,7 @@ func (self *Binance) DepositStatus(id common.ActivityID, timepoint uint64) (stri
 		return "", err
 	} else {
 		for _, deposit := range deposits.Deposits {
-			if deposit.TxID == txID {
+			if deposit.TxID == txHash {
 				if deposit.Status == 1 {
 					return "done", nil
 				} else {
@@ -423,12 +437,11 @@ func (self *Binance) DepositStatus(id common.ActivityID, timepoint uint64) (stri
 				}
 			}
 		}
-		return "", errors.New("Deposit doesn't exist. This shouldn't happen unless tx returned from binance and activity ID are not consistently designed")
+		return "", errors.New("Deposit is not found in deposit list returned from Binance. This might cause by wrong start/end time, please check again.")
 	}
 }
 
-func (self *Binance) WithdrawStatus(id common.ActivityID, timepoint uint64) (string, string, error) {
-	withdrawID := id.EID
+func (self *Binance) WithdrawStatus(id, currency string, amount float64, timepoint uint64) (string, string, error) {
 	startTime := timepoint - 86400000
 	endTime := timepoint
 	withdraws, err := self.interf.WithdrawHistory(startTime, endTime)
@@ -436,7 +449,7 @@ func (self *Binance) WithdrawStatus(id common.ActivityID, timepoint uint64) (str
 		return "", "", err
 	} else {
 		for _, withdraw := range withdraws.Withdrawals {
-			if withdraw.ID == withdrawID {
+			if withdraw.ID == id {
 				if withdraw.Status == 3 || withdraw.Status == 5 || withdraw.Status == 6 {
 					return "done", withdraw.TxID, nil
 				} else {
@@ -448,16 +461,13 @@ func (self *Binance) WithdrawStatus(id common.ActivityID, timepoint uint64) (str
 	}
 }
 
-func (self *Binance) OrderStatus(id common.ActivityID, timepoint uint64) (string, error) {
-	tradeID := id.EID
-	parts := strings.Split(tradeID, "_")
-	orderID, err := strconv.ParseUint(parts[0], 10, 64)
+func (self *Binance) OrderStatus(id string, base, quote string) (string, error) {
+	orderID, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
-		// if this crashes, it means core put malformed activity ID
 		panic(err)
 	}
-	symbol := parts[1]
-	order, err := self.interf.OrderStatus(symbol, orderID, timepoint)
+	symbol := base + quote
+	order, err := self.interf.OrderStatus(symbol, orderID)
 	if err != nil {
 		return "", err
 	}

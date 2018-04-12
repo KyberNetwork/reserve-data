@@ -2,13 +2,14 @@ package http_runner
 
 import (
 	"errors"
-	"github.com/KyberNetwork/reserve-data/common"
-	"github.com/getsentry/raven-go"
-	"github.com/gin-contrib/sentry"
-	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/KyberNetwork/reserve-data/common"
+	raven "github.com/getsentry/raven-go"
+	"github.com/gin-contrib/sentry"
+	"github.com/gin-gonic/gin"
 )
 
 const MAX_TIMESPOT uint64 = 18446744073709551615
@@ -23,15 +24,15 @@ type HttpRunnerServer struct {
 func getTimePoint(c *gin.Context) uint64 {
 	timestamp := c.DefaultQuery("timestamp", "")
 	if timestamp == "" {
-		log.Printf("Interpreted timestamp(%s) to default - %s\n", timestamp, MAX_TIMESPOT)
+		log.Printf("Interpreted timestamp(%s) to default - %d\n", timestamp, MAX_TIMESPOT)
 		return MAX_TIMESPOT
 	} else {
 		timepoint, err := strconv.ParseUint(timestamp, 10, 64)
 		if err != nil {
-			log.Printf("Interpreted timestamp(%s) to default - %s\n", timestamp, MAX_TIMESPOT)
+			log.Printf("Interpreted timestamp(%s) to default - %d\n", timestamp, MAX_TIMESPOT)
 			return MAX_TIMESPOT
 		} else {
-			log.Printf("Interpreted timestamp(%s) to %s\n", timestamp, timepoint)
+			log.Printf("Interpreted timestamp(%s) to %d\n", timestamp, timepoint)
 			return timepoint
 		}
 	}

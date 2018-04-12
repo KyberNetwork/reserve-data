@@ -45,15 +45,15 @@ func (self *BittrexEndpoint) fillRequest(req *http.Request, signNeeded bool) {
 	req.Header.Add("Accept", "application/json")
 	if signNeeded {
 		q := req.URL.Query()
-		q.Set("apikey", self.signer.GetBittrexKey())
+		q.Set("apikey", self.signer.GetKey())
 		q.Set("nonce", nonce())
 		req.URL.RawQuery = q.Encode()
-		req.Header.Add("apisign", self.signer.BittrexSign(req.URL.String()))
+		req.Header.Add("apisign", self.signer.Sign(req.URL.String()))
 	}
 }
 
 func (self *BittrexEndpoint) GetResponse(
-	url string, params map[string]string, signNeeded bool, timepoint uint64) ([]byte, error) {
+	url string, params map[string]string, signNeeded bool) ([]byte, error) {
 	client := &http.Client{
 		Timeout: time.Duration(30 * time.Second),
 	}
@@ -82,12 +82,10 @@ func (self *BittrexEndpoint) GetResponse(
 
 func (self *BittrexEndpoint) GetExchangeInfo() (exchange.BittExchangeInfo, error) {
 	result := exchange.BittExchangeInfo{}
-	timepoint := common.GetTimepoint()
 	resp_body, err := self.GetResponse(
-		addPath(self.interf.PublicEndpoint(timepoint), "getmarkets"),
+		addPath(self.interf.PublicEndpoint(), "getmarkets"),
 		map[string]string{},
 		false,
-		timepoint,
 	)
 	if err == nil {
 		err = json.Unmarshal(resp_body, &result)
@@ -95,18 +93,15 @@ func (self *BittrexEndpoint) GetExchangeInfo() (exchange.BittExchangeInfo, error
 	return result, err
 }
 
-func (self *BittrexEndpoint) FetchOnePairData(
-	pair common.TokenPair, timepoint uint64) (exchange.Bittresp, error) {
-
+func (self *BittrexEndpoint) FetchOnePairData(pair common.TokenPair) (exchange.Bittresp, error) {
 	data := exchange.Bittresp{}
 	resp_body, err := self.GetResponse(
-		addPath(self.interf.PublicEndpoint(timepoint), "getorderbook"),
+		addPath(self.interf.PublicEndpoint(), "getorderbook"),
 		map[string]string{
 			"market": fmt.Sprintf("%s-%s", pair.Quote.ID, pair.Base.ID),
 			"type":   "both",
 		},
 		false,
-		timepoint,
 	)
 
 	if err != nil {
@@ -120,15 +115,14 @@ func (self *BittrexEndpoint) FetchOnePairData(
 func (self *BittrexEndpoint) Trade(
 	tradeType string,
 	base, quote common.Token,
-	rate, amount float64,
-	timepoint uint64) (exchange.Bitttrade, error) {
+	rate, amount float64) (exchange.Bitttrade, error) {
 
 	result := exchange.Bitttrade{}
 	var url string
 	if tradeType == "sell" {
-		url = addPath(self.interf.MarketEndpoint(timepoint), "selllimit")
+		url = addPath(self.interf.MarketEndpoint(), "selllimit")
 	} else {
-		url = addPath(self.interf.MarketEndpoint(timepoint), "buylimit")
+		url = addPath(self.interf.MarketEndpoint(), "buylimit")
 	}
 	params := map[string]string{
 		"market":   fmt.Sprintf("%s-%s", strings.ToUpper(quote.ID), strings.ToUpper(base.ID)),
@@ -136,7 +130,7 @@ func (self *BittrexEndpoint) Trade(
 		"rate":     strconv.FormatFloat(rate, 'f', -1, 64),
 	}
 	resp_body, err := self.GetResponse(
-		url, params, true, timepoint)
+		url, params, true)
 
 	if err != nil {
 		return result, err
@@ -146,15 +140,14 @@ func (self *BittrexEndpoint) Trade(
 	}
 }
 
-func (self *BittrexEndpoint) OrderStatus(uuid string, timepoint uint64) (exchange.Bitttraderesult, error) {
+func (self *BittrexEndpoint) OrderStatus(uuid string) (exchange.Bitttraderesult, error) {
 	result := exchange.Bitttraderesult{}
 	resp_body, err := self.GetResponse(
-		addPath(self.interf.AccountEndpoint(timepoint), "getorder"),
+		addPath(self.interf.AccountEndpoint(), "getorder"),
 		map[string]string{
 			"uuid": uuid,
 		},
 		true,
-		timepoint,
 	)
 	if err != nil {
 		return result, err
@@ -166,14 +159,12 @@ func (self *BittrexEndpoint) OrderStatus(uuid string, timepoint uint64) (exchang
 
 func (self *BittrexEndpoint) GetDepositAddress(currency string) (exchange.BittrexDepositAddress, error) {
 	result := exchange.BittrexDepositAddress{}
-	timepoint := common.GetTimepoint()
 	resp_body, err := self.GetResponse(
-		addPath(self.interf.AccountEndpoint(timepoint), "getdepositaddress"),
+		addPath(self.interf.AccountEndpoint(), "getdepositaddress"),
 		map[string]string{
 			"currency": currency,
 		},
 		true,
-		timepoint,
 	)
 	if err == nil {
 		json.Unmarshal(resp_body, &result)
@@ -181,15 +172,14 @@ func (self *BittrexEndpoint) GetDepositAddress(currency string) (exchange.Bittre
 	return result, err
 }
 
-func (self *BittrexEndpoint) WithdrawHistory(currency string, timepoint uint64) (exchange.Bittwithdrawhistory, error) {
+func (self *BittrexEndpoint) WithdrawHistory(currency string) (exchange.Bittwithdrawhistory, error) {
 	result := exchange.Bittwithdrawhistory{}
 	resp_body, err := self.GetResponse(
-		addPath(self.interf.AccountEndpoint(timepoint), "getwithdrawalhistory"),
+		addPath(self.interf.AccountEndpoint(), "getwithdrawalhistory"),
 		map[string]string{
 			"currency": currency,
 		},
 		true,
-		timepoint,
 	)
 	if err != nil {
 		return result, err
@@ -199,15 +189,14 @@ func (self *BittrexEndpoint) WithdrawHistory(currency string, timepoint uint64) 
 	}
 }
 
-func (self *BittrexEndpoint) DepositHistory(currency string, timepoint uint64) (exchange.Bittdeposithistory, error) {
+func (self *BittrexEndpoint) DepositHistory(currency string) (exchange.Bittdeposithistory, error) {
 	result := exchange.Bittdeposithistory{}
 	resp_body, err := self.GetResponse(
-		addPath(self.interf.AccountEndpoint(timepoint), "getdeposithistory"),
+		addPath(self.interf.AccountEndpoint(), "getdeposithistory"),
 		map[string]string{
 			"currency": currency,
 		},
 		true,
-		timepoint,
 	)
 	if err != nil {
 		return result, err
@@ -217,17 +206,16 @@ func (self *BittrexEndpoint) DepositHistory(currency string, timepoint uint64) (
 	}
 }
 
-func (self *BittrexEndpoint) Withdraw(token common.Token, amount *big.Int, address ethereum.Address, timepoint uint64) (exchange.Bittwithdraw, error) {
+func (self *BittrexEndpoint) Withdraw(token common.Token, amount *big.Int, address ethereum.Address) (exchange.Bittwithdraw, error) {
 	result := exchange.Bittwithdraw{}
 	resp_body, err := self.GetResponse(
-		addPath(self.interf.AccountEndpoint(timepoint), "withdraw"),
+		addPath(self.interf.AccountEndpoint(), "withdraw"),
 		map[string]string{
 			"currency": strings.ToUpper(token.ID),
 			"quantity": strconv.FormatFloat(common.BigToFloat(amount, token.Decimal), 'f', -1, 64),
 			"address":  address.Hex(),
 		},
 		true,
-		timepoint,
 	)
 	if err != nil {
 		return result, err
@@ -237,13 +225,12 @@ func (self *BittrexEndpoint) Withdraw(token common.Token, amount *big.Int, addre
 	}
 }
 
-func (self *BittrexEndpoint) GetInfo(timepoint uint64) (exchange.Bittinfo, error) {
+func (self *BittrexEndpoint) GetInfo() (exchange.Bittinfo, error) {
 	result := exchange.Bittinfo{}
 	resp_body, err := self.GetResponse(
-		addPath(self.interf.AccountEndpoint(timepoint), "getbalances"),
+		addPath(self.interf.AccountEndpoint(), "getbalances"),
 		map[string]string{},
 		true,
-		timepoint,
 	)
 	if err != nil {
 		return result, err
@@ -253,15 +240,14 @@ func (self *BittrexEndpoint) GetInfo(timepoint uint64) (exchange.Bittinfo, error
 	}
 }
 
-func (self *BittrexEndpoint) CancelOrder(uuid string, timepoint uint64) (exchange.Bittcancelorder, error) {
+func (self *BittrexEndpoint) CancelOrder(uuid string) (exchange.Bittcancelorder, error) {
 	result := exchange.Bittcancelorder{}
 	resp_body, err := self.GetResponse(
-		addPath(self.interf.MarketEndpoint(timepoint), "cancel"),
+		addPath(self.interf.MarketEndpoint(), "cancel"),
 		map[string]string{
 			"uuid": uuid,
 		},
 		true,
-		timepoint,
 	)
 	if err != nil {
 		return result, err
@@ -271,7 +257,7 @@ func (self *BittrexEndpoint) CancelOrder(uuid string, timepoint uint64) (exchang
 	}
 }
 
-func (self *BittrexEndpoint) GetAccountTradeHistory(base, quote common.Token, timepoint uint64) (exchange.BittTradeHistory, error) {
+func (self *BittrexEndpoint) GetAccountTradeHistory(base, quote common.Token) (exchange.BittTradeHistory, error) {
 	result := exchange.BittTradeHistory{}
 	params := map[string]string{}
 	symbol := fmt.Sprintf("%s-%s", quote.ID, base.ID)
@@ -279,10 +265,9 @@ func (self *BittrexEndpoint) GetAccountTradeHistory(base, quote common.Token, ti
 		params["market"] = symbol
 	}
 	resp_body, err := self.GetResponse(
-		addPath(self.interf.AccountEndpoint(timepoint), "getorderhistory"),
+		addPath(self.interf.AccountEndpoint(), "getorderhistory"),
 		params,
 		true,
-		timepoint,
 	)
 	if err == nil {
 		json.Unmarshal(resp_body, &result)

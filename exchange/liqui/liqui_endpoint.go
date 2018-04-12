@@ -82,8 +82,8 @@ func (self *LiquiEndpoint) CancelOrder(id string) (exchange.Liqcancel, error) {
 	req.Header.Add("Content-Length", strconv.Itoa(len(params)))
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Add("Key", self.signer.GetLiquiKey())
-	req.Header.Add("Sign", self.signer.LiquiSign(params))
+	req.Header.Add("Key", self.signer.GetKey())
+	req.Header.Add("Sign", self.signer.Sign(params))
 	resp, err := client.Do(req)
 	if err == nil && resp.StatusCode == 200 {
 		defer resp.Body.Close()
@@ -118,8 +118,8 @@ func (self *LiquiEndpoint) Trade(tradeType string, base, quote common.Token, rat
 	req.Header.Add("Content-Length", strconv.Itoa(len(params)))
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Add("Key", self.signer.GetLiquiKey())
-	req.Header.Add("Sign", self.signer.LiquiSign(params))
+	req.Header.Add("Key", self.signer.GetKey())
+	req.Header.Add("Sign", self.signer.Sign(params))
 	resp, err := client.Do(req)
 	if err == nil && resp.StatusCode == 200 {
 		defer resp.Body.Close()
@@ -162,8 +162,8 @@ func (self *LiquiEndpoint) Withdraw(token common.Token, amount *big.Int, address
 	req.Header.Add("Content-Length", strconv.Itoa(len(params)))
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Add("Key", self.signer.GetLiquiKey())
-	req.Header.Add("Sign", self.signer.LiquiSign(params))
+	req.Header.Add("Key", self.signer.GetKey())
+	req.Header.Add("Sign", self.signer.Sign(params))
 	resp, err := client.Do(req)
 	if err == nil && resp.StatusCode == 200 {
 		defer resp.Body.Close()
@@ -202,18 +202,18 @@ func (self *LiquiEndpoint) GetInfo(timepoint uint64) (exchange.Liqinfo, error) {
 	req.Header.Add("Content-Length", strconv.Itoa(len(params)))
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Add("Key", self.signer.GetLiquiKey())
-	req.Header.Add("Sign", self.signer.LiquiSign(params))
+	req.Header.Add("Key", self.signer.GetKey())
+	req.Header.Add("Sign", self.signer.Sign(params))
 	resp, err := client.Do(req)
 	if err == nil {
 		if resp.StatusCode == 200 {
 			defer resp.Body.Close()
 			resp_body, err := ioutil.ReadAll(resp.Body)
-			log.Printf("Liqui GetInfo response: %s\n", string(resp_body))
+			log.Printf("Liqui GetInfo response: %s", string(resp_body))
 			if err == nil {
 				json.Unmarshal(resp_body, &result)
 			}
-			log.Printf("Liqui GetInfo data: %s\n", result)
+			log.Printf("Liqui GetInfo data: %v", result)
 		} else {
 			err = errors.New("Unsuccessful response from Liqui: Status " + resp.Status)
 		}
@@ -238,18 +238,18 @@ func (self *LiquiEndpoint) OrderInfo(orderID string, timepoint uint64) (exchange
 	req.Header.Add("Content-Length", strconv.Itoa(len(params)))
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Add("Key", self.signer.GetLiquiKey())
-	req.Header.Add("Sign", self.signer.LiquiSign(params))
+	req.Header.Add("Key", self.signer.GetKey())
+	req.Header.Add("Sign", self.signer.Sign(params))
 	resp, err := client.Do(req)
 	if err == nil {
 		if resp.StatusCode == 200 {
 			defer resp.Body.Close()
 			resp_body, err := ioutil.ReadAll(resp.Body)
-			log.Printf("Liqui Order info response: %s\n", string(resp_body))
+			log.Printf("Liqui Order info response: %s", string(resp_body))
 			if err == nil {
 				json.Unmarshal(resp_body, &result)
 			}
-			log.Printf("Liqui Order info data: %s\n", result)
+			log.Printf("Liqui Order info data: %v", result)
 		} else {
 			err = errors.New("Unsuccessful response from Liqui: Status " + resp.Status)
 		}
@@ -274,18 +274,18 @@ func (self *LiquiEndpoint) ActiveOrders(timepoint uint64) (exchange.Liqorders, e
 	req.Header.Add("Content-Length", strconv.Itoa(len(params)))
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Add("Key", self.signer.GetLiquiKey())
-	req.Header.Add("Sign", self.signer.LiquiSign(params))
+	req.Header.Add("Key", self.signer.GetKey())
+	req.Header.Add("Sign", self.signer.Sign(params))
 	resp, err := client.Do(req)
 	if err == nil {
 		if resp.StatusCode == 200 {
 			defer resp.Body.Close()
 			resp_body, err := ioutil.ReadAll(resp.Body)
-			log.Printf("Liqui ActiveOrders response: %s\n", string(resp_body))
+			log.Printf("Liqui ActiveOrders response: %s", string(resp_body))
 			if err == nil {
 				json.Unmarshal(resp_body, &result)
 			}
-			log.Printf("Liqui ActiveOrders data: %s\n", result)
+			log.Printf("Liqui ActiveOrders data: %v", result)
 		} else {
 			err = errors.New("Unsuccessful response from Liqui: Status " + resp.Status)
 		}

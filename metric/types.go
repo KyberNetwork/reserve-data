@@ -40,9 +40,9 @@ type PWIEquation struct {
 }
 
 type RebalanceControl struct {
-	Status bool `json:status`
+	Status bool `json:"status"`
 }
 
 type SetrateControl struct {
-	Status bool `json:status`
+	Status bool `json:"status"`
 }

@@ -18,6 +18,7 @@
 reserve-data
 config.json
 log/*
+cmd/*_awsconfig.json
 cmd/cmd
 cmd/core.db
 cmd/log.log

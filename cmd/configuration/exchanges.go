@@ -6,12 +6,13 @@ import (
 	"sync"
 
 	"github.com/KyberNetwork/reserve-data/common"
+	"github.com/KyberNetwork/reserve-data/common/blockchain"
+	"github.com/KyberNetwork/reserve-data/common/blockchain/nonce"
 	"github.com/KyberNetwork/reserve-data/data/fetcher"
 	"github.com/KyberNetwork/reserve-data/exchange"
 	"github.com/KyberNetwork/reserve-data/exchange/binance"
 	"github.com/KyberNetwork/reserve-data/exchange/bittrex"
 	"github.com/KyberNetwork/reserve-data/exchange/huobi"
-	"github.com/KyberNetwork/reserve-data/signer"
 )
 
 type ExchangePool struct {
@@ -49,8 +50,9 @@ func getHuobiInterface(kyberENV string) huobi.Interface {
 func NewExchangePool(
 	feeConfig common.ExchangeFeesConfig,
 	addressConfig common.AddressConfig,
-	signer *signer.FileSigner,
-	bittrexStorage exchange.BittrexStorage, kyberENV string) *ExchangePool {
+	settingPaths SettingPaths,
+	blockchain *blockchain.BaseBlockchain,
+	kyberENV string) *ExchangePool {
 
 	exchanges := map[common.ExchangeID]interface{}{}
 	params := os.Getenv("KYBER_EXCHANGES")
@@ -58,7 +60,12 @@ func NewExchangePool(
 	for _, exparam := range exparams {
 		switch exparam {
 		case "bittrex":
-			endpoint := bittrex.NewBittrexEndpoint(signer, getBittrexInterface(kyberENV))
+			bittrexSigner := bittrex.NewSignerFromFile(settingPaths.secretPath)
+			endpoint := bittrex.NewBittrexEndpoint(bittrexSigner, getBittrexInterface(kyberENV))
+			bittrexStorage, err := bittrex.NewBoltStorage("/go/src/github.com/KyberNetwork/reserve-data/cmd/bittrex.db")
+			if err != nil {
+				panic(err)
+			}
 			bit := exchange.NewBittrex(addressConfig.Exchanges["bittrex"], feeConfig.Exchanges["bittrex"], endpoint, bittrexStorage)
 			wait := sync.WaitGroup{}
 			for tokenID, addr := range addressConfig.Exchanges["bittrex"] {
@@ -69,7 +76,8 @@ func NewExchangePool(
 			bit.UpdatePairsPrecision()
 			exchanges[bit.ID()] = bit
 		case "binance":
-			endpoint := binance.NewBinanceEndpoint(signer, getBinanceInterface(kyberENV))
+			binanceSigner := binance.NewSignerFromFile(settingPaths.secretPath)
+			endpoint := binance.NewBinanceEndpoint(binanceSigner, getBinanceInterface(kyberENV))
 			bin := exchange.NewBinance(addressConfig.Exchanges["binance"], feeConfig.Exchanges["binance"], endpoint)
 			wait := sync.WaitGroup{}
 			for tokenID, addr := range addressConfig.Exchanges["binance"] {
@@ -80,7 +88,23 @@ func NewExchangePool(
 			bin.UpdatePairsPrecision()
 			exchanges[bin.ID()] = bin
 		case "huobi":
-			huobi := exchange.NewHuobi(huobi.NewHuobiEndpoint(signer, getHuobiInterface(kyberENV)))
+			huobiSigner := huobi.NewSignerFromFile(settingPaths.secretPath)
+			endpoint := huobi.NewHuobiEndpoint(huobiSigner, getHuobiInterface(kyberENV))
+			storage, err := huobi.NewBoltStorage("/go/src/github.com/KyberNetwork/reserve-data/cmd/huobi.db")
+			intermediatorSigner := HuobiIntermediatorSignerFromFile(settingPaths.secretPath)
+			intermediatorNonce := nonce.NewTimeWindow(intermediatorSigner.GetAddress())
+			if err != nil {
+				panic(err)
+			}
+			huobi := exchange.NewHuobi(
+				addressConfig.Exchanges["huobi"],
+				feeConfig.Exchanges["huobi"],
+				endpoint,
+				blockchain,
+				intermediatorSigner,
+				intermediatorNonce,
+				storage,
+			)
 			wait := sync.WaitGroup{}
 			for tokenID, addr := range addressConfig.Exchanges["huobi"] {
 				wait.Add(1)

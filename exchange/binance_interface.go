@@ -8,31 +8,27 @@ import (
 )
 
 type BinanceInterface interface {
-	GetDepthOnePair(
-		pair common.TokenPair, timepoint uint64) (Binaresp, error)
+	GetDepthOnePair(pair common.TokenPair) (Binaresp, error)
 
-	OpenOrdersForOnePair(
-		pair common.TokenPair, timepoint uint64) (Binaorders, error)
+	OpenOrdersForOnePair(pair common.TokenPair) (Binaorders, error)
 
-	GetInfo(timepoint uint64) (Binainfo, error)
+	GetInfo() (Binainfo, error)
 
 	GetExchangeInfo() (BinanceExchangeInfo, error)
 
 	GetDepositAddress(tokenID string) (Binadepositaddress, error)
 
-	GetAccountTradeHistory(base, quote common.Token, fromID, timepoint uint64) (BinaAccountTradeHistory, error)
+	GetAccountTradeHistory(base, quote common.Token, fromID uint64) (BinaAccountTradeHistory, error)
 
 	Withdraw(
 		token common.Token,
 		amount *big.Int,
-		address ethereum.Address,
-		timepoint uint64) (string, error)
+		address ethereum.Address) (string, error)
 
 	Trade(
 		tradeType string,
 		base, quote common.Token,
-		rate, amount float64,
-		timepoint uint64) (Binatrade, error)
+		rate, amount float64) (Binatrade, error)
 
 	CancelOrder(symbol string, id uint64) (Binacancel, error)
 
@@ -42,7 +38,7 @@ type BinanceInterface interface {
 		startTime, endTime uint64) (Binawithdrawals, error)
 
 	OrderStatus(
-		symbol string, id uint64, timepoint uint64) (Binaorder, error)
+		symbol string, id uint64) (Binaorder, error)
 
 	GetServerTime() (uint64, error)
 }

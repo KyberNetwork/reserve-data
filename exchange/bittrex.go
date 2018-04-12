@@ -109,7 +109,7 @@ func (self *Bittrex) Name() string {
 }
 
 func (self *Bittrex) QueryOrder(uuid string, timepoint uint64) (float64, float64, bool, error) {
-	result, err := self.interf.OrderStatus(uuid, timepoint)
+	result, err := self.interf.OrderStatus(uuid)
 	if err != nil {
 		return 0, 0, false, err
 	} else {
@@ -120,7 +120,7 @@ func (self *Bittrex) QueryOrder(uuid string, timepoint uint64) (float64, float64
 }
 
 func (self *Bittrex) Trade(tradeType string, base common.Token, quote common.Token, rate float64, amount float64, timepoint uint64) (string, float64, float64, bool, error) {
-	result, err := self.interf.Trade(tradeType, base, quote, rate, amount, timepoint)
+	result, err := self.interf.Trade(tradeType, base, quote, rate, amount)
 
 	if err != nil {
 		return "", 0, 0, false, errors.New("Trade rejected by Bittrex")
@@ -137,12 +137,12 @@ func (self *Bittrex) Trade(tradeType string, base common.Token, quote common.Tok
 }
 
 func (self *Bittrex) Withdraw(token common.Token, amount *big.Int, address ethereum.Address, timepoint uint64) (string, error) {
-	resp, err := self.interf.Withdraw(token, amount, address, timepoint)
+	resp, err := self.interf.Withdraw(token, amount, address)
 	if err != nil {
 		return "", err
 	} else {
 		if resp.Success {
-			return resp.Result["uuid"] + "|" + token.ID, nil
+			return resp.Result["uuid"], nil
 		} else {
 			return "", errors.New(resp.Error)
 		}
@@ -166,7 +166,8 @@ func bitttimestampToUint64(input string) uint64 {
 	return uint64(t.UnixNano() / int64(time.Millisecond))
 }
 
-func (self *Bittrex) DepositStatus(id common.ActivityID, timepoint uint64) (string, error) {
+func (self *Bittrex) DepositStatus(
+	id common.ActivityID, txHash, currency string, amount float64, timepoint uint64) (string, error) {
 	timestamp := id.Timepoint
 	idParts := strings.Split(id.EID, "|")
 	if len(idParts) != 3 {
@@ -175,12 +176,11 @@ func (self *Bittrex) DepositStatus(id common.ActivityID, timepoint uint64) (stri
 		// 2. id is not constructed correctly in a form of uuid + "|" + token + "|" + amount
 		return "", errors.New("Invalid deposit id")
 	}
-	currency := idParts[1]
 	amount, err := strconv.ParseFloat(idParts[2], 64)
 	if err != nil {
 		panic(err)
 	}
-	histories, err := self.interf.DepositHistory(currency, timepoint)
+	histories, err := self.interf.DepositHistory(currency)
 	if err != nil {
 		return "", err
 	} else {
@@ -193,11 +193,11 @@ func (self *Bittrex) DepositStatus(id common.ActivityID, timepoint uint64) (stri
 			)
 			log.Printf("deposit.Currency: %s", deposit.Currency)
 			log.Printf("currency: %s", currency)
-			log.Printf("deposit.Amount: %s", deposit.Amount)
-			log.Printf("amount: %s", amount)
-			log.Printf("deposit.LastUpdated: %s", bitttimestampToUint64(deposit.LastUpdated))
-			log.Printf("timestamp: %s", timestamp/uint64(time.Millisecond))
-			log.Printf("is new deposit: %s", self.storage.IsNewBittrexDeposit(deposit.Id, id))
+			log.Printf("deposit.Amount: %f", deposit.Amount)
+			log.Printf("amount: %f", amount)
+			log.Printf("deposit.LastUpdated: %d", bitttimestampToUint64(deposit.LastUpdated))
+			log.Printf("timestamp: %d", timestamp/uint64(time.Millisecond))
+			log.Printf("is new deposit: %t", self.storage.IsNewBittrexDeposit(deposit.Id, id))
 			if deposit.Currency == currency &&
 				deposit.Amount-amount < BITTREX_EPSILON &&
 				bitttimestampToUint64(deposit.LastUpdated) > timestamp/uint64(time.Millisecond) &&
@@ -210,9 +210,8 @@ func (self *Bittrex) DepositStatus(id common.ActivityID, timepoint uint64) (stri
 	}
 }
 
-func (self *Bittrex) CancelOrder(id common.ActivityID) error {
-	uuid := id.EID
-	resp, err := self.interf.CancelOrder(uuid, common.GetTimepoint())
+func (self *Bittrex) CancelOrder(id, base, quote string) error {
+	resp, err := self.interf.CancelOrder(id)
 	if err != nil {
 		return err
 	} else {
@@ -224,22 +223,13 @@ func (self *Bittrex) CancelOrder(id common.ActivityID) error {
 	}
 }
 
-func (self *Bittrex) WithdrawStatus(id common.ActivityID, timepoint uint64) (string, string, error) {
-	idParts := strings.Split(id.EID, "|")
-	if len(idParts) != 2 {
-		// here, the exchange id part in id is malformed
-		// 1. because analytic didn't pass original ID
-		// 2. id is not constructed correctly in a form of uuid + "|" + token
-		return "", "", errors.New("Invalid withdraw id")
-	}
-	uuid := idParts[0]
-	currency := idParts[1]
-	histories, err := self.interf.WithdrawHistory(currency, timepoint)
+func (self *Bittrex) WithdrawStatus(id, currency string, amount float64, timepoint uint64) (string, string, error) {
+	histories, err := self.interf.WithdrawHistory(currency)
 	if err != nil {
 		return "", "", err
 	} else {
 		for _, withdraw := range histories.Result {
-			if withdraw.PaymentUuid == uuid {
+			if withdraw.PaymentUuid == id {
 				if withdraw.PendingPayment {
 					return "", withdraw.TxId, nil
 				} else {
@@ -247,13 +237,12 @@ func (self *Bittrex) WithdrawStatus(id common.ActivityID, timepoint uint64) (str
 				}
 			}
 		}
-		return "", "", errors.New("Withdraw with uuid " + uuid + " of currency " + currency + " is not found on bittrex")
+		return "", "", errors.New("Withdraw with uuid " + id + " of currency " + currency + " is not found on bittrex")
 	}
 }
 
-func (self *Bittrex) OrderStatus(id common.ActivityID, timepoint uint64) (string, error) {
-	uuid := id.EID
-	resp_data, err := self.interf.OrderStatus(uuid, timepoint)
+func (self *Bittrex) OrderStatus(uuid string, base, quote string) (string, error) {
+	resp_data, err := self.interf.OrderStatus(uuid)
 	if err != nil {
 		return "", err
 	} else {
@@ -270,7 +259,7 @@ func (self *Bittrex) FetchOnePairData(wq *sync.WaitGroup, pair common.TokenPair,
 	result := common.ExchangePrice{}
 	result.Timestamp = common.Timestamp(fmt.Sprintf("%d", timepoint))
 	result.Valid = true
-	onePairData, err := self.interf.FetchOnePairData(pair, timepoint)
+	onePairData, err := self.interf.FetchOnePairData(pair)
 	returnTime := common.GetTimestamp()
 	result.ReturnTime = returnTime
 	if err != nil {
@@ -325,15 +314,17 @@ func (self *Bittrex) FetchEBalanceData(timepoint uint64) (common.EBalanceEntry, 
 	result := common.EBalanceEntry{}
 	result.Timestamp = common.Timestamp(fmt.Sprintf("%d", timepoint))
 	result.Valid = true
-	resp_data, err := self.interf.GetInfo(timepoint)
+	resp_data, err := self.interf.GetInfo()
 	result.ReturnTime = common.GetTimestamp()
 	if err != nil {
 		result.Valid = false
 		result.Error = err.Error()
+		result.Status = false
 	} else {
 		result.AvailableBalance = map[string]float64{}
 		result.LockedBalance = map[string]float64{}
 		result.DepositBalance = map[string]float64{}
+		result.Status = true
 		if resp_data.Success {
 			for _, b := range resp_data.Result {
 				tokenID := b.Currency
@@ -360,7 +351,7 @@ func (self *Bittrex) FetchOnePairTradeHistory(
 
 	defer wait.Done()
 	result := []common.TradeHistory{}
-	resp, err := self.interf.GetAccountTradeHistory(pair.Base, pair.Quote, timepoint)
+	resp, err := self.interf.GetAccountTradeHistory(pair.Base, pair.Quote)
 	if err != nil {
 		log.Printf("Cannot fetch data for pair %s%s: %s", pair.Base.ID, pair.Quote.ID, err.Error())
 	}

@@ -18,13 +18,13 @@ func NewRamTradeStorage() *RamTradeStorage {
 	}
 }
 
-func (self *RamTradeStorage) GetTradeHistory(timepoint uint64) (common.AllTradeHistory, error) {
+func (self *RamTradeStorage) GetTradeHistory() (common.AllTradeHistory, error) {
 	self.mu.RLock()
 	defer self.mu.RUnlock()
 	return self.data, nil
 }
 
-func (self *RamTradeStorage) StoreTradeHistory(data common.AllTradeHistory, timepoint uint64) error {
+func (self *RamTradeStorage) StoreTradeHistory(data common.AllTradeHistory) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 	self.data = data

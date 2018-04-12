@@ -5,9 +5,9 @@ import (
 )
 
 type Interface interface {
-	PublicEndpoint(timepoint uint64) string
-	MarketEndpoint(timepoint uint64) string
-	AccountEndpoint(timepoint uint64) string
+	PublicEndpoint() string
+	MarketEndpoint() string
+	AccountEndpoint() string
 }
 
 type RealInterface struct{}
@@ -20,21 +20,17 @@ func getOrSetDefaultURL(base_url string) string {
 	} else {
 		return "http://127.0.0.1:5300"
 	}
-
 }
 
-func (self *RealInterface) PublicEndpoint(timepoint uint64) string {
-	// ignore timepoint because timepoint is only relevant in simulation
+func (self *RealInterface) PublicEndpoint() string {
 	return "https://bittrex.com/api/" + apiVersion + "/public"
 }
 
-func (self *RealInterface) MarketEndpoint(timepoint uint64) string {
-	// ignore timepoint because timepoint is only relevant in simulation
+func (self *RealInterface) MarketEndpoint() string {
 	return "https://bittrex.com/api/" + apiVersion + "/market"
 }
 
-func (self *RealInterface) AccountEndpoint(timepoint uint64) string {
-	// ignore timepoint because timepoint is only relevant in simulation
+func (self *RealInterface) AccountEndpoint() string {
 	return "https://bittrex.com/api/" + apiVersion + "/account"
 }
 
@@ -50,16 +46,16 @@ func (self *SimulatedInterface) baseurl() string {
 	return getOrSetDefaultURL(self.base_url)
 }
 
-func (self *SimulatedInterface) PublicEndpoint(timepoint uint64) string {
-	return fmt.Sprintf("%s/api/%s/public?timestamp=%d", self.baseurl(), apiVersion, timepoint)
+func (self *SimulatedInterface) PublicEndpoint() string {
+	return fmt.Sprintf("%s/api/%s/public", self.baseurl(), apiVersion)
 }
 
-func (self *SimulatedInterface) MarketEndpoint(timepoint uint64) string {
-	return fmt.Sprintf("%s/api/%s/market?timestamp=%d", self.baseurl(), apiVersion, timepoint)
+func (self *SimulatedInterface) MarketEndpoint() string {
+	return fmt.Sprintf("%s/api/%s/market", self.baseurl(), apiVersion)
 }
 
-func (self *SimulatedInterface) AccountEndpoint(timepoint uint64) string {
-	return fmt.Sprintf("%s/api/%s/account?timestamp=%d", self.baseurl(), apiVersion, timepoint)
+func (self *SimulatedInterface) AccountEndpoint() string {
+	return fmt.Sprintf("%s/api/%s/account", self.baseurl(), apiVersion)
 }
 
 func NewSimulatedInterface(flagVariable string) *SimulatedInterface {
@@ -68,18 +64,15 @@ func NewSimulatedInterface(flagVariable string) *SimulatedInterface {
 
 type DevInterface struct{}
 
-func (self *DevInterface) PublicEndpoint(timepoint uint64) string {
-	// ignore timepoint because timepoint is only relevant in simulation
+func (self *DevInterface) PublicEndpoint() string {
 	return "https://bittrex.com/api/" + apiVersion + "/public"
 }
 
-func (self *DevInterface) MarketEndpoint(timepoint uint64) string {
-	// ignore timepoint because timepoint is only relevant in simulation
+func (self *DevInterface) MarketEndpoint() string {
 	return "https://bittrex.com/api/" + apiVersion + "/market"
 }
 
-func (self *DevInterface) AccountEndpoint(timepoint uint64) string {
-	// ignore timepoint because timepoint is only relevant in simulation
+func (self *DevInterface) AccountEndpoint() string {
 	return "https://bittrex.com/api/" + apiVersion + "/account"
 }
 
@@ -95,17 +88,16 @@ func (self *RopstenInterface) baseurl() string {
 	return getOrSetDefaultURL(self.base_url)
 }
 
-func (self *RopstenInterface) PublicEndpoint(timepoint uint64) string {
-	// ignore timepoint because timepoint is only relevant in simulation
+func (self *RopstenInterface) PublicEndpoint() string {
 	return "https://bittrex.com/api/" + apiVersion + "/public"
 }
 
-func (self *RopstenInterface) MarketEndpoint(timepoint uint64) string {
-	return fmt.Sprintf("%s/api/%s/market?timestamp=%d", self.baseurl(), apiVersion, timepoint)
+func (self *RopstenInterface) MarketEndpoint() string {
+	return fmt.Sprintf("%s/api/%s/market", self.baseurl(), apiVersion)
 }
 
-func (self *RopstenInterface) AccountEndpoint(timepoint uint64) string {
-	return fmt.Sprintf("%s/api/%s/account?timestamp=%d", self.baseurl(), apiVersion, timepoint)
+func (self *RopstenInterface) AccountEndpoint() string {
+	return fmt.Sprintf("%s/api/%s/account", self.baseurl(), apiVersion)
 }
 
 func NewRopstenInterface(flagVariable string) *RopstenInterface {
@@ -120,17 +112,16 @@ func (self *KovanInterface) baseurl() string {
 	return getOrSetDefaultURL(self.base_url)
 }
 
-func (self *KovanInterface) PublicEndpoint(timepoint uint64) string {
-	// ignore timepoint because timepoint is only relevant in simulation
+func (self *KovanInterface) PublicEndpoint() string {
 	return "https://bittrex.com/api/" + apiVersion + "/public"
 }
 
-func (self *KovanInterface) MarketEndpoint(timepoint uint64) string {
-	return fmt.Sprintf("%s/api/%s/market?timestamp=%d", self.baseurl(), apiVersion, timepoint)
+func (self *KovanInterface) MarketEndpoint() string {
+	return fmt.Sprintf("%s/api/%s/market", self.baseurl(), apiVersion)
 }
 
-func (self *KovanInterface) AccountEndpoint(timepoint uint64) string {
-	return fmt.Sprintf("%s/api/%s/account?timestamp=%d", self.baseurl(), apiVersion, timepoint)
+func (self *KovanInterface) AccountEndpoint() string {
+	return fmt.Sprintf("%s/api/%s/account", self.baseurl(), apiVersion)
 }
 
 func NewKovanInterface(flagVariable string) *KovanInterface {

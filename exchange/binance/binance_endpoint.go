@@ -31,14 +31,14 @@ func (self *BinanceEndpoint) fillRequest(req *http.Request, signNeeded bool, tim
 		req.Header.Add("User-Agent", "binance/go")
 	}
 	req.Header.Add("Accept", "application/json")
-	log.Printf("Bin Time Delta: %s", self.timeDelta)
+	log.Printf("Bin Time Delta: %d", self.timeDelta)
 	if signNeeded {
 		q := req.URL.Query()
 		sig := url.Values{}
-		req.Header.Set("X-MBX-APIKEY", self.signer.GetBinanceKey())
+		req.Header.Set("X-MBX-APIKEY", self.signer.GetKey())
 		q.Set("timestamp", fmt.Sprintf("%d", int64(timepoint)+self.timeDelta-1000))
 		q.Set("recvWindow", "5000")
-		sig.Set("signature", self.signer.BinanceSign(q.Encode()))
+		sig.Set("signature", self.signer.Sign(q.Encode()))
 		// Using separated values map for signature to ensure it is at the end
 		// of the query. This is required for /wapi apis from binance without
 		// any damn documentation about it!!!
@@ -73,22 +73,30 @@ func (self *BinanceEndpoint) GetResponse(
 		switch resp.StatusCode {
 		case 429:
 			err = errors.New("breaking a request rate limit.")
+			break
 		case 418:
 			err = errors.New("IP has been auto-banned for continuing to send requests after receiving 429 codes.")
+			break
 		case 500:
 			err = errors.New("500 from Binance, its fault.")
+			break
+		case 401:
+			err = errors.New("API key not valid.")
+			break
 		case 200:
 			resp_body, err = ioutil.ReadAll(resp.Body)
+			break
+		default:
+			err = errors.New(fmt.Sprintf("Binance return with code: %d", resp.StatusCode))
 		}
 		if err != nil || len(resp_body) == 0 || rand.Int()%10 == 0 {
-			log.Printf("request to %s, got response from binance (error or throttled to 10%): %s, err: %v", req.URL, common.TruncStr(resp_body), err)
+			log.Printf("request to %s, got response from binance (error or throttled to 10%%): %s, err: %v", req.URL, common.TruncStr(resp_body), err)
 		}
 		return resp_body, err
 	}
 }
 
-func (self *BinanceEndpoint) GetDepthOnePair(
-	pair common.TokenPair, timepoint uint64) (exchange.Binaresp, error) {
+func (self *BinanceEndpoint) GetDepthOnePair(pair common.TokenPair) (exchange.Binaresp, error) {
 
 	resp_body, err := self.GetResponse(
 		"GET", self.interf.PublicEndpoint()+"/api/v1/depth",
@@ -127,7 +135,7 @@ func (self *BinanceEndpoint) GetDepthOnePair(
 //
 // In this version, we only support LIMIT order which means only buy/sell with acceptable price,
 // and GTC time in force which means that the order will be active until it's implicitly canceled
-func (self *BinanceEndpoint) Trade(tradeType string, base, quote common.Token, rate, amount float64, timepoint uint64) (exchange.Binatrade, error) {
+func (self *BinanceEndpoint) Trade(tradeType string, base, quote common.Token, rate, amount float64) (exchange.Binatrade, error) {
 	result := exchange.Binatrade{}
 	symbol := base.ID + quote.ID
 	orderType := "LIMIT"
@@ -177,8 +185,7 @@ func (self *BinanceEndpoint) GetTradeHistory(symbol string) (exchange.BinanceTra
 
 func (self *BinanceEndpoint) GetAccountTradeHistory(
 	base, quote common.Token,
-	fromID uint64,
-	timepoint uint64) (exchange.BinaAccountTradeHistory, error) {
+	fromID uint64) (exchange.BinaAccountTradeHistory, error) {
 
 	symbol := strings.ToUpper(fmt.Sprintf("%s%s", base.ID, quote.ID))
 	result := exchange.BinaAccountTradeHistory{}
@@ -194,7 +201,7 @@ func (self *BinanceEndpoint) GetAccountTradeHistory(
 		self.interf.AuthenticatedEndpoint()+"/api/v3/myTrades",
 		params,
 		true,
-		timepoint,
+		common.GetTimepoint(),
 	)
 	if err == nil {
 		json.Unmarshal(resp_body, &result)
@@ -265,7 +272,7 @@ func (self *BinanceEndpoint) CancelOrder(symbol string, id uint64) (exchange.Bin
 	return result, err
 }
 
-func (self *BinanceEndpoint) OrderStatus(symbol string, id uint64, timepoint uint64) (exchange.Binaorder, error) {
+func (self *BinanceEndpoint) OrderStatus(symbol string, id uint64) (exchange.Binaorder, error) {
 	result := exchange.Binaorder{}
 	resp_body, err := self.GetResponse(
 		"GET",
@@ -286,7 +293,7 @@ func (self *BinanceEndpoint) OrderStatus(symbol string, id uint64, timepoint uin
 	return result, err
 }
 
-func (self *BinanceEndpoint) Withdraw(token common.Token, amount *big.Int, address ethereum.Address, timepoint uint64) (string, error) {
+func (self *BinanceEndpoint) Withdraw(token common.Token, amount *big.Int, address ethereum.Address) (string, error) {
 	result := exchange.Binawithdraw{}
 	resp_body, err := self.GetResponse(
 		"POST",
@@ -311,7 +318,7 @@ func (self *BinanceEndpoint) Withdraw(token common.Token, amount *big.Int, addre
 	}
 }
 
-func (self *BinanceEndpoint) GetInfo(timepoint uint64) (exchange.Binainfo, error) {
+func (self *BinanceEndpoint) GetInfo() (exchange.Binainfo, error) {
 	result := exchange.Binainfo{}
 	resp_body, err := self.GetResponse(
 		"GET",
@@ -329,8 +336,7 @@ func (self *BinanceEndpoint) GetInfo(timepoint uint64) (exchange.Binainfo, error
 	return result, err
 }
 
-func (self *BinanceEndpoint) OpenOrdersForOnePair(
-	pair common.TokenPair, timepoint uint64) (exchange.Binaorders, error) {
+func (self *BinanceEndpoint) OpenOrdersForOnePair(pair common.TokenPair) (exchange.Binaorders, error) {
 
 	result := exchange.Binaorders{}
 	resp_body, err := self.GetResponse(
@@ -407,13 +413,13 @@ func (self *BinanceEndpoint) UpdateTimeDelta() error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Binance current time: %s", currentTime)
-	log.Printf("Binance server time: %s", serverTime)
-	log.Printf("Binance response time: %s", responseTime)
+	log.Printf("Binance current time: %d", currentTime)
+	log.Printf("Binance server time: %d", serverTime)
+	log.Printf("Binance response time: %d", responseTime)
 	roundtripTime := (int64(responseTime) - int64(currentTime)) / 2
 	self.timeDelta = int64(serverTime) - int64(currentTime) - roundtripTime
 
-	log.Printf("Time delta: %s", self.timeDelta)
+	log.Printf("Time delta: %d", self.timeDelta)
 	return nil
 }
 

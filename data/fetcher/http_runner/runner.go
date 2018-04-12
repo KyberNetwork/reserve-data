@@ -8,13 +8,29 @@ import (
 )
 
 type HttpRunner struct {
-	port    int
-	oticker chan time.Time
-	aticker chan time.Time
-	rticker chan time.Time
-	bticker chan time.Time
-	tticker chan time.Time
-	server  *HttpRunnerServer
+	port                    int
+	oticker                 chan time.Time
+	aticker                 chan time.Time
+	rticker                 chan time.Time
+	bticker                 chan time.Time
+	tticker                 chan time.Time
+	rsticker                chan time.Time
+	lticker                 chan time.Time
+	tradeLogProcessorTicker chan time.Time
+	catLogProcessorTicker   chan time.Time
+	server                  *HttpRunnerServer
+}
+
+func (self *HttpRunner) GetTradeLogProcessorTicker() <-chan time.Time {
+	return self.tradeLogProcessorTicker
+}
+
+func (self *HttpRunner) GetCatLogProcessorTicker() <-chan time.Time {
+	return self.catLogProcessorTicker
+}
+
+func (self *HttpRunner) GetLogTicker() <-chan time.Time {
+	return self.lticker
 }
 
 func (self *HttpRunner) GetBlockTicker() <-chan time.Time {
@@ -34,6 +50,10 @@ func (self *HttpRunner) GetRateTicker() <-chan time.Time {
 }
 func (self *HttpRunner) GetTradeHistoryTicker() <-chan time.Time {
 	return self.tticker
+}
+
+func (self *HttpRunner) GetReserveRatesTicker() <-chan time.Time {
+	return self.rsticker
 }
 
 func (self *HttpRunner) Start() error {
@@ -67,6 +87,10 @@ func NewHttpRunner(port int) *HttpRunner {
 	rchan := make(chan time.Time)
 	bchan := make(chan time.Time)
 	tchan := make(chan time.Time)
+	rschan := make(chan time.Time)
+	lchan := make(chan time.Time)
+	tradeLogProcessorChan := make(chan time.Time)
+	catLogProcessorChan := make(chan time.Time)
 	runner := HttpRunner{
 		port,
 		ochan,
@@ -74,6 +98,10 @@ func NewHttpRunner(port int) *HttpRunner {
 		rchan,
 		bchan,
 		tchan,
+		rschan,
+		lchan,
+		tradeLogProcessorChan,
+		catLogProcessorChan,
 		nil,
 	}
 	runner.Start()

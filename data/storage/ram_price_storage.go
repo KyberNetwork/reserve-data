@@ -20,7 +20,7 @@ func NewRamPriceStorage() *RamPriceStorage {
 	}
 }
 
-func (self *RamPriceStorage) CurrentVersion(timepoint uint64) (int64, error) {
+func (self *RamPriceStorage) CurrentVersion() (int64, error) {
 	self.mu.RLock()
 	defer self.mu.RUnlock()
 	return self.version, nil
@@ -53,7 +53,7 @@ func (self *RamPriceStorage) GetOnePrice(pair common.TokenPairID, version int64)
 	}
 }
 
-func (self *RamPriceStorage) StoreNewData(data common.AllPriceEntry, timepoint uint64) error {
+func (self *RamPriceStorage) StoreNewData(data common.AllPriceEntry) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 	self.version = self.version + 1

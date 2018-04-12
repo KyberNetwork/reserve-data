@@ -708,7 +708,10 @@ response
   {
     "success": true,
   }
+```
+
 ### Get trade logs
+
 ```
 <host>:8000/tradelogs
 GET request
@@ -733,11 +736,11 @@ Url params:
 ```
 
 ```
-curl -x GET http://localhost:8000/get-asset-volume?fromTime=0&&toTime=1519227041000&&freq=M&&asset=ETH
+curl -x GET http://localhost:8000/get-asset-volume?fromTime=1520640035000&toTime=1520722835000&asset=eth&freq=M
 ```
 response
 ```
-  {"data":[{"1519227000000000000":100000000000000000},{"1519226880000000000":86999913000000000},{"1519226640000000000":100000000000000000},{"1519226520000000000":100000000000000000},{"1519226340000000000":126264963825000000},{"1519081680000000000":51466039469120200},{"1519067760000000000":9369109645107630},{"1519067520000000000":9633580170681883},{"1519067400000000000":29388269566904720},{"1519067340000000000":59797583186420043},{"1519067280000000000":19430650154405726},{"1519067100000000000":9796387044628134},{"1519067040000000000":9815712359930319},{"1519066860000000000":20000000000000000},{"1519066740000000000":10000000000000000},{"1519066560000000000":10000000000000000},{"1519052160000000000":2269667698116220},{"1519048980000000000":9831816773460462},{"1519048800000000000":10000000000000000},{"1519048680000000000":9821581719812169},{"1519048620000000000":10000000000000000},{"1519048440000000000":10000000000000000},{"1519047900000000000":10000000000000000},{"1519047600000000000":98309510769053336},{"1519047540000000000":100000000000000000},{"1519047480000000000":9731437317788610},{"1519047420000000000":10000000000000000},{"1519047300000000000":9795253145888408},{"1519047180000000000":10000000000000000},{"1519046880000000000":9838275264215577},{"1519046820000000000":10000000000000000},{"1519046340000000000":100000000000000000},{"1519046280000000000":222675547815392127},{"1519045980000000000":13712492908075780},{"1519044120000000000":100000000000000000},{"1519043100000000000":4720253116336855},{"1519042980000000000":10000000000000000},{"1518211020000000000":100000000000000000},{"1518113220000000000":10000000000000000},{"1518111180000000000":10551700279301788},{"1518090420000000000":292113000000000000},{"1518033900000000000":220000000000000000},{"1518030840000000000":22451719674887340},{"1518030660000000000":25239000000000000},{"1518029460000000000":14976217096974016},{"1518028920000000000":50027774181109647},{"1518028800000000000":17167610627196171},{"1518027780000000000":12420698128483600},{"1518027600000000000":60000000000000000},{"1518027120000000000":38264206744879475},{"1518026460000000000":35071897038494700},{"1518026280000000000":89874000000000000},{"1518026160000000000":80776000000000000},{"1518025980000000000":295035786166562022},{"1518025920000000000":98251190616823944},{"1518025800000000000":100000000000000000},{"1518025740000000000":97968021472895074},{"1518025680000000000":100000000000000000},{"1518025620000000000":97165154997504114},{"1518025560000000000":100000000000000000}],"success":true}
+  {"data":{"1520652360000":{"usd_amount":0.734518,"volume":0.001},"1520654280000":{"usd_amount":0.7297319999999999,"volume":0.001},"1520654820000":{"usd_amount":1.4581552500230603,"volume":0.001998206533389053},"1520656440000":{"usd_amount":0.7297319999999999,"volume":0.001},"1520656500000":{"usd_amount":0.7297319999999999,"volume":0.001},"1520656560000":{"usd_amount":0.7297319999999999,"volume":0.001}},"success":true}
 ```
 
 ### Get burn fee follow aggregate time (hour, day, month)
@@ -753,11 +756,11 @@ Url params:
 ```
 
 ```
-curl -x GET http://localhost:8000/get-burn-fee?fromTime=0&&toTime=1519227041000&&freq=M&&reserveAddr=0x2c5a182d280eeb5824377b98cd74871f78d6b8bc
+curl -x GET http://localhost:8000/get-burn-fee?fromTime=1520640035000&toTime=1520722835000&reserveAddr=0x2c5a182d280eeb5824377b98cd74871f78d6b8bc&freq=H
 ```
 response
 ```
-  {"data":[{"1519081680000000000":38599529601840150},{"1519067760000000000":7026832233830722},{"1519067520000000000":7225185128011412},{"1519067400000000000":22041202175178538},{"1519067340000000000":44848187389815032},{"1519067280000000000":14572987615804294},{"1519067100000000000":7347290283471100},{"1519067040000000000":7361784269947739},{"1519066860000000000":15000000000000000},{"1519066740000000000":7500000000000000},{"1519066560000000000":7500000000000000},{"1519052160000000000":1702250773587165},{"1519048980000000000":7373862580095346},{"1519048800000000000":7500000000000000},{"1519048680000000000":7366186289859126},{"1519048620000000000":7500000000000000},{"1519048440000000000":7500000000000000},{"1519047900000000000":7500000000000000},{"1519047600000000000":73732133076790002},{"1519047540000000000":75000000000000000},{"1519047480000000000":7298577988341457},{"1519047420000000000":7500000000000000},{"1519047300000000000":7346439859416306},{"1519047180000000000":7500000000000000},{"1519046880000000000":7378706448161682},{"1519046820000000000":7500000000000000},{"1519046340000000000":75000000000000000},{"1519046280000000000":167006660861544095},{"1519045980000000000":10284369681056835},{"1519044120000000000":75000000000000000},{"1519043100000000000":3540189837252641},{"1519042980000000000":7500000000000000},{"1518211020000000000":75000000000000000},{"1518113220000000000":7500000000000000},{"1518111180000000000":7913775209476341},{"1518090420000000000":219084750000000000},{"1518033900000000000":165000000000000000},{"1518030840000000000":16838789756165505},{"1518030660000000000":18929250000000000},{"1518029460000000000":11232162822730512},{"1518028920000000000":37520830635832235},{"1518028800000000000":12875707970397128},{"1518027780000000000":9315523596362700},{"1518027600000000000":45000000000000000},{"1518027120000000000":28698155058659606},{"1518026460000000000":26303922778871025},{"1518026280000000000":67405500000000000},{"1518026160000000000":60582000000000000},{"1518025980000000000":221276839624921516},{"1518025920000000000":73688392962617958},{"1518025800000000000":75000000000000000},{"1518025740000000000":73476016104671305},{"1518025680000000000":75000000000000000},{"1518025620000000000":72873866248128085},{"1518025560000000000":75000000000000000}],"success":true}
+  {"data":{"1520650800000":0.00225,"1520654400000":0.005622982350062684},"success":true}
 ```
 
 ### Get wallet fee follow aggregate time (hour, day, month)
@@ -774,11 +777,11 @@ Url params:
 ```
 
 ```
-curl -x GET http://localhost:8000/get-wallet-fee?fromTime=0&&toTime=1519227041000&&freq=M&&reserveAddr=0x2c5a182d280eeb5824377b98cd74871f78d6b8bc&&walletAddr=0x0000000000000000000000000000000000000000
+curl -x GET http://localhost:8000/get-wallet-fee?fromTime=1520640035000&toTime=1520722835000&reserveAddr=0x2c5a182d280eeb5824377b98cd74871f78d6b8bc&walletAddr=0x0000000000000000000000000000000000000000&freq=H
 ```
 response
 ```
-  {"data":[{"1519081680000000000":38599529601840150},{"1519067760000000000":7026832233830722},{"1519067520000000000":7225185128011412},{"1519067400000000000":22041202175178538},{"1519067340000000000":44848187389815032},{"1519067280000000000":14572987615804294},{"1519067100000000000":7347290283471100},{"1519067040000000000":7361784269947739},{"1519066860000000000":15000000000000000},{"1519066740000000000":7500000000000000},{"1519066560000000000":7500000000000000},{"1519052160000000000":1702250773587165},{"1519048980000000000":7373862580095346},{"1519048800000000000":7500000000000000},{"1519048680000000000":7366186289859126},{"1519048620000000000":7500000000000000},{"1519048440000000000":7500000000000000},{"1519047900000000000":7500000000000000},{"1519047600000000000":73732133076790002},{"1519047540000000000":75000000000000000},{"1519047480000000000":7298577988341457},{"1519047420000000000":7500000000000000},{"1519047300000000000":7346439859416306},{"1519047180000000000":7500000000000000},{"1519046880000000000":7378706448161682},{"1519046820000000000":7500000000000000},{"1519046340000000000":75000000000000000},{"1519046280000000000":167006660861544095},{"1519045980000000000":10284369681056835},{"1519044120000000000":75000000000000000},{"1519043100000000000":3540189837252641},{"1519042980000000000":7500000000000000},{"1518211020000000000":75000000000000000},{"1518113220000000000":7500000000000000},{"1518111180000000000":7913775209476341},{"1518090420000000000":219084750000000000},{"1518033900000000000":165000000000000000},{"1518030840000000000":16838789756165505},{"1518030660000000000":18929250000000000},{"1518029460000000000":11232162822730512},{"1518028920000000000":37520830635832235},{"1518028800000000000":12875707970397128},{"1518027780000000000":9315523596362700},{"1518027600000000000":45000000000000000},{"1518027120000000000":28698155058659606},{"1518026460000000000":26303922778871025},{"1518026280000000000":67405500000000000},{"1518026160000000000":60582000000000000},{"1518025980000000000":221276839624921516},{"1518025920000000000":73688392962617958},{"1518025800000000000":75000000000000000},{"1518025740000000000":73476016104671305},{"1518025680000000000":75000000000000000},{"1518025620000000000":72873866248128085},{"1518025560000000000":75000000000000000}],"success":true}
+  {"data":{"1520650800000":0,"1520654400000":0},"success":true}
 ```
 
 
@@ -795,12 +798,259 @@ Url params:
 ```
 
 ```
-curl -x GET http://localhost:8000/get-user-volume?fromTime=0&&toTime=1519227041000&&freq=M&&reserveAddr=0x2c5a182d280eeb5824377b98cd74871f78d6b8bc&&userAddr=0x053a9f418f7be3391a2821be23b418a909f42f54
+curl -x GET http://localhost:8000/get-user-volume?fromTime=1520640035000&toTime=1520722835000&userAddr=0x8fa07f46353a2b17e92645592a94a0fc1ceb783f&freq=H
 ```
 response
 ```
-  {"data":[{"1519046340000000000":115},{"1519046280000000000":230}],"success":true}
+  {"data":{"1520650800000":0.734518,"1520654400000":0},"success":true}  
 ```
+
+### Get rate from blockchain follow reserve (including sanity rate)
+```
+<host>:8000/get-reserve-rate
+GET request
+
+URL params:
+  - fromTime (millisecond - required): from timestamp
+  - toTime (millisecond - required): to timestamp
+  - reserveAddr (required): Address of the reserve to get rate from
+```
+
+```
+curl -x GET http://localhost:8000/get-reserve-rate?fromTime=1520650426000&reserveAddr=0x2C5a182d280EeB5824377B98CD74871f78d6b8BC
+```
+
+response
+```
+{"data":[{"Timestamp":0,"ReturnTime":1520655211398,"BlockNumber":5228238,"Data":{"APPC-ETH":{"ReserveRate":0.008393501685222925,"SanityRate":0.009476954807692308},"BAT-ETH":{"ReserveRate":0.004239837479770336,"SanityRate":0.004723026},"BQX-ETH":{"ReserveRate":0.000584106942517358,"SanityRate":0.000652623583333333},"ELF-ETH":{"ReserveRate":0.000111035861616385,"SanityRate":0.000123576933333333},"ENG-ETH":{"ReserveRate":0.000596961062855617,"SanityRate":0.000671348333333333},"EOS-ETH":{"ReserveRate":0.002752586323625439,"SanityRate":0.0029518775},"ETH-APPC":{"ReserveRate":117.09352189952426,"SanityRate":127.67814393478591},"ETH-BAT":{"ReserveRate":229.70817443088293,"SanityRate":256.19168727845243},"ETH-BQX":{"ReserveRate":1674.1030165099337,"SanityRate":1854.0549727299406},"ETH-ELF":{"ReserveRate":8741.854159397268,"SanityRate":9791.471331758756},"ETH-ENG":{"ReserveRate":1615.634600168794,"SanityRate":1802.3430459597466},"ETH-EOS":{"ReserveRate":356.63560217559376,"SanityRate":409.9086090123997},"ETH-GTO":{"ReserveRate":377.41338205276884,"SanityRate":432.7020247561754},"ETH-KNC":{"ReserveRate":3343.445798727388,"SanityRate":3740.5264791019335},"ETH-MANA":{"ReserveRate":2653.110602592891,"SanityRate":2961.048749629869},"ETH-OMG":{"ReserveRate":221.03211631662654,"SanityRate":247.71892159696137},"ETH-POWR":{"ReserveRate":2625.724091042635,"SanityRate":2849.3656923419003},"ETH-RDN":{"ReserveRate":49.46371879742714,"SanityRate":54.91076347236177},"ETH-REQ":{"ReserveRate":5123.294220111987,"SanityRate":5665.576472406068},"ETH-SALT":{"ReserveRate":532.7984920557698,"SanityRate":611.1450636146453},"ETH-SNT":{"ReserveRate":924.3533982883454,"SanityRate":1052.547224086108},"GTO-ETH":{"ReserveRate":0.002590177384056749,"SanityRate":0.002796381645502645},"KNC-ETH":{"ReserveRate":0.0002894500017402,"SanityRate":0.000323483875},"MANA-ETH":{"ReserveRate":0.00036813437957934,"SanityRate":0.000408639},"OMG-ETH":{"ReserveRate":0.004383746019560721,"SanityRate":0.004884568333333332},"POWR-ETH":{"ReserveRate":0.000369936605210205,"SanityRate":0.000424655916666666},"RDN-ETH":{"ReserveRate":0.01987031936393942,"SanityRate":0.02203575261904761},"REQ-ETH":{"ReserveRate":0.000191920526182855,"SanityRate":0.0002135705},"SALT-ETH":{"ReserveRate":0.001821407074188612,"SanityRate":0.00197989},"SNT-ETH":{"ReserveRate":0.001042608668464954,"SanityRate":0.001149592125}}},{"Timestamp":0,"ReturnTime":1520655227886,"BlockNumber":5228239,"Data":{"APPC-ETH":{"ReserveRate":0.000369936605210205,"SanityRate":0.000424655916666666},"BAT-ETH":{"ReserveRate":0.0002894500017402,"SanityRate":0.000323483875},"BQX-ETH":{"ReserveRate":0.002590177384056749,"SanityRate":0.002796381645502645},"ELF-ETH":{"ReserveRate":0.01987031936393942,"SanityRate":0.02203575261904761},"ENG-ETH":{"ReserveRate":0.000584106942517358,"SanityRate":0.000652623583333333},"EOS-ETH":{"ReserveRate":0.000191920526182855,"SanityRate":0.0002135705},"ETH-APPC":{"ReserveRate":2625.724091042635,"SanityRate":2849.3656923419003},"ETH-BAT":{"ReserveRate":3343.445798727388,"SanityRate":3740.5264791019335},"ETH-BQX":{"ReserveRate":377.41338205276884,"SanityRate":432.7020247561754},"ETH-ELF":{"ReserveRate":49.46371879742714,"SanityRate":54.91076347236177},"ETH-ENG":{"ReserveRate":1674.1030165099337,"SanityRate":1854.0549727299406},"ETH-EOS":{"ReserveRate":5123.294220111987,"SanityRate":5665.576472406068},"ETH-GTO":{"ReserveRate":229.70817443088293,"SanityRate":256.19168727845243},"ETH-KNC":{"ReserveRate":1615.634600168794,"SanityRate":1802.3430459597466},"ETH-MANA":{"ReserveRate":221.03211631662654,"SanityRate":247.71892159696137},"ETH-OMG":{"ReserveRate":8741.854159397268,"SanityRate":9791.471331758756},"ETH-POWR":{"ReserveRate":924.3533982883454,"SanityRate":1052.547224086108},"ETH-RDN":{"ReserveRate":532.7984920557698,"SanityRate":611.1450636146453},"ETH-REQ":{"ReserveRate":117.09352189952426,"SanityRate":127.67814393478591},"ETH-SALT":{"ReserveRate":2653.110602592891,"SanityRate":2961.048749629869},"ETH-SNT":{"ReserveRate":356.63560217559376,"SanityRate":409.9086090123997},"GTO-ETH":{"ReserveRate":0.004239837479770336,"SanityRate":0.004723026},"KNC-ETH":{"ReserveRate":0.000596961062855617,"SanityRate":0.000671348333333333},"MANA-ETH":{"ReserveRate":0.004383746019560721,"SanityRate":0.004884568333333332},"OMG-ETH":{"ReserveRate":0.000111035861616385,"SanityRate":0.000123576933333333},"POWR-ETH":{"ReserveRate":0.001042608668464954,"SanityRate":0.001149592125},"RDN-ETH":{"ReserveRate":0.001821407074188612,"SanityRate":0.00197989},"REQ-ETH":{"ReserveRate":0.008393501685222925,"SanityRate":0.009476954807692308},"SALT-ETH":{"ReserveRate":0.00036813437957934,"SanityRate":0.000408639},"SNT-ETH":{"ReserveRate":0.002752586323625439,"SanityRate":0.0029518775}}}],"success":true}
+```
+
+
+### Get trade summary follow timeframe (day)
+```
+<host>:8000/get-trade-summary
+GET request
+
+Url params:
+  - fromTime (millisecond - required): from time stamp
+  - toTime (millisecond - required): to time stamp  
+  - timeZone (in range [-12,14], default to 0): the integer specific which UTC timezone to query
+```
+
+```
+curl -x GET http://localhost:8000/get-trade-summary?fromTime=1519297149000&toTime=1519815549000
+```
+response
+```
+{"data":{"1519344000000":{"eth_per_trade":0.55402703087424,"kyced_addresses":0,"new_unique_addresses":35,"total_burn_fee":0,"total_eth_volume":44.3221624699392,"total_trade":80,"total_usd_amount":30981.281202536768,"unique_addresses":50,"usd_per_trade":387.26601503170957},"1519430400000":{"eth_per_trade":0.17008867987348247,"kyced_addresses":0,"new_unique_addresses":17,"total_burn_fee":0,"total_eth_volume":8.674522673547607,"total_trade":51,"total_usd_amount":6060.828270348999,"unique_addresses":29,"usd_per_trade":118.83977000684311},"1519516800000":{"eth_per_trade":0.14234886960871,"kyced_addresses":0,"new_unique_addresses":9,"total_burn_fee":1.1025,"total_eth_volume":5.40925704513098,"total_trade":38,"total_usd_amount":3779.4100326337,"unique_addresses":18,"usd_per_trade":99.45815875351843},"1519603200000":{"eth_per_trade":0.5430574166436676,"kyced_addresses":0,"new_unique_addresses":39,"total_burn_fee":42.85336706164196,"total_eth_volume":45.07376558142441,"total_trade":83,"total_usd_amount":31497.3427579499,"unique_addresses":56,"usd_per_trade":379.4860573246976},"1519689600000":{"eth_per_trade":0.6014134385918366,"kyced_addresses":0,"new_unique_addresses":69,"total_burn_fee":79.03472646631772,"total_eth_volume":78.7851604555306,"total_trade":131,"total_usd_amount":55076.026979006005,"unique_addresses":92,"usd_per_trade":420.4276868626413},"1519776000000":{"eth_per_trade":0.40083191776618454,"kyced_addresses":0,"new_unique_addresses":64,"total_burn_fee":48.899026261678536,"total_eth_volume":52.50898122737018,"total_trade":131,"total_usd_amount":36662.138255818456,"unique_addresses":94,"usd_per_trade":279.8636508077745}},"success":true}
+```
+
+### Get a specific wallet's stats summary follow timeframe (day)
+```
+<host>:8000/get-wallet-stats
+GET request
+
+Url params:
+  - fromTime (millisecond - required): from time stamp
+  - toTime (millisecond - required): to time stamp  
+  - timeZone (in range [-12,14], default to 0): the integer specific which UTC timezone to query
+  - walletAddr (hex string - required) : to specific which wallet Address to query data from. It must be larger than 2^128 to be valid.
+```
+
+```
+curl -x GET http://localhost:8000/get-wallet-stats?fromTime=1521914061000&toTime=1523000461000&walletAddr=0xb9e29984fe50602e7a619662ebed4f90d93824c7
+```
+response
+```
+{"data":{"1521936000000":{"eth_per_trade":0.15169175185997197,"kyced_addresses":0,"new_unique_addresses":27,"total_burn_fee":3.5843774403434443,"total_eth_volume":9.101505111598318,"total_trade":60,"total_usd_amount":4738.284168671162,"unique_addresses":40,"usd_per_trade":78.97140281118602},"1522022400000":{"eth_per_trade":0.1305336778977258,"kyced_addresses":0,"new_unique_addresses":13,"total_burn_fee":1.2758795269915402,"total_eth_volume":2.3496062021590642,"total_trade":18,"total_usd_amount":1230.3892752776494,"unique_addresses":18,"usd_per_trade":68.35495973764719}},"success":true}
+```
+
+### Get a list of wallet that has ever traded with core
+```
+<host>:8000/get-wallet-address 
+GET request
+
+URL params:
+  Nil
+```
+
+
+```
+curl -x GET http://localhost:8000/get-wallet-address
+```
+response
+```
+{"data":["0xb9e29984fe50602e7a619662ebed4f90d93824c7","0xf1aa99c69715f423086008eb9d06dc1e35cc504d"],"success":true}
+``` 
+
+### Get exchanges status
+```
+<host>:8000/get-exchange-status
+GET request
+```
+
+eg:
+```
+curl -x GET http://localhost:8000/get-exchange-status
+```
+
+response:
+```
+{"data":{"binance":{"timestamp":1521532176702,"status":true},"bittrex":{"timestamp":1521532176704,"status":true},"huobi":{"timestamp":1521532176703,"status":true}},"success":true}
+```
+
+### Update exchanges status
+```
+<host>:8000/update-exchange-status
+POST request
+
+params: 
+exchange (string): exchange name (eg: 'binance')
+status (bool): true (up), false (down)
+timestamp (integer): timestamp of the exchange status
+```
+
+eg:
+```
+curl -X POST \
+  http://localhost:8000/update-exchange-status \
+  -H 'content-type: multipart/form-data' \
+  -F exchange=binance \
+  -F status=false
+```
+
+### Get country stats
+```
+<host>:8000/get-country-stats
+GET request
+params:
+ - fromTime (integer) - from timestamp (millisecond)
+ - toTime (integer) - to timestamp (millisecond)
+ - country (string) - internatinal country 
+ - timezone (integer) - timezone to get country stats from -11 to 14
+```
+
+response: 
+```
+{"data":{"1522368000000":{"eth_per_trade":1.1759348083481784,"kyced_addresses":0,"new_unique_addresses":23,"total_burn_fee":40.10625390027786,"total_eth_volume":51.741131567319854,"total_trade":44,"total_usd_amount":19804.392524011764,"unique_addresses":26,"usd_per_trade":450.09983009117644}},"success":true}
+```
+
+### Get heatmap - list of countries sort by total ETH value
+```
+<host>:8000/get-heat-map
+GET request
+params:
+ - fromTime (integer) - from timestamp (millisecond)
+ - toTime (integer) - to timestamp (millisecond)
+ - timezone (integer) - timezone to get country stats from -11 to 14
+```
+
+response:
+```
+{"data":[{"country":"US","total_eth_value":51.741131567319854,"total_fiat_value":19804.392524011764},{"country":"unknown","total_eth_value":31.28130484378119,"total_fiat_value":12268.937507634406},{"country":"TW","total_eth_value":15,"total_fiat_value":5916.6900000000005},{"country":"KR","total_eth_value":13.280037553077175,"total_fiat_value":5016.70456645198},{"country":"JP","total_eth_value":10.277090646,"total_fiat_value":3857.271305900826},{"country":"TH","total_eth_value":8.241091466923997,"total_fiat_value":3195.368602817533},{"country":"CA","total_eth_value":3.8122812821017558,"total_fiat_value":1445.8819158742285},{"country":"AU","total_eth_value":2.6,"total_fiat_value":969.02},{"country":"DE","total_eth_value":1.823287,"total_fiat_value":697.502009413},{"country":"ID","total_eth_value":1.7178731840736186,"total_fiat_value":674.8439050493492},{"country":"RO","total_eth_value":1.4009999999999998,"total_fiat_value":529.075415},{"country":"VN","total_eth_value":1.3951777988339262,"total_fiat_value":548.8376078547749},{"country":"CN","total_eth_value":1.0121575386522288,"total_fiat_value":401.6824093511598},{"country":"PL","total_eth_value":0.379699,"total_fiat_value":144.141714079},{"country":"FR","total_eth_value":0.319624,"total_fiat_value":122.92586391999998},{"country":"SG","total_eth_value":0.15642985716526572,"total_fiat_value":64.06928945889221},{"country":"ES","total_eth_value":0.09344946,"total_fiat_value":35.176806429959996},{"country":"XX","total_eth_value":0.09,"total_fiat_value":36.86148},{"country":"IN","total_eth_value":0.0714026952146661,"total_fiat_value":27.977050948875906},{"country":"AR","total_eth_value":0.02751473,"total_fiat_value":10.92519129691},{"country":"RU","total_eth_value":0.024162,"total_fiat_value":9.61210186},{"country":"SE","total_eth_value":0.023,"total_fiat_value":9.132541},{"country":"LV","total_eth_value":0.01,"total_fiat_value":3.9209899999999998},{"country":"AL","total_eth_value":0.003,"total_fiat_value":1.126449}],"success":true}
+```
+
+### Update Price Analytic Data - (signing required) set a record marking the condition because of which the set price is called. 
+```
+<host>:8000/update-price-analytic-data
+POST request
+params:
+ - timestamp - the timestamp of the action (real time ) in millisecond
+ - value - the json enconded object to save. 
+
+Note: the data sent over must be encoded in Json in order to make it valid for output operation
+  In Python, the data would be encoded as:
+   data = {"timestamp": timestamp, "value": json.dumps(analytic_data)} 
+ ```
+
+response:
+```
+on success:
+{"success":true}
+on failure:
+{"success":false,
+ "reason":<error>}
+```
+
+### Get Price Analytic Data - (signing required) list of price analytic data, sorted by timestamp 
+```
+<host>:8000/get-heat-map
+GET request
+params:
+ - fromTime (integer) - from timestamp (millisecond)
+ - toTime (integer) - to timestamp (millisecond)
+```
+example:
+curl -x GET \
+  http://localhost:8000/get-price-analytic-data?fromTime=1522753160000&toTime=1522755792000
+```
+ 
+response:
+```
+{
+  "data": [
+    {
+      "Timestamp": 1522755271000,
+      "Data": {
+        "block_expiration": false,
+        "trigger_price_update": true,
+        "triggering_tokens_list": [
+          {
+            "ask_price": 0.002,
+            "bid_price": 0.003,
+            "mid afp_old_price": 0.34555,
+            "mid_afp_price": 0.6555,
+            "min_spread": 0.233,
+            "token": "OMG"
+          },
+          {
+            "ask_price": 0.004,
+            "bid_price": 0.005,
+            "mid afp_old_price": 0.21555,
+            "mid_afp_price": 0.4355,
+            "min_spread": 0.133,
+            "token": "KNC"
+          }
+        ]
+      }
+    }
+  ],
+  "success": true
+}
+```
+
+### Update exchange notifications 
+```
+<host>:8000/exchange-notification
+POST request
+params:
+ - exchange (string) - exchange name
+ - action (string) - action name
+ - token (string) - token pair
+ - fromTime (integer) - from timestamp
+ - toTime (integer) - to timestamp
+ - isWarning (bool) - is exchange warning or not
+ - msg (string) - message for the notification
+```
+
+response:
+```
+  {
+    "success": true
+  }
+```
+
+### Get exchange notifications
+```
+<host>:8000/exchange-notifications
+GET request
+```
+
+response:
+```
+{"data":{"binance":{"trade":{"OMG":{"fromTime":123,"toTime":125,"isWarning":true,"msg":"3 times"}}}},"success":true}
+```
+
 
 ## Authentication
 All APIs that are marked with (signing required) must follow authentication mechanism below:

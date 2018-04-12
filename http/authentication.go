@@ -3,6 +3,8 @@ package http
 import (
 	"crypto/hmac"
 	"crypto/sha512"
+	"encoding/json"
+	"io/ioutil"
 
 	ethereum "github.com/ethereum/go-ethereum/common"
 )
@@ -16,10 +18,23 @@ type Authentication interface {
 }
 
 type KNAuthentication struct {
-	KNSecret        string
-	KNReadOnly      string
-	KNConfiguration string
-	KNConfirmConf   string
+	KNSecret        string `json:"kn_secret"`
+	KNReadOnly      string `json:"kn_readonly"`
+	KNConfiguration string `json:"kn_configuration"`
+	KNConfirmConf   string `json:"kn_confirm_configuration"`
+}
+
+func NewKNAuthenticationFromFile(path string) KNAuthentication {
+	raw, err := ioutil.ReadFile(path)
+	if err != nil {
+		panic(err)
+	}
+	result := KNAuthentication{}
+	err = json.Unmarshal(raw, &result)
+	if err != nil {
+		panic(err)
+	}
+	return result
 }
 
 func (self KNAuthentication) KNSign(msg string) string {

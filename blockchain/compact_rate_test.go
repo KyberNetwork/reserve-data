@@ -26,7 +26,7 @@ func testOutcome(testcase BigIntToCompactRateTestCase, t *testing.T) {
 	if testcase.ExpectedBase != rate.Base.Uint64() ||
 		testcase.ExpectedCompact != rate.Compact ||
 		testcase.ExpectedOverflow != overflow {
-		t.Fatalf("Expect CompactRate(%s, %d) overflow(%s), got CompactRate(%d, %d) overflow(%s)",
+		t.Fatalf("Expect CompactRate(%d, %d) overflow(%t), got CompactRate(%s, %d) overflow(%t)",
 			testcase.ExpectedBase, testcase.ExpectedCompact, testcase.ExpectedOverflow,
 			rate.Base.Text(10), rate.Compact, overflow,
 		)

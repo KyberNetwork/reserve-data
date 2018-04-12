@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
+	"sort"
 	"strings"
 	"time"
 
@@ -11,22 +13,42 @@ import (
 	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
+const (
+	MAX_GET_RATES_PERIOD uint64 = 86400000 //7 days in milisec
+)
+
 type ReserveStats struct {
-	storage Storage
-	fetcher *Fetcher
+	analyticStorage  AnalyticStorage
+	statStorage      StatStorage
+	logStorage       LogStorage
+	userStorage      UserStorage
+	rateStorage      RateStorage
+	fetcher          *Fetcher
+	controllerRunner ControllerRunner
 }
 
-func NewReserveStats(storage Storage, fetcher *Fetcher) *ReserveStats {
+func NewReserveStats(
+	analyticStorage AnalyticStorage,
+	statStorage StatStorage,
+	logStorage LogStorage,
+	rateStorage RateStorage,
+	userStorage UserStorage,
+	controllerRunner ControllerRunner,
+	fetcher *Fetcher) *ReserveStats {
 	return &ReserveStats{
-		storage: storage,
-		fetcher: fetcher,
+		analyticStorage:  analyticStorage,
+		statStorage:      statStorage,
+		logStorage:       logStorage,
+		rateStorage:      rateStorage,
+		userStorage:      userStorage,
+		fetcher:          fetcher,
+		controllerRunner: controllerRunner,
 	}
 }
 
 func validateTimeWindow(fromTime, toTime uint64, freq string) (uint64, uint64, error) {
 	var from = fromTime * 1000000
 	var to = toTime * 1000000
-
 	switch freq {
 	case "m", "M":
 		if to-from > uint64((time.Hour * 24).Nanoseconds()) {
@@ -59,7 +81,7 @@ func (self ReserveStats) GetAssetVolume(fromTime, toTime uint64, freq, asset str
 		return data, errors.New(fmt.Sprintf("assets %s is not supported", asset))
 	}
 
-	data, err = self.storage.GetAssetVolume(fromTime, toTime, freq, strings.ToLower(token.Address))
+	data, err = self.statStorage.GetAssetVolume(fromTime, toTime, freq, strings.ToLower(token.Address))
 	return data, err
 }
 
@@ -71,7 +93,7 @@ func (self ReserveStats) GetBurnFee(fromTime, toTime uint64, freq, reserveAddr s
 		return data, err
 	}
 
-	data, err = self.storage.GetBurnFee(fromTime, toTime, freq, reserveAddr)
+	data, err = self.statStorage.GetBurnFee(fromTime, toTime, freq, reserveAddr)
 	return data, err
 }
 
@@ -83,7 +105,7 @@ func (self ReserveStats) GetWalletFee(fromTime, toTime uint64, freq, reserveAddr
 		return data, err
 	}
 
-	data, err = self.storage.GetWalletFee(fromTime, toTime, freq, reserveAddr, walletAddr)
+	data, err = self.statStorage.GetWalletFee(fromTime, toTime, freq, reserveAddr, walletAddr)
 	return data, err
 }
 
@@ -95,16 +117,141 @@ func (self ReserveStats) GetUserVolume(fromTime, toTime uint64, freq, userAddr s
 		return data, err
 	}
 
-	data, err = self.storage.GetUserVolume(fromTime, toTime, freq, userAddr)
+	data, err = self.statStorage.GetUserVolume(fromTime, toTime, freq, userAddr)
+	return data, err
+}
+
+func (self ReserveStats) GetTradeSummary(fromTime, toTime uint64, timezone int64) (common.StatTicks, error) {
+	data := common.StatTicks{}
+
+	fromTime, toTime, err := validateTimeWindow(fromTime, toTime, "D")
+	if err != nil {
+		return data, err
+	}
+
+	data, err = self.statStorage.GetTradeSummary(fromTime, toTime, timezone)
 	return data, err
 }
 
 func (self ReserveStats) GetTradeLogs(fromTime uint64, toTime uint64) ([]common.TradeLog, error) {
-	return self.storage.GetTradeLogs(fromTime, toTime)
+	result := []common.TradeLog{}
+
+	if toTime-fromTime > MAX_GET_RATES_PERIOD {
+		return result, errors.New(fmt.Sprintf("Time range is too broad, it must be smaller or equal to %d miliseconds", MAX_GET_RATES_PERIOD))
+	}
+
+	result, err := self.logStorage.GetTradeLogs(fromTime*1000000, toTime*1000000)
+	return result, err
+}
+
+func (self ReserveStats) GetGeoData(fromTime, toTime uint64, country string, tzparam int64) (common.StatTicks, error) {
+	var err error
+	result := common.StatTicks{}
+	fromTime, toTime, err = validateTimeWindow(fromTime, toTime, "D")
+	if err != nil {
+		return result, err
+	}
+	result, err = self.statStorage.GetCountryStats(fromTime, toTime, country, tzparam)
+	return result, err
+}
+
+func (self ReserveStats) GetHeatMap(fromTime, toTime uint64, tzparam int64) (common.HeatmapResponse, error) {
+	result := common.Heatmap{}
+	var arrResult common.HeatmapResponse
+	var err error
+	fromTime, toTime, err = validateTimeWindow(fromTime, toTime, "D")
+	if err != nil {
+		return arrResult, err
+	}
+	countries, err := self.statStorage.GetCountries()
+	if err != nil {
+		return arrResult, err
+	}
+
+	// get stats
+	for _, c := range countries {
+		cStats, err := self.statStorage.GetCountryStats(fromTime, toTime, c, tzparam)
+		if err != nil {
+			return arrResult, err
+		}
+		for _, stat := range cStats {
+			s := stat.(common.MetricStats)
+			current := result[c]
+			result[c] = common.HeatmapType{
+				TotalETHValue:        current.TotalETHValue + s.ETHVolume,
+				TotalFiatValue:       current.TotalFiatValue + s.USDVolume,
+				ToTalBurnFee:         current.ToTalBurnFee + s.BurnFee,
+				TotalTrade:           current.TotalTrade + s.TradeCount,
+				TotalUniqueAddresses: current.TotalUniqueAddresses + s.UniqueAddr,
+				TotalKYCUser:         current.TotalKYCUser + s.KYCEd,
+			}
+		}
+	}
+
+	// sort heatmap
+	for k, v := range result {
+		arrResult = append(arrResult, common.HeatmapObject{
+			Country:              k,
+			TotalETHValue:        v.TotalETHValue,
+			TotalFiatValue:       v.TotalFiatValue,
+			ToTalBurnFee:         v.ToTalBurnFee,
+			TotalTrade:           v.TotalTrade,
+			TotalUniqueAddresses: v.TotalUniqueAddresses,
+			TotalKYCUser:         v.TotalKYCUser,
+		})
+	}
+	sort.Sort(sort.Reverse(arrResult))
+	return arrResult, err
+}
+
+func (self ReserveStats) GetCountries() ([]string, error) {
+	result, _ := self.statStorage.GetCountries()
+	return result, nil
+}
+
+func (self ReserveStats) GetCatLogs(fromTime uint64, toTime uint64) ([]common.SetCatLog, error) {
+	return self.logStorage.GetCatLogs(fromTime, toTime)
 }
 
 func (self ReserveStats) GetPendingAddresses() ([]string, error) {
-	return self.storage.GetPendingAddresses()
+	return self.userStorage.GetPendingAddresses()
+}
+
+func (self ReserveStats) RunAnalyticStorageController() {
+	for {
+		log.Printf("waiting for signal from analytic storage control channel")
+		t := <-self.controllerRunner.GetAnalyticStorageControlTicker()
+		timepoint := common.TimeToTimepoint(t)
+		log.Printf("got signal in analytic storage control channel with timestamp %d", timepoint)
+		fileName := fmt.Sprintf("ExpiredPriceAnalyticData_%s", time.Unix(int64(timepoint/1000), 0).UTC())
+		nRecord, err := self.analyticStorage.ExportPruneExpired(common.GetTimepoint(), fileName)
+		if err != nil {
+			log.Printf("export and prune operation failed: %s", err)
+		} else {
+			if nRecord > 0 {
+				err := self.analyticStorage.BackupFile(fileName)
+				if err != nil {
+					log.Printf("AnalyticPriceData: Back up file failed: %s", err)
+				} else {
+					log.Printf("AnalyticPriceData: Back up file successfully.")
+				}
+
+			} else {
+				//remove the empty file
+				os.Remove(fileName)
+			}
+			log.Printf("AnalyticPriceData: exported and pruned %d expired records from storage controll block from blockchain", nRecord)
+		}
+	}
+}
+
+func (self ReserveStats) RunDBController() error {
+	err := self.controllerRunner.Start()
+	if err != nil {
+		return err
+	}
+	go self.RunAnalyticStorageController()
+	return err
 }
 
 func (self ReserveStats) Run() error {
@@ -116,7 +263,7 @@ func (self ReserveStats) Stop() error {
 }
 
 func (self ReserveStats) GetCapByAddress(addr ethereum.Address) (*common.UserCap, error) {
-	category, err := self.storage.GetCategory(addr.Hex())
+	category, err := self.userStorage.GetCategory(addr.Hex())
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +275,7 @@ func (self ReserveStats) GetCapByAddress(addr ethereum.Address) (*common.UserCap
 }
 
 func (self ReserveStats) GetCapByUser(userID string) (*common.UserCap, error) {
-	addresses, err := self.storage.GetAddressesOfUser(userID)
+	addresses, _, err := self.userStorage.GetAddressesOfUser(userID)
 	if err != nil {
 		return nil, err
 	}
@@ -140,22 +287,76 @@ func (self ReserveStats) GetCapByUser(userID string) (*common.UserCap, error) {
 	}
 }
 
-func (self ReserveStats) UpdateUserAddresses(userID string, addrs []ethereum.Address) error {
+func isDuplicate(currentRate, latestRate common.ReserveRates) bool {
+	currentData := currentRate.Data
+	latestData := latestRate.Data
+	for key, _ := range currentData {
+		if currentData[key].BuyReserveRate != latestData[key].BuyReserveRate ||
+			currentData[key].BuySanityRate != latestData[key].BuySanityRate ||
+			currentData[key].SellReserveRate != latestData[key].SellReserveRate ||
+			currentData[key].SellSanityRate != latestData[key].SellSanityRate {
+			return false
+		}
+	}
+	return true
+}
+func (self ReserveStats) GetWalletStats(fromTime uint64, toTime uint64, walletAddr string, timezone int64) (common.StatTicks, error) {
+	fromTime, toTime, err := validateTimeWindow(fromTime, toTime, "D")
+	if err != nil {
+		return nil, err
+	}
+	walletAddr = strings.ToLower(walletAddr)
+	return self.statStorage.GetWalletStats(fromTime, toTime, walletAddr, timezone)
+}
+
+func (self ReserveStats) GetWalletAddress() ([]string, error) {
+	return self.statStorage.GetWalletAddress()
+}
+
+func (self ReserveStats) GetReserveRates(fromTime, toTime uint64, reserveAddr ethereum.Address) ([]common.ReserveRates, error) {
+	var result []common.ReserveRates
+	var err error
+	var rates []common.ReserveRates
+	rates, err = self.rateStorage.GetReserveRates(fromTime, toTime, reserveAddr.Hex())
+	latest := common.ReserveRates{}
+	for _, rate := range rates {
+		if !isDuplicate(rate, latest) {
+			result = append(result, rate)
+		} else {
+			if len(result) > 0 {
+				result[len(result)-1].ToBlockNumber = rate.BlockNumber
+			}
+		}
+		latest = rate
+	}
+	log.Printf("Get reserve rate: %v", result)
+	return result, err
+}
+
+func (self ReserveStats) UpdateUserAddresses(userID string, addrs []ethereum.Address, timestamps []uint64) error {
 	addresses := []string{}
 	for _, addr := range addrs {
 		addresses = append(addresses, addr.Hex())
 	}
-	return self.storage.UpdateUserAddresses(userID, addresses)
+	return self.userStorage.UpdateUserAddresses(userID, addresses, timestamps)
 }
 
 func (self ReserveStats) ExceedDailyLimit(address ethereum.Address) (bool, error) {
-	user, err := self.storage.GetUserOfAddress(address.Hex())
+	user, _, err := self.userStorage.GetUserOfAddress(address.Hex())
+	log.Printf("got user %s for address %s", user, strings.ToLower(address.Hex()))
 	if err != nil {
 		return false, err
 	}
-	addrs, err := self.storage.GetAddressesOfUser(user)
-	if err != nil {
-		return false, err
+	addrs := []string{}
+	if user == "" {
+		// address is not associated to any users
+		addrs = append(addrs, strings.ToLower(address.Hex()))
+	} else {
+		addrs, _, err := self.userStorage.GetAddressesOfUser(user)
+		log.Printf("got addresses %v for address %s", addrs, strings.ToLower(address.Hex()))
+		if err != nil {
+			return false, err
+		}
 	}
 	today := common.GetTimepoint() / uint64(24*time.Hour/time.Millisecond) * uint64(24*time.Hour/time.Millisecond)
 	var totalVolume float64 = 0.0
@@ -168,10 +369,13 @@ func (self ReserveStats) ExceedDailyLimit(address ethereum.Address) (bool, error
 				log.Printf("Got more than 1 day stats. This is a bug in GetUserVolume")
 			} else {
 				for _, volume := range volumeStats {
-					totalVolume += volume
+					volumeValue := volume.(common.VolumeStats)
+					totalVolume += volumeValue.USDAmount
 					break
 				}
 			}
+		} else {
+			log.Printf("Getting volumes for %s failed, err: %s", strings.ToLower(address.Hex()), err.Error())
 		}
 	}
 	cap, err := self.GetCapByAddress(address)
@@ -180,4 +384,12 @@ func (self ReserveStats) ExceedDailyLimit(address ethereum.Address) (bool, error
 	} else {
 		return false, nil
 	}
+}
+
+func (self ReserveStats) UpdatePriceAnalyticData(timestamp uint64, value []byte) error {
+	return self.analyticStorage.UpdatePriceAnalyticData(timestamp, value)
+}
+
+func (self ReserveStats) GetPriceAnalyticData(fromTime uint64, toTime uint64) ([]common.AnalyticPriceResponse, error) {
+	return self.analyticStorage.GetPriceAnalyticData(fromTime, toTime)
 }

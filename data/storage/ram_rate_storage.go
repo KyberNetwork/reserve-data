@@ -20,7 +20,7 @@ func NewRamRateStorage() *RamRateStorage {
 	}
 }
 
-func (self *RamRateStorage) CurrentVersion(timepoint uint64) (int64, error) {
+func (self *RamRateStorage) CurrentVersion() (int64, error) {
 	self.mu.RLock()
 	defer self.mu.RUnlock()
 	return self.version, nil
@@ -45,7 +45,7 @@ func (self *RamRateStorage) GetRate(version int64) (common.AllRateEntry, error) 
 	}
 }
 
-func (self *RamRateStorage) StoreNewData(data common.AllRateEntry, timepoint uint64) error {
+func (self *RamRateStorage) StoreNewData(data common.AllRateEntry) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 	self.version = self.version + 1

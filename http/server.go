@@ -33,7 +33,12 @@ type HTTPServer struct {
 	r           *gin.Engine
 }
 
-const MAX_TIMESPOT uint64 = 18446744073709551615
+const (
+	MAX_TIMESPOT   uint64 = 18446744073709551615
+	MAX_DATA_SIZE  int    = 1000000 //1 Megabyte in byte
+	START_TIMEZONE int64  = -11
+	END_TIMEZONE   int64  = 14
+)
 
 func getTimePoint(c *gin.Context, useDefault bool) uint64 {
 	timestamp := c.DefaultQuery("timestamp", "")
@@ -49,10 +54,10 @@ func getTimePoint(c *gin.Context, useDefault bool) uint64 {
 	} else {
 		timepoint, err := strconv.ParseUint(timestamp, 10, 64)
 		if err != nil {
-			log.Printf("Interpreted timestamp(%s) to default - %s\n", timestamp, MAX_TIMESPOT)
+			log.Printf("Interpreted timestamp(%s) to default - %d", timestamp, MAX_TIMESPOT)
 			return MAX_TIMESPOT
 		} else {
-			log.Printf("Interpreted timestamp(%s) to %s\n", timestamp, timepoint)
+			log.Printf("Interpreted timestamp(%s) to %d", timestamp, timepoint)
 			return timepoint
 		}
 	}
@@ -60,7 +65,7 @@ func getTimePoint(c *gin.Context, useDefault bool) uint64 {
 
 func IsIntime(nonce string) bool {
 	serverTime := common.GetTimepoint()
-	log.Printf("Server time: %d, None: %d", serverTime, nonce)
+	log.Printf("Server time: %d, None: %s", serverTime, nonce)
 	nonceInt, err := strconv.ParseInt(nonce, 10, 64)
 	if err != nil {
 		log.Printf("IsIntime returns false, err: %v", err)
@@ -655,6 +660,34 @@ func (self *HTTPServer) GetActivities(c *gin.Context) {
 	}
 
 	data, err := self.app.GetRecords(fromTime*1000000, toTime*1000000)
+	if err != nil {
+		c.JSON(
+			http.StatusOK,
+			gin.H{"success": false, "reason": err.Error()},
+		)
+	} else {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": true,
+				"data":    data,
+			},
+		)
+	}
+}
+
+func (self *HTTPServer) CatLogs(c *gin.Context) {
+	log.Printf("Getting cat logs")
+	fromTime, err := strconv.ParseUint(c.Query("fromTime"), 10, 64)
+	if err != nil {
+		fromTime = 0
+	}
+	toTime, err := strconv.ParseUint(c.Query("toTime"), 10, 64)
+	if err != nil || toTime == 0 {
+		toTime = common.GetTimepoint()
+	}
+
+	data, err := self.stat.GetCatLogs(fromTime, toTime)
 	if err != nil {
 		c.JSON(
 			http.StatusOK,
@@ -1534,7 +1567,72 @@ func (self *HTTPServer) GetUserVolume(c *gin.Context) {
 	toTime, _ := strconv.ParseUint(c.Query("toTime"), 10, 64)
 	freq := c.Query("freq")
 	userAddr := c.Query("userAddr")
+	if userAddr == "" {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  "User address is required",
+			},
+		)
+		return
+	}
 	data, err := self.stat.GetUserVolume(fromTime, toTime, freq, userAddr)
+	if err != nil {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  err.Error(),
+			},
+		)
+		return
+	}
+	c.JSON(
+		http.StatusOK,
+		gin.H{
+			"success": true,
+			"data":    data,
+		},
+	)
+}
+
+func (self *HTTPServer) ValidateTimeInput(c *gin.Context) (uint64, uint64, bool) {
+	fromTime, ok := strconv.ParseUint(c.Query("fromTime"), 10, 64)
+	if ok != nil {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  fmt.Sprintf("fromTime param is invalid: %s", ok),
+			},
+		)
+		return 0, 0, false
+	}
+	toTime, _ := strconv.ParseUint(c.Query("toTime"), 10, 64)
+	if toTime == 0 {
+		toTime = common.GetTimepoint()
+	}
+	return fromTime, toTime, true
+}
+
+func (self *HTTPServer) GetTradeSummary(c *gin.Context) {
+	fromTime, toTime, ok := self.ValidateTimeInput(c)
+	if !ok {
+		return
+	}
+	tzparam, _ := strconv.ParseInt(c.Query("timeZone"), 10, 64)
+	if (tzparam < START_TIMEZONE) || (tzparam > END_TIMEZONE) {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  "Timezone is not supported",
+			},
+		)
+		return
+	}
+	data, err := self.stat.GetTradeSummary(fromTime, toTime, tzparam)
 	if err != nil {
 		c.JSON(
 			http.StatusOK,
@@ -1657,17 +1755,33 @@ func (self *HTTPServer) GetPendingAddresses(c *gin.Context) {
 
 func (self *HTTPServer) UpdateUserAddresses(c *gin.Context) {
 	var err error
-	postForm, ok := self.Authenticated(c, []string{"user", "addresses"}, []Permission{ConfirmConfPermission})
+	postForm, ok := self.Authenticated(c, []string{"user", "addresses", "timestamps"}, []Permission{ConfirmConfPermission})
 	if !ok {
 		return
 	}
 	user := postForm.Get("user")
 	addresses := postForm.Get("addresses")
+	times := postForm.Get("timestamps")
 	addrs := []ethereum.Address{}
-	for _, addr := range strings.Split(addresses, "-") {
+	timestamps := []uint64{}
+	addrsStr := strings.Split(addresses, "-")
+	timesStr := strings.Split(times, "-")
+	if len(addrsStr) != len(timesStr) {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  "addresses and timestamps must have the same number of elements",
+			},
+		)
+		return
+	}
+	for i, addr := range addrsStr {
 		a := ethereum.HexToAddress(addr)
-		if a.Big().Cmp(ethereum.Big0) != 0 {
+		t, err := strconv.ParseUint(timesStr[i], 10, 64)
+		if a.Big().Cmp(ethereum.Big0) != 0 && err == nil {
 			addrs = append(addrs, a)
+			timestamps = append(timestamps, t)
 		}
 	}
 	if len(addrs) == 0 {
@@ -1680,7 +1794,7 @@ func (self *HTTPServer) UpdateUserAddresses(c *gin.Context) {
 		)
 		return
 	}
-	err = self.stat.UpdateUserAddresses(user, addrs)
+	err = self.stat.UpdateUserAddresses(user, addrs, timestamps)
 	if err != nil {
 		c.JSON(
 			http.StatusOK,
@@ -1697,6 +1811,418 @@ func (self *HTTPServer) UpdateUserAddresses(c *gin.Context) {
 			},
 		)
 	}
+}
+
+func (self *HTTPServer) GetWalletStats(c *gin.Context) {
+	fromTime, toTime, ok := self.ValidateTimeInput(c)
+	if !ok {
+		return
+	}
+	tzparam, _ := strconv.ParseInt(c.Query("timeZone"), 10, 64)
+	if (tzparam < START_TIMEZONE) || (tzparam > END_TIMEZONE) {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  "Timezone is not supported",
+			},
+		)
+		return
+	}
+	if toTime == 0 {
+		toTime = common.GetTimepoint()
+	}
+	walletAddr := ethereum.HexToAddress(c.Query("walletAddr"))
+	cap := big.NewInt(0)
+	cap.Exp(big.NewInt(2), big.NewInt(128), big.NewInt(0))
+	if walletAddr.Big().Cmp(cap) < 0 {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  "Wallet address is invalid, its integer form must be larger than 2^128",
+			},
+		)
+		return
+	}
+
+	data, err := self.stat.GetWalletStats(fromTime, toTime, walletAddr.Hex(), tzparam)
+	if err != nil {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  err.Error(),
+			},
+		)
+		return
+	}
+	c.JSON(
+		http.StatusOK,
+		gin.H{
+			"success": true,
+			"data":    data,
+		},
+	)
+}
+
+func (self *HTTPServer) GetWalletAddress(c *gin.Context) {
+	data, err := self.stat.GetWalletAddress()
+	if err != nil {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  err.Error(),
+			},
+		)
+		return
+	}
+	c.JSON(
+		http.StatusOK,
+		gin.H{
+			"success": true,
+			"data":    data,
+		},
+	)
+}
+
+func (self *HTTPServer) GetReserveRate(c *gin.Context) {
+	fromTime, _ := strconv.ParseUint(c.Query("fromTime"), 10, 64)
+	toTime, _ := strconv.ParseUint(c.Query("toTime"), 10, 64)
+	if toTime == 0 {
+		toTime = common.GetTimepoint()
+	}
+	reserveAddr := ethereum.HexToAddress(c.Query("reserveAddr"))
+	if reserveAddr.Big().Cmp(ethereum.Big0) == 0 {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  "Reserve address is invalid",
+			},
+		)
+		return
+	}
+	data, err := self.stat.GetReserveRates(fromTime, toTime, reserveAddr)
+	if err != nil {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  err.Error(),
+			},
+		)
+		return
+	}
+	c.JSON(
+		http.StatusOK,
+		gin.H{
+			"success": true,
+			"data":    data,
+		},
+	)
+}
+
+func (self *HTTPServer) GetExchangesStatus(c *gin.Context) {
+	data, err := self.app.GetExchangeStatus()
+	if err != nil {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  err.Error(),
+			},
+		)
+		return
+	}
+	c.JSON(
+		http.StatusOK,
+		gin.H{
+			"success": true,
+			"data":    data,
+		},
+	)
+}
+
+func (self *HTTPServer) UpdateExchangeStatus(c *gin.Context) {
+	postForm, ok := self.Authenticated(c, []string{"exchange", "status", "timestamp"}, []Permission{ConfirmConfPermission})
+	if !ok {
+		return
+	}
+	exchange := postForm.Get("exchange")
+	status, err := strconv.ParseBool(postForm.Get("status"))
+	if err != nil {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  err.Error(),
+			},
+		)
+		return
+	}
+	timestamp, err := strconv.ParseUint(postForm.Get("timestamp"), 10, 64)
+	if err != nil {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  err.Error(),
+			},
+		)
+		return
+	}
+	_, err = common.GetExchange(strings.ToLower(exchange))
+	if err != nil {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  err.Error(),
+			},
+		)
+		return
+	}
+	err = self.app.UpdateExchangeStatus(exchange, status, timestamp)
+	if err != nil {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  err.Error(),
+			},
+		)
+		return
+	}
+	c.JSON(
+		http.StatusOK,
+		gin.H{
+			"success": true,
+		},
+	)
+}
+
+func (self *HTTPServer) GetCountryStats(c *gin.Context) {
+	fromTime, toTime, ok := self.ValidateTimeInput(c)
+	if !ok {
+		return
+	}
+	country := c.Query("country")
+	tzparam, _ := strconv.ParseInt(c.Query("timeZone"), 10, 64)
+	if (tzparam < START_TIMEZONE) || (tzparam > END_TIMEZONE) {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  "Timezone is not supported",
+			},
+		)
+		return
+	}
+	data, err := self.stat.GetGeoData(fromTime, toTime, country, tzparam)
+	if err != nil {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  err.Error(),
+			},
+		)
+		return
+	}
+	c.JSON(
+		http.StatusOK,
+		gin.H{
+			"success": true,
+			"data":    data,
+		},
+	)
+}
+
+func (self *HTTPServer) GetHeatMap(c *gin.Context) {
+	fromTime, toTime, ok := self.ValidateTimeInput(c)
+	if !ok {
+		return
+	}
+	tzparam, _ := strconv.ParseInt(c.Query("timeZone"), 10, 64)
+	if (tzparam < START_TIMEZONE) || (tzparam > END_TIMEZONE) {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  "Timezone is not supported",
+			},
+		)
+		return
+	}
+
+	data, err := self.stat.GetHeatMap(fromTime, toTime, tzparam)
+	if err != nil {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  err.Error(),
+			},
+		)
+		return
+	}
+	c.JSON(
+		http.StatusOK,
+		gin.H{
+			"success": true,
+			"data":    data,
+		},
+	)
+}
+
+func (self *HTTPServer) GetCountries(c *gin.Context) {
+	data, _ := self.stat.GetCountries()
+	c.JSON(
+		http.StatusOK,
+		gin.H{
+			"success": true,
+			"data":    data,
+		},
+	)
+}
+
+func (self *HTTPServer) UpdatePriceAnalyticData(c *gin.Context) {
+	postForm, ok := self.Authenticated(c, []string{}, []Permission{RebalancePermission})
+	if !ok {
+		return
+	}
+	timestamp, err := strconv.ParseUint(postForm.Get("timestamp"), 10, 64)
+	if err != nil {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  err.Error(),
+			},
+		)
+		return
+	}
+	value := []byte(postForm.Get("value"))
+	if len(value) > MAX_DATA_SIZE {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  "the data size must be less than 1 MB",
+			},
+		)
+		return
+	}
+	err = self.stat.UpdatePriceAnalyticData(timestamp, value)
+	if err != nil {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  err.Error(),
+			},
+		)
+		return
+	}
+	c.JSON(
+		http.StatusOK,
+		gin.H{
+			"success": true,
+		},
+	)
+}
+func (self *HTTPServer) GetPriceAnalyticData(c *gin.Context) {
+	_, ok := self.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, ConfigurePermission, ConfirmConfPermission, RebalancePermission})
+	if !ok {
+		return
+	}
+	fromTime, toTime, ok := self.ValidateTimeInput(c)
+	if !ok {
+		return
+	}
+	if toTime == 0 {
+		toTime = common.GetTimepoint()
+	}
+
+	data, err := self.stat.GetPriceAnalyticData(fromTime, toTime)
+	if err != nil {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  err.Error(),
+			},
+		)
+		return
+	}
+	c.JSON(
+		http.StatusOK,
+		gin.H{
+			"success": true,
+			"data":    data,
+		},
+	)
+}
+
+func (self *HTTPServer) ExchangeNotification(c *gin.Context) {
+	postForm, ok := self.Authenticated(c, []string{
+		"exchange", "action", "token", "fromTime", "toTime", "isWarning", "msg"}, []Permission{RebalancePermission})
+	if !ok {
+		return
+	}
+
+	exchange := postForm.Get("exchange")
+	action := postForm.Get("action")
+	tokenPair := postForm.Get("token")
+	from, _ := strconv.ParseUint(postForm.Get("fromTime"), 10, 64)
+	to, _ := strconv.ParseUint(postForm.Get("toTime"), 10, 64)
+	isWarning, _ := strconv.ParseBool(postForm.Get("isWarning"))
+	msg := postForm.Get("msg")
+
+	err := self.app.UpdateExchangeNotification(exchange, action, tokenPair, from, to, isWarning, msg)
+	if err != nil {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  err.Error(),
+			},
+		)
+		return
+	}
+	c.JSON(
+		http.StatusOK,
+		gin.H{
+			"success": true,
+		},
+	)
+}
+
+func (self *HTTPServer) GetNotifications(c *gin.Context) {
+	_, ok := self.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
+	if !ok {
+		return
+	}
+	data, err := self.app.GetNotifications()
+	if err != nil {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  err.Error(),
+			},
+		)
+		return
+	}
+	c.JSON(
+		http.StatusOK,
+		gin.H{
+			"success": true,
+			"data":    data,
+		},
+	)
 }
 
 func (self *HTTPServer) Run() {
@@ -1747,6 +2273,12 @@ func (self *HTTPServer) Run() {
 		self.r.POST("/set-pwis-equation", self.SetPWIEquation)
 		self.r.POST("/confirm-pwis-equation", self.ConfirmPWIEquation)
 		self.r.POST("/reject-pwis-equation", self.RejectPWIEquation)
+
+		self.r.GET("/get-exchange-status", self.GetExchangesStatus)
+		self.r.POST("/update-exchange-status", self.UpdateExchangeStatus)
+
+		self.r.POST("/exchange-notification", self.ExchangeNotification)
+		self.r.GET("/exchange-notifications", self.GetNotifications)
 	}
 
 	if self.stat != nil {
@@ -1754,12 +2286,22 @@ func (self *HTTPServer) Run() {
 		self.r.GET("/cap-by-user/:user", self.GetCapByUser)
 		self.r.GET("/richguy/:addr", self.ExceedDailyLimit)
 		self.r.GET("/tradelogs", self.TradeLogs)
+		self.r.GET("/catlogs", self.CatLogs)
 		self.r.GET("/get-asset-volume", self.GetAssetVolume)
 		self.r.GET("/get-burn-fee", self.GetBurnFee)
 		self.r.GET("/get-wallet-fee", self.GetWalletFee)
 		self.r.GET("/get-user-volume", self.GetUserVolume)
+		self.r.GET("/get-trade-summary", self.GetTradeSummary)
 		self.r.POST("/update-user-addresses", self.UpdateUserAddresses)
 		self.r.GET("/get-pending-addresses", self.GetPendingAddresses)
+		self.r.GET("/get-reserve-rate", self.GetReserveRate)
+		self.r.GET("/get-wallet-stats", self.GetWalletStats)
+		self.r.GET("/get-wallet-address", self.GetWalletAddress)
+		self.r.GET("/get-country-stats", self.GetCountryStats)
+		self.r.GET("/get-heat-map", self.GetHeatMap)
+		self.r.GET("/get-countries", self.GetCountries)
+		self.r.POST("/update-price-analytic-data", self.UpdatePriceAnalyticData)
+		self.r.GET("/get-price-analytic-data", self.GetPriceAnalyticData)
 	}
 
 	self.r.Run(self.host)
