@@ -10,7 +10,7 @@ type StatStorage interface {
 	GetWalletFee(fromTime, toTime uint64, freq, reserveAddr string, walletAddr string) (common.StatTicks, error)
 	GetUserVolume(fromTime, toTime uint64, freq, userAddr string) (common.StatTicks, error)
 	GetWalletStats(fromTime, toTime uint64, walletAddr string, timezone int64) (common.StatTicks, error)
-	SetWalletStat(walletStats map[string]common.MetricStatsTimeZone) error
+	SetWalletStat(walletStats map[string]common.MetricStatsTimeZone, lastProcessedTimepoint uint64) error
 
 	GetLastProcessedTradeLogTimepoint(statType string) (timepoint uint64, err error)
 	SetLastProcessedTradeLogTimepoint(statType string, timepoint uint64) error

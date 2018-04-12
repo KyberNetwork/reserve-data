@@ -36,6 +36,13 @@ const (
 	USER_FIRST_TRADE_EVER       string = "user_first_trade_ever"
 	USER_STAT_BUCKET            string = "user_stat_bucket"
 	VOLUME_STAT_BUCKET          string = "volume_stat_bucket"
+
+	TRADE_SUMMARY_AGGREGATION string = "trade_summary_aggregation"
+	WALLET_AGGREGATION        string = "wallet_aggregation"
+	COUNTRY_AGGREGATION       string = "country_aggregation"
+	USER_AGGREGATION          string = "user_aggregation"
+	VOLUME_STAT_AGGREGATION   string = "volume_stat_aggregation"
+	BURNFEE_AGGREGATION       string = "burn_fee_aggregation"
 )
 
 type BoltStatStorage struct {
@@ -293,9 +300,8 @@ func (self *BoltStatStorage) SetVolumeStat(volumeStats map[string]common.VolumeS
 	return err
 }
 
-func (self *BoltStatStorage) SetWalletStat(stats map[string]common.MetricStatsTimeZone) error {
-	var err error
-	err = self.db.Update(func(tx *bolt.Tx) error {
+func (self *BoltStatStorage) SetWalletStat(stats map[string]common.MetricStatsTimeZone, lastProcessTimePoint uint64) error {
+	err := self.db.Update(func(tx *bolt.Tx) error {
 		for wallet, timeZoneStat := range stats {
 			b, err := tx.CreateBucketIfNotExists([]byte(wallet))
 			if err != nil {
@@ -333,6 +339,11 @@ func (self *BoltStatStorage) SetWalletStat(stats map[string]common.MetricStatsTi
 					walletTzBucket.Put(timestamp, dataJSON)
 				}
 			}
+		}
+		lastProcessBk := tx.Bucket([]byte(TRADELOG_PROCESSOR_STATE))
+		if lastProcessBk != nil {
+			dataJSON := uint64ToBytes(lastProcessTimePoint)
+			lastProcessBk.Put([]byte(WALLET_AGGREGATION), dataJSON)
 		}
 		return nil
 	})
