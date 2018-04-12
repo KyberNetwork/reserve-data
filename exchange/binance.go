@@ -249,8 +249,8 @@ func (self *Binance) FetchPriceData(timepoint uint64) (map[common.TokenPairID]co
 			pair := pairs[x]
 			go self.FetchOnePairData(&wait, pair, &data, timepoint)
 		}
-		i = x + 1
 		wait.Wait()
+		i = x
 	}
 	result := map[common.TokenPairID]common.ExchangePrice{}
 	data.Range(func(key, value interface{}) bool {
@@ -315,7 +315,7 @@ func (self *Binance) FetchOrderData(timepoint uint64) (common.OrderEntry, error)
 			pair := pairs[x]
 			go self.OpenOrdersForOnePair(&wait, pair, &data, timepoint)
 		}
-		i = x + 1
+		i = x
 		wait.Wait()
 	}
 
@@ -411,7 +411,7 @@ func (self *Binance) FetchTradeHistory(timepoint uint64) (map[common.TokenPairID
 			pair := pairs[x]
 			go self.FetchOnePairTradeHistory(&wait, &data, pair, timepoint)
 		}
-		i = x + 1
+		i = x
 		wait.Wait()
 	}
 	data.Range(func(key, value interface{}) bool {
