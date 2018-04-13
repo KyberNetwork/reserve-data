@@ -202,8 +202,8 @@ func (self *Fetcher) RunCountryStatAggregation(t time.Time) {
 			}
 		}
 		// TODO: set last processed data here
-		self.statStorage.SetCountryStat(countryStats)
-		self.statStorage.SetLastProcessedTradeLogTimepoint(COUNTRY_AGGREGATION, last)
+		self.statStorage.SetCountryStat(countryStats, last)
+		// self.statStorage.SetLastProcessedTradeLogTimepoint(COUNTRY_AGGREGATION, last)
 	} else {
 		l, err := self.logStorage.GetLastTradeLog()
 		if err != nil {
@@ -245,8 +245,8 @@ func (self *Fetcher) RunTradeSummaryAggregation(t time.Time) {
 			}
 		}
 		// TODO: set last processed data here
-		self.statStorage.SetTradeSummary(tradeSummary)
-		self.statStorage.SetLastProcessedTradeLogTimepoint(TRADE_SUMMARY_AGGREGATION, last)
+		self.statStorage.SetTradeSummary(tradeSummary, last)
+		// self.statStorage.SetLastProcessedTradeLogTimepoint(TRADE_SUMMARY_AGGREGATION, last)
 	} else {
 		l, err := self.logStorage.GetLastTradeLog()
 		if err != nil {
@@ -329,8 +329,8 @@ func (self *Fetcher) RunBurnFeeAggregation(t time.Time) {
 			}
 		}
 		// TODO: set last processed data here
-		self.statStorage.SetBurnFeeStat(burnFeeStats)
-		self.statStorage.SetLastProcessedTradeLogTimepoint(BURNFEE_AGGREGATION, last)
+		self.statStorage.SetBurnFeeStat(burnFeeStats, last)
+		// self.statStorage.SetLastProcessedTradeLogTimepoint(BURNFEE_AGGREGATION, last)
 	} else {
 		l, err := self.logStorage.GetLastTradeLog()
 		if err != nil {
@@ -369,7 +369,7 @@ func (self *Fetcher) RunVolumeStatAggregation(t time.Time) {
 			}
 		}
 		// TODO: set last processed data here
-		self.statStorage.SetVolumeStat(volumeStats)
+		self.statStorage.SetVolumeStat(volumeStats, last)
 		// self.statStorage.SetLastProcessedTradeLogTimepoint(VOLUME_STAT_AGGREGATION, last)
 	} else {
 		l, err := self.logStorage.GetLastTradeLog()
@@ -409,8 +409,8 @@ func (self *Fetcher) RunUserAggregation(t time.Time) {
 				last = trade.Timestamp
 			}
 		}
-		self.statStorage.SetFirstTradeEver(userTradeList)
-		self.statStorage.SetFirstTradeInDay(userTradeList)
+		self.statStorage.SetFirstTradeEver(userTradeList, last)
+		self.statStorage.SetFirstTradeInDay(userTradeList, last)
 		self.statStorage.SetLastProcessedTradeLogTimepoint(USER_AGGREGATION, last)
 	} else {
 		l, err := self.logStorage.GetLastTradeLog()
