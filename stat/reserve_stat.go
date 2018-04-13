@@ -317,7 +317,7 @@ func (self ReserveStats) GetReserveRates(fromTime, toTime uint64, reserveAddr et
 	var result []common.ReserveRates
 	var err error
 	var rates []common.ReserveRates
-	rates, err = self.rateStorage.GetReserveRates(fromTime, toTime, reserveAddr.Hex())
+	rates, err = self.rateStorage.GetReserveRates(fromTime, toTime, reserveAddr)
 	latest := common.ReserveRates{}
 	for _, rate := range rates {
 		if !isDuplicate(rate, latest) {

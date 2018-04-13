@@ -242,7 +242,7 @@ func (self *Fetcher) GetReserveRates(
 	if err != nil {
 		log.Println(err.Error())
 	}
-	data.Store(string(reserveAddr.Hex()), rates)
+	data.Store(reserveAddr, rates)
 }
 
 func (self *Fetcher) FetchReserveRates(timepoint uint64) {
@@ -267,7 +267,7 @@ func (self *Fetcher) FetchReserveRates(timepoint uint64) {
 	}
 	wg.Wait()
 	data.Range(func(key, value interface{}) bool {
-		reserveAddr := key.(string)
+		reserveAddr := key.(ethereum.Address)
 		rates := value.(common.ReserveRates)
 		log.Printf("Storing reserve rates to db...")
 		self.rateStorage.StoreReserveRates(reserveAddr, rates, common.GetTimepoint())
