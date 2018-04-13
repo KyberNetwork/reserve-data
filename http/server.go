@@ -1408,10 +1408,6 @@ func (self *HTTPServer) GetPendingPWIEquation(c *gin.Context) {
 }
 
 func (self *HTTPServer) GetBurnFee(c *gin.Context) {
-	_, ok := self.Authenticated(c, []string{"fromTime", "toTime", "freq", "reserveAddr"}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
-	if !ok {
-		return
-	}
 	fromTime, _ := strconv.ParseUint(c.Query("fromTime"), 10, 64)
 	toTime, _ := strconv.ParseUint(c.Query("toTime"), 10, 64)
 	freq := c.Query("freq")
