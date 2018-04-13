@@ -306,7 +306,7 @@ func (self ReserveStats) GetWalletStats(fromTime uint64, toTime uint64, walletAd
 		return nil, err
 	}
 	walletAddr = strings.ToLower(walletAddr)
-	return self.statStorage.GetWalletStats(fromTime, toTime, walletAddr, timezone)
+	return self.statStorage.GetWalletStats(fromTime, toTime, ethereum.HexToAddress(walletAddr), timezone)
 }
 
 func (self ReserveStats) GetWalletAddress() ([]string, error) {

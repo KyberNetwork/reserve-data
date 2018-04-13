@@ -183,14 +183,8 @@ func (self *Fetcher) RunTradeLogProcessor() {
 		}
 		if len(tradeLogs) > 0 {
 			var last uint64
-			userTradeList := map[string]uint64{} // map of user address and fist trade timestamp
-			for _, trade := range tradeLogs {
-				userAddr := common.AddrToString(trade.UserAddress)
-				key := fmt.Sprintf("%s_%d", userAddr, trade.Timestamp)
-				userTradeList[key] = trade.Timestamp
-			}
-			self.statStorage.SetFirstTradeEver(userTradeList)
-			self.statStorage.SetFirstTradeInDay(userTradeList)
+			self.statStorage.SetFirstTradeEver(&tradeLogs)
+			self.statStorage.SetFirstTradeInDay(&tradeLogs)
 
 			countryStats := map[string]common.MetricStatsTimeZone{}
 			walletStats := map[string]common.MetricStatsTimeZone{}
@@ -459,7 +453,7 @@ func (self *Fetcher) aggregateTradeLog(trade common.TradeLog,
 	countryStats map[string]common.MetricStatsTimeZone,
 	walletStats map[string]common.MetricStatsTimeZone,
 	tradeSummary map[string]common.MetricStatsTimeZone,
-	allFirstTradeEver map[string]uint64,
+	allFirstTradeEver map[ethereum.Address]uint64,
 	assetVolumeStats map[string]common.VolumeStatsTimeZone,
 	burnFeeStats map[string]common.BurnFeeStatsTimeZone) (err error) {
 
@@ -475,7 +469,7 @@ func (self *Fetcher) aggregateTradeLog(trade common.TradeLog,
 	}
 
 	if checkWalletAddress(walletAddr) {
-		self.statStorage.SetWalletAddress(walletAddr)
+		self.statStorage.SetWalletAddress(ethereum.HexToAddress(walletAddr))
 	}
 
 	var srcAmount, destAmount, ethAmount, burnFee, walletFee float64
@@ -589,8 +583,8 @@ func (self *Fetcher) aggregateVolumeStat(
 func (self *Fetcher) aggregateMetricStat(trade common.TradeLog, statKey string, ethAmount, burnFee float64,
 	metricStats map[string]common.MetricStatsTimeZone,
 	kycEd bool,
-	allFirstTradeEver map[string]uint64) {
-	userAddr := common.AddrToString(trade.UserAddress)
+	allFirstTradeEver map[ethereum.Address]uint64) {
+	userAddr := trade.UserAddress
 
 	for i := START_TIMEZONE; i <= END_TIMEZONE; i++ {
 		freq := fmt.Sprintf("%s%d", TIMEZONE_BUCKET_PREFIX, i)
@@ -607,7 +601,7 @@ func (self *Fetcher) aggregateMetricStat(trade common.TradeLog, statKey string, 
 		if !exist {
 			data = common.MetricStats{}
 		}
-		timeFirstTrade := allFirstTradeEver[userAddr]
+		timeFirstTrade := allFirstTradeEver[trade.UserAddress]
 		if timeFirstTrade == trade.Timestamp {
 			data.NewUniqueAddresses++
 			data.UniqueAddr++
