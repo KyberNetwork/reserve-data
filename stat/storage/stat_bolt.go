@@ -13,6 +13,7 @@ import (
 
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/boltdb/bolt"
+	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
 const (
@@ -715,10 +716,10 @@ func (self *BoltStatStorage) SetFirstTradeInDay(userAddrs map[string]uint64) err
 	return err
 }
 
-func (self *BoltStatStorage) GetAssetVolume(fromTime uint64, toTime uint64, freq string, assetAddr string) (common.StatTicks, error) {
+func (self *BoltStatStorage) GetAssetVolume(fromTime uint64, toTime uint64, freq string, assetAddr ethereum.Address) (common.StatTicks, error) {
 	result := common.StatTicks{}
 	err := self.db.Update(func(tx *bolt.Tx) error {
-		b, _ := tx.CreateBucketIfNotExists([]byte(assetAddr))
+		b, _ := tx.CreateBucketIfNotExists([]byte(assetAddr.Hex()))
 
 		freqBkName, _ := getBucketNameByFreq(freq)
 		min := uint64ToBytes(fromTime)
@@ -738,11 +739,10 @@ func (self *BoltStatStorage) GetAssetVolume(fromTime uint64, toTime uint64, freq
 	return result, err
 }
 
-func (self *BoltStatStorage) GetBurnFee(fromTime uint64, toTime uint64, freq string, reserveAddr string) (common.StatTicks, error) {
+func (self *BoltStatStorage) GetBurnFee(fromTime uint64, toTime uint64, freq string, reserveAddr ethereum.Address) (common.StatTicks, error) {
 	result := common.StatTicks{}
-
 	err := self.db.Update(func(tx *bolt.Tx) error {
-		b, _ := tx.CreateBucketIfNotExists([]byte(reserveAddr))
+		b, _ := tx.CreateBucketIfNotExists([]byte(reserveAddr.Hex()))
 		freqBkName, _ := getBucketNameByFreq(freq)
 
 		freqBk, _ := b.CreateBucketIfNotExists([]byte(freqBkName))
@@ -762,11 +762,11 @@ func (self *BoltStatStorage) GetBurnFee(fromTime uint64, toTime uint64, freq str
 	return result, err
 }
 
-func (self *BoltStatStorage) GetWalletFee(fromTime uint64, toTime uint64, freq string, reserveAddr string, walletAddr string) (common.StatTicks, error) {
+func (self *BoltStatStorage) GetWalletFee(fromTime uint64, toTime uint64, freq string, reserveAddr ethereum.Address, walletAddr ethereum.Address) (common.StatTicks, error) {
 	result := common.StatTicks{}
 
 	err := self.db.Update(func(tx *bolt.Tx) error {
-		bucketName := fmt.Sprintf("%s_%s", reserveAddr, walletAddr)
+		bucketName := fmt.Sprintf("%s_%s", reserveAddr.Hex(), walletAddr.Hex())
 		b, _ := tx.CreateBucketIfNotExists([]byte(bucketName))
 		freqBkName, _ := getBucketNameByFreq(freq)
 		freqBk, _ := b.CreateBucketIfNotExists([]byte(freqBkName))
@@ -787,10 +787,10 @@ func (self *BoltStatStorage) GetWalletFee(fromTime uint64, toTime uint64, freq s
 	return result, err
 }
 
-func (self *BoltStatStorage) GetUserVolume(fromTime uint64, toTime uint64, freq string, userAddr string) (common.StatTicks, error) {
+func (self *BoltStatStorage) GetUserVolume(fromTime uint64, toTime uint64, freq string, userAddr ethereum.Address) (common.StatTicks, error) {
 	result := common.StatTicks{}
 	err := self.db.Update(func(tx *bolt.Tx) error {
-		b, _ := tx.CreateBucketIfNotExists([]byte(userAddr))
+		b, _ := tx.CreateBucketIfNotExists([]byte(userAddr.Hex()))
 		freqBkName, _ := getBucketNameByFreq(freq)
 		freqBk, _ := b.CreateBucketIfNotExists([]byte(freqBkName))
 

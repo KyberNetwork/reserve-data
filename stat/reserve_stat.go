@@ -81,7 +81,7 @@ func (self ReserveStats) GetAssetVolume(fromTime, toTime uint64, freq, asset str
 		return data, errors.New(fmt.Sprintf("assets %s is not supported", asset))
 	}
 
-	data, err = self.statStorage.GetAssetVolume(fromTime, toTime, freq, strings.ToLower(token.Address))
+	data, err = self.statStorage.GetAssetVolume(fromTime, toTime, freq, ethereum.HexToAddress(token.Address))
 	return data, err
 }
 
@@ -93,7 +93,7 @@ func (self ReserveStats) GetBurnFee(fromTime, toTime uint64, freq, reserveAddr s
 		return data, err
 	}
 
-	data, err = self.statStorage.GetBurnFee(fromTime, toTime, freq, reserveAddr)
+	data, err = self.statStorage.GetBurnFee(fromTime, toTime, freq, ethereum.HexToAddress(reserveAddr))
 	return data, err
 }
 
@@ -105,7 +105,7 @@ func (self ReserveStats) GetWalletFee(fromTime, toTime uint64, freq, reserveAddr
 		return data, err
 	}
 
-	data, err = self.statStorage.GetWalletFee(fromTime, toTime, freq, reserveAddr, walletAddr)
+	data, err = self.statStorage.GetWalletFee(fromTime, toTime, freq, ethereum.HexToAddress(reserveAddr), ethereum.HexToAddress(walletAddr))
 	return data, err
 }
 
@@ -117,7 +117,7 @@ func (self ReserveStats) GetUserVolume(fromTime, toTime uint64, freq, userAddr s
 		return data, err
 	}
 
-	data, err = self.statStorage.GetUserVolume(fromTime, toTime, freq, userAddr)
+	data, err = self.statStorage.GetUserVolume(fromTime, toTime, freq, ethereum.HexToAddress(userAddr))
 	return data, err
 }
 

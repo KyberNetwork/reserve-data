@@ -2,13 +2,14 @@ package stat
 
 import (
 	"github.com/KyberNetwork/reserve-data/common"
+	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
 type StatStorage interface {
-	GetAssetVolume(fromTime, toTime uint64, freq, asset string) (common.StatTicks, error)
-	GetBurnFee(fromTime, toTime uint64, freq, reserveAddr string) (common.StatTicks, error)
-	GetWalletFee(fromTime, toTime uint64, freq, reserveAddr string, walletAddr string) (common.StatTicks, error)
-	GetUserVolume(fromTime, toTime uint64, freq, userAddr string) (common.StatTicks, error)
+	GetAssetVolume(fromTime, toTime uint64, freq string, assetAddr ethereum.Address) (common.StatTicks, error)
+	GetBurnFee(fromTime, toTime uint64, freq string, reserveAddr ethereum.Address) (common.StatTicks, error)
+	GetWalletFee(fromTime, toTime uint64, freq string, reserveAddr ethereum.Address, walletAddr ethereum.Address) (common.StatTicks, error)
+	GetUserVolume(fromTime, toTime uint64, freq string, userAddr ethereum.Address) (common.StatTicks, error)
 	GetLastProcessedTradeLogTimepoint() (timepoint uint64, err error)
 	GetWalletStats(fromTime, toTime uint64, walletAddr string, timezone int64) (common.StatTicks, error)
 	SetWalletStat(walletStats map[string]common.MetricStatsTimeZone) error
