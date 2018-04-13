@@ -615,7 +615,10 @@ func (self *Fetcher) aggregateMetricStat(trade common.TradeLog, statKey string, 
 				data.KYCEd++
 			}
 		} else {
-			firstTradeInday := self.statStorage.GetFirstTradeInDay(userAddr, trade.Timestamp, i)
+			firstTradeInday, err := self.statStorage.GetFirstTradeInDay(userAddr, trade.Timestamp, i)
+			if err != nil {
+				log.Printf("ERROR: get first traede in day fail. %v", err)
+			}
 			if firstTradeInday == trade.Timestamp {
 				data.UniqueAddr++
 				if kycEd {

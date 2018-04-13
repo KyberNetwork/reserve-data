@@ -619,7 +619,7 @@ func (self *BoltStatStorage) SetFirstTradeEver(userAddrs map[string]uint64) erro
 	err := self.db.Update(func(tx *bolt.Tx) error {
 		b, _ := tx.CreateBucketIfNotExists([]byte(USER_FIRST_TRADE_EVER))
 		for k, timepoint := range userAddrs {
-			userAddr := strings.Split(k, "_")[0]
+			userAddr := strings.ToLower(strings.Split(k, "_")[0])
 			if !self.DidTrade(tx, userAddr, timepoint) {
 				timestampByte := uint64ToBytes(timepoint)
 				b.Put([]byte(userAddr), timestampByte)
@@ -630,15 +630,16 @@ func (self *BoltStatStorage) SetFirstTradeEver(userAddrs map[string]uint64) erro
 	return err
 }
 
-func (self *BoltStatStorage) GetFirstTradeEver(userAddr string) uint64 {
+func (self *BoltStatStorage) GetFirstTradeEver(userAddr string) (uint64, error) {
 	result := uint64(0)
-	self.db.Update(func(tx *bolt.Tx) error {
+	userAddr = strings.ToLower(userAddr)
+	err := self.db.Update(func(tx *bolt.Tx) error {
 		b, _ := tx.CreateBucketIfNotExists([]byte(USER_FIRST_TRADE_EVER))
 		v := b.Get([]byte(userAddr))
 		result = bytesToUint64(v)
 		return nil
 	})
-	return result
+	return result, err
 }
 
 func (self *BoltStatStorage) GetAllFirstTradeEver() (map[string]uint64, error) {
@@ -674,9 +675,9 @@ func (self *BoltStatStorage) DidTradeInDay(tx *bolt.Tx, userAddr string, timepoi
 	return result
 }
 
-func (self *BoltStatStorage) GetFirstTradeInDay(userAddr string, timepoint uint64, timezone int64) uint64 {
+func (self *BoltStatStorage) GetFirstTradeInDay(userAddr string, timepoint uint64, timezone int64) (uint64, error) {
 	result := uint64(0)
-	self.db.Update(func(tx *bolt.Tx) error {
+	err := self.db.Update(func(tx *bolt.Tx) error {
 		userStatBk, _ := tx.CreateBucketIfNotExists([]byte(USER_STAT_BUCKET))
 		freq := fmt.Sprintf("%s%d", TIMEZONE_BUCKET_PREFIX, timezone)
 		timestamp := getTimestampByFreq(timepoint, freq)
@@ -690,7 +691,7 @@ func (self *BoltStatStorage) GetFirstTradeInDay(userAddr string, timepoint uint6
 		}
 		return nil
 	})
-	return result
+	return result, err
 }
 
 func (self *BoltStatStorage) SetFirstTradeInDay(userAddrs map[string]uint64) error {
@@ -701,7 +702,6 @@ func (self *BoltStatStorage) SetFirstTradeInDay(userAddrs map[string]uint64) err
 			for timezone := START_TIMEZONE; timezone <= END_TIMEZONE; timezone++ {
 				freq := fmt.Sprintf("%s%d", TIMEZONE_BUCKET_PREFIX, timezone)
 				timestamp := getTimestampByFreq(timepoint, freq)
-
 				timezoneBk, _ := userStatBk.CreateBucketIfNotExists(uint64ToBytes(uint64(timezone)))
 				userDailyBucket, _ := timezoneBk.CreateBucketIfNotExists(timestamp)
 				if !self.DidTradeInDay(tx, userAddr, timepoint, timezone) {

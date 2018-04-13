@@ -5,7 +5,7 @@ import (
 )
 
 type StatStorage interface {
-	GetAssetVolume(fromTime, toTime uint64, freq, asset string) (common.StatTicks, error)
+	GetAssetVolume(fromTime, toTime uint64, freq, assetAddr string) (common.StatTicks, error)
 	GetBurnFee(fromTime, toTime uint64, freq, reserveAddr string) (common.StatTicks, error)
 	GetWalletFee(fromTime, toTime uint64, freq, reserveAddr string, walletAddr string) (common.StatTicks, error)
 	GetUserVolume(fromTime, toTime uint64, freq, userAddr string) (common.StatTicks, error)
@@ -27,10 +27,10 @@ type StatStorage interface {
 	GetCountryStats(fromTime, toTime uint64, country string, tzparam int64) (common.StatTicks, error)
 
 	SetFirstTradeEver(userAddrs map[string]uint64) error
-	GetFirstTradeEver(userAddr string) uint64
+	GetFirstTradeEver(userAddr string) (uint64, error)
 	GetAllFirstTradeEver() (map[string]uint64, error)
 	SetFirstTradeInDay(userAddr map[string]uint64) error
-	GetFirstTradeInDay(userAddr string, timepoint uint64, timezone int64) uint64
+	GetFirstTradeInDay(userAddr string, timepoint uint64, timezone int64) (uint64, error)
 
 	SetTradeSummary(stats map[string]common.MetricStatsTimeZone) error
 	GetTradeSummary(fromTime, toTime uint64, timezone int64) (common.StatTicks, error)
