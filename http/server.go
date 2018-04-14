@@ -2225,6 +2225,42 @@ func (self *HTTPServer) GetNotifications(c *gin.Context) {
 	)
 }
 
+func (self *HTTPServer) GetUserList(c *gin.Context) {
+	fromTime, toTime, ok := self.ValidateTimeInput(c)
+	if !ok {
+		return
+	}
+	timeZone, err := strconv.ParseInt(c.Query("timeZone"), 10, 64)
+	if err != nil {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  err.Error(),
+			},
+		)
+		return
+	}
+	data, err := self.stat.GetUserList(fromTime, toTime, timeZone)
+	if err != nil {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  err.Error(),
+			},
+		)
+		return
+	}
+	c.JSON(
+		http.StatusOK,
+		gin.H{
+			"success": true,
+			"data":    data,
+		},
+	)
+}
+
 func (self *HTTPServer) Run() {
 	if self.core != nil && self.app != nil {
 		self.r.GET("/prices-version", self.AllPricesVersion)
@@ -2302,6 +2338,7 @@ func (self *HTTPServer) Run() {
 		self.r.GET("/get-countries", self.GetCountries)
 		self.r.POST("/update-price-analytic-data", self.UpdatePriceAnalyticData)
 		self.r.GET("/get-price-analytic-data", self.GetPriceAnalyticData)
+		self.r.GET("/get-user-list", self.GetUserList)
 	}
 
 	self.r.Run(self.host)

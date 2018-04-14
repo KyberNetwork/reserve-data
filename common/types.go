@@ -645,6 +645,13 @@ type MetricStats struct {
 
 type MetricStatsTimeZone map[int64]map[uint64]MetricStats
 
+type UserInfo struct {
+	Addr  string `json:"user_address"`
+	Email string `json:"email"`
+}
+
+type UserInfoTimezone map[int64]map[uint64]UserInfo
+
 type TradeHistory struct {
 	ID        string
 	Price     float64

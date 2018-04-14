@@ -38,6 +38,7 @@ const (
 	USER_FIRST_TRADE_EVER       string = "user_first_trade_ever"
 	USER_STAT_BUCKET            string = "user_stat_bucket"
 	VOLUME_STAT_BUCKET          string = "volume_stat_bucket"
+	USER_LIST_BUCKET            string = "user_list"
 )
 
 type BoltStatStorage struct {
@@ -713,6 +714,73 @@ func (self *BoltStatStorage) SetFirstTradeInDay(userAddrs map[string]uint64) err
 		return nil
 	})
 	return err
+}
+
+func (self *BoltStatStorage) SetUserList(userInfos map[string]common.UserInfoTimezone) error {
+	err := self.db.Update(func(tx *bolt.Tx) error {
+		b, err := tx.CreateBucketIfNotExists([]byte(USER_LIST_BUCKET))
+		if err != nil {
+			return err
+		}
+		for userAddr, userInfoData := range userInfos {
+			for timezone := START_TIMEZONE; timezone <= END_TIMEZONE; timezone++ {
+				freq := fmt.Sprintf("%s%d", TIMEZONE_BUCKET_PREFIX, timezone)
+				timezoneBk, err := b.CreateBucketIfNotExists([]byte(freq))
+				if err != nil {
+					return err
+				}
+				timezoneData := userInfoData[timezone]
+				for timepoint, userData := range timezoneData {
+					timestamp := getTimestampByFreq(timepoint, freq)
+					timestampBk, err := timezoneBk.CreateBucketIfNotExists(timestamp)
+					if err != nil {
+						return err
+					}
+					dataJSON, _ := json.Marshal(userData)
+					err = timestampBk.Put([]byte(userAddr), dataJSON)
+					if err != nil {
+						log.Printf("cannot saved user list: %s", err.Error())
+						return err
+					}
+				}
+
+			}
+		}
+		return err
+	})
+	return err
+}
+
+func (self *BoltStatStorage) GetUserList(fromTime, toTime uint64, timezone int64) ([]common.UserInfo, error) {
+	result := []common.UserInfo{}
+	err := self.db.Update(func(tx *bolt.Tx) error {
+		b, err := tx.CreateBucketIfNotExists([]byte(USER_LIST_BUCKET))
+		min := uint64ToBytes(fromTime)
+		max := uint64ToBytes(toTime)
+
+		timezoneBkName := fmt.Sprintf("%s%d", TIMEZONE_BUCKET_PREFIX, timezone)
+		timezoneBk, err := b.CreateBucketIfNotExists([]byte(timezoneBkName))
+		if err != nil {
+			return err
+		}
+		c := timezoneBk.Cursor()
+		for k, v := c.Seek(min); k != nil && bytes.Compare(k, max) <= 0; k, v = c.Next() {
+			if v == nil {
+				timestampBk, _ := timezoneBk.CreateBucketIfNotExists(k)
+				cursor := timestampBk.Cursor()
+				for kk, vv := cursor.First(); kk != nil; kk, vv = cursor.Next() {
+					value := common.UserInfo{}
+					err := json.Unmarshal(vv, &value)
+					if err != nil {
+						return err
+					}
+					result = append(result, value)
+				}
+			}
+		}
+		return err
+	})
+	return result, err
 }
 
 func (self *BoltStatStorage) GetAssetVolume(fromTime uint64, toTime uint64, freq string, assetAddr string) (common.StatTicks, error) {

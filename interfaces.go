@@ -32,6 +32,8 @@ type ReserveStats interface {
 	GetHeatMap(fromTime, toTime uint64, tzparam int64) (common.HeatmapResponse, error)
 	GetCountries() ([]string, error)
 
+	GetUserList(fromTime, toTime uint64, timezone int64) ([]common.UserInfo, error)
+
 	RunDBController() error
 	Run() error
 	Stop() error
