@@ -737,6 +737,11 @@ func (self *BoltStatStorage) SetUserList(userInfos map[string]common.UserInfoTim
 						return err
 					}
 					dataJSON, _ := json.Marshal(userData)
+					currentUserData := common.UserInfo{}
+					currentValue := timestampBk.Get([]byte(userAddr))
+					if currentValue != nil {
+						json.Unmarshal(currentValue, &currentUserData)
+					}
 					err = timestampBk.Put([]byte(userAddr), dataJSON)
 					if err != nil {
 						log.Printf("cannot saved user list: %s", err.Error())
@@ -751,8 +756,8 @@ func (self *BoltStatStorage) SetUserList(userInfos map[string]common.UserInfoTim
 	return err
 }
 
-func (self *BoltStatStorage) GetUserList(fromTime, toTime uint64, timezone int64) ([]common.UserInfo, error) {
-	result := []common.UserInfo{}
+func (self *BoltStatStorage) GetUserList(fromTime, toTime uint64, timezone int64) (map[string]common.UserInfo, error) {
+	result := map[string]common.UserInfo{}
 	err := self.db.Update(func(tx *bolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte(USER_LIST_BUCKET))
 		min := uint64ToBytes(fromTime)
@@ -774,7 +779,16 @@ func (self *BoltStatStorage) GetUserList(fromTime, toTime uint64, timezone int64
 					if err != nil {
 						return err
 					}
-					result = append(result, value)
+					currentData, exist := result[value.Addr]
+					if !exist {
+						currentData = common.UserInfo{
+							Email: value.Email,
+							Addr:  value.Addr,
+						}
+					}
+					currentData.ETHVolume += value.ETHVolume
+					currentData.USDVolume += value.USDVolume
+					result[value.Addr] = currentData
 				}
 			}
 		}

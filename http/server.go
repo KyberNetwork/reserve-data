@@ -2226,6 +2226,10 @@ func (self *HTTPServer) GetNotifications(c *gin.Context) {
 }
 
 func (self *HTTPServer) GetUserList(c *gin.Context) {
+	_, ok := self.Authenticated(c, []string{"fromTime", "toTime", "timeZone"}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
+	if !ok {
+		return
+	}
 	fromTime, toTime, ok := self.ValidateTimeInput(c)
 	if !ok {
 		return

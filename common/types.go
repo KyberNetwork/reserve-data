@@ -646,9 +646,20 @@ type MetricStats struct {
 type MetricStatsTimeZone map[int64]map[uint64]MetricStats
 
 type UserInfo struct {
-	Addr  string `json:"user_address"`
-	Email string `json:"email"`
+	Addr      string  `json:"user_address"`
+	Email     string  `json:"email"`
+	ETHVolume float64 `json:"total_eth_volume"`
+	USDVolume float64 `json:"total_usd_volume"`
 }
+
+type UserListResponse []UserInfo
+
+func (h UserListResponse) Less(i, j int) bool {
+	return h[i].ETHVolume < h[j].ETHVolume
+}
+
+func (h UserListResponse) Len() int      { return len(h) }
+func (h UserListResponse) Swap(i, j int) { h[i], h[j] = h[j], h[i] }
 
 type UserInfoTimezone map[int64]map[uint64]UserInfo
 

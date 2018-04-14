@@ -542,13 +542,28 @@ func (self *Fetcher) aggregateTradeLog(trade common.TradeLog,
 
 func (self *Fetcher) aggregateUserInfo(trade common.TradeLog, userInfos map[string]common.UserInfoTimezone) {
 	userAddr := common.AddrToString(trade.UserAddress)
+	srcAddr := common.AddrToString(trade.SrcAddress)
+	dstAddr := common.AddrToString(trade.DestAddress)
+
+	var srcAmount, destAmount, ethAmount float64
+	for _, token := range common.SupportedTokens {
+		if strings.ToLower(token.Address) == srcAddr {
+			srcAmount = common.BigToFloat(trade.SrcAmount, token.Decimal)
+			if token.IsETH() {
+				ethAmount = srcAmount
+			}
+		}
+
+		if strings.ToLower(token.Address) == dstAddr {
+			destAmount = common.BigToFloat(trade.DestAmount, token.Decimal)
+			if token.IsETH() {
+				ethAmount = destAmount
+			}
+		}
+	}
 	email, _, err := self.userStorage.GetUserOfAddress(userAddr)
 	if err != nil {
 		return
-	}
-	userInfo := common.UserInfo{
-		Email: email,
-		Addr:  userAddr,
 	}
 	userAddrInfo, exist := userInfos[userAddr]
 	if !exist {
@@ -561,7 +576,16 @@ func (self *Fetcher) aggregateUserInfo(trade common.TradeLog, userInfos map[stri
 		if !exist {
 			timezoneInfo = map[uint64]common.UserInfo{}
 		}
-		timezoneInfo[timestamp] = userInfo
+		currentUserInfo, exist := timezoneInfo[timestamp]
+		if !exist {
+			currentUserInfo = common.UserInfo{
+				Email: email,
+				Addr:  userAddr,
+			}
+		}
+		currentUserInfo.ETHVolume += ethAmount
+		currentUserInfo.USDVolume += trade.FiatAmount
+		timezoneInfo[timestamp] = currentUserInfo
 		userAddrInfo[timezone] = timezoneInfo
 		userInfos[userAddr] = userAddrInfo
 	}
