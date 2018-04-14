@@ -429,11 +429,11 @@ func (self *Fetcher) RunTradeLogProcessor() {
 	for {
 		t := <-self.runner.GetTradeLogProcessorTicker()
 		self.RunUserAggregation(t)
-		self.RunBurnFeeAggregation(t)
-		self.RunVolumeStatAggregation(t)
-		self.RunTradeSummaryAggregation(t)
-		self.RunWalletStatAggregation(t)
-		self.RunCountryStatAggregation(t)
+		go self.RunBurnFeeAggregation(t)
+		go self.RunVolumeStatAggregation(t)
+		go self.RunTradeSummaryAggregation(t)
+		go self.RunWalletStatAggregation(t)
+		go self.RunCountryStatAggregation(t)
 	}
 }
 
