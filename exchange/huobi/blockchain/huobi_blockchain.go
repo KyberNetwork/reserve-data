@@ -28,11 +28,11 @@ func (self *Blockchain) SendTokenFromAccountToExchange(amount *big.Int, exchange
 }
 
 func (self *Blockchain) SendETHFromAccountToExchange(amount *big.Int, exchangeAddress ethereum.Address) (*types.Transaction, error) {
-	opts, err := self.GetTxOpts(HUOBI_OP, nil, nil, nil)
+	opts, err := self.GetTxOpts(HUOBI_OP, nil, nil, amount)
 	if err != nil {
 		return nil, err
 	}
-	tx, err := self.BuildSendETHTx(opts, amount, exchangeAddress)
+	tx, err := self.BuildSendETHTx(opts, exchangeAddress)
 	if err != nil {
 		return nil, err
 	} else {

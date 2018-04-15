@@ -11,6 +11,7 @@ type StatStorage interface {
 	SetVolumeStat(volumeStat map[string]common.VolumeStatsTimeZone, lastProcessedTimepoint uint64) error
 	GetAssetVolume(fromTime, toTime uint64, freq, asset string) (common.StatTicks, error)
 	GetUserVolume(fromTime, toTime uint64, freq, userAddr string) (common.StatTicks, error)
+	GetReserveVolume(fromTime, toTime uint64, freq, reserveAddr string) (common.StatTicks, error)
 
 	SetBurnFeeStat(burnFeeStat map[string]common.BurnFeeStatsTimeZone, lastProcessedTimepoint uint64) error
 	GetBurnFee(fromTime, toTime uint64, freq, reserveAddr string) (common.StatTicks, error)
