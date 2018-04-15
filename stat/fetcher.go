@@ -369,7 +369,6 @@ func (self *Fetcher) RunVolumeStatAggregation(t time.Time) {
 				}
 			}
 		}
-		// TODO: set last processed data here
 		self.statStorage.SetVolumeStat(volumeStats, last)
 		// self.statStorage.SetLastProcessedTradeLogTimepoint(VOLUME_STAT_AGGREGATION, last)
 	} else {
@@ -440,11 +439,7 @@ func (self *Fetcher) RunReserveVolumeAggregation(t time.Time) {
 	}
 	if len(tradeLogs) > 0 {
 		var last uint64
-		userTradeList := map[string]uint64{} // map of user address and fist trade timestamp
 		for _, trade := range tradeLogs {
-			userAddr := common.AddrToString(trade.UserAddress)
-			key := fmt.Sprintf("%s_%d", userAddr, trade.Timestamp)
-			userTradeList[key] = trade.Timestamp
 			if trade.Timestamp > last {
 				last = trade.Timestamp
 			}
@@ -825,11 +820,11 @@ func (self *Fetcher) aggregateVolumeStat(
 	trade common.TradeLog,
 	assetAddr string,
 	assetAmount, ethAmount, fiatAmount float64,
-	assetVolumtStats map[string]common.VolumeStatsTimeZone) {
+	assetVolumetStats map[string]common.VolumeStatsTimeZone) {
 	for _, freq := range []string{"M", "H", "D"} {
 		timestamp := getTimestampFromTimeZone(trade.Timestamp, freq)
 
-		currentVolume, exist := assetVolumtStats[assetAddr]
+		currentVolume, exist := assetVolumetStats[assetAddr]
 		if !exist {
 			currentVolume = common.VolumeStatsTimeZone{}
 		}
@@ -846,7 +841,7 @@ func (self *Fetcher) aggregateVolumeStat(
 		data.Volume += assetAmount
 		dataTimeZone[timestamp] = data
 		currentVolume[freq] = dataTimeZone
-		assetVolumtStats[assetAddr] = currentVolume
+		assetVolumetStats[assetAddr] = currentVolume
 	}
 }
 
