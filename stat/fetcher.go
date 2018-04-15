@@ -452,7 +452,7 @@ func (self *Fetcher) RunUserInfoAggregation(t time.Time) {
 			return
 		} else {
 			if toTime < l.Timestamp {
-				self.statStorage.SetLastProcessedTradeLogTimepoint(USER_AGGREGATION, toTime)
+				self.statStorage.SetLastProcessedTradeLogTimepoint(USER_INFO_AGGREGATION, toTime)
 			}
 		}
 	}
