@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"math"
 	"math/big"
 	"strconv"
 	"strings"
@@ -368,20 +367,8 @@ func getDepositInfo(id common.ActivityID) (string, float64, string) {
 	return txID, sentAmount, tokenID
 }
 
-func getBigIntFromFloat(amount float64, decimal int64) *big.Int {
-	FAmount := big.NewFloat(amount)
-
-	power := math.Pow10(int(decimal))
-
-	FDecimal := (big.NewFloat(0)).SetFloat64(power)
-	FAmount.Mul(FAmount, FDecimal)
-	IAmount := big.NewInt(0)
-	FAmount.Int(IAmount)
-	return IAmount
-}
-
 func (self *Huobi) Send2ndTransaction(amount float64, token common.Token, exchangeAddress ethereum.Address) (*types.Transaction, error) {
-	IAmount := getBigIntFromFloat(amount, token.Decimal)
+	IAmount := common.FloatToBigInt(amount, token.Decimal)
 	// Check balance, removed from huobi's blockchain object.
 	// currBalance := self.blockchain.CheckBalance(token)
 	// log.Printf("current balance of token %s is %d", token.ID, currBalance)

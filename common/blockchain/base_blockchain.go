@@ -290,7 +290,7 @@ func (self *BaseBlockchain) BuildSendERC20Tx(opts TxOpts, amount *big.Int, to et
 	return rawTx, nil
 }
 
-func (self *BaseBlockchain) BuildSendETHTx(opts TxOpts, amount *big.Int, to ethereum.Address) (*types.Transaction, error) {
+func (self *BaseBlockchain) BuildSendETHTx(opts TxOpts, to ethereum.Address) (*types.Transaction, error) {
 	value := opts.Value
 	if value == nil {
 		value = new(big.Int)
