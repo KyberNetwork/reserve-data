@@ -425,15 +425,27 @@ func (self *Fetcher) RunUserAggregation(t time.Time) {
 	}
 }
 
+func runAggregationInParallel(wg *sync.WaitGroup, t time.Time, f func(t time.Time)) {
+	defer wg.Done()
+	f(t)
+}
+
 func (self *Fetcher) RunTradeLogProcessor() {
 	for {
 		t := <-self.runner.GetTradeLogProcessorTicker()
 		self.RunUserAggregation(t)
-		go self.RunBurnFeeAggregation(t)
-		go self.RunVolumeStatAggregation(t)
-		go self.RunTradeSummaryAggregation(t)
-		go self.RunWalletStatAggregation(t)
-		go self.RunCountryStatAggregation(t)
+		wg := sync.WaitGroup{}
+		wg.Add(1)
+		go runAggregationInParallel(&wg, t, self.RunBurnFeeAggregation)
+		wg.Add(1)
+		go runAggregationInParallel(&wg, t, self.RunVolumeStatAggregation)
+		wg.Add(1)
+		go runAggregationInParallel(&wg, t, self.RunTradeSummaryAggregation)
+		wg.Add(1)
+		go runAggregationInParallel(&wg, t, self.RunWalletStatAggregation)
+		wg.Add(1)
+		go runAggregationInParallel(&wg, t, self.RunCountryStatAggregation)
+		wg.Wait()
 	}
 }
 
