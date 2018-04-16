@@ -263,7 +263,7 @@ func (self ReserveStats) Stop() error {
 }
 
 func (self ReserveStats) GetCapByAddress(addr ethereum.Address) (*common.UserCap, error) {
-	category, err := self.userStorage.GetCategory(addr.Hex())
+	category, err := self.userStorage.GetCategory(addr)
 	if err != nil {
 		return nil, err
 	}
@@ -283,7 +283,7 @@ func (self ReserveStats) GetCapByUser(userID string) (*common.UserCap, error) {
 		log.Printf("Couldn't find any associated addresses. User %s is not kyced.", userID)
 		return common.NonKycedCap(), nil
 	} else {
-		return self.GetCapByAddress(ethereum.HexToAddress(addresses[0]))
+		return self.GetCapByAddress(addresses[0])
 	}
 }
 
@@ -334,15 +334,15 @@ func (self ReserveStats) GetReserveRates(fromTime, toTime uint64, reserveAddr et
 }
 
 func (self ReserveStats) UpdateUserAddresses(userID string, addrs []ethereum.Address, timestamps []uint64) error {
-	addresses := []string{}
+	addresses := []ethereum.Address{}
 	for _, addr := range addrs {
-		addresses = append(addresses, addr.Hex())
+		addresses = append(addresses, addr)
 	}
 	return self.userStorage.UpdateUserAddresses(userID, addresses, timestamps)
 }
 
 func (self ReserveStats) ExceedDailyLimit(address ethereum.Address) (bool, error) {
-	user, _, err := self.userStorage.GetUserOfAddress(address.Hex())
+	user, _, err := self.userStorage.GetUserOfAddress(address)
 	log.Printf("got user %s for address %s", user, strings.ToLower(address.Hex()))
 	if err != nil {
 		return false, err

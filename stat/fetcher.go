@@ -117,7 +117,7 @@ func (self *Fetcher) RunCatLogProcessor() {
 			var last uint64
 			for _, l := range catLogs {
 				err := self.userStorage.UpdateAddressCategory(
-					strings.ToLower(l.Address.Hex()),
+					l.Address,
 					l.Category,
 				)
 				if err != nil {
@@ -512,7 +512,7 @@ func (self *Fetcher) aggregateTradeLog(trade common.TradeLog,
 
 	// stats on user
 	userAddr = strings.ToLower(trade.UserAddress.String())
-	email, regTime, err := self.userStorage.GetUserOfAddress(userAddr)
+	email, regTime, err := self.userStorage.GetUserOfAddress(trade.UserAddress)
 	if err != nil {
 		return
 	}
