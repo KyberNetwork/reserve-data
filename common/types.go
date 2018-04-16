@@ -348,13 +348,13 @@ type ExchangePrice struct {
 }
 
 func FloatToBigInt(amount float64, decimal int64) *big.Int {
-	FAmount := big.NewFloat(amount)
-	power := math.Pow10(int(decimal))
-	FDecimal := (big.NewFloat(0)).SetFloat64(power)
-	FAmount.Mul(FAmount, FDecimal)
-	IAmount := big.NewInt(0)
-	FAmount.Int(IAmount)
-	return IAmount
+	// 6 is our smallest precision
+	if decimal < 6 {
+		return big.NewInt(int64(amount * math.Pow10(int(decimal))))
+	} else {
+		result := big.NewInt(int64(amount * math.Pow10(6)))
+		return result.Mul(result, big.NewInt(0).Exp(big.NewInt(10), big.NewInt(decimal-6), nil))
+	}
 }
 
 func BigToFloat(b *big.Int, decimal int64) float64 {
