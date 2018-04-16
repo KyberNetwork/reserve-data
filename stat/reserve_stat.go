@@ -351,6 +351,20 @@ func (self ReserveStats) GetReserveRates(fromTime, toTime uint64, reserveAddr et
 	return result, err
 }
 
+func (self ReserveStats) GetUserList(fromTime, toTime uint64, timezone int64) (common.UserListResponse, error) {
+	fromTime, toTime, err := validateTimeWindow(fromTime, toTime, "D")
+	if err != nil {
+		return []common.UserInfo{}, err
+	}
+	result := common.UserListResponse{}
+	data, err := self.statStorage.GetUserList(fromTime, toTime, timezone)
+	for _, v := range data {
+		result = append(result, v)
+	}
+	sort.Sort(sort.Reverse(result))
+	return result, err
+}
+
 func (self ReserveStats) UpdateUserAddresses(userID string, addrs []ethereum.Address, timestamps []uint64) error {
 	addresses := []string{}
 	for _, addr := range addrs {

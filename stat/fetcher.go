@@ -29,6 +29,7 @@ const (
 	USER_AGGREGATION           string = "user_aggregation"
 	VOLUME_STAT_AGGREGATION    string = "volume_stat_aggregation"
 	BURNFEE_AGGREGATION        string = "burn_fee_aggregation"
+	USER_INFO_AGGREGATION      string = "user_info_aggregation"
 	RESERVE_VOLUME_AGGREGATION string = "reserve_volume_aggregation"
 )
 
@@ -422,6 +423,42 @@ func (self *Fetcher) RunUserAggregation(t time.Time) {
 	}
 }
 
+func (self *Fetcher) RunUserInfoAggregation(t time.Time) {
+	// get trade log from db
+	fromTime, err := self.statStorage.GetLastProcessedTradeLogTimepoint(USER_INFO_AGGREGATION)
+	if err != nil {
+		log.Printf("get trade log processor state from db failed: %v", err)
+		return
+	}
+	fromTime, toTime := self.GetTradeLogTimeRange(fromTime, t)
+	tradeLogs, err := self.logStorage.GetTradeLogs(fromTime, toTime)
+	if err != nil {
+		log.Printf("get trade log from db failed: %v", err)
+		return
+	}
+	if len(tradeLogs) > 0 {
+		var last uint64
+		userInfos := map[string]common.UserInfoTimezone{}
+		for _, trade := range tradeLogs {
+			self.aggregateUserInfo(trade, userInfos)
+			if trade.Timestamp > last {
+				last = trade.Timestamp
+			}
+		}
+		self.statStorage.SetUserList(userInfos, last)
+	} else {
+		l, err := self.logStorage.GetLastTradeLog()
+		if err != nil {
+			log.Printf("can't get last trade log: err(%s)", err)
+			return
+		} else {
+			if toTime < l.Timestamp {
+				self.statStorage.SetLastProcessedTradeLogTimepoint(USER_INFO_AGGREGATION, toTime)
+			}
+		}
+	}
+}
+
 func runAggregationInParallel(wg *sync.WaitGroup, t time.Time, f func(t time.Time)) {
 	defer wg.Done()
 	f(t)
@@ -442,6 +479,8 @@ func (self *Fetcher) RunTradeLogProcessor() {
 		go runAggregationInParallel(&wg, t, self.RunWalletStatAggregation)
 		wg.Add(1)
 		go runAggregationInParallel(&wg, t, self.RunCountryStatAggregation)
+		wg.Add(1)
+		go runAggregationInParallel(&wg, t, self.RunUserInfoAggregation)
 		wg.Wait()
 	}
 }
@@ -787,6 +826,57 @@ func (self *Fetcher) aggregateBurnFeeStats(trade common.TradeLog, burnFeeStats m
 	}
 	self.aggregateBurnfee(fmt.Sprintf("%s_%s", reserveAddr, walletAddr), walletFee, trade, burnFeeStats)
 	return nil
+}
+
+func (self *Fetcher) aggregateUserInfo(trade common.TradeLog, userInfos map[string]common.UserInfoTimezone) {
+	userAddr := common.AddrToString(trade.UserAddress)
+	srcAddr := common.AddrToString(trade.SrcAddress)
+	dstAddr := common.AddrToString(trade.DestAddress)
+
+	var srcAmount, destAmount, ethAmount float64
+	for _, token := range common.SupportedTokens {
+		if strings.ToLower(token.Address) == srcAddr {
+			srcAmount = common.BigToFloat(trade.SrcAmount, token.Decimal)
+			if token.IsETH() {
+				ethAmount = srcAmount
+			}
+		}
+
+		if strings.ToLower(token.Address) == dstAddr {
+			destAmount = common.BigToFloat(trade.DestAmount, token.Decimal)
+			if token.IsETH() {
+				ethAmount = destAmount
+			}
+		}
+	}
+	email, _, err := self.userStorage.GetUserOfAddress(userAddr)
+	if err != nil {
+		return
+	}
+	userAddrInfo, exist := userInfos[userAddr]
+	if !exist {
+		userAddrInfo = common.UserInfoTimezone{}
+	}
+	for timezone := START_TIMEZONE; timezone <= END_TIMEZONE; timezone++ {
+		freq := fmt.Sprintf("%s%d", TIMEZONE_BUCKET_PREFIX, timezone)
+		timestamp := getTimestampFromTimeZone(trade.Timestamp, freq)
+		timezoneInfo, exist := userAddrInfo[timezone]
+		if !exist {
+			timezoneInfo = map[uint64]common.UserInfo{}
+		}
+		currentUserInfo, exist := timezoneInfo[timestamp]
+		if !exist {
+			currentUserInfo = common.UserInfo{
+				Email: email,
+				Addr:  userAddr,
+			}
+		}
+		currentUserInfo.ETHVolume += ethAmount
+		currentUserInfo.USDVolume += trade.FiatAmount
+		timezoneInfo[timestamp] = currentUserInfo
+		userAddrInfo[timezone] = timezoneInfo
+		userInfos[userAddr] = userAddrInfo
+	}
 }
 
 func (self *Fetcher) aggregateBurnfee(key string, fee float64, trade common.TradeLog, burnFeeStats map[string]common.BurnFeeStatsTimeZone) {

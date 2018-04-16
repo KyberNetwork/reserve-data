@@ -35,6 +35,9 @@ type StatStorage interface {
 	SetFirstTradeInDay(userAddr map[string]uint64, lastProcessedTimepoint uint64) error
 	GetFirstTradeInDay(userAddr string, timepoint uint64, timezone int64) uint64
 
+	SetUserList(userInfos map[string]common.UserInfoTimezone, lastProcessedTimepoint uint64) error
+	GetUserList(fromTime, toTime uint64, timezone int64) (map[string]common.UserInfo, error)
+
 	SetTradeSummary(stats map[string]common.MetricStatsTimeZone, lastProcessedTimepoint uint64) error
 	GetTradeSummary(fromTime, toTime uint64, timezone int64) (common.StatTicks, error)
 }
