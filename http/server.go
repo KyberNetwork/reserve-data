@@ -2275,6 +2275,63 @@ func (self *HTTPServer) GetUserList(c *gin.Context) {
 	)
 }
 
+func (self *HTTPServer) GetReserveVolume(c *gin.Context) {
+	fromTime, _ := strconv.ParseUint(c.Query("fromTime"), 10, 64)
+	toTime, _ := strconv.ParseUint(c.Query("toTime"), 10, 64)
+	freq := c.Query("freq")
+	reserveAddr := c.Query("reserveAddr")
+	if reserveAddr == "" {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  "reserve address is required",
+			},
+		)
+		return
+	}
+	tokenName := c.Query("token")
+	if tokenName == "" {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  "token is required",
+			},
+		)
+		return
+	}
+	token, err := common.GetToken(tokenName)
+	if err != nil {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  err.Error(),
+			},
+		)
+		return
+	}
+	data, err := self.stat.GetReserveVolume(fromTime, toTime, freq, reserveAddr, token.Address)
+	if err != nil {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  err.Error(),
+			},
+		)
+		return
+	}
+	c.JSON(
+		http.StatusOK,
+		gin.H{
+			"success": true,
+			"data":    data,
+		},
+	)
+}
+
 func (self *HTTPServer) Run() {
 	if self.core != nil && self.app != nil {
 		self.r.GET("/prices-version", self.AllPricesVersion)
@@ -2357,63 +2414,6 @@ func (self *HTTPServer) Run() {
 	}
 
 	self.r.Run(self.host)
-}
-
-func (self *HTTPServer) GetReserveVolume(c *gin.Context) {
-	fromTime, _ := strconv.ParseUint(c.Query("fromTime"), 10, 64)
-	toTime, _ := strconv.ParseUint(c.Query("toTime"), 10, 64)
-	freq := c.Query("freq")
-	reserveAddr := c.Query("reserveAddr")
-	if reserveAddr == "" {
-		c.JSON(
-			http.StatusOK,
-			gin.H{
-				"success": false,
-				"reason":  "reserve address is required",
-			},
-		)
-		return
-	}
-	tokenName := c.Query("token")
-	if tokenName == "" {
-		c.JSON(
-			http.StatusOK,
-			gin.H{
-				"success": false,
-				"reason":  "token is required",
-			},
-		)
-		return
-	}
-	token, err := common.GetToken(tokenName)
-	if err != nil {
-		c.JSON(
-			http.StatusOK,
-			gin.H{
-				"success": false,
-				"reason":  err.Error(),
-			},
-		)
-		return
-	}
-	data, err := self.stat.GetReserveVolume(fromTime, toTime, freq, reserveAddr, token.Address)
-	if err != nil {
-		c.JSON(
-			http.StatusOK,
-			gin.H{
-				"success": false,
-				"reason":  err.Error(),
-			},
-		)
-		return
-	}
-	c.JSON(
-		http.StatusOK,
-		gin.H{
-			"success": true,
-			"data":    data,
-		},
-	)
 }
 
 func NewHTTPServer(
