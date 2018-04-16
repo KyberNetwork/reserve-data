@@ -2,7 +2,8 @@ package stat
 
 import (
 	"fmt"
-	"strings"
+
+	ethereum "github.com/ethereum/go-ethereum/common"
 
 	"github.com/KyberNetwork/reserve-data/common"
 )
@@ -23,25 +24,18 @@ func (self *RateStorageTest) TestReserveRates() error {
 		BlockNumber:   333,
 		ToBlockNumber: 444,
 	}
-	err = self.storage.StoreReserveRates(TESTASSETADDR, rate, 111)
+	testAsset := ethereum.HexToAddress(TESTASSETADDR)
+	err = self.storage.StoreReserveRates(testAsset, rate, 111)
 	if err != nil {
 		return err
 	}
-	result, err := self.storage.GetReserveRates(0, 8640000, strings.ToLower(TESTASSETADDR))
+	result, err := self.storage.GetReserveRates(0, 8640000, testAsset)
 	if result == nil || len(result) < 1 {
-		return fmt.Errorf("GetReserverRates return empty result (LOWER CASE ADDR)")
+		return fmt.Errorf("GetReserverRates return empty result ")
 	}
 	rate = result[0]
 	if rate.BlockNumber != 333 {
-		return fmt.Errorf("Get ReserverRates return wrong result, expect blockNumber 333, got %d (LOWER CASE ADDR)", rate.BlockNumber)
-	}
-	result, err = self.storage.GetReserveRates(0, 8640000, strings.ToUpper(TESTASSETADDR))
-	if result == nil || len(result) < 1 {
-		return fmt.Errorf("GetReserverRates return empty result (UPPER CASE ADDR)")
-	}
-	rate = result[0]
-	if rate.BlockNumber != 333 {
-		return fmt.Errorf("Get ReserverRates return wrong result, expect blockNumber 333, got %d (UPPER CASE ADDR)", rate.BlockNumber)
+		return fmt.Errorf("Get ReserverRates return wrong result, expect blockNumber 333, got %d ", rate.BlockNumber)
 	}
 	return err
 }
