@@ -753,7 +753,18 @@ func (self *Fetcher) aggregateVolumeStats(trade common.TradeLog, volumeStats map
 	self.aggregateVolumeStat(trade, userAddr, srcAmount, ethAmount, trade.FiatAmount, volumeStats)
 
 	// reserve volume
-	self.aggregateVolumeStat(trade, reserveAddr, srcAmount, destAmount, trade.FiatAmount, volumeStats)
+	eth := common.MustGetToken("ETH")
+	var assetAddr string
+	var assetAmount float64
+	if srcAddr != eth.Address {
+		assetAddr = srcAddr
+		assetAmount = srcAmount
+	} else {
+		assetAddr = dstAddr
+		assetAmount = destAmount
+	}
+	key := fmt.Sprintf("%s_%s", reserveAddr, assetAddr)
+	self.aggregateVolumeStat(trade, key, assetAmount, ethAmount, trade.FiatAmount, volumeStats)
 	return nil
 }
 

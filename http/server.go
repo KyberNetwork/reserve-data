@@ -2250,7 +2250,18 @@ func (self *HTTPServer) GetReserveVolume(c *gin.Context) {
 		)
 		return
 	}
-	data, err := self.stat.GetReserveVolume(fromTime, toTime, freq, reserveAddr)
+	token := c.Query("token")
+	if token == "" {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  "token address is required",
+			},
+		)
+		return
+	}
+	data, err := self.stat.GetReserveVolume(fromTime, toTime, freq, reserveAddr, token)
 	if err != nil {
 		c.JSON(
 			http.StatusOK,

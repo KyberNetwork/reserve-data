@@ -695,10 +695,11 @@ func (self *BoltStatStorage) GetUserVolume(fromTime uint64, toTime uint64, freq 
 	return result, err
 }
 
-func (self *BoltStatStorage) GetReserveVolume(fromTime uint64, toTime uint64, freq string, reserveAddr string) (common.StatTicks, error) {
+func (self *BoltStatStorage) GetReserveVolume(fromTime uint64, toTime uint64, freq string, reserveAddr, token string) (common.StatTicks, error) {
 	result := common.StatTicks{}
 	err := self.db.Update(func(tx *bolt.Tx) error {
-		b, _ := tx.CreateBucketIfNotExists([]byte(reserveAddr))
+		bucket_key := fmt.Sprintf("%s_%s", reserveAddr, token)
+		b, _ := tx.CreateBucketIfNotExists([]byte(bucket_key))
 		freqBkName, _ := getBucketNameByFreq(freq)
 		freqBk, _ := b.CreateBucketIfNotExists([]byte(freqBkName))
 
