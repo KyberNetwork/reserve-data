@@ -14,7 +14,7 @@ type StatStorage interface {
 	GetLastProcessedTradeLogTimepoint(statType string) (timepoint uint64, err error)
 	SetLastProcessedTradeLogTimepoint(statType string, timepoint uint64) error
 
-	SetVolumeStat(volumeStat map[string]common.VolumeStatsTimeZone, lastProcessedTimepoint uint64) error
+	SetVolumeStat(volumeStat map[ethereum.Address]common.VolumeStatsTimeZone, lastProcessedTimepoint uint64) error
 	SetBurnFeeStat(burnFeeStat map[string]common.BurnFeeStatsTimeZone, lastProcessedTimepoint uint64) error
 
 	SetWalletAddress(walletAddr ethereum.Address) error
@@ -27,10 +27,10 @@ type StatStorage interface {
 	GetCountryStats(fromTime, toTime uint64, country string, tzparam int64) (common.StatTicks, error)
 
 	SetFirstTradeEver(tradeLogs *[]common.TradeLog, lastProcessTimePoint uint64) error
-	GetFirstTradeEver(userAddr ethereum.Address) uint64
+	GetFirstTradeEver(userAddr ethereum.Address) (uint64, error)
 	GetAllFirstTradeEver() (map[ethereum.Address]uint64, error)
 	SetFirstTradeInDay(tradeLogs *[]common.TradeLog, lastProcessTimePoint uint64) error
-	GetFirstTradeInDay(userAddr ethereum.Address, timepoint uint64, timezone int64) uint64
+	GetFirstTradeInDay(userAddr ethereum.Address, timepoint uint64, timezone int64) (uint64, error)
 
 	SetTradeSummary(stats map[string]common.MetricStatsTimeZone, lastProcessedTimepoint uint64) error
 	GetTradeSummary(fromTime, toTime uint64, timezone int64) (common.StatTicks, error)

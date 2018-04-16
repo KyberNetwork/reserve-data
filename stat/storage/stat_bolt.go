@@ -248,6 +248,8 @@ func (self *BoltStatStorage) GetWalletAddress() ([]string, error) {
 func (self *BoltStatStorage) SetBurnFeeStat(burnFeeStats map[string]common.BurnFeeStatsTimeZone, lastProcessTimePoint uint64) error {
 	err := self.db.Update(func(tx *bolt.Tx) error {
 		for key, timezoneData := range burnFeeStats {
+			key = strings.ToLower(key)
+			log.Printf("key %v", key)
 			burnFeeBk, _ := tx.CreateBucketIfNotExists([]byte(key))
 			for _, freq := range []string{"M", "H", "D"} {
 				stats := timezoneData[freq]
@@ -277,10 +279,10 @@ func (self *BoltStatStorage) SetBurnFeeStat(burnFeeStats map[string]common.BurnF
 	return err
 }
 
-func (self *BoltStatStorage) SetVolumeStat(volumeStats map[string]common.VolumeStatsTimeZone, lastProcessTimePoint uint64) error {
+func (self *BoltStatStorage) SetVolumeStat(volumeStats map[ethereum.Address]common.VolumeStatsTimeZone, lastProcessTimePoint uint64) error {
 	err := self.db.Update(func(tx *bolt.Tx) error {
 		for asset, freqData := range volumeStats {
-			volumeBk, _ := tx.CreateBucketIfNotExists([]byte(asset))
+			volumeBk, _ := tx.CreateBucketIfNotExists([]byte(common.AddrToString(asset)))
 			for _, freq := range []string{"M", "H", "D"} {
 				stats := freqData[freq]
 				freqBkName, _ := getBucketNameByFreq(freq)
@@ -314,6 +316,7 @@ func (self *BoltStatStorage) SetVolumeStat(volumeStats map[string]common.VolumeS
 func (self *BoltStatStorage) SetWalletStat(stats map[string]common.MetricStatsTimeZone, lastProcessTimePoint uint64) error {
 	err := self.db.Update(func(tx *bolt.Tx) error {
 		for wallet, timeZoneStat := range stats {
+			wallet = strings.ToLower(wallet)
 			b, err := tx.CreateBucketIfNotExists([]byte(wallet))
 			if err != nil {
 				return err
@@ -385,6 +388,7 @@ func (self *BoltStatStorage) GetWalletStats(fromTime uint64, toTime uint64, wall
 
 func (self *BoltStatStorage) SetCountry(country string) error {
 	var err error
+	country = strings.ToLower(country)
 	err = self.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(COUNTRY_BUCKET))
 		err = b.Put([]byte(country), []byte("1"))
@@ -411,6 +415,7 @@ func (self *BoltStatStorage) SetCountryStat(stats map[string]common.MetricStatsT
 	var err error
 	err = self.db.Update(func(tx *bolt.Tx) error {
 		for country, timeZoneStat := range stats {
+			country = strings.ToLower(country)
 			b, err := tx.CreateBucketIfNotExists([]byte(country))
 			if err != nil {
 				return err
@@ -460,6 +465,7 @@ func (self *BoltStatStorage) SetCountryStat(stats map[string]common.MetricStatsT
 
 func (self *BoltStatStorage) GetCountryStats(fromTime, toTime uint64, country string, timezone int64) (common.StatTicks, error) {
 	result := common.StatTicks{}
+	country = strings.ToLower(country)
 	tzstring := fmt.Sprintf("%s%d", TIMEZONE_BUCKET_PREFIX, timezone)
 	self.db.Update(func(tx *bolt.Tx) error {
 		countryBk, _ := tx.CreateBucketIfNotExists([]byte(country))
@@ -514,15 +520,15 @@ func (self *BoltStatStorage) SetFirstTradeEver(userTradeLog *[]common.TradeLog, 
 	return err
 }
 
-func (self *BoltStatStorage) GetFirstTradeEver(userAddr ethereum.Address) uint64 {
+func (self *BoltStatStorage) GetFirstTradeEver(userAddr ethereum.Address) (uint64, error) {
 	result := uint64(0)
-	self.db.Update(func(tx *bolt.Tx) error {
+	err := self.db.Update(func(tx *bolt.Tx) error {
 		b, _ := tx.CreateBucketIfNotExists([]byte(USER_FIRST_TRADE_EVER))
 		v := b.Get([]byte(common.AddrToString(userAddr)))
 		result = bytesToUint64(v)
 		return nil
 	})
-	return result
+	return result, err
 }
 
 func (self *BoltStatStorage) GetAllFirstTradeEver() (map[ethereum.Address]uint64, error) {
@@ -532,7 +538,7 @@ func (self *BoltStatStorage) GetAllFirstTradeEver() (map[ethereum.Address]uint64
 		c := b.Cursor()
 		for k, v := c.First(); k != nil; k, v = c.Next() {
 			value := bytesToUint64(v)
-			result[ethereum.BytesToAddress(k)] = value
+			result[ethereum.HexToAddress(string(k))] = value
 		}
 		return nil
 	})
@@ -558,9 +564,9 @@ func (self *BoltStatStorage) DidTradeInDay(tx *bolt.Tx, userAddr string, timepoi
 	return result
 }
 
-func (self *BoltStatStorage) GetFirstTradeInDay(userAddr ethereum.Address, timepoint uint64, timezone int64) uint64 {
+func (self *BoltStatStorage) GetFirstTradeInDay(userAddr ethereum.Address, timepoint uint64, timezone int64) (uint64, error) {
 	result := uint64(0)
-	self.db.Update(func(tx *bolt.Tx) error {
+	err := self.db.Update(func(tx *bolt.Tx) error {
 		userStatBk, _ := tx.CreateBucketIfNotExists([]byte(USER_STAT_BUCKET))
 		freq := fmt.Sprintf("%s%d", TIMEZONE_BUCKET_PREFIX, timezone)
 		timestamp := getTimestampByFreq(timepoint, freq)
@@ -574,7 +580,7 @@ func (self *BoltStatStorage) GetFirstTradeInDay(userAddr ethereum.Address, timep
 		}
 		return nil
 	})
-	return result
+	return result, err
 }
 
 func (self *BoltStatStorage) SetFirstTradeInDay(tradeLogs *[]common.TradeLog, lastProcessTimePoint uint64) error {
@@ -586,7 +592,6 @@ func (self *BoltStatStorage) SetFirstTradeInDay(tradeLogs *[]common.TradeLog, la
 			for timezone := START_TIMEZONE; timezone <= END_TIMEZONE; timezone++ {
 				freq := fmt.Sprintf("%s%d", TIMEZONE_BUCKET_PREFIX, timezone)
 				timestamp := getTimestampByFreq(timepoint, freq)
-
 				timezoneBk, _ := userStatBk.CreateBucketIfNotExists(uint64ToBytes(uint64(timezone)))
 				userDailyBucket, _ := timezoneBk.CreateBucketIfNotExists(timestamp)
 				if !self.DidTradeInDay(tx, userAddr, timepoint, timezone) {
@@ -631,6 +636,7 @@ func (self *BoltStatStorage) GetAssetVolume(fromTime uint64, toTime uint64, freq
 func (self *BoltStatStorage) GetBurnFee(fromTime uint64, toTime uint64, freq string, reserveAddr ethereum.Address) (common.StatTicks, error) {
 	result := common.StatTicks{}
 	err := self.db.Update(func(tx *bolt.Tx) error {
+		log.Printf("%v", common.AddrToString(reserveAddr))
 		b, _ := tx.CreateBucketIfNotExists([]byte(common.AddrToString(reserveAddr)))
 		freqBkName, _ := getBucketNameByFreq(freq)
 
@@ -701,6 +707,7 @@ func (self *BoltStatStorage) SetTradeSummary(tradeSummary map[string]common.Metr
 	var err error
 	err = self.db.Update(func(tx *bolt.Tx) error {
 		for key, stats := range tradeSummary {
+			key = strings.ToLower(key)
 			b, _ := tx.CreateBucketIfNotExists([]byte(key))
 			// update to timezone buckets
 			for i := START_TIMEZONE; i <= END_TIMEZONE; i++ {
