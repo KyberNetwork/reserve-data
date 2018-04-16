@@ -249,7 +249,6 @@ func (self *BoltStatStorage) SetBurnFeeStat(burnFeeStats map[string]common.BurnF
 	err := self.db.Update(func(tx *bolt.Tx) error {
 		for key, timezoneData := range burnFeeStats {
 			key = strings.ToLower(key)
-			log.Printf("key %v", key)
 			burnFeeBk, _ := tx.CreateBucketIfNotExists([]byte(key))
 			for _, freq := range []string{"M", "H", "D"} {
 				stats := timezoneData[freq]
@@ -636,7 +635,6 @@ func (self *BoltStatStorage) GetAssetVolume(fromTime uint64, toTime uint64, freq
 func (self *BoltStatStorage) GetBurnFee(fromTime uint64, toTime uint64, freq string, reserveAddr ethereum.Address) (common.StatTicks, error) {
 	result := common.StatTicks{}
 	err := self.db.Update(func(tx *bolt.Tx) error {
-		log.Printf("%v", common.AddrToString(reserveAddr))
 		b, _ := tx.CreateBucketIfNotExists([]byte(common.AddrToString(reserveAddr)))
 		freqBkName, _ := getBucketNameByFreq(freq)
 

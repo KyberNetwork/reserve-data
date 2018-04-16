@@ -216,6 +216,7 @@ func (self *BoltUserStorage) GetCategory(ethaddr ethereum.Address) (string, erro
 
 func (self *BoltUserStorage) GetAddressesOfUser(user string) ([]ethereum.Address, []uint64, error) {
 	var err error
+	user = strings.ToLower(user)
 	result := []ethereum.Address{}
 	timestamps := []uint64{}
 	err = self.db.View(func(tx *bolt.Tx) error {

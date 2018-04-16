@@ -3,7 +3,6 @@ package stat
 import (
 	"errors"
 	"fmt"
-	"log"
 
 	ethereum "github.com/ethereum/go-ethereum/common"
 )
@@ -74,10 +73,7 @@ func (self *UserStorageTest) TestUpdateUserAddressesThenUpdateAddressCategory() 
 	addr1 := ethereum.HexToAddress("0x8180a5ca4e3b94045e05a9313777955f7518d757")
 	time1 := uint64(1520825136556)
 	addr2 := ethereum.HexToAddress("0xcbac9e86e0b7160f1a8e4835ad01dd51c514afce")
-	addr4 := ethereum.HexToAddress("0xcbac9e86e0b7160f1a8e4835ad01dd51c514afce")
-	if addr2 != addr4 {
-		log.Printf("cant compare eth address")
-	}
+
 	time2 := uint64(1520825136557)
 	addr3 := ethereum.HexToAddress("0x0ccd5bd8eb6822d357d7aef833274502e8b4b8ac")
 	time3 := uint64(1520825136558)
@@ -98,9 +94,6 @@ func (self *UserStorageTest) TestUpdateUserAddressesThenUpdateAddressCategory() 
 		addr1: time1,
 		addr3: time3,
 	}
-	log.Printf("%v", addr1)
-	log.Printf("%v", addr2)
-	log.Printf("%v", addr4)
 
 	if len(pendingAddrs) != len(expectedAddresses) {
 		return errors.New(
