@@ -2250,18 +2250,29 @@ func (self *HTTPServer) GetReserveVolume(c *gin.Context) {
 		)
 		return
 	}
-	token := c.Query("token")
-	if token == "" {
+	tokenName := c.Query("token")
+	if tokenName == "" {
 		c.JSON(
 			http.StatusOK,
 			gin.H{
 				"success": false,
-				"reason":  "token address is required",
+				"reason":  "token is required",
 			},
 		)
 		return
 	}
-	data, err := self.stat.GetReserveVolume(fromTime, toTime, freq, reserveAddr, token)
+	token, err := common.GetToken(tokenName)
+	if err != nil {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  err.Error(),
+			},
+		)
+		return
+	}
+	data, err := self.stat.GetReserveVolume(fromTime, toTime, freq, reserveAddr, token.Address)
 	if err != nil {
 		c.JSON(
 			http.StatusOK,
