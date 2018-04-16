@@ -360,7 +360,7 @@ func (self *Fetcher) RunVolumeStatAggregation(t time.Time) {
 	if len(tradeLogs) > 0 {
 		var last uint64
 
-		volumeStats := map[string]common.VolumeStatsTimeZone{}
+		volumeStats := map[ethereum.Address]common.VolumeStatsTimeZone{}
 		for _, trade := range tradeLogs {
 			if err := self.aggregateVolumeStats(trade, volumeStats); err == nil {
 				if trade.Timestamp > last {
@@ -368,6 +368,7 @@ func (self *Fetcher) RunVolumeStatAggregation(t time.Time) {
 				}
 			}
 		}
+
 		// TODO: set last processed data here
 		self.statStorage.SetVolumeStat(volumeStats, last)
 		// self.statStorage.SetLastProcessedTradeLogTimepoint(VOLUME_STAT_AGGREGATION, last)
@@ -734,11 +735,11 @@ func (self *Fetcher) aggregateTradeSumary(trade common.TradeLog,
 	return nil
 }
 
-func (self *Fetcher) aggregateVolumeStats(trade common.TradeLog, volumeStats map[string]common.VolumeStatsTimeZone) error {
+func (self *Fetcher) aggregateVolumeStats(trade common.TradeLog, volumeStats map[ethereum.Address]common.VolumeStatsTimeZone) error {
 
-	srcAddr := common.AddrToString(trade.SrcAddress)
-	dstAddr := common.AddrToString(trade.DestAddress)
-	userAddr := common.AddrToString(trade.UserAddress)
+	srcAddr := trade.SrcAddress
+	dstAddr := trade.DestAddress
+	userAddr := trade.UserAddress
 
 	srcAmount, destAmount, ethAmount, _, _, _ := self.getTradeInfo(trade)
 	// token volume
@@ -793,9 +794,9 @@ func (self *Fetcher) aggregateBurnfee(key string, fee float64, trade common.Trad
 
 func (self *Fetcher) aggregateVolumeStat(
 	trade common.TradeLog,
-	assetAddr string,
+	assetAddr ethereum.Address,
 	assetAmount, ethAmount, fiatAmount float64,
-	assetVolumtStats map[string]common.VolumeStatsTimeZone) {
+	assetVolumtStats map[ethereum.Address]common.VolumeStatsTimeZone) {
 	for _, freq := range []string{"M", "H", "D"} {
 		timestamp := getTimestampFromTimeZone(trade.Timestamp, freq)
 
