@@ -3,8 +3,9 @@ package stat
 import (
 	"errors"
 	"fmt"
-	// "github.com/KyberNetwork/reserve-data/common"
-	// ethereum "github.com/ethereum/go-ethereum/common"
+	"log"
+
+	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
 // This test type enforces necessary logic required for a stat storage.
@@ -27,7 +28,7 @@ func NewUserStorageTest(storage UserStorage) *UserStorageTest {
 func (self *UserStorageTest) TestUpdateAddressCategory() error {
 	lowercaseAddr := "0x8180a5ca4e3b94045e05a9313777955f7518d757"
 	lowercaseCat := "0x4a"
-	addr := "0x8180a5CA4E3B94045e05A9313777955f7518D757"
+	addr := ethereum.HexToAddress("0x8180a5CA4E3B94045e05A9313777955f7518D757")
 	cat := "0x4A"
 	if err := self.storage.UpdateAddressCategory(addr, cat); err != nil {
 		return err
@@ -40,7 +41,7 @@ func (self *UserStorageTest) TestUpdateAddressCategory() error {
 		return errors.New(fmt.Sprintf("Got unexpected category. Expected(%s) Got(%s)",
 			lowercaseCat, gotCat))
 	}
-	gotCat, err = self.storage.GetCategory(lowercaseAddr)
+	gotCat, err = self.storage.GetCategory(ethereum.HexToAddress(lowercaseAddr))
 	if err != nil {
 		return err
 	}
@@ -48,7 +49,7 @@ func (self *UserStorageTest) TestUpdateAddressCategory() error {
 		return errors.New(fmt.Sprintf("Got unexpected category. Expected(%s) Got(%s)",
 			lowercaseCat, gotCat))
 	}
-	user, _, err := self.storage.GetUserOfAddress(lowercaseAddr)
+	user, _, err := self.storage.GetUserOfAddress(ethereum.HexToAddress(lowercaseAddr))
 	// initialy user is identical to the address
 	if err != nil {
 		return err
@@ -61,25 +62,29 @@ func (self *UserStorageTest) TestUpdateAddressCategory() error {
 	if err != nil {
 		return err
 	}
-	if addresses[0] != lowercaseAddr {
+	if addresses[0].Hex() != ethereum.HexToAddress(lowercaseAddr).Hex() {
 		return errors.New(fmt.Sprintf("Got unexpected addresses. Expected(%v) Got(%v)",
-			addresses, []string{lowercaseAddr}))
+			addresses[0].Hex(), []string{lowercaseAddr}))
 	}
 	return nil
 }
 
 func (self *UserStorageTest) TestUpdateUserAddressesThenUpdateAddressCategory() error {
 	email := "victor@kyber.network"
-	addr1 := "0x8180a5ca4e3b94045e05a9313777955f7518d757"
+	addr1 := ethereum.HexToAddress("0x8180a5ca4e3b94045e05a9313777955f7518d757")
 	time1 := uint64(1520825136556)
-	addr2 := "0xcbac9e86e0b7160f1a8e4835ad01dd51c514afce"
+	addr2 := ethereum.HexToAddress("0xcbac9e86e0b7160f1a8e4835ad01dd51c514afce")
+	addr4 := ethereum.HexToAddress("0xcbac9e86e0b7160f1a8e4835ad01dd51c514afce")
+	if addr2 != addr4 {
+		log.Printf("cant compare eth address")
+	}
 	time2 := uint64(1520825136557)
-	addr3 := "0x0ccd5bd8eb6822d357d7aef833274502e8b4b8ac"
+	addr3 := ethereum.HexToAddress("0x0ccd5bd8eb6822d357d7aef833274502e8b4b8ac")
 	time3 := uint64(1520825136558)
 	cat := "0x0000000000000000000000000000000000000000000000000000000000000004"
 
 	err := self.storage.UpdateUserAddresses(
-		email, []string{addr1, addr3}, []uint64{time1, time3},
+		email, []ethereum.Address{addr1, addr3}, []uint64{time1, time3},
 	)
 	if err != nil {
 		return err
@@ -89,28 +94,32 @@ func (self *UserStorageTest) TestUpdateUserAddressesThenUpdateAddressCategory() 
 	if err != nil {
 		return err
 	}
-	expectedAddresses := map[string]uint64{
+	expectedAddresses := map[ethereum.Address]uint64{
 		addr1: time1,
 		addr3: time3,
 	}
+	log.Printf("%v", addr1)
+	log.Printf("%v", addr2)
+	log.Printf("%v", addr4)
+
 	if len(pendingAddrs) != len(expectedAddresses) {
 		return errors.New(
 			fmt.Sprintf("Expected to get %d addresses, got %d addresses", len(expectedAddresses), len(pendingAddrs)))
 	}
 	for _, addr := range pendingAddrs {
 		if _, found := expectedAddresses[addr]; !found {
-			return errors.New(fmt.Sprintf("Expected to find %s, got not found", addr))
+			return errors.New(fmt.Sprintf("Expected to find %v, got not found", addr))
 		}
 	}
 	self.storage.UpdateUserAddresses(
-		email, []string{addr1, addr2}, []uint64{time1, time2},
+		email, []ethereum.Address{addr1, addr2}, []uint64{time1, time2},
 	)
 	// test if pending addresses are correct
 	pendingAddrs, err = self.storage.GetPendingAddresses()
 	if err != nil {
 		return err
 	}
-	expectedAddresses = map[string]uint64{
+	expectedAddresses = map[ethereum.Address]uint64{
 		addr1: time1,
 		addr2: time2,
 	}
@@ -126,14 +135,14 @@ func (self *UserStorageTest) TestUpdateUserAddressesThenUpdateAddressCategory() 
 	// Start receiving cat logs
 	self.storage.UpdateAddressCategory(addr1, cat)
 	self.storage.UpdateUserAddresses(
-		email, []string{addr1, addr2}, []uint64{time1, time2},
+		email, []ethereum.Address{addr1, addr2}, []uint64{time1, time2},
 	)
 	// test if pending addresses are correct
 	pendingAddrs, err = self.storage.GetPendingAddresses()
 	if err != nil {
 		return err
 	}
-	expectedAddresses = map[string]uint64{
+	expectedAddresses = map[ethereum.Address]uint64{
 		addr2: time2,
 	}
 	if len(pendingAddrs) != len(expectedAddresses) {
@@ -152,7 +161,7 @@ func (self *UserStorageTest) TestUpdateUserAddressesThenUpdateAddressCategory() 
 		return err
 	}
 	// test addresses of user
-	expectedAddresses = map[string]uint64{
+	expectedAddresses = map[ethereum.Address]uint64{
 		addr1: time1,
 		addr2: time2,
 	}
@@ -194,17 +203,17 @@ func (self *UserStorageTest) TestUpdateUserAddressesThenUpdateAddressCategory() 
 func (self *UserStorageTest) TestUpdateAddressCategoryThenUpdateUserAddresses() error {
 	email := "Victor@kyber.network"
 	lowercaseEmail := "victor@kyber.network"
-	addr1 := "0x8180a5CA4E3B94045e05A9313777955f7518D757"
+	addr1 := ethereum.HexToAddress("0x8180a5CA4E3B94045e05A9313777955f7518D757")
 	time1 := uint64(1520825136556)
 	lowercaseAddr1 := "0x8180a5ca4e3b94045e05a9313777955f7518d757"
-	addr2 := "0xcbac9e86e0b7160f1a8e4835ad01dd51c514afce"
+	addr2 := ethereum.HexToAddress("0xcbac9e86e0b7160f1a8e4835ad01dd51c514afce")
 	time2 := uint64(1520825136557)
 	cat := "0x4A"
 
 	self.storage.UpdateAddressCategory(addr1, cat)
 	self.storage.UpdateAddressCategory(addr2, cat)
 	err := self.storage.UpdateUserAddresses(
-		email, []string{addr1, addr2}, []uint64{time1, time2},
+		email, []ethereum.Address{addr1, addr2}, []uint64{time1, time2},
 	)
 	if err != nil {
 		return err
@@ -213,9 +222,9 @@ func (self *UserStorageTest) TestUpdateAddressCategoryThenUpdateUserAddresses() 
 	if err != nil {
 		return err
 	}
-	expectedAddresses := map[string]uint64{
-		lowercaseAddr1: time1,
-		addr2:          time2,
+	expectedAddresses := map[ethereum.Address]uint64{
+		ethereum.HexToAddress(lowercaseAddr1): time1,
+		addr2: time2,
 	}
 	if len(gotAddresses) != len(expectedAddresses) {
 		return errors.New(

@@ -220,8 +220,16 @@ func (self ReserveStats) GetCatLogs(fromTime uint64, toTime uint64) ([]common.Se
 	return self.logStorage.GetCatLogs(fromTime, toTime)
 }
 
-func (self ReserveStats) GetPendingAddresses() ([]ethereum.Address, error) {
-	return self.userStorage.GetPendingAddresses()
+func (self ReserveStats) GetPendingAddresses() ([]string, error) {
+	addresses, err := self.userStorage.GetPendingAddresses()
+	if err != nil {
+		return nil, err
+	}
+	result := []string{}
+	for _, addr := range addresses {
+		result = append(result, common.AddrToString(addr))
+	}
+	return result, nil
 }
 
 func (self ReserveStats) RunAnalyticStorageController() {
