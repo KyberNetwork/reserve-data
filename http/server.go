@@ -2250,7 +2250,7 @@ func (self *HTTPServer) GetUserList(c *gin.Context) {
 			http.StatusOK,
 			gin.H{
 				"success": false,
-				"reason":  err.Error(),
+				"reason":  fmt.Sprintf("timeZone is required: %s", err.Error()),
 			},
 		)
 		return
