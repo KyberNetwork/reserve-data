@@ -367,8 +367,6 @@ func (self *Fetcher) RunVolumeStatAggregation(t time.Time) {
 				}
 			}
 		}
-
-		// TODO: set last processed data here
 		self.statStorage.SetVolumeStat(volumeStats, last)
 		// self.statStorage.SetLastProcessedTradeLogTimepoint(VOLUME_STAT_AGGREGATION, last)
 	} else {
