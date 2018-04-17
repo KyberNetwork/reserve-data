@@ -126,6 +126,75 @@
       "maxTotalImbalance": "123819203326",
       "internal use": true
     },
+    "BQX": {
+      "name": "Ethos",
+      "decimals": 8,
+      "address": "0x5Af2Be193a6ABCa9c8817001F45744777Db30756",
+      "minimalRecordResolution": "10000",
+      "maxPerBlockImbalance": "127620338002",
+      "maxTotalImbalance": "127620338002",
+      "internal use": true
+    },
+
+    "ADX": {
+      "name": "AdEx",
+      "decimals": 4,
+      "address": "0x4470BB87d77b963A013DB939BE332f927f2b992e",
+      "minimalRecordResolution" : "10",
+      "maxPerBlockImbalance" : "1925452883",
+      "maxTotalImbalance" : "1925452883",
+      "internal use": false
+    },
+
+    "AST": {
+      "name": "AirSwap",
+      "decimals": 4,
+      "address": "0x27054b13b1b798b345b591a4d22e6562d47ea75a",
+      "minimalRecordResolution" : "10",
+      "maxPerBlockImbalance" : "1925452883",
+      "maxTotalImbalance" : "1925452883",
+      "internal use": true
+    },
+
+    "RCN": {
+      "name": "Ripio Credit Network",
+      "decimals": 18,
+      "address": "0xf970b8e36e23f7fc3fd752eea86f8be8d83375a6",
+      "minimalRecordResolution" : "10",
+      "maxPerBlockImbalance" : "1925452883",
+      "maxTotalImbalance" : "1925452883",
+      "internal use": false
+    },
+
+    "ZIL": {
+      "name": "Zilliqa",
+      "decimals": 12,
+      "address": "0x05f4a42e251f2d52b8ed15e9fedaacfcef1fad27",
+      "minimalRecordResolution" : "10",
+      "maxPerBlockImbalance" : "1925452883",
+      "maxTotalImbalance" : "1925452883",
+      "internal use": true
+    },
+
+    "LINK": {
+      "name": "Chain Link",
+      "decimals": 18,
+      "address": "0x514910771af9ca656af840dff83e8264ecf986ca",
+      "minimalRecordResolution" : "10",
+      "maxPerBlockImbalance" : "1925452883",
+      "maxTotalImbalance" : "1925452883",
+      "internal use": true
+    },
+
+    "DAI": {
+      "name" : "DAI",
+      "decimals": 18,
+      "address": "0x89d24a6b4ccb1b6faa2625fe562bdd9a23260359",
+      "minimalRecordResolution": "1000000000000000",
+      "maxPerBlockImbalance": "2711997842670896021504",
+      "maxTotalImbalance": "3833713935933528080384",
+      "internal use": false
+    },
     "ETH": {
       "name": "Ethereum",
       "decimals": 18,
