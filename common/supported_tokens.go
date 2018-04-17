@@ -43,7 +43,7 @@ func (self *SupportedTokens) AddInternalToken(t Token) {
 	self.idToToken[strings.ToUpper(t.ID)] = t
 	self.addrToToken[strings.ToLower(t.Address)] = t
 
-	self.iTokens = append(self.tokens, t)
+	self.iTokens = append(self.iTokens, t)
 	self.iIDToToken[strings.ToUpper(t.ID)] = t
 	self.iAddrToToken[strings.ToLower(t.Address)] = t
 }
@@ -56,7 +56,7 @@ func (self *SupportedTokens) AddExternalToken(t Token) {
 	self.idToToken[strings.ToUpper(t.ID)] = t
 	self.addrToToken[strings.ToLower(t.Address)] = t
 
-	self.eTokens = append(self.tokens, t)
+	self.eTokens = append(self.eTokens, t)
 	self.eIDToToken[strings.ToUpper(t.ID)] = t
 	self.eAddrToToken[strings.ToLower(t.Address)] = t
 }

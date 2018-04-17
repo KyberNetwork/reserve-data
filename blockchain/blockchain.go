@@ -95,6 +95,7 @@ func (self *Blockchain) LoadAndSetTokenIndices() error {
 	tokens := []ethereum.Address{}
 	self.tokenIndices = map[string]tbindex{}
 
+	log.Printf("tokens: %v", self.tokens)
 	for _, tok := range self.tokens {
 		if tok.ID != "ETH" {
 			tokens = append(tokens, ethereum.HexToAddress(tok.Address))
@@ -104,6 +105,7 @@ func (self *Blockchain) LoadAndSetTokenIndices() error {
 		}
 	}
 	opts := self.GetCallOpts(0)
+	log.Printf("tokens: %v", tokens)
 	bulkIndices, indicesInBulk, err := self.GeneratedGetTokenIndicies(
 		opts,
 		self.pricingAddr,
