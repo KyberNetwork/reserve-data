@@ -556,7 +556,6 @@ func (self *Fetcher) RunLogFetcher() {
 				continue
 			}
 			nextBlock, err := self.FetchLogs(lastBlock+1, toBlock, timepoint)
-			//crash
 			if err != nil {
 				// in case there is error, we roll back and try it again.
 				// dont have to do anything here. just continute with the loop.
