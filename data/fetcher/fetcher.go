@@ -49,9 +49,12 @@ func (self *Fetcher) AddExchange(exchange Exchange) {
 		exchangeStatus = map[string]common.ExStatus{}
 	}
 	exchangeID := string(exchange.ID())
-	exchangeStatus[exchangeID] = common.ExStatus{
-		Timestamp: common.GetTimepoint(),
-		Status:    true,
+	_, exist := exchangeStatus[exchangeID]
+	if !exist {
+		exchangeStatus[exchangeID] = common.ExStatus{
+			Timestamp: common.GetTimepoint(),
+			Status:    true,
+		}
 	}
 	self.storage.UpdateExchangeStatus(exchangeStatus)
 }
