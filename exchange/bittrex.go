@@ -69,6 +69,7 @@ func (self *Bittrex) UpdatePrecisionLimit(pair common.TokenPair, symbols []BittP
 			exchangePrecisionLimit.Precision.Price = 8
 			// update limit
 			exchangePrecisionLimit.AmountLimit.Min = symbol.MinAmount
+			exchangePrecisionLimit.MinNotional = 0.02
 			self.exchangeInfo.Update(pair.PairID(), exchangePrecisionLimit)
 			break
 		}
