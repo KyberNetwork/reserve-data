@@ -186,7 +186,7 @@ func (self *StatStorageTest) TestVolumeStats() error {
 	testAsset := ethereum.HexToAddress(TESTASSETADDR)
 
 	tzvlStat := common.VolumeStatsTimeZone{"D": {0: vlStat}}
-	updates := map[ethereum.Address]common.VolumeStatsTimeZone{testAsset: tzvlStat}
+	updates := map[string]common.VolumeStatsTimeZone{TESTASSETADDR: tzvlStat}
 	err = self.storage.SetVolumeStat(updates, 0)
 	if err != nil {
 		return err
@@ -223,38 +223,49 @@ func (self *StatStorageTest) TestVolumeStats() error {
 		return fmt.Errorf("Wrong usd volume value returned: %v expected 4567.8 (UPPER CASE ADDR)", usdVol)
 	}
 
-	assetVol, err = self.storage.GetUserVolume(0, 86400000, "D", testAsset)
-	if (assetVol == nil) || len(assetVol) == 0 {
-		return fmt.Errorf("Can't find such record, addressess might not be in the correct case (LOWER CASE ADDR)")
+	//test user volume
+	testUser := ethereum.HexToAddress(TESTUSERADDR)
+	updates = map[string]common.VolumeStatsTimeZone{TESTUSERADDR: tzvlStat}
+	err = self.storage.SetVolumeStat(updates, 0)
+	if err != nil {
+		return err
 	}
-	result, ok = (assetVol[0]).(common.VolumeStats)
+	userVol, err := self.storage.GetUserVolume(0, 86400000, "D", testUser)
+	if (userVol == nil) || len(userVol) == 0 {
+		return fmt.Errorf("Test uservolume failed. Can't find such record, addressess might not be in the correct case")
+	}
+	result, ok = (userVol[0]).(common.VolumeStats)
 	if !ok {
-		return errors.New("Type mismatched: get user volume summary return wrong type (LOWER CASE ADDR)")
+		return errors.New("Type mismatched: get user volume summary return wrong type")
 	}
 	usdVol = (result.USDAmount)
 	if !ok {
-		return errors.New("Type mismatched: get user volume summary return missing field (LOWER CASE ADDR)")
+		return errors.New("Type mismatched: get user volume summary return missing field")
 	}
 	if usdVol != 4567.8 {
-		return fmt.Errorf("Wrong usd volume value returned: %v expected 4567.8 (LOWER CASE ADDR)", usdVol)
+		return fmt.Errorf("Wrong usd volume value returned: %v expected 4567.8", usdVol)
 	}
 
-	assetVol, err = self.storage.GetUserVolume(0, 86400000, "D", testAsset)
-	if (assetVol == nil) || len(assetVol) == 0 {
-		return fmt.Errorf("Can't find such record, addressess might not be in the correct case (UPPER CASE ADDR) ")
+	updates = map[string]common.VolumeStatsTimeZone{fmt.Sprintf("%s_%s", TESTASSETADDR, TESTUSERADDR): tzvlStat}
+	err = self.storage.SetVolumeStat(updates, 0)
+	if err != nil {
+		return err
 	}
-	result, ok = (assetVol[0]).(common.VolumeStats)
+	reserveVol, err := self.storage.GetReserveVolume(0, 86400000, "D", testAsset, testUser)
+	if (reserveVol == nil) || len(reserveVol) == 0 {
+		return fmt.Errorf("Can't find such record, addressess might not be in the correct case")
+	}
+	result, ok = (reserveVol[0]).(common.VolumeStats)
 	if !ok {
-		return errors.New("Type mismatched: get user volume summary return wrong type (UPPER CASE ADDR)")
+		return errors.New("Type mismatched: get user volume summary return wrong type")
 	}
 	usdVol = (result.USDAmount)
 	if !ok {
-		return errors.New("Type mismatched: get user volume summary return missing field (UPPER CASE ADDR)")
+		return errors.New("Type mismatched: get user volume summary return missing field")
 	}
 	if usdVol != 4567.8 {
-		return fmt.Errorf("Wrong usd volume value returned: %v expected 4567.8 (UPPER CASE ADDR)", usdVol)
+		return fmt.Errorf("Wrong usd volume value returned: %v expected 4567.8", usdVol)
 	}
-
 	return nil
 
 }

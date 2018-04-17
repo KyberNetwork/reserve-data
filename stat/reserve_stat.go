@@ -134,7 +134,7 @@ func (self ReserveStats) GetReserveVolume(fromTime, toTime uint64, freq, reserve
 
 	reserveAddr = strings.ToLower(reserveAddr)
 	tokenAddr = strings.ToLower(tokenAddr)
-	data, err = self.statStorage.GetReserveVolume(fromTime, toTime, freq, reserveAddr, tokenAddr)
+	data, err = self.statStorage.GetReserveVolume(fromTime, toTime, freq, ethereum.HexToAddress(reserveAddr), ethereum.HexToAddress(tokenAddr))
 	return data, err
 }
 
