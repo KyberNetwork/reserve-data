@@ -981,6 +981,7 @@ params:
  - toTime (integer) - to timestamp (millisecond)
 ```
 example:
+```
 curl -x GET \
   http://localhost:8000/get-price-analytic-data?fromTime=1522753160000&toTime=1522755792000
 ```
@@ -1051,6 +1052,28 @@ response:
 {"data":{"binance":{"trade":{"OMG":{"fromTime":123,"toTime":125,"isWarning":true,"msg":"3 times"}}}},"success":true}
 ```
 
+### Get reserve volume
+```
+<host>:8000/exchange-notifications
+GET request
+URL Params:
+  - fromTime (integer): millisecond
+  - toTime (integer): millisecond
+  - token (string): name of token to get volume (eg: ETH)
+  - reserveAddr (string): reserve address to get volume of token
+  - freq (string): frequency to get volume ("M", "H", "D" - Minute, Hour, Day)
+```
+
+example:
+```
+curl -x GET \
+http://localhost:8000/get-reserve-volume?fromTime=1522540800000&toTime=1522627200000&freq=D&token=KNC&reserveAddr=0x63825c174ab367968EC60f061753D3bbD36A0D8F
+```
+
+response:
+```
+{"data":{"1522540800000":{"eth_amount":9.971150530912206,"usd_amount":3838.6105908493496,"volume":3945.5899585215247},"1522627200000":{"eth_amount":14.749439804645423,"usd_amount":5766.650333669346,"volume":5884.90733954939}},"success":true}
+```
 
 ## Authentication
 All APIs that are marked with (signing required) must follow authentication mechanism below:

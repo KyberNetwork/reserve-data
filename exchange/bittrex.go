@@ -69,6 +69,7 @@ func (self *Bittrex) UpdatePrecisionLimit(pair common.TokenPair, symbols []BittP
 			exchangePrecisionLimit.Precision.Price = 8
 			// update limit
 			exchangePrecisionLimit.AmountLimit.Min = symbol.MinAmount
+			exchangePrecisionLimit.MinNotional = 0.02
 			self.exchangeInfo.Update(pair.PairID(), exchangePrecisionLimit)
 			break
 		}
@@ -328,8 +329,8 @@ func (self *Bittrex) FetchEBalanceData(timepoint uint64) (common.EBalanceEntry, 
 		if resp_data.Success {
 			for _, b := range resp_data.Result {
 				tokenID := b.Currency
-				_, exist := common.SupportedTokens[tokenID]
-				if exist {
+				_, err := common.GetInternalToken(tokenID)
+				if err == nil {
 					result.AvailableBalance[tokenID] = b.Available
 					result.DepositBalance[tokenID] = b.Pending
 					result.LockedBalance[tokenID] = 0

@@ -72,18 +72,14 @@ func GetConfig(kyberENV string, authEnbl bool, endpointOW string, noCore, enable
 		endpoint = setPath.endPoint
 	}
 
-	common.SupportedTokens = map[string]common.Token{}
-	common.ExternalTokens = map[string]common.Token{}
-	tokens := []common.Token{}
 	for id, t := range addressConfig.Tokens {
 		tok := common.Token{
 			id, t.Address, t.Decimals,
 		}
 		if t.KNReserveSupport {
-			common.SupportedTokens[id] = tok
-			tokens = append(tokens, tok)
+			common.RegisterInternalToken(tok)
 		} else {
-			common.ExternalTokens[id] = tok
+			common.RegisterExternalToken(tok)
 		}
 	}
 
@@ -120,7 +116,7 @@ func GetConfig(kyberENV string, authEnbl bool, endpointOW string, noCore, enable
 		Blockchain:              blockchain,
 		EthereumEndpoint:        endpoint,
 		BackupEthereumEndpoints: bkendpoints,
-		SupportedTokens:         tokens,
+		SupportedTokens:         common.InternalTokens(),
 		WrapperAddress:          wrapperAddr,
 		PricingAddress:          pricingAddr,
 		ReserveAddress:          reserveAddr,

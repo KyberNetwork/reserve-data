@@ -292,8 +292,8 @@ func (self *Huobi) FetchEBalanceData(timepoint uint64) (common.EBalanceEntry, er
 			balances := resp_data.Data.List
 			for _, b := range balances {
 				tokenID := strings.ToUpper(b.Currency)
-				_, exist := common.SupportedTokens[tokenID]
-				if exist {
+				_, err := common.GetInternalToken(tokenID)
+				if err == nil {
 					balance, _ := strconv.ParseFloat(b.Balance, 64)
 					if b.Type == "trade" {
 						result.AvailableBalance[tokenID] = balance
@@ -433,7 +433,7 @@ func (self *Huobi) DepositStatus(id common.ActivityID, txHash, currency string, 
 			//if it is mined, send 2nd tx.
 			log.Printf("found a new deposit status, which deposit %.5f %s. Procceed to send it to Huobi", sentAmount, currency)
 			//check if the token is supported
-			token, err := common.GetToken(currency)
+			token, err := common.GetInternalToken(currency)
 			if err != nil {
 				return "", err
 			}
@@ -486,7 +486,7 @@ func (self *Huobi) DepositStatus(id common.ActivityID, txHash, currency string, 
 					}
 				}
 			}
-			return "", errors.New(fmt.Sprintf("Deposit doesn't exist. This should not happen unless you have more than %d deposits at the same time.", len(common.SupportedTokens)*2))
+			return "", errors.New(fmt.Sprintf("Deposit doesn't exist. This should not happen unless you have more than %d deposits at the same time.", len(common.InternalTokens())*2))
 		} else if status == "failed" || status == "lost" {
 			data = common.TXEntry{tx2Entry.Hash, self.Name(), currency, "failed", "failed", sentAmount, common.GetTimestamp()}
 			err = self.storage.StoreIntermediateTx(id, data)
@@ -500,7 +500,7 @@ func (self *Huobi) DepositStatus(id common.ActivityID, txHash, currency string, 
 			return "failed", nil
 		}
 	}
-	return "", errors.New(fmt.Sprintf("Deposit doesn't exist. This should not happen unless you have more than %d deposits at the same time.", len(common.SupportedTokens)*2))
+	return "", errors.New(fmt.Sprintf("Deposit doesn't exist. This should not happen unless you have more than %d deposits at the same time.", len(common.InternalTokens())*2))
 }
 
 func (self *Huobi) WithdrawStatus(
