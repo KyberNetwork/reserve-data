@@ -556,6 +556,7 @@ func (self *Fetcher) RunLogFetcher() {
 				continue
 			}
 			nextBlock, err := self.FetchLogs(lastBlock+1, toBlock, timepoint)
+			//crash
 			if err != nil {
 				// in case there is error, we roll back and try it again.
 				// dont have to do anything here. just continute with the loop.
@@ -570,7 +571,6 @@ func (self *Fetcher) RunLogFetcher() {
 					nextBlock = toBlock
 				}
 				log.Printf("LogFetcher - update log block: %d", nextBlock)
-				self.logStorage.UpdateLogBlock(nextBlock, timepoint)
 				log.Printf("LogFetcher - nextBlock: %d", nextBlock)
 			}
 		} else {
@@ -632,6 +632,7 @@ func (self *Fetcher) FetchLogs(fromBlock uint64, toBlock uint64, timepoint uint6
 		}
 	} else {
 		if len(logs) > 0 {
+			var maxBlock uint64 = 0
 			for _, il := range logs {
 				if il.Type() == "TradeLog" {
 					l := il.(common.TradeLog)
@@ -651,14 +652,12 @@ func (self *Fetcher) FetchLogs(fromBlock uint64, toBlock uint64, timepoint uint6
 						log.Printf("LogFetcher - storing cat log failed, ignore that log and proceed with remaining logs, err: %+v", err)
 					}
 				}
-			}
-			var max uint64 = 0
-			for _, l := range logs {
-				if l.BlockNo() > max {
-					max = l.BlockNo()
+				if il.BlockNo() > maxBlock {
+					maxBlock = il.BlockNo()
+					self.logStorage.UpdateLogBlock(maxBlock, common.GetTimepoint())
 				}
 			}
-			return max, nil
+			return maxBlock, nil
 		} else {
 			return fromBlock - 1, nil
 		}
