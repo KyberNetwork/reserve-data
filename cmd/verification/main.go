@@ -93,7 +93,7 @@ func run(verify *Verification) {
 			verify.UpdateBaseUrl(*depositBaseUrl)
 		}
 		if *depositToken != "" {
-			token, err = common.GetToken(*depositToken)
+			token, err = common.GetInternalToken(*depositToken)
 			if err != nil {
 				log.Println(err.Error())
 				os.Exit(1)

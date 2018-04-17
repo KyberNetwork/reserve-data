@@ -328,8 +328,8 @@ func (self *Bittrex) FetchEBalanceData(timepoint uint64) (common.EBalanceEntry, 
 		if resp_data.Success {
 			for _, b := range resp_data.Result {
 				tokenID := b.Currency
-				_, exist := common.SupportedTokens[tokenID]
-				if exist {
+				_, err := common.GetInternalToken(tokenID)
+				if err == nil {
 					result.AvailableBalance[tokenID] = b.Available
 					result.DepositBalance[tokenID] = b.Pending
 					result.LockedBalance[tokenID] = 0

@@ -126,11 +126,11 @@ func (self *Liqui) FetchEBalanceData(timepoint uint64) (common.EBalanceEntry, er
 			result.AvailableBalance = map[string]float64{}
 			result.LockedBalance = map[string]float64{}
 			result.DepositBalance = map[string]float64{}
-			for tokenID := range common.SupportedTokens {
-				result.AvailableBalance[tokenID] = balances[strings.ToLower(tokenID)]
+			for _, token := range common.InternalTokens() {
+				result.AvailableBalance[token.ID] = balances[strings.ToLower(token.ID)]
 				// TODO: need to take open order into account
-				result.LockedBalance[tokenID] = 0
-				result.DepositBalance[tokenID] = 0
+				result.LockedBalance[token.ID] = 0
+				result.DepositBalance[token.ID] = 0
 			}
 		} else {
 			result.Valid = false

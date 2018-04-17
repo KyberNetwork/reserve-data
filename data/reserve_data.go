@@ -74,7 +74,7 @@ func (self ReserveData) GetAuthData(timepoint uint64) (common.AuthDataResponse, 
 		result.Data.ReserveBalances = map[string]common.BalanceResponse{}
 		for tokenID, balance := range data.ReserveBalances {
 			result.Data.ReserveBalances[tokenID] = balance.ToBalanceResponse(
-				common.MustGetToken(tokenID).Decimal,
+				common.MustGetInternalToken(tokenID).Decimal,
 			)
 		}
 		return result, err

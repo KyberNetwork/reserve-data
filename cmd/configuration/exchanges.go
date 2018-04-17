@@ -21,7 +21,7 @@ type ExchangePool struct {
 
 func AsyncUpdateDepositAddress(ex common.Exchange, tokenID, addr string, wait *sync.WaitGroup) {
 	defer wait.Done()
-	ex.UpdateDepositAddress(common.MustGetToken(tokenID), addr)
+	ex.UpdateDepositAddress(common.MustGetInternalToken(tokenID), addr)
 }
 func getBittrexInterface(kyberENV string) bittrex.Interface {
 	envInterface, err := BittrexInterfaces[kyberENV]

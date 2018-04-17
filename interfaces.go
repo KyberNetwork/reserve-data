@@ -16,6 +16,7 @@ type ReserveStats interface {
 	GetWalletFee(fromTime, toTime uint64, freq, reserveAddr, walletAddr string) (common.StatTicks, error)
 	GetWalletAddress() ([]string, error)
 	GetUserVolume(fromTime, toTime uint64, freq, userAddr string) (common.StatTicks, error)
+	GetReserveVolume(fromTime, toTime uint64, freq, reserveAddr, token string) (common.StatTicks, error)
 	GetTradeSummary(fromTime, toTime uint64, timezone int64) (common.StatTicks, error)
 
 	GetCapByUser(userID string) (*common.UserCap, error)
@@ -31,6 +32,8 @@ type ReserveStats interface {
 	GetGeoData(fromTime, toTime uint64, country string, tzparam int64) (common.StatTicks, error)
 	GetHeatMap(fromTime, toTime uint64, tzparam int64) (common.HeatmapResponse, error)
 	GetCountries() ([]string, error)
+
+	GetUserList(fromTime, toTime uint64, timezone int64) (common.UserListResponse, error)
 
 	RunDBController() error
 	Run() error

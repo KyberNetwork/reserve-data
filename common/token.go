@@ -3,7 +3,6 @@ package common
 import (
 	"errors"
 	"fmt"
-	"strings"
 )
 
 type Token struct {
@@ -33,8 +32,8 @@ func (self *TokenPair) PairID() TokenPairID {
 }
 
 func NewTokenPair(base, quote string) (TokenPair, error) {
-	bToken, err1 := GetToken(base)
-	qToken, err2 := GetToken(quote)
+	bToken, err1 := GetInternalToken(base)
+	qToken, err2 := GetInternalToken(quote)
 	if err1 != nil || err2 != nil {
 		return TokenPair{}, errors.New(fmt.Sprintf("%s or %s is not supported", base, quote))
 	} else {
@@ -49,24 +48,4 @@ func MustCreateTokenPair(base, quote string) TokenPair {
 	} else {
 		return pair
 	}
-}
-
-var SupportedTokens map[string]Token
-var ExternalTokens map[string]Token
-
-func GetToken(id string) (Token, error) {
-	t := SupportedTokens[strings.ToUpper(id)]
-	if t.ID == "" {
-		return t, errors.New(fmt.Sprintf("Token %s is not supported", id))
-	} else {
-		return t, nil
-	}
-}
-
-func MustGetToken(id string) Token {
-	t, e := GetToken(id)
-	if e != nil {
-		panic(e)
-	}
-	return t
 }

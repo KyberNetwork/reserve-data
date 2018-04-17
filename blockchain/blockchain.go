@@ -296,8 +296,8 @@ func (self *Blockchain) FetchBalanceData(reserve ethereum.Address, atBlock uint6
 	returnTime := common.GetTimestamp()
 	log.Printf("Fetcher ------> balances: %v, err: %s", balances, err)
 	if err != nil {
-		for tokenID, _ := range common.SupportedTokens {
-			result[tokenID] = common.BalanceEntry{
+		for _, token := range common.InternalTokens() {
+			result[token.ID] = common.BalanceEntry{
 				Valid:      false,
 				Error:      err.Error(),
 				Timestamp:  timestamp,
@@ -374,7 +374,7 @@ func (self *Blockchain) GetReserveRates(
 	rates := common.ReserveRates{}
 	rates.Timestamp = common.GetTimepoint()
 
-	ETH := common.MustGetToken("ETH")
+	ETH := common.ETHToken()
 	srcAddresses := []ethereum.Address{}
 	destAddresses := []ethereum.Address{}
 	for _, token := range tokens {
@@ -529,7 +529,7 @@ func (self *Blockchain) GetLogs(fromBlock uint64, toBlock uint64) ([]common.KNLo
 
 					if ethRate := self.GetEthRate(tradeLog.Timestamp / 1000000); ethRate != 0 {
 						// fiatAmount = amount * ethRate
-						eth := common.SupportedTokens["ETH"]
+						eth := common.ETHToken()
 						f := new(big.Float)
 						if strings.ToLower(eth.Address) == strings.ToLower(srcAddr.String()) {
 							f.SetInt(tradeLog.SrcAmount)
