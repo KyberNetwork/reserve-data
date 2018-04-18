@@ -152,6 +152,23 @@ func (self *Fetcher) FetchAllAuthData(timepoint uint64) {
 			pendings, timepoint)
 	}
 	wait.Wait()
+	// if we got tx info of withdrawals from the cexs, we have to
+	// update them to pending activities in order to also check
+	// their mining status.
+	// otherwise, if the txs are already mined and the reserve
+	// balances are already changed, their mining statuses will
+	// still be "", which can lead analytic to intepret the balances
+	// wrongly.
+	for _, activity := range pendings {
+		status, found := estatuses.Load(activity.ID)
+		if found {
+			activityStatus := status.(common.ActivityStatus)
+			if activity.Result["tx"] != nil && activity.Result["tx"].(string) == "" {
+				activity.Result["tx"] = activityStatus.Tx
+			}
+		}
+	}
+
 	self.FetchAuthDataFromBlockchain(
 		bbalances, &bstatuses, pendings)
 	snapshot.Block = self.currentBlock
@@ -226,21 +243,21 @@ func (self *Fetcher) FetchAuthDataFromBlockchain(
 	var statuses map[common.ActivityID]common.ActivityStatus
 	var err error
 	for {
-		log.Printf("DEBUG balances %s statuses: %s", balances, statuses)
+		log.Printf("DEBUG balances %v statuses: %v", balances, statuses)
 
 		preStatuses := self.FetchStatusFromBlockchain(pendings)
-		log.Printf("DEBUG prestatus %s ", preStatuses)
+		log.Printf("DEBUG prestatus %v ", preStatuses)
 
 		balances, err = self.FetchBalanceFromBlockchain()
-		log.Printf("DEBUG balances %s ", balances)
+		log.Printf("DEBUG balances %v ", balances)
 
 		if err != nil {
-			log.Printf("Fetching blockchain balances failed: %s\n", err)
+			log.Printf("Fetching blockchain balances failed: %v", err)
 			break
 		}
 
 		statuses = self.FetchStatusFromBlockchain(pendings)
-		log.Printf("DEBUG statuses %s ", statuses)
+		log.Printf("DEBUG statuses %v ", statuses)
 
 		if unchanged(preStatuses, statuses) {
 			break
