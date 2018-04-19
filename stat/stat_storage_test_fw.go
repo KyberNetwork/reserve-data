@@ -391,7 +391,7 @@ func (self *StatStorageTest) TestFirstTradeEver() error {
 		UserAddress: ethereum.HexToAddress(TESTUSERADDR),
 	}
 	userAddrs := []common.TradeLog{tradelog}
-	err = self.storage.SetFirstTradeEver(&userAddrs, 0)
+	err = self.storage.SetFirstTradeEver(&userAddrs)
 	if err != nil {
 		return err
 	}
@@ -422,7 +422,7 @@ func (self *StatStorageTest) TestFirstTradeEver() error {
 		UserAddress: ethereum.HexToAddress(TESTWALLETADDR),
 	}
 	userAddrs = []common.TradeLog{tradelog}
-	err = self.storage.SetFirstTradeEver(&userAddrs, 45678)
+	err = self.storage.SetFirstTradeEver(&userAddrs)
 	if err != nil {
 		return err
 	}
@@ -441,7 +441,7 @@ func (self *StatStorageTest) TestFirstTradeInDay() error {
 		UserAddress: ethereum.HexToAddress(TESTUSERADDR),
 	}
 	userAddrs := []common.TradeLog{tradelog}
-	err = self.storage.SetFirstTradeInDay(&userAddrs, 0)
+	err = self.storage.SetFirstTradeInDay(&userAddrs)
 	if err != nil {
 		return err
 	}

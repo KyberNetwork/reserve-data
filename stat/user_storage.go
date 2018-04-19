@@ -14,6 +14,8 @@ type UserStorage interface {
 	GetUserOfAddress(addr ethereum.Address) (email string, registeredTime uint64, err error)
 	GetLastProcessedCatLogTimepoint() (timepoint uint64, err error)
 
+	GetKycUsers() (map[string]uint64, error)
+
 	// returns all of addresses that's not pushed to the chain
 	// for kyced category
 	GetPendingAddresses() ([]ethereum.Address, error)
