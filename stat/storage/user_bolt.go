@@ -4,7 +4,9 @@ import (
 	"log"
 	"strings"
 
+	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/boltdb/bolt"
+	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
 const (
@@ -84,12 +86,12 @@ func (self *BoltUserStorage) GetLastProcessedCatLogTimepoint() (uint64, error) {
 	return result, err
 }
 
-func (self *BoltUserStorage) UpdateAddressCategory(address string, cat string) error {
+func (self *BoltUserStorage) UpdateAddressCategory(address ethereum.Address, cat string) error {
 	var err error
 	err = self.db.Update(func(tx *bolt.Tx) error {
 		// map address to category
 		b := tx.Bucket([]byte(ADDRESS_CATEGORY))
-		addrBytes := []byte(strings.ToLower(address))
+		addrBytes := []byte(common.AddrToString(address))
 		err = b.Put(addrBytes, []byte(strings.ToLower(cat)))
 		if err != nil {
 			return err
@@ -128,11 +130,11 @@ func (self *BoltUserStorage) UpdateAddressCategory(address string, cat string) e
 	return err
 }
 
-func (self *BoltUserStorage) UpdateUserAddresses(user string, addrs []string, timestamps []uint64) error {
+func (self *BoltUserStorage) UpdateUserAddresses(user string, addrs []ethereum.Address, timestamps []uint64) error {
 	user = strings.ToLower(user)
 	addresses := []string{}
 	for _, addr := range addrs {
-		addresses = append(addresses, strings.ToLower(addr))
+		addresses = append(addresses, common.AddrToString(addr))
 	}
 	var err error
 	err = self.db.Update(func(tx *bolt.Tx) error {
@@ -166,7 +168,7 @@ func (self *BoltUserStorage) UpdateUserAddresses(user string, addrs []string, ti
 			return err
 		}
 		for _, oldAddr := range oldAddrs {
-			if err = pendingBk.Delete([]byte(oldAddr)); err != nil {
+			if err = pendingBk.Delete([]byte(common.AddrToString(oldAddr))); err != nil {
 				return err
 			}
 		}
@@ -199,8 +201,8 @@ func (self *BoltUserStorage) UpdateUserAddresses(user string, addrs []string, ti
 }
 
 // returns lowercased category of an address
-func (self *BoltUserStorage) GetCategory(addr string) (string, error) {
-	addr = strings.ToLower(addr)
+func (self *BoltUserStorage) GetCategory(ethaddr ethereum.Address) (string, error) {
+	addr := common.AddrToString(ethaddr)
 	var err error
 	var result string
 	err = self.db.View(func(tx *bolt.Tx) error {
@@ -212,9 +214,10 @@ func (self *BoltUserStorage) GetCategory(addr string) (string, error) {
 	return result, err
 }
 
-func (self *BoltUserStorage) GetAddressesOfUser(user string) ([]string, []uint64, error) {
+func (self *BoltUserStorage) GetAddressesOfUser(user string) ([]ethereum.Address, []uint64, error) {
 	var err error
-	result := []string{}
+	user = strings.ToLower(user)
+	result := []ethereum.Address{}
 	timestamps := []uint64{}
 	err = self.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(ID_ADDRESSES))
@@ -222,7 +225,7 @@ func (self *BoltUserStorage) GetAddressesOfUser(user string) ([]string, []uint64
 		userBucket := b.Bucket([]byte(user))
 		if userBucket != nil {
 			userBucket.ForEach(func(k, v []byte) error {
-				addr := string(k)
+				addr := ethereum.HexToAddress(string(k))
 				result = append(result, addr)
 				timestamps = append(timestamps, bytesToUint64(timeBucket.Get(k)))
 				return nil
@@ -234,8 +237,8 @@ func (self *BoltUserStorage) GetAddressesOfUser(user string) ([]string, []uint64
 }
 
 // returns lowercased user identity of the address
-func (self *BoltUserStorage) GetUserOfAddress(addr string) (string, uint64, error) {
-	addr = strings.ToLower(addr)
+func (self *BoltUserStorage) GetUserOfAddress(ethaddr ethereum.Address) (string, uint64, error) {
+	addr := common.AddrToString(ethaddr)
 	var err error
 	var result string
 	var timestamp uint64
@@ -252,13 +255,13 @@ func (self *BoltUserStorage) GetUserOfAddress(addr string) (string, uint64, erro
 
 // returns all of addresses that's not pushed to the chain
 // for kyced category
-func (self *BoltUserStorage) GetPendingAddresses() ([]string, error) {
+func (self *BoltUserStorage) GetPendingAddresses() ([]ethereum.Address, error) {
 	var err error
-	result := []string{}
+	result := []ethereum.Address{}
 	err = self.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(PENDING_ADDRESSES))
 		b.ForEach(func(k, v []byte) error {
-			result = append(result, string(k))
+			result = append(result, ethereum.HexToAddress(string(k)))
 			return nil
 		})
 		return nil

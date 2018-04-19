@@ -37,7 +37,7 @@ func doOneTest(f func(tester *stat.UserStorageTest, t *testing.T), t *testing.T)
 	f(tester, t)
 }
 
-func TestBoltAsStatStorage(t *testing.T) {
+func TestBoltUserForStatStorage(t *testing.T) {
 	doOneTest(func(tester *stat.UserStorageTest, t *testing.T) {
 		if err := tester.TestUpdateAddressCategory(); err != nil {
 			t.Fatalf("Testing bolt as a stat storage: test update address category failed(%s)", err)

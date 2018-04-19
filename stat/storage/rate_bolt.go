@@ -9,6 +9,7 @@ import (
 
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/boltdb/bolt"
+	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
 const (
@@ -36,8 +37,9 @@ func NewBoltRateStorage(path string) (*BoltRateStorage, error) {
 	return storage, nil
 }
 
-func (self *BoltRateStorage) StoreReserveRates(reserveAddr string, rate common.ReserveRates, timepoint uint64) error {
+func (self *BoltRateStorage) StoreReserveRates(ethReserveAddr ethereum.Address, rate common.ReserveRates, timepoint uint64) error {
 	var err error
+	reserveAddr := common.AddrToString(ethReserveAddr)
 	err = self.db.Update(func(tx *bolt.Tx) error {
 		b, _ := tx.CreateBucketIfNotExists([]byte(reserveAddr))
 		c := b.Cursor()
@@ -62,8 +64,9 @@ func (self *BoltRateStorage) StoreReserveRates(reserveAddr string, rate common.R
 	return err
 }
 
-func (self *BoltRateStorage) GetReserveRates(fromTime, toTime uint64, reserveAddr string) ([]common.ReserveRates, error) {
+func (self *BoltRateStorage) GetReserveRates(fromTime, toTime uint64, ethReserveAddr ethereum.Address) ([]common.ReserveRates, error) {
 	var err error
+	reserveAddr := common.AddrToString(ethReserveAddr)
 	var result []common.ReserveRates
 	if toTime-fromTime > MAX_GET_RATES_PERIOD {
 		return result, errors.New(fmt.Sprintf("Time range is too broad, it must be smaller or equal to %d miliseconds", MAX_GET_RATES_PERIOD))

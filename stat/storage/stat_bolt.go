@@ -13,6 +13,7 @@ import (
 
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/boltdb/bolt"
+	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
 const (
@@ -219,7 +220,8 @@ func getTimestampByFreq(t uint64, freq string) (result []byte) {
 	return
 }
 
-func (self *BoltStatStorage) SetWalletAddress(walletAddr string) (err error) {
+func (self *BoltStatStorage) SetWalletAddress(ethWalletAddr ethereum.Address) (err error) {
+	walletAddr := common.AddrToString(ethWalletAddr)
 	err = self.db.Update(func(tx *bolt.Tx) error {
 		walletBucket := tx.Bucket([]byte(WALLET_ADDRESS_BUCKET))
 
@@ -249,6 +251,7 @@ func (self *BoltStatStorage) GetWalletAddress() ([]string, error) {
 func (self *BoltStatStorage) SetBurnFeeStat(burnFeeStats map[string]common.BurnFeeStatsTimeZone, lastProcessTimePoint uint64) error {
 	err := self.db.Update(func(tx *bolt.Tx) error {
 		for key, timezoneData := range burnFeeStats {
+			key = strings.ToLower(key)
 			burnFeeBk, _ := tx.CreateBucketIfNotExists([]byte(key))
 			for _, freq := range []string{"M", "H", "D"} {
 				stats := timezoneData[freq]
@@ -281,6 +284,7 @@ func (self *BoltStatStorage) SetBurnFeeStat(burnFeeStats map[string]common.BurnF
 func (self *BoltStatStorage) SetVolumeStat(volumeStats map[string]common.VolumeStatsTimeZone, lastProcessTimePoint uint64) error {
 	err := self.db.Update(func(tx *bolt.Tx) error {
 		for asset, freqData := range volumeStats {
+			asset = strings.ToLower(asset)
 			volumeBk, _ := tx.CreateBucketIfNotExists([]byte(asset))
 			for _, freq := range []string{"M", "H", "D"} {
 				stats := freqData[freq]
@@ -315,6 +319,7 @@ func (self *BoltStatStorage) SetVolumeStat(volumeStats map[string]common.VolumeS
 func (self *BoltStatStorage) SetWalletStat(stats map[string]common.MetricStatsTimeZone, lastProcessTimePoint uint64) error {
 	err := self.db.Update(func(tx *bolt.Tx) error {
 		for wallet, timeZoneStat := range stats {
+			wallet = strings.ToLower(wallet)
 			b, err := tx.CreateBucketIfNotExists([]byte(wallet))
 			if err != nil {
 				return err
@@ -362,11 +367,10 @@ func (self *BoltStatStorage) SetWalletStat(stats map[string]common.MetricStatsTi
 	return err
 }
 
-func (self *BoltStatStorage) GetWalletStats(fromTime uint64, toTime uint64, walletAddr string, timezone int64) (common.StatTicks, error) {
-
+func (self *BoltStatStorage) GetWalletStats(fromTime uint64, toTime uint64, ethWalletAddr ethereum.Address, timezone int64) (common.StatTicks, error) {
+	walletAddr := common.AddrToString(ethWalletAddr)
 	result := common.StatTicks{}
 	tzstring := fmt.Sprintf("%s%d", TIMEZONE_BUCKET_PREFIX, timezone)
-	log.Printf("Get wallet stats: %s and %d", walletAddr, timezone)
 	err := self.db.Update(func(tx *bolt.Tx) error {
 		walletBk, _ := tx.CreateBucketIfNotExists([]byte(walletAddr))
 		timezoneBk, _ := walletBk.CreateBucketIfNotExists([]byte(tzstring))
@@ -386,6 +390,7 @@ func (self *BoltStatStorage) GetWalletStats(fromTime uint64, toTime uint64, wall
 
 func (self *BoltStatStorage) SetCountry(country string) error {
 	var err error
+	country = strings.ToLower(country)
 	err = self.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(COUNTRY_BUCKET))
 		err = b.Put([]byte(country), []byte("1"))
@@ -412,6 +417,7 @@ func (self *BoltStatStorage) SetCountryStat(stats map[string]common.MetricStatsT
 	var err error
 	err = self.db.Update(func(tx *bolt.Tx) error {
 		for country, timeZoneStat := range stats {
+			country = strings.ToLower(country)
 			b, err := tx.CreateBucketIfNotExists([]byte(country))
 			if err != nil {
 				return err
@@ -461,6 +467,7 @@ func (self *BoltStatStorage) SetCountryStat(stats map[string]common.MetricStatsT
 
 func (self *BoltStatStorage) GetCountryStats(fromTime, toTime uint64, country string, timezone int64) (common.StatTicks, error) {
 	result := common.StatTicks{}
+	country = strings.ToLower(country)
 	tzstring := fmt.Sprintf("%s%d", TIMEZONE_BUCKET_PREFIX, timezone)
 	self.db.Update(func(tx *bolt.Tx) error {
 		countryBk, _ := tx.CreateBucketIfNotExists([]byte(country))
@@ -494,11 +501,12 @@ func (self *BoltStatStorage) DidTrade(tx *bolt.Tx, userAddr string, timepoint ui
 	return result
 }
 
-func (self *BoltStatStorage) SetFirstTradeEver(userAddrs map[string]uint64, lastProcessTimePoint uint64) error {
+func (self *BoltStatStorage) SetFirstTradeEver(userTradeLog *[]common.TradeLog, lastProcessTimePoint uint64) error {
 	err := self.db.Update(func(tx *bolt.Tx) error {
 		b, _ := tx.CreateBucketIfNotExists([]byte(USER_FIRST_TRADE_EVER))
-		for k, timepoint := range userAddrs {
-			userAddr := strings.Split(k, "_")[0]
+		for _, trade := range *userTradeLog {
+			userAddr := common.AddrToString(trade.UserAddress)
+			timepoint := trade.Timestamp
 			if !self.DidTrade(tx, userAddr, timepoint) {
 				timestampByte := uint64ToBytes(timepoint)
 				b.Put([]byte(userAddr), timestampByte)
@@ -514,25 +522,26 @@ func (self *BoltStatStorage) SetFirstTradeEver(userAddrs map[string]uint64, last
 	return err
 }
 
-func (self *BoltStatStorage) GetFirstTradeEver(userAddr string) uint64 {
+func (self *BoltStatStorage) GetFirstTradeEver(ethUserAddr ethereum.Address) (uint64, error) {
 	result := uint64(0)
-	self.db.Update(func(tx *bolt.Tx) error {
+	userAddr := common.AddrToString(ethUserAddr)
+	err := self.db.Update(func(tx *bolt.Tx) error {
 		b, _ := tx.CreateBucketIfNotExists([]byte(USER_FIRST_TRADE_EVER))
 		v := b.Get([]byte(userAddr))
 		result = bytesToUint64(v)
 		return nil
 	})
-	return result
+	return result, err
 }
 
-func (self *BoltStatStorage) GetAllFirstTradeEver() (map[string]uint64, error) {
-	result := map[string]uint64{}
+func (self *BoltStatStorage) GetAllFirstTradeEver() (map[ethereum.Address]uint64, error) {
+	result := map[ethereum.Address]uint64{}
 	err := self.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(USER_FIRST_TRADE_EVER))
 		c := b.Cursor()
 		for k, v := c.First(); k != nil; k, v = c.Next() {
 			value := bytesToUint64(v)
-			result[string(k)] = value
+			result[ethereum.HexToAddress(string(k))] = value
 		}
 		return nil
 	})
@@ -558,9 +567,10 @@ func (self *BoltStatStorage) DidTradeInDay(tx *bolt.Tx, userAddr string, timepoi
 	return result
 }
 
-func (self *BoltStatStorage) GetFirstTradeInDay(userAddr string, timepoint uint64, timezone int64) uint64 {
+func (self *BoltStatStorage) GetFirstTradeInDay(ethUserAddr ethereum.Address, timepoint uint64, timezone int64) (uint64, error) {
 	result := uint64(0)
-	self.db.Update(func(tx *bolt.Tx) error {
+	userAddr := common.AddrToString(ethUserAddr)
+	err := self.db.Update(func(tx *bolt.Tx) error {
 		userStatBk, _ := tx.CreateBucketIfNotExists([]byte(USER_STAT_BUCKET))
 		freq := fmt.Sprintf("%s%d", TIMEZONE_BUCKET_PREFIX, timezone)
 		timestamp := getTimestampByFreq(timepoint, freq)
@@ -574,18 +584,18 @@ func (self *BoltStatStorage) GetFirstTradeInDay(userAddr string, timepoint uint6
 		}
 		return nil
 	})
-	return result
+	return result, err
 }
 
-func (self *BoltStatStorage) SetFirstTradeInDay(userAddrs map[string]uint64, lastProcessTimePoint uint64) error {
+func (self *BoltStatStorage) SetFirstTradeInDay(tradeLogs *[]common.TradeLog, lastProcessTimePoint uint64) error {
 	err := self.db.Update(func(tx *bolt.Tx) error {
 		userStatBk, _ := tx.CreateBucketIfNotExists([]byte(USER_STAT_BUCKET))
-		for k, timepoint := range userAddrs {
-			userAddr := strings.Split(k, "_")[0]
+		for _, trade := range *tradeLogs {
+			userAddr := common.AddrToString(trade.UserAddress)
+			timepoint := trade.Timestamp
 			for timezone := START_TIMEZONE; timezone <= END_TIMEZONE; timezone++ {
 				freq := fmt.Sprintf("%s%d", TIMEZONE_BUCKET_PREFIX, timezone)
 				timestamp := getTimestampByFreq(timepoint, freq)
-
 				timezoneBk, _ := userStatBk.CreateBucketIfNotExists(uint64ToBytes(uint64(timezone)))
 				userDailyBucket, _ := timezoneBk.CreateBucketIfNotExists(timestamp)
 				if !self.DidTradeInDay(tx, userAddr, timepoint, timezone) {
@@ -611,6 +621,7 @@ func (self *BoltStatStorage) SetUserList(userInfos map[string]common.UserInfoTim
 			return err
 		}
 		for userAddr, userInfoData := range userInfos {
+			userAddr = strings.ToLower(userAddr)
 			for timezone := START_TIMEZONE; timezone <= END_TIMEZONE; timezone++ {
 				freq := fmt.Sprintf("%s%d", TIMEZONE_BUCKET_PREFIX, timezone)
 				timezoneBk, err := b.CreateBucketIfNotExists([]byte(freq))
@@ -690,8 +701,9 @@ func (self *BoltStatStorage) GetUserList(fromTime, toTime uint64, timezone int64
 	return result, err
 }
 
-func (self *BoltStatStorage) GetAssetVolume(fromTime uint64, toTime uint64, freq string, assetAddr string) (common.StatTicks, error) {
+func (self *BoltStatStorage) GetAssetVolume(fromTime uint64, toTime uint64, freq string, ethAssetAddr ethereum.Address) (common.StatTicks, error) {
 	result := common.StatTicks{}
+	assetAddr := common.AddrToString(ethAssetAddr)
 	err := self.db.Update(func(tx *bolt.Tx) error {
 		b, _ := tx.CreateBucketIfNotExists([]byte(assetAddr))
 
@@ -713,9 +725,9 @@ func (self *BoltStatStorage) GetAssetVolume(fromTime uint64, toTime uint64, freq
 	return result, err
 }
 
-func (self *BoltStatStorage) GetBurnFee(fromTime uint64, toTime uint64, freq string, reserveAddr string) (common.StatTicks, error) {
+func (self *BoltStatStorage) GetBurnFee(fromTime uint64, toTime uint64, freq string, ethReserveAddr ethereum.Address) (common.StatTicks, error) {
 	result := common.StatTicks{}
-
+	reserveAddr := common.AddrToString(ethReserveAddr)
 	err := self.db.Update(func(tx *bolt.Tx) error {
 		b, _ := tx.CreateBucketIfNotExists([]byte(reserveAddr))
 		freqBkName, _ := getBucketNameByFreq(freq)
@@ -737,11 +749,11 @@ func (self *BoltStatStorage) GetBurnFee(fromTime uint64, toTime uint64, freq str
 	return result, err
 }
 
-func (self *BoltStatStorage) GetWalletFee(fromTime uint64, toTime uint64, freq string, reserveAddr string, walletAddr string) (common.StatTicks, error) {
+func (self *BoltStatStorage) GetWalletFee(fromTime uint64, toTime uint64, freq string, reserveAddr ethereum.Address, walletAddr ethereum.Address) (common.StatTicks, error) {
 	result := common.StatTicks{}
 
 	err := self.db.Update(func(tx *bolt.Tx) error {
-		bucketName := fmt.Sprintf("%s_%s", reserveAddr, walletAddr)
+		bucketName := fmt.Sprintf("%s_%s", common.AddrToString(reserveAddr), common.AddrToString(walletAddr))
 		b, _ := tx.CreateBucketIfNotExists([]byte(bucketName))
 		freqBkName, _ := getBucketNameByFreq(freq)
 		freqBk, _ := b.CreateBucketIfNotExists([]byte(freqBkName))
@@ -762,8 +774,9 @@ func (self *BoltStatStorage) GetWalletFee(fromTime uint64, toTime uint64, freq s
 	return result, err
 }
 
-func (self *BoltStatStorage) GetUserVolume(fromTime uint64, toTime uint64, freq string, userAddr string) (common.StatTicks, error) {
+func (self *BoltStatStorage) GetUserVolume(fromTime uint64, toTime uint64, freq string, ethUserAddr ethereum.Address) (common.StatTicks, error) {
 	result := common.StatTicks{}
+	userAddr := common.AddrToString(ethUserAddr)
 	err := self.db.Update(func(tx *bolt.Tx) error {
 		b, _ := tx.CreateBucketIfNotExists([]byte(userAddr))
 		freqBkName, _ := getBucketNameByFreq(freq)
@@ -783,10 +796,10 @@ func (self *BoltStatStorage) GetUserVolume(fromTime uint64, toTime uint64, freq 
 	return result, err
 }
 
-func (self *BoltStatStorage) GetReserveVolume(fromTime uint64, toTime uint64, freq string, reserveAddr, token string) (common.StatTicks, error) {
+func (self *BoltStatStorage) GetReserveVolume(fromTime uint64, toTime uint64, freq string, reserveAddr, token ethereum.Address) (common.StatTicks, error) {
 	result := common.StatTicks{}
 	err := self.db.Update(func(tx *bolt.Tx) error {
-		bucket_key := fmt.Sprintf("%s_%s", reserveAddr, token)
+		bucket_key := fmt.Sprintf("%s_%s", common.AddrToString(reserveAddr), common.AddrToString(token))
 		b, _ := tx.CreateBucketIfNotExists([]byte(bucket_key))
 		freqBkName, _ := getBucketNameByFreq(freq)
 		freqBk, _ := b.CreateBucketIfNotExists([]byte(freqBkName))
@@ -809,6 +822,7 @@ func (self *BoltStatStorage) SetTradeSummary(tradeSummary map[string]common.Metr
 	var err error
 	err = self.db.Update(func(tx *bolt.Tx) error {
 		for key, stats := range tradeSummary {
+			key = strings.ToLower(key)
 			b, _ := tx.CreateBucketIfNotExists([]byte(key))
 			// update to timezone buckets
 			for i := START_TIMEZONE; i <= END_TIMEZONE; i++ {
