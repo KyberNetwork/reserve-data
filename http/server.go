@@ -2178,7 +2178,7 @@ func (self *HTTPServer) GetPriceAnalyticData(c *gin.Context) {
 
 func (self *HTTPServer) ExchangeNotification(c *gin.Context) {
 	postForm, ok := self.Authenticated(c, []string{
-		"exchange", "action", "token", "fromTime", "toTime", "isWarning", "msg"}, []Permission{RebalancePermission})
+		"exchange", "action", "token", "fromTime", "toTime", "isWarning"}, []Permission{RebalancePermission})
 	if !ok {
 		return
 	}
