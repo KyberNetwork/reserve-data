@@ -3,6 +3,7 @@ package stat
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 )
 
 type AnalyticStorageTest struct {
@@ -14,6 +15,7 @@ func NewAnalyticStorageTest(storage AnalyticStorage) *AnalyticStorageTest {
 }
 func (self *AnalyticStorageTest) TestPriceAnalyticData() error {
 	var err error
+	//test UpdatePriceAnalytic
 	testDict := map[string]interface{}{
 		"token":             "OMG",
 		"ask_price":         "xxxx",
@@ -28,6 +30,8 @@ func (self *AnalyticStorageTest) TestPriceAnalyticData() error {
 	if err != nil {
 		return err
 	}
+
+	//test GetPriceAnalytic
 	resp, err := self.storage.GetPriceAnalyticData(0, 86400000)
 	if (resp == nil) || (len(resp) < 1) {
 		return fmt.Errorf("GetPriceAnalyticData returns empty")
@@ -43,9 +47,19 @@ func (self *AnalyticStorageTest) TestPriceAnalyticData() error {
 	if !ok {
 		return fmt.Errorf("result returns wrong type")
 	}
-	if afpFloat != 0.6555 {
-		return fmt.Errorf("Expect mid afp price to be 0.6555, got 0.1111")
+	log.Printf("afp is %v", afpFloat)
+	if afpFloat != 0.6111 {
+		return fmt.Errorf("Expect mid afp price to be 0.6555, got %v", afpFloat)
 	}
-	fmt.Printf("%v", resp[0].Data)
+
+	//test ExportPruneExpire
+	nRecord, err := self.storage.ExportPruneExpired(30*86400000+1, "test")
+	if err != nil {
+		return err
+	}
+	if nRecord != 1 {
+		return fmt.Errorf("Expect pruned 1 record, got %d", nRecord)
+	}
+
 	return err
 }
