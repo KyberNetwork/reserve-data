@@ -264,7 +264,7 @@ func (self *BoltUserStorage) GetKycUsers() (map[string]uint64, error) {
 			var timestamp uint64
 			if id != "" && id != string(k) {
 				timestamp = bytesToUint64(timeBucket.Get(k))
-				result[id] = timestamp
+				result[string(k)] = timestamp
 			}
 		}
 		return nil
