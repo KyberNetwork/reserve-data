@@ -16,6 +16,7 @@ type StatStorage interface {
 
 	SetVolumeStat(volumeStat map[string]common.VolumeStatsTimeZone, lastProcessedTimepoint uint64) error
 	GetReserveVolume(fromTime, toTime uint64, freq string, reserveAddr, tokenAddr ethereum.Address) (common.StatTicks, error)
+	GetTokenHeatmap(fromTime, toTime uint64, key, freq string) (common.StatTicks, error)
 
 	SetBurnFeeStat(burnFeeStat map[string]common.BurnFeeStatsTimeZone, lastProcessedTimepoint uint64) error
 

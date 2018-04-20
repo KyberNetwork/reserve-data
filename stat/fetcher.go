@@ -376,7 +376,6 @@ func (self *Fetcher) RunVolumeStatAggregation(t time.Time) {
 			}
 		}
 		self.statStorage.SetVolumeStat(volumeStats, last)
-		// self.statStorage.SetLastProcessedTradeLogTimepoint(VOLUME_STAT_AGGREGATION, last)
 	} else {
 		l, err := self.logStorage.GetLastTradeLog()
 		if err != nil {
@@ -826,6 +825,12 @@ func (self *Fetcher) aggregateVolumeStats(trade common.TradeLog, volumeStats map
 	// eth volume
 	key = fmt.Sprintf("%s_%s", reserveAddr, eth.Address)
 	self.aggregateVolumeStat(trade, key, ethAmount, ethAmount, trade.FiatAmount, volumeStats)
+
+	// country token volume
+	key = fmt.Sprintf("%s_%s", trade.Country, assetAddr)
+	log.Printf("aggegate volume: %s", key)
+	self.aggregateVolumeStat(trade, key, assetAmount, ethAmount, trade.FiatAmount, volumeStats)
+
 	return nil
 }
 

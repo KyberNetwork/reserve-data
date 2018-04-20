@@ -805,6 +805,28 @@ func (self *BoltStatStorage) GetReserveVolume(fromTime uint64, toTime uint64, fr
 	return result, err
 }
 
+func (self *BoltStatStorage) GetTokenHeatmap(fromTime, toTime uint64, key, freq string) (common.StatTicks, error) {
+	result := common.StatTicks{}
+	err := self.db.Update(func(tx *bolt.Tx) error {
+		key := strings.ToLower(key)
+		b, _ := tx.CreateBucketIfNotExists([]byte(key))
+		freqBkName, _ := getBucketNameByFreq(freq)
+		freqBk, _ := b.CreateBucketIfNotExists([]byte(freqBkName))
+
+		min := uint64ToBytes(fromTime)
+		max := uint64ToBytes(toTime)
+		c := freqBk.Cursor()
+		for k, v := c.Seek(min); k != nil && bytes.Compare(k, max) <= 0; k, v = c.Next() {
+			value := common.VolumeStats{}
+			json.Unmarshal(v, &value)
+			key := bytesToUint64(k) / 1000000
+			result[key] = value
+		}
+		return nil
+	})
+	return result, err
+}
+
 func (self *BoltStatStorage) SetTradeSummary(tradeSummary map[string]common.MetricStatsTimeZone, lastProcessTimePoint uint64) error {
 	var err error
 	err = self.db.Update(func(tx *bolt.Tx) error {
