@@ -41,26 +41,26 @@ type TickerRunner struct {
 	signal                    chan bool
 }
 
-func (self *TickerRunner) GetTradeLogProcessorTicker() <-chan time.Time {
-	if self.tradeLogProcessorClock == nil {
-		<-self.signal
-	}
-	return self.tradeLogProcessorClock.C
-}
+// func (self *TickerRunner) GetTradeLogProcessorTicker() <-chan time.Time {
+// 	if self.tradeLogProcessorClock == nil {
+// 		<-self.signal
+// 	}
+// 	return self.tradeLogProcessorClock.C
+// }
 
-func (self *TickerRunner) GetCatLogProcessorTicker() <-chan time.Time {
-	if self.catLogProcessorClock == nil {
-		<-self.signal
-	}
-	return self.catLogProcessorClock.C
-}
+// func (self *TickerRunner) GetCatLogProcessorTicker() <-chan time.Time {
+// 	if self.catLogProcessorClock == nil {
+// 		<-self.signal
+// 	}
+// 	return self.catLogProcessorClock.C
+// }
 
-func (self *TickerRunner) GetLogTicker() <-chan time.Time {
-	if self.lclock == nil {
-		<-self.signal
-	}
-	return self.lclock.C
-}
+// func (self *TickerRunner) GetLogTicker() <-chan time.Time {
+// 	if self.lclock == nil {
+// 		<-self.signal
+// 	}
+// 	return self.lclock.C
+// }
 
 func (self *TickerRunner) GetBlockTicker() <-chan time.Time {
 	if self.bclock == nil {
@@ -92,12 +92,13 @@ func (self *TickerRunner) GetTradeHistoryTicker() <-chan time.Time {
 	}
 	return self.tclock.C
 }
-func (self *TickerRunner) GetReserveRatesTicker() <-chan time.Time {
-	if self.rsclock == nil {
-		<-self.signal
-	}
-	return self.rsclock.C
-}
+
+// func (self *TickerRunner) GetReserveRatesTicker() <-chan time.Time {
+// 	if self.rsclock == nil {
+// 		<-self.signal
+// 	}
+// 	return self.rsclock.C
+// }
 
 func (self *TickerRunner) Start() error {
 	self.oclock = time.NewTicker(self.oduration)
