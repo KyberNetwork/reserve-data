@@ -29,7 +29,7 @@ func GetChainType(kyberENV string) string {
 		return "homestead"
 	case "staging":
 		return "byzantium"
-	case "simulation":
+	case "simulation", "analytic_dev":
 		return "homestead"
 	case "ropsten":
 		return "byzantium"
@@ -52,6 +52,8 @@ func GetConfigPaths(kyberENV string) SettingPaths {
 		return (ConfigPaths["simulation"])
 	case "ropsten":
 		return (ConfigPaths["ropsten"])
+	case "analytic_dev":
+		return (ConfigPaths["analytic_dev"])
 	default:
 		log.Println("Environment setting paths is not found, using dev...")
 		return (ConfigPaths["dev"])
