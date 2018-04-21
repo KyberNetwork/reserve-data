@@ -337,6 +337,21 @@ var ConfigPaths = map[string]SettingPaths{
 			"https://api.myetherapi.com/rop",
 		},
 	},
+	"analytic_dev": {
+		"/go/src/github.com/KyberNetwork/reserve-data/cmd/shared/deployment_dev.json",
+		"/go/src/github.com/KyberNetwork/reserve-data/cmd/fee.json",
+		"/go/src/github.com/KyberNetwork/reserve-data/cmd/core.db",
+		"/go/src/github.com/KyberNetwork/reserve-data/cmd/core_analytics.db",
+		"/go/src/github.com/KyberNetwork/reserve-data/cmd/core_stats.db",
+		"/go/src/github.com/KyberNetwork/reserve-data/cmd/core_logs.db",
+		"/go/src/github.com/KyberNetwork/reserve-data/cmd/core_rates.db",
+		"/go/src/github.com/KyberNetwork/reserve-data/cmd/core_users.db",
+		"/go/src/github.com/KyberNetwork/reserve-data/cmd/config.json",
+		"http://blockchain:8545",
+		[]string{
+			"http://blockchain:8545",
+		},
+	},
 }
 
 var Baseurl string = "http://127.0.0.1"
@@ -353,6 +368,7 @@ func SetInterface(base_url string) {
 	BittrexInterfaces["staging"] = bittrex.NewRealInterface()
 	BittrexInterfaces["simulation"] = bittrex.NewSimulatedInterface(base_url)
 	BittrexInterfaces["ropsten"] = bittrex.NewRopstenInterface(base_url)
+	BittrexInterfaces["analytic_dev"] = bittrex.NewRopstenInterface(base_url)
 
 	HuobiInterfaces["dev"] = huobi.NewDevInterface()
 	HuobiInterfaces["kovan"] = huobi.NewKovanInterface(base_url)
@@ -360,6 +376,7 @@ func SetInterface(base_url string) {
 	HuobiInterfaces["staging"] = huobi.NewRealInterface()
 	HuobiInterfaces["simulation"] = huobi.NewSimulatedInterface(base_url)
 	HuobiInterfaces["ropsten"] = huobi.NewRopstenInterface(base_url)
+	HuobiInterfaces["analytic_dev"] = huobi.NewRopstenInterface(base_url)
 
 	BinanceInterfaces["dev"] = binance.NewDevInterface()
 	BinanceInterfaces["kovan"] = binance.NewKovanInterface(base_url)
@@ -367,4 +384,5 @@ func SetInterface(base_url string) {
 	BinanceInterfaces["staging"] = binance.NewRealInterface()
 	BinanceInterfaces["simulation"] = binance.NewSimulatedInterface(base_url)
 	BinanceInterfaces["ropsten"] = binance.NewRopstenInterface(base_url)
+	BinanceInterfaces["analytic_dev"] = binance.NewRopstenInterface(base_url)
 }
