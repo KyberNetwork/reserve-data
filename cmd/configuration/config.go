@@ -135,7 +135,7 @@ func (self *Config) AddStatConfig(settingPath SettingPaths, addressConfig common
 	self.WhitelistAddress = whitelistAddr
 }
 
-func (self *Config) AddCoreConfig(settingPath SettingPaths, authEnbl bool, addressConfig common.AddressConfig, kyberENV string) {
+func (self *Config) AddCoreConfig(settingPath SettingPaths, addressConfig common.AddressConfig, kyberENV string) {
 	networkAddr := ethereum.HexToAddress(addressConfig.Network)
 	burnerAddr := ethereum.HexToAddress(addressConfig.FeeBurner)
 	whitelistAddr := ethereum.HexToAddress(addressConfig.Whitelist)
@@ -161,22 +161,14 @@ func (self *Config) AddCoreConfig(settingPath SettingPaths, authEnbl bool, addre
 	pricingSigner := PricingSignerFromConfigFile(settingPath.secretPath)
 	depositSigner := DepositSignerFromConfigFile(settingPath.secretPath)
 
-	hmac512auth := http.NewKNAuthenticationFromFile(settingPath.secretPath)
-
-	if !authEnbl {
-		log.Printf("\nWARNING: No authentication mode\n")
-	}
-
 	self.ActivityStorage = dataStorage
 	self.DataStorage = dataStorage
 	self.FetcherStorage = dataStorage
 	self.MetricStorage = dataStorage
 	self.FetcherRunner = fetcherRunner
 	self.BlockchainSigner = pricingSigner
-	self.EnableAuthentication = authEnbl
 	//self.IntermediatorSigner = huoBiintermediatorSigner
 	self.DepositSigner = depositSigner
-	self.AuthEngine = hmac512auth
 	self.FeeBurnerAddress = burnerAddr
 	self.NetworkAddress = networkAddr
 	self.WhitelistAddress = whitelistAddr

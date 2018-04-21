@@ -5,6 +5,7 @@ import (
 
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/blockchain"
+	"github.com/KyberNetwork/reserve-data/http"
 	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
@@ -60,6 +61,7 @@ func GetConfigPaths(kyberENV string) SettingPaths {
 func GetConfig(kyberENV string, authEnbl bool, endpointOW string, noCore, enableStat bool) *Config {
 	setPath := GetConfigPaths(kyberENV)
 	addressConfig := GetAddressConfig(setPath.settingPath)
+	hmac512auth := http.NewKNAuthenticationFromFile(setPath.secretPath)
 
 	wrapperAddr := ethereum.HexToAddress(addressConfig.Wrapper)
 	pricingAddr := ethereum.HexToAddress(addressConfig.Pricing)
@@ -112,6 +114,9 @@ func GetConfig(kyberENV string, authEnbl bool, endpointOW string, noCore, enable
 		blockchain.NewContractCaller(callClients, setPath.bkendpoints),
 	)
 
+	if !authEnbl {
+		log.Printf("\nWARNING: No authentication mode\n")
+	}
 	config := &Config{
 		Blockchain:              blockchain,
 		EthereumEndpoint:        endpoint,
@@ -121,6 +126,8 @@ func GetConfig(kyberENV string, authEnbl bool, endpointOW string, noCore, enable
 		PricingAddress:          pricingAddr,
 		ReserveAddress:          reserveAddr,
 		ChainType:               chainType,
+		AuthEngine:              hmac512auth,
+		EnableAuthentication:    authEnbl,
 	}
 
 	if enableStat {
@@ -128,7 +135,7 @@ func GetConfig(kyberENV string, authEnbl bool, endpointOW string, noCore, enable
 	}
 
 	if !noCore {
-		config.AddCoreConfig(setPath, authEnbl, addressConfig, kyberENV)
+		config.AddCoreConfig(setPath, addressConfig, kyberENV)
 	}
 	return config
 }
