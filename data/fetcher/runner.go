@@ -20,25 +20,17 @@ type FetcherRunner interface {
 }
 
 type TickerRunner struct {
-	oduration                 time.Duration
-	aduration                 time.Duration
-	rduration                 time.Duration
-	bduration                 time.Duration
-	tduration                 time.Duration
-	rsduration                time.Duration
-	lduration                 time.Duration
-	tradeLogProcessorDuration time.Duration
-	catLogProcessorDuration   time.Duration
-	oclock                    *time.Ticker
-	aclock                    *time.Ticker
-	rclock                    *time.Ticker
-	bclock                    *time.Ticker
-	tclock                    *time.Ticker
-	rsclock                   *time.Ticker
-	lclock                    *time.Ticker
-	tradeLogProcessorClock    *time.Ticker
-	catLogProcessorClock      *time.Ticker
-	signal                    chan bool
+	oduration time.Duration
+	aduration time.Duration
+	rduration time.Duration
+	bduration time.Duration
+	tduration time.Duration
+	oclock    *time.Ticker
+	aclock    *time.Ticker
+	rclock    *time.Ticker
+	bclock    *time.Ticker
+	tclock    *time.Ticker
+	signal    chan bool
 }
 
 // func (self *TickerRunner) GetTradeLogProcessorTicker() <-chan time.Time {
@@ -111,14 +103,6 @@ func (self *TickerRunner) Start() error {
 	self.signal <- true
 	self.tclock = time.NewTicker(self.tduration)
 	self.signal <- true
-	self.rsclock = time.NewTicker(self.rsduration)
-	self.signal <- true
-	self.lclock = time.NewTicker(self.lduration)
-	self.signal <- true
-	self.tradeLogProcessorClock = time.NewTicker(self.tradeLogProcessorDuration)
-	self.signal <- true
-	self.catLogProcessorClock = time.NewTicker(self.catLogProcessorDuration)
-	self.signal <- true
 	return nil
 }
 
@@ -128,38 +112,23 @@ func (self *TickerRunner) Stop() error {
 	self.rclock.Stop()
 	self.bclock.Stop()
 	self.tclock.Stop()
-	self.rsclock.Stop()
-	self.lclock.Stop()
-	self.tradeLogProcessorClock.Stop()
-	self.catLogProcessorClock.Stop()
 	return nil
 }
 
 func NewTickerRunner(
 	oduration, aduration, rduration,
-	bduration, tduration, rsduration,
-	lduration,
-	tradeLogProcessorDuration,
-	catLogProcessorDuration time.Duration) *TickerRunner {
+	bduration, tduration time.Duration) *TickerRunner {
 	return &TickerRunner{
 		oduration,
 		aduration,
 		rduration,
 		bduration,
 		tduration,
-		rsduration,
-		lduration,
-		tradeLogProcessorDuration,
-		catLogProcessorDuration,
 		nil,
 		nil,
 		nil,
 		nil,
 		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		make(chan bool, 9),
+		make(chan bool, 5),
 	}
 }

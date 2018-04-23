@@ -167,11 +167,7 @@ func (self *Config) AddCoreConfig(settingPath SettingPaths, authEnbl bool, addre
 			5*time.Second,  // authdata fetching interval
 			3*time.Second,  // rate fetching interval
 			5*time.Second,  // block fetching interval
-			10*time.Minute, // tradeHistory fetching interval
-			10*time.Second, // reserve rates fetching interval
-			7*time.Second,  // log fetching interval
-			2*time.Second,  // trade log processing interval
-			2*time.Second)  // cat log processing interval
+			10*time.Minute) // tradeHistory fetching interval
 	}
 
 	pricingSigner := PricingSignerFromConfigFile(settingPath.secretPath)
