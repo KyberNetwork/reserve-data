@@ -1,3 +1,11 @@
+# 0.6.0 (2018-04-10)
+
+## Features:
+## Bug fixes:
+## Improvements:
+## Compatability:
+- This version only works with KyberNetwork smart contracts version 0.3.0 or later
+
 # 0.5.0 (2018-03-08)
 
 ## Features:

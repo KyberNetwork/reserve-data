@@ -1,7 +1,6 @@
 package exchange
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"math/big"
@@ -22,6 +21,7 @@ const (
 type Binance struct {
 	interf       BinanceInterface
 	pairs        []common.TokenPair
+	tokens       []common.Token
 	addresses    *common.ExchangeAddresses
 	exchangeInfo *common.ExchangeInfo
 	fees         common.ExchangeFees
@@ -298,36 +298,36 @@ func (self *Binance) OpenOrdersForOnePair(
 	}
 }
 
-func (self *Binance) FetchOrderData(timepoint uint64) (common.OrderEntry, error) {
-	result := common.OrderEntry{}
-	result.Timestamp = common.Timestamp(fmt.Sprintf("%d", timepoint))
-	result.Valid = true
-	result.Data = []common.Order{}
-
-	wait := sync.WaitGroup{}
-	data := sync.Map{}
-	pairs := self.pairs
-	var i int = 0
-	var x int = 0
-	for i < len(pairs) {
-		for x = i; x < len(pairs) && x < i+BATCH_SIZE; x++ {
-			wait.Add(1)
-			pair := pairs[x]
-			go self.OpenOrdersForOnePair(&wait, pair, &data, timepoint)
-		}
-		i = x
-		wait.Wait()
-	}
-
-	result.ReturnTime = common.GetTimestamp()
-
-	data.Range(func(key, value interface{}) bool {
-		orders := value.([]common.Order)
-		result.Data = append(result.Data, orders...)
-		return true
-	})
-	return result, nil
-}
+// func (self *Binance) FetchOrderData(timepoint uint64) (common.OrderEntry, error) {
+// 	result := common.OrderEntry{}
+// 	result.Timestamp = common.Timestamp(fmt.Sprintf("%d", timepoint))
+// 	result.Valid = true
+// 	result.Data = []common.Order{}
+//
+// 	wait := sync.WaitGroup{}
+// 	data := sync.Map{}
+// 	pairs := self.pairs
+// 	var i int = 0
+// 	var x int = 0
+// 	for i < len(pairs) {
+// 		for x = i; x < len(pairs) && x < i+BATCH_SIZE; x++ {
+// 			wait.Add(1)
+// 			pair := pairs[x]
+// 			go self.OpenOrdersForOnePair(&wait, pair, &data, timepoint)
+// 		}
+// 		i = x
+// 		wait.Wait()
+// 	}
+//
+// 	result.ReturnTime = common.GetTimestamp()
+//
+// 	data.Range(func(key, value interface{}) bool {
+// 		orders := value.([]common.Order)
+// 		result.Data = append(result.Data, orders...)
+// 		return true
+// 	})
+// 	return result, nil
+// }
 
 func (self *Binance) FetchEBalanceData(timepoint uint64) (common.EBalanceEntry, error) {
 	result := common.EBalanceEntry{}
@@ -437,7 +437,8 @@ func (self *Binance) DepositStatus(id common.ActivityID, txHash, currency string
 				}
 			}
 		}
-		return "", errors.New("Deposit is not found in deposit list returned from Binance. This might cause by wrong start/end time, please check again.")
+		log.Printf("Deposit is not found in deposit list returned from Binance. This might cause by wrong start/end time, please check again.")
+		return "", nil
 	}
 }
 
@@ -457,7 +458,8 @@ func (self *Binance) WithdrawStatus(id, currency string, amount float64, timepoi
 				}
 			}
 		}
-		return "", "", errors.New("Withdrawal doesn't exist. This shouldn't happen unless tx returned from withdrawal from binance and activity ID are not consistently designed")
+		log.Printf("Withdrawal doesn't exist. This shouldn't happen unless tx returned from withdrawal from binance and activity ID are not consistently designed")
+		return "", "", nil
 	}
 }
 
@@ -479,10 +481,11 @@ func (self *Binance) OrderStatus(id string, base, quote string) (string, error) 
 }
 
 func NewBinance(addressConfig map[string]string, feeConfig common.ExchangeFees, interf BinanceInterface) *Binance {
-	pairs, fees := getExchangePairsAndFeesFromConfig(addressConfig, feeConfig, "binance")
+	tokens, pairs, fees := getExchangePairsAndFeesFromConfig(addressConfig, feeConfig, "binance")
 	return &Binance{
 		interf,
 		pairs,
+		tokens,
 		common.NewExchangeAddresses(),
 		common.NewExchangeInfo(),
 		fees,

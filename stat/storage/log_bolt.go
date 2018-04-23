@@ -48,7 +48,7 @@ func NewBoltLogStorage(path string) (*BoltLogStorage, error) {
 
 	storage := &BoltLogStorage{sync.RWMutex{}, db, 0}
 	err = storage.db.View(func(tx *bolt.Tx) error {
-		block, _, vErr := storage.LoadLastLogIndex(tx)
+		block, vErr := storage.LoadLastLogIndex(tx)
 		if vErr != nil {
 			return vErr
 		}
@@ -78,11 +78,22 @@ func (self *BoltLogStorage) LoadLastCatLog(tx *bolt.Tx) (common.SetCatLog, error
 	return record, err
 }
 
-func (self *BoltLogStorage) LoadLastLogIndex(tx *bolt.Tx) (uint64, uint, error) {
+func (self *BoltLogStorage) LoadLastLogIndex(tx *bolt.Tx) (uint64, error) {
+	catBlock, _, err1 := self.LoadLastCatLogIndex(tx)
+	tradeBlock, _, err2 := self.LoadLastTradeLogIndex(tx)
+	if err1 != nil && err2 != nil {
+		return 0, fmt.Errorf("last Cat Log err: %v and last Trade log err: %v ", err1, err2)
+	}
+	if catBlock > tradeBlock {
+		return catBlock, nil
+	}
+	return tradeBlock, nil
+}
+
+func (self *BoltLogStorage) LoadLastTradeLogIndex(tx *bolt.Tx) (uint64, uint, error) {
 	b := tx.Bucket([]byte(TRADELOG_BUCKET))
 	c := b.Cursor()
 	k, v := c.Last()
-
 	if k == nil {
 		return 0, 0, nil
 	}
@@ -94,6 +105,20 @@ func (self *BoltLogStorage) LoadLastLogIndex(tx *bolt.Tx) (uint64, uint, error) 
 	return record.BlockNumber, record.Index, nil
 }
 
+func (self *BoltLogStorage) LoadLastCatLogIndex(tx *bolt.Tx) (uint64, uint, error) {
+	b := tx.Bucket([]byte(TRADELOG_BUCKET))
+	c := b.Cursor()
+	k, v := c.Last()
+	if k == nil {
+		return 0, 0, nil
+	}
+
+	record := common.SetCatLog{}
+	if err := json.Unmarshal(v, &record); err != nil {
+		return 0, 0, err
+	}
+	return record.BlockNumber, record.Index, nil
+}
 func (self *BoltLogStorage) StoreCatLog(l common.SetCatLog) error {
 	var err error
 	err = self.db.Update(func(tx *bolt.Tx) error {
@@ -101,6 +126,11 @@ func (self *BoltLogStorage) StoreCatLog(l common.SetCatLog) error {
 		dataJson, uErr := json.Marshal(l)
 		if uErr != nil {
 			return uErr
+		}
+		block, index, uErr := self.LoadLastCatLogIndex(tx)
+		if uErr == nil && (block > l.BlockNumber || (block == l.BlockNumber && index >= l.Index)) {
+			// TODO: logs the error, or embed on the returning error
+			return fmt.Errorf("Duplicated cat log %+v (new block number %d is smaller or equal to latest block number %d and tx index %d is smaller or equal to last log tx index %d)", l, block, l.BlockNumber, index, l.Index)
 		}
 		// log.Printf("Storing cat log: %d", l.Timestamp)
 		idByte := uint64ToBytes(l.Timestamp)
@@ -114,10 +144,10 @@ func (self *BoltLogStorage) StoreTradeLog(stat common.TradeLog, timepoint uint64
 	err = self.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(TRADELOG_BUCKET))
 		var dataJson []byte
-		block, index, uErr := self.LoadLastLogIndex(tx)
+		block, index, uErr := self.LoadLastTradeLogIndex(tx)
 		if uErr == nil && (block > stat.BlockNumber || (block == stat.BlockNumber && index >= stat.Index)) {
 			// TODO: logs the error, or embed on the returning error
-			return fmt.Errorf("Duplicated log %+v (new block number %d is smaller or equal to latest block number %d and tx index %d is smaller or equal to last log tx index %d)", stat, block, stat.BlockNumber, index, stat.Index)
+			return fmt.Errorf("Duplicated trade log %+v (new block number %d is smaller or equal to latest block number %d and tx index %d is smaller or equal to last log tx index %d)", stat, block, stat.BlockNumber, index, stat.Index)
 		}
 		dataJson, uErr = json.Marshal(stat)
 		if uErr != nil {

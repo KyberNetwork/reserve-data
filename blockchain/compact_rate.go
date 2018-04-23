@@ -18,9 +18,15 @@ type CompactRate struct {
 // return overflow = true
 func BigIntToCompactRate(rate *big.Int, base *big.Int) (compactrate *CompactRate, overflow bool) {
 	if base.Cmp(big.NewInt(0)) == 0 {
-		return &CompactRate{
-			rate, 0,
-		}, true
+		if rate.Cmp(big.NewInt(0)) == 0 {
+			return &CompactRate{
+				rate, 0,
+			}, false
+		} else {
+			return &CompactRate{
+				rate, 0,
+			}, true
+		}
 	}
 	// rate = base * (1 + compact/1000)
 	// compact = (rate / base - 1) * 1000

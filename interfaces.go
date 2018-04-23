@@ -31,6 +31,7 @@ type ReserveStats interface {
 
 	GetGeoData(fromTime, toTime uint64, country string, tzparam int64) (common.StatTicks, error)
 	GetHeatMap(fromTime, toTime uint64, tzparam int64) (common.HeatmapResponse, error)
+	GetTokenHeatmap(fromTime, toTime uint64, token, freq string) (common.TokenHeatmapResponse, error)
 	GetCountries() ([]string, error)
 
 	GetUserList(fromTime, toTime uint64, timezone int64) (common.UserListResponse, error)

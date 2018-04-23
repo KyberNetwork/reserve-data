@@ -77,6 +77,7 @@ func getTestBittrex(depositHistory string, registered bool) *Bittrex {
 	return &Bittrex{
 		testBittrexInterface{depositHistory},
 		[]common.TokenPair{},
+		[]common.Token{},
 		common.NewExchangeAddresses(),
 		&testBittrexStorage{registered},
 		&common.ExchangeInfo{},

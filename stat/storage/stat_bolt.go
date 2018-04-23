@@ -390,7 +390,7 @@ func (self *BoltStatStorage) GetWalletStats(fromTime uint64, toTime uint64, ethW
 
 func (self *BoltStatStorage) SetCountry(country string) error {
 	var err error
-	country = strings.ToLower(country)
+	country = strings.ToUpper(country)
 	err = self.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(COUNTRY_BUCKET))
 		err = b.Put([]byte(country), []byte("1"))
@@ -417,7 +417,7 @@ func (self *BoltStatStorage) SetCountryStat(stats map[string]common.MetricStatsT
 	var err error
 	err = self.db.Update(func(tx *bolt.Tx) error {
 		for country, timeZoneStat := range stats {
-			country = strings.ToLower(country)
+			country = strings.ToUpper(country)
 			b, err := tx.CreateBucketIfNotExists([]byte(country))
 			if err != nil {
 				return err
@@ -467,8 +467,8 @@ func (self *BoltStatStorage) SetCountryStat(stats map[string]common.MetricStatsT
 
 func (self *BoltStatStorage) GetCountryStats(fromTime, toTime uint64, country string, timezone int64) (common.StatTicks, error) {
 	result := common.StatTicks{}
-	country = strings.ToLower(country)
 	tzstring := fmt.Sprintf("%s%d", TIMEZONE_BUCKET_PREFIX, timezone)
+	country = strings.ToUpper(country)
 	self.db.Update(func(tx *bolt.Tx) error {
 		countryBk, _ := tx.CreateBucketIfNotExists([]byte(country))
 		timezoneBk, _ := countryBk.CreateBucketIfNotExists([]byte(tzstring))
@@ -501,7 +501,7 @@ func (self *BoltStatStorage) DidTrade(tx *bolt.Tx, userAddr string, timepoint ui
 	return result
 }
 
-func (self *BoltStatStorage) SetFirstTradeEver(userTradeLog *[]common.TradeLog, lastProcessTimePoint uint64) error {
+func (self *BoltStatStorage) SetFirstTradeEver(userTradeLog *[]common.TradeLog) error {
 	err := self.db.Update(func(tx *bolt.Tx) error {
 		b, _ := tx.CreateBucketIfNotExists([]byte(USER_FIRST_TRADE_EVER))
 		for _, trade := range *userTradeLog {
@@ -511,11 +511,6 @@ func (self *BoltStatStorage) SetFirstTradeEver(userTradeLog *[]common.TradeLog, 
 				timestampByte := uint64ToBytes(timepoint)
 				b.Put([]byte(userAddr), timestampByte)
 			}
-		}
-		lastProcessBk := tx.Bucket([]byte(TRADELOG_PROCESSOR_STATE))
-		if lastProcessBk != nil {
-			dataJSON := uint64ToBytes(lastProcessTimePoint)
-			lastProcessBk.Put([]byte(USER_AGGREGATION), dataJSON)
 		}
 		return nil
 	})
@@ -587,7 +582,7 @@ func (self *BoltStatStorage) GetFirstTradeInDay(ethUserAddr ethereum.Address, ti
 	return result, err
 }
 
-func (self *BoltStatStorage) SetFirstTradeInDay(tradeLogs *[]common.TradeLog, lastProcessTimePoint uint64) error {
+func (self *BoltStatStorage) SetFirstTradeInDay(tradeLogs *[]common.TradeLog) error {
 	err := self.db.Update(func(tx *bolt.Tx) error {
 		userStatBk, _ := tx.CreateBucketIfNotExists([]byte(USER_STAT_BUCKET))
 		for _, trade := range *tradeLogs {
@@ -603,11 +598,6 @@ func (self *BoltStatStorage) SetFirstTradeInDay(tradeLogs *[]common.TradeLog, la
 					userDailyBucket.Put([]byte(userAddr), timestampByte)
 				}
 			}
-		}
-		lastProcessBk := tx.Bucket([]byte(TRADELOG_PROCESSOR_STATE))
-		if lastProcessBk != nil {
-			dataJSON := uint64ToBytes(lastProcessTimePoint)
-			lastProcessBk.Put([]byte(USER_AGGREGATION), dataJSON)
 		}
 		return nil
 	})
@@ -801,6 +791,28 @@ func (self *BoltStatStorage) GetReserveVolume(fromTime uint64, toTime uint64, fr
 	err := self.db.Update(func(tx *bolt.Tx) error {
 		bucket_key := fmt.Sprintf("%s_%s", common.AddrToString(reserveAddr), common.AddrToString(token))
 		b, _ := tx.CreateBucketIfNotExists([]byte(bucket_key))
+		freqBkName, _ := getBucketNameByFreq(freq)
+		freqBk, _ := b.CreateBucketIfNotExists([]byte(freqBkName))
+
+		min := uint64ToBytes(fromTime)
+		max := uint64ToBytes(toTime)
+		c := freqBk.Cursor()
+		for k, v := c.Seek(min); k != nil && bytes.Compare(k, max) <= 0; k, v = c.Next() {
+			value := common.VolumeStats{}
+			json.Unmarshal(v, &value)
+			key := bytesToUint64(k) / 1000000
+			result[key] = value
+		}
+		return nil
+	})
+	return result, err
+}
+
+func (self *BoltStatStorage) GetTokenHeatmap(fromTime, toTime uint64, key, freq string) (common.StatTicks, error) {
+	result := common.StatTicks{}
+	err := self.db.Update(func(tx *bolt.Tx) error {
+		key := strings.ToLower(key)
+		b, _ := tx.CreateBucketIfNotExists([]byte(key))
 		freqBkName, _ := getBucketNameByFreq(freq)
 		freqBk, _ := b.CreateBucketIfNotExists([]byte(freqBkName))
 

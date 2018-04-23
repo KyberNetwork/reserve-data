@@ -24,6 +24,7 @@ const (
 type Huobi struct {
 	interf            HuobiInterface
 	pairs             []common.TokenPair
+	tokens            []common.Token
 	addresses         *common.ExchangeAddresses
 	exchangeInfo      *common.ExchangeInfo
 	fees              common.ExchangeFees
@@ -545,21 +546,17 @@ func NewHuobi(
 	interf HuobiInterface, blockchain *blockchain.BaseBlockchain,
 	signer blockchain.Signer, nonce blockchain.NonceCorpus, storage HuobiStorage) *Huobi {
 
-	pairs, fees := getExchangePairsAndFeesFromConfig(addressConfig, feeConfig, "huobi")
+	tokens, pairs, fees := getExchangePairsAndFeesFromConfig(addressConfig, feeConfig, "huobi")
 	bc, err := huobiblockchain.NewBlockchain(blockchain, signer, nonce)
 	if err != nil {
 		log.Printf("Cant create Huobi's blockchain: %v", err)
 		panic(err)
 	}
 
-	// huobiStorage, err := huobistorage.NewBoltStorage(huobiConfig.StoragePath)
-	// if err != nil {
-	// 	panic(err)
-	// }
-
 	huobiObj := Huobi{
 		interf,
 		pairs,
+		tokens,
 		common.NewExchangeAddresses(),
 		common.NewExchangeInfo(),
 		fees,

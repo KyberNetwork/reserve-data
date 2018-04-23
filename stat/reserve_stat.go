@@ -221,6 +221,49 @@ func (self ReserveStats) GetHeatMap(fromTime, toTime uint64, tzparam int64) (com
 	return arrResult, err
 }
 
+func (self ReserveStats) GetTokenHeatmap(fromTime, toTime uint64, tokenStr, freq string) (common.TokenHeatmapResponse, error) {
+	result := common.CountryTokenHeatmap{}
+	var arrResult common.TokenHeatmapResponse
+	fromTime, toTime, err := validateTimeWindow(fromTime, toTime, "D")
+	if err != nil {
+		return arrResult, err
+	}
+	countries, err := self.statStorage.GetCountries()
+	if err != nil {
+		return arrResult, err
+	}
+	token, err := common.GetNetworkToken(tokenStr)
+	if err != nil {
+		return arrResult, err
+	}
+	for _, country := range countries {
+		key := fmt.Sprintf("%s_%s", country, strings.ToLower(token.Address))
+		stats, err := self.statStorage.GetTokenHeatmap(fromTime, toTime, key, freq)
+		if err != nil {
+			return arrResult, err
+		}
+		for _, stat := range stats {
+			s := stat.(common.VolumeStats)
+			current := result[country]
+			result[country] = common.VolumeStats{
+				Volume:    current.Volume + s.Volume,
+				ETHVolume: current.ETHVolume + s.ETHVolume,
+				USDAmount: current.USDAmount + s.USDAmount,
+			}
+		}
+	}
+	for k, v := range result {
+		arrResult = append(arrResult, common.TokenHeatmap{
+			Country:   k,
+			Volume:    v.Volume,
+			ETHVolume: v.ETHVolume,
+			USDVolume: v.USDAmount,
+		})
+	}
+	sort.Sort(sort.Reverse(arrResult))
+	return arrResult, err
+}
+
 func (self ReserveStats) GetCountries() ([]string, error) {
 	result, _ := self.statStorage.GetCountries()
 	return result, nil

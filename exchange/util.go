@@ -7,8 +7,9 @@ import (
 func getExchangePairsAndFeesFromConfig(
 	addressConfig map[string]string,
 	feeConfig common.ExchangeFees,
-	exchange string) ([]common.TokenPair, common.ExchangeFees) {
+	exchange string) ([]common.Token, []common.TokenPair, common.ExchangeFees) {
 
+	tokens := []common.Token{}
 	pairs := []common.TokenPair{}
 	fees := common.ExchangeFees{
 		feeConfig.Trading,
@@ -18,6 +19,7 @@ func getExchangePairsAndFeesFromConfig(
 		},
 	}
 	for tokenID := range addressConfig {
+		tokens = append(tokens, common.MustGetInternalToken(tokenID))
 		if tokenID != "ETH" {
 			pair := common.MustCreateTokenPair(tokenID, "ETH")
 			pairs = append(pairs, pair)
@@ -33,5 +35,5 @@ func getExchangePairsAndFeesFromConfig(
 			panic(tokenID + " is not found in " + exchange + " binance deposit fee config file")
 		}
 	}
-	return pairs, fees
+	return tokens, pairs, fees
 }

@@ -19,6 +19,7 @@ const BITTREX_EPSILON float64 = 0.000001
 type Bittrex struct {
 	interf       BittrexInterface
 	pairs        []common.TokenPair
+	tokens       []common.Token
 	addresses    *common.ExchangeAddresses
 	storage      BittrexStorage
 	exchangeInfo *common.ExchangeInfo
@@ -69,6 +70,7 @@ func (self *Bittrex) UpdatePrecisionLimit(pair common.TokenPair, symbols []BittP
 			exchangePrecisionLimit.Precision.Price = 8
 			// update limit
 			exchangePrecisionLimit.AmountLimit.Min = symbol.MinAmount
+			exchangePrecisionLimit.MinNotional = 0.02
 			self.exchangeInfo.Update(pair.PairID(), exchangePrecisionLimit)
 			break
 		}
@@ -237,7 +239,8 @@ func (self *Bittrex) WithdrawStatus(id, currency string, amount float64, timepoi
 				}
 			}
 		}
-		return "", "", errors.New("Withdraw with uuid " + id + " of currency " + currency + " is not found on bittrex")
+		log.Printf("Withdraw with uuid " + id + " of currency " + currency + " is not found on bittrex")
+		return "", "", nil
 	}
 }
 
@@ -335,6 +338,13 @@ func (self *Bittrex) FetchEBalanceData(timepoint uint64) (common.EBalanceEntry, 
 					result.LockedBalance[tokenID] = 0
 				}
 			}
+			// check if bittrex returned balance for all of the
+			// supported token.
+			// If it didn't, it is considered invalid
+			if len(result.AvailableBalance) != len(self.tokens) {
+				result.Valid = false
+				result.Error = "Bittrex didn't return balance for all supported tokens"
+			}
 		} else {
 			result.Valid = false
 			result.Error = resp_data.Error
@@ -392,10 +402,11 @@ func (self *Bittrex) FetchTradeHistory(timepoint uint64) (map[common.TokenPairID
 }
 
 func NewBittrex(addressConfig map[string]string, feeConfig common.ExchangeFees, interf BittrexInterface, storage BittrexStorage) *Bittrex {
-	pairs, fees := getExchangePairsAndFeesFromConfig(addressConfig, feeConfig, "bittrex")
+	tokens, pairs, fees := getExchangePairsAndFeesFromConfig(addressConfig, feeConfig, "bittrex")
 	return &Bittrex{
 		interf,
 		pairs,
+		tokens,
 		common.NewExchangeAddresses(),
 		storage,
 		common.NewExchangeInfo(),

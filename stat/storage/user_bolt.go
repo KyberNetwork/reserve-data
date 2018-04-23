@@ -29,7 +29,7 @@ func NewBoltUserStorage(path string) (*BoltUserStorage, error) {
 	var err error
 	var db *bolt.DB
 	db, err = bolt.Open(path, 0600, nil)
-	if err != nil {
+	if db == nil {
 		return nil, err
 	}
 
@@ -251,6 +251,25 @@ func (self *BoltUserStorage) GetUserOfAddress(ethaddr ethereum.Address) (string,
 		return nil
 	})
 	return result, timestamp, err
+}
+
+func (self *BoltUserStorage) GetKycUsers() (map[string]uint64, error) {
+	result := map[string]uint64{}
+	err := self.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(ADDRESS_ID))
+		timeBucket := tx.Bucket([]byte(ADDRESS_TIME))
+		c := b.Cursor()
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			id := string(v)
+			var timestamp uint64
+			if id != "" && id != string(k) {
+				timestamp = bytesToUint64(timeBucket.Get(k))
+				result[string(k)] = timestamp
+			}
+		}
+		return nil
+	})
+	return result, err
 }
 
 // returns all of addresses that's not pushed to the chain

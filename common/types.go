@@ -739,3 +739,21 @@ type ExchangeTokenNoti map[string]ExchangeNotiContent
 type ExchangeActionNoti map[string]ExchangeTokenNoti
 
 type ExchangeNotifications map[string]ExchangeActionNoti
+
+type CountryTokenHeatmap map[string]VolumeStats
+
+type TokenHeatmap struct {
+	Country   string  `json:"country"`
+	Volume    float64 `json:"volume"`
+	ETHVolume float64 `json:"eth_volume"`
+	USDVolume float64 `json:"usd_volume"`
+}
+
+type TokenHeatmapResponse []TokenHeatmap
+
+func (t TokenHeatmapResponse) Less(i, j int) bool {
+	return t[i].Volume < t[j].Volume
+}
+
+func (t TokenHeatmapResponse) Len() int      { return len(t) }
+func (t TokenHeatmapResponse) Swap(i, j int) { t[i], t[j] = t[j], t[i] }

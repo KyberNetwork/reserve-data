@@ -49,9 +49,12 @@ func (self *Fetcher) AddExchange(exchange Exchange) {
 		exchangeStatus = map[string]common.ExStatus{}
 	}
 	exchangeID := string(exchange.ID())
-	exchangeStatus[exchangeID] = common.ExStatus{
-		Timestamp: common.GetTimepoint(),
-		Status:    true,
+	_, exist := exchangeStatus[exchangeID]
+	if !exist {
+		exchangeStatus[exchangeID] = common.ExStatus{
+			Timestamp: common.GetTimepoint(),
+			Status:    true,
+		}
 	}
 	self.storage.UpdateExchangeStatus(exchangeStatus)
 }
@@ -422,7 +425,9 @@ func (self *Fetcher) PersistSnapshot(
 			if activityStatus.Error != nil {
 				snapshot.Valid = false
 				snapshot.Error = activityStatus.Error.Error()
-				activity.Result["error"] = activityStatus.Error.Error()
+				activity.Result["status_error"] = activityStatus.Error.Error()
+			} else {
+				activity.Result["status_error"] = ""
 			}
 		}
 		status, _ = bstatuses.Load(activity.ID)
@@ -436,7 +441,9 @@ func (self *Fetcher) PersistSnapshot(
 			if activityStatus.Error != nil {
 				snapshot.Valid = false
 				snapshot.Error = activityStatus.Error.Error()
-				activity.Result["error"] = activityStatus.Error.Error()
+				activity.Result["status_error"] = activityStatus.Error.Error()
+			} else {
+				activity.Result["status_error"] = ""
 			}
 		}
 		log.Printf("Aggregate statuses, final activity: %+v", activity)
