@@ -20,13 +20,11 @@ type TickerRunner struct {
 	rateDuration        time.Duration
 	tlogProcessDuration time.Duration
 	clogProcessDuration time.Duration
-	ascduration         time.Duration
 	blockClock          *time.Ticker
 	logClock            *time.Ticker
 	rateClock           *time.Ticker
 	tlogProcessClock    *time.Ticker
 	clogProcessClock    *time.Ticker
-	ascclock            *time.Ticker
 	signal              chan bool
 }
 
@@ -65,13 +63,6 @@ func (self *TickerRunner) GetCatLogProcessorTicker() <-chan time.Time {
 	return self.clogProcessClock.C
 }
 
-func (self *TickerRunner) GetAnalyticStorageControlTicker() <-chan time.Time {
-	if self.ascclock == nil {
-		<-self.signal
-	}
-	return self.ascclock.C
-}
-
 func (self *TickerRunner) Start() error {
 	self.blockClock = time.NewTicker(self.blockDuration)
 	self.signal <- true
@@ -83,8 +74,6 @@ func (self *TickerRunner) Start() error {
 	self.signal <- true
 	self.clogProcessClock = time.NewTicker(self.clogProcessDuration)
 	self.signal <- true
-	self.ascclock = time.NewTicker(self.ascduration)
-	self.signal <- true
 	return nil
 }
 
@@ -94,25 +83,22 @@ func (self *TickerRunner) Stop() error {
 	self.rateClock.Stop()
 	self.tlogProcessClock.Stop()
 	self.clogProcessClock.Stop()
-	self.ascclock.Stop()
 	return nil
 }
 
 func NewTickerRunner(
-	blockDuration, logDuration, rateDuration, tlogProcessDuration, clogProcessDuration, ascduration time.Duration) *TickerRunner {
+	blockDuration, logDuration, rateDuration, tlogProcessDuration, clogProcessDuration time.Duration) *TickerRunner {
 	return &TickerRunner{
 		blockDuration,
 		logDuration,
 		rateDuration,
 		tlogProcessDuration,
 		clogProcessDuration,
-		ascduration,
 		nil,
 		nil,
 		nil,
 		nil,
 		nil,
-		nil,
-		make(chan bool, 6),
+		make(chan bool, 5),
 	}
 }

@@ -118,9 +118,15 @@ func (self *Config) AddStatConfig(settingPath SettingPaths, addressConfig common
 	if os.Getenv("KYBER_ENV") == "simulation" {
 		statFetcherRunner = http_runner.NewHttpRunner(8002)
 	} else {
-		statFatcherRunner = stat.NewTickerRunner(5*time.Second, 7*time.Second, 10*time.Second, 2*time.Second, 2*time.Second, 24*time.Hour)
-		//		statFetcherRunner = fetcher.NewTickerRunner(7*time.Second, 5*time.Second, 3*time.Second, 5*time.Second, 5*time.Second, 10*time.Second, 7*time.Second, 2*time.Second, 2*time.Second)
-		ControllerRunner = stat.NewTickerRunner(24 * time.Hour)
+		statRunner := stat.NewTickerRunner(
+			5*time.Second,  // block fetching interval
+			7*time.Second,  // log fetching interval
+			10*time.Second, // rate fetching interval
+			2*time.Second,  // tradelog processing interval
+			2*time.Second)  // catlog processing interval
+		statFetcherRunner = statRunner
+		ControllerRunner = stat.NewControllerTickerRunner(24 * time.Hour)
+
 	}
 
 	self.StatStorage = statStorage
@@ -156,7 +162,16 @@ func (self *Config) AddCoreConfig(settingPath SettingPaths, authEnbl bool, addre
 	if os.Getenv("KYBER_ENV") == "simulation" {
 		fetcherRunner = http_runner.NewHttpRunner(8001)
 	} else {
-		fetcherRunner = fetcher.NewTickerRunner(7*time.Second, 5*time.Second, 3*time.Second, 5*time.Second, 5*time.Second, 10*time.Second, 7*time.Second, 2*time.Second, 2*time.Second)
+		fetcherRunner = fetcher.NewTickerRunner(
+			7*time.Second,  // orderbook fetching interval
+			5*time.Second,  // authdata fetching interval
+			3*time.Second,  // rate fetching interval
+			5*time.Second,  // block fetching interval
+			10*time.Minute, // tradeHistory fetching interval
+			10*time.Second, // reserve rates fetching interval
+			7*time.Second,  // log fetching interval
+			2*time.Second,  // trade log processing interval
+			2*time.Second)  // cat log processing interval
 	}
 
 	pricingSigner := PricingSignerFromConfigFile(settingPath.secretPath)
@@ -284,10 +299,10 @@ var ConfigPaths = map[string]SettingPaths{
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/staging.db",
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/staging_analytics.db",
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/staging_stats.db",
-		"/go/src/github.com/KyberNetwork/reserve-data/cmd/staging_config.json",
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/staging_logs.db",
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/staging_rates.db",
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/staging_users.db",
+		"/go/src/github.com/KyberNetwork/reserve-data/cmd/staging_config.json",
 		"https://semi-node.kyber.network",
 		[]string{
 			"https://semi-node.kyber.network",
