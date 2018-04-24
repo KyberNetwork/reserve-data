@@ -20,8 +20,13 @@ func SetupTickerTestForStatFetcherRunner(blockDuration,
 	return stat.NewFetcherRunnerTest(tickerRuner), nil
 }
 
-func doTickerforStatFetcherRunnerTest(f func(tester *stat.FetcherRunnerTest, t *testing.T), t *testing.T) {
-	tester, err := SetupTickerTestForStatFetcherRunner(1*time.Second, 2*time.Second, 3*time.Second, 4*time.Second, 5*time.Second)
+func doTickerforStatFetcherRunnerTest(blockDuration,
+	logDuration,
+	rateDuration,
+	tlogProcessDuration,
+	clogProcessDuration time.Duration,
+	f func(tester *stat.FetcherRunnerTest, t *testing.T), t *testing.T) {
+	tester, err := SetupTickerTestForStatFetcherRunner(blockDuration, logDuration, rateDuration, tlogProcessDuration, clogProcessDuration)
 	if err != nil {
 		t.Fatalf("Testing Ticker Runner as Controller Runner: init failed(%s)", err)
 	}
@@ -29,9 +34,29 @@ func doTickerforStatFetcherRunnerTest(f func(tester *stat.FetcherRunnerTest, t *
 }
 
 func TestTickerRunnerForStatFetcherRunner(t *testing.T) {
-	doTickerforStatFetcherRunnerTest(func(tester *stat.FetcherRunnerTest, t *testing.T) {
-		if err := tester.TestFetcherConcurrency(TESTDURATION.Nanoseconds()); err != nil {
-			t.Fatalf("Testing Ticker Runner ")
+	doTickerforStatFetcherRunnerTest(1*time.Second, 1*time.Second, 1*time.Second, 1*time.Second, 1*time.Second, func(tester *stat.FetcherRunnerTest, t *testing.T) {
+		if err := tester.TestBlockTicker(); err != nil {
+			t.Fatalf("Testing Ticker Runner failed:(%s)", err)
+		}
+	}, t)
+	doTickerforStatFetcherRunnerTest(1*time.Second, 1*time.Second, 1*time.Second, 1*time.Second, 1*time.Second, func(tester *stat.FetcherRunnerTest, t *testing.T) {
+		if err := tester.TestLogTicker(); err != nil {
+			t.Fatalf("Testing Ticker Runner failed:(%s)", err)
+		}
+	}, t)
+	doTickerforStatFetcherRunnerTest(1*time.Second, 1*time.Second, 1*time.Second, 1*time.Second, 1*time.Second, func(tester *stat.FetcherRunnerTest, t *testing.T) {
+		if err := tester.TestReserveRateTicker(); err != nil {
+			t.Fatalf("Testing Ticker Runner failed:(%s)", err)
+		}
+	}, t)
+	doTickerforStatFetcherRunnerTest(1*time.Second, 1*time.Second, 1*time.Second, 1*time.Second, 1*time.Second, func(tester *stat.FetcherRunnerTest, t *testing.T) {
+		if err := tester.TestTradelogProcessorTicker(); err != nil {
+			t.Fatalf("Testing Ticker Runner failed:(%s)", err)
+		}
+	}, t)
+	doTickerforStatFetcherRunnerTest(1*time.Second, 1*time.Second, 1*time.Second, 1*time.Second, 1*time.Second, func(tester *stat.FetcherRunnerTest, t *testing.T) {
+		if err := tester.TestCatlogProcessorTicker(); err != nil {
+			t.Fatalf("Testing Ticker Runner failed:(%s)", err)
 		}
 	}, t)
 }
