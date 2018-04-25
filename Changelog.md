@@ -1,4 +1,14 @@
-# 0.6.0 (2018-04-10)
+# 0.6.1 (2018-04-25)
+## Features:
+- Getting aws info from config file
+
+## Bug fixes:
+- Get correct filename from AWS's Item key for intergrity check
+
+## Compatability:
+- This version only works with KyberNetwork smart contracts version 0.3.0 or later
+
+# 0.6.0 (2018-04-25)
 
 ## Features:
 - support Huobi as backend centralized exchange
@@ -9,6 +19,7 @@
 - Support multiple token mode (internal use, external use, unlisted tokens)
 - API to support status server, dashboard notifications
 - Analytic dev mode to support dev environment for analytic team
+- API for analytic to submit pricing data
 
 
 ## Bug fixes:
@@ -27,13 +38,6 @@
 
 ## Compatability:
 - This version only works with KyberNetwork smart contracts version 0.3.0 or later
-
-# 0.5.1 (2018-03-08)
-## Features: 
-- API for analytic to submit pricing data
-
-## Bug fixes:
-- Get correct filename from AWS's Item key for intergrity check
 
 # 0.5.0 (2018-03-08)
 
