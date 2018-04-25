@@ -28,6 +28,13 @@
 ## Compatability:
 - This version only works with KyberNetwork smart contracts version 0.3.0 or later
 
+# 0.5.1 (2018-03-08)
+## Features: 
+- API for analytic to submit pricing data
+
+## Bug fixes:
+- Get correct filename from AWS's Item key for intergrity check
+
 # 0.5.0 (2018-03-08)
 
 ## Features:
