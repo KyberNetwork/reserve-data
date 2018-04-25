@@ -6,10 +6,12 @@ import (
 )
 
 type AWSConfig struct {
-	Region      string `json:"region"`
-	AccessKeyID string `json:"aws_access_key_id"`
-	SecretKey   string `json:"aws_secret_access_key"`
-	Token       string `json:"aws_token"`
+	Region                    string `json:"aws_region"`
+	AccessKeyID               string `json:"aws_access_key_id"`
+	SecretKey                 string `json:"aws_secret_access_key"`
+	Token                     string `json:"aws_token"`
+	ExpiredAnalyticBucketName string `json:"aws_expired_analytic_bucket_name"`
+	ExpiredAnalyticFolderPath string `json:"aws_expired_analytic_folder_path"`
 }
 
 func GetAWSconfigFromFile(path string) (AWSConfig, error) {

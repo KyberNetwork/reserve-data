@@ -15,26 +15,26 @@ import (
 )
 
 const (
-	PRICE_ANALYTIC_BUCKET                 string = "price_analytic"
-	EXPIRED_PRICE_ANALYTIC_S3_BUCKET_NAME string = "kn-data-collector"
-	MAX_GET_ANALYTIC_PERIOD               uint64 = 86400000      //1 day in milisecond
-	PRICE_ANALYTIC_EXPIRED                uint64 = 30 * 86400000 //30 days in milisecond
-	EXPIRED_PRICE_ANALYTIC_AWSFOLDER_PATH string = ""
+	PRICE_ANALYTIC_BUCKET   string = "price_analytic"
+	MAX_GET_ANALYTIC_PERIOD uint64 = 86400000  //1 day in milisecond
+	PRICE_ANALYTIC_EXPIRED  uint64 = 30 * 1000 //30 days in milisecond
 )
 
 type BoltAnalyticStorage struct {
-	db   *bolt.DB
-	arch archive.Archive
+	db            *bolt.DB
+	arch          archive.Archive
+	bucketName    string
+	awsFolderPath string
 }
 
-func NewBoltAnalyticStorage(path, awsPath string) (*BoltAnalyticStorage, error) {
+func NewBoltAnalyticStorage(dbPath, awsKeyPath string) (*BoltAnalyticStorage, error) {
 	var err error
 	var db *bolt.DB
-	db, err = bolt.Open(path, 0600, nil)
+	db, err = bolt.Open(dbPath, 0600, nil)
 	if err != nil {
 		panic(err)
 	}
-	awsConf, err := archive.GetAWSconfigFromFile(awsPath)
+	awsConf, err := archive.GetAWSconfigFromFile(awsKeyPath)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func NewBoltAnalyticStorage(path, awsPath string) (*BoltAnalyticStorage, error) 
 		return nil, err
 	}
 	s3archive := archive.NewS3Archive(awsConf)
-	storage := BoltAnalyticStorage{db, s3archive}
+	storage := BoltAnalyticStorage{db, s3archive, awsConf.ExpiredAnalyticBucketName, awsConf.ExpiredAnalyticFolderPath}
 	return &storage, nil
 }
 
@@ -67,12 +67,11 @@ func (self *BoltAnalyticStorage) UpdatePriceAnalyticData(timestamp uint64, value
 
 func (self *BoltAnalyticStorage) BackupFile(fileName string) error {
 	log.Printf("AnalyticPriceData: uploading file... ")
-	err := self.arch.UploadFile(EXPIRED_PRICE_ANALYTIC_AWSFOLDER_PATH, fileName, EXPIRED_PRICE_ANALYTIC_S3_BUCKET_NAME)
+	err := self.arch.UploadFile(self.awsFolderPath, fileName, self.bucketName)
 	if err != nil {
 		return err
 	}
-
-	intergrity, err := self.arch.CheckFileIntergrity(EXPIRED_PRICE_ANALYTIC_AWSFOLDER_PATH, fileName, EXPIRED_PRICE_ANALYTIC_S3_BUCKET_NAME)
+	intergrity, err := self.arch.CheckFileIntergrity(self.awsFolderPath, fileName, self.bucketName)
 	if err != nil {
 		return err
 	}
