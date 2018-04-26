@@ -1127,8 +1127,7 @@ on failure:
 {"success":false,
  "reason":<error>}
 ```
-
-### Get stable token params- (signing required) return the current confirmed stable token params
+### Get pending stable token params- (signing required) return the current pending stable token params
 ```
 <host>:8000/pending-stable-token-params
 GET request
@@ -1154,7 +1153,8 @@ response:
   "success": true
 }
 ```
-### Get pending stable token params- (signing required) return the current pending stable token params
+
+### Get stable token params- (signing required) return the current confirmed stable token params
 ```
 <host>:8000/stable-token-params
 GET request

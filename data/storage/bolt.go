@@ -18,7 +18,7 @@ import (
 )
 
 const (
-  GOLD_BUCKET string = "gold_feeds"
+	GOLD_BUCKET string = "gold_feeds"
 
 	PRICE_BUCKET                       string = "prices"
 	RATE_BUCKET                        string = "rates"
@@ -1288,7 +1288,7 @@ func (self *BoltStorage) GetStableTokenParams() (map[string]interface{}, error) 
 		}
 		record := b.Get(k)
 		if record == nil {
-			return fmt.Errorf("Bucket is empty")
+			return nil
 		}
 		vErr := json.Unmarshal(record, &result)
 		if vErr != nil {
@@ -1309,7 +1309,7 @@ func (self *BoltStorage) GetPendingStableTokenParams() (map[string]interface{}, 
 		}
 		record := b.Get(k)
 		if record == nil {
-			return fmt.Errorf("Bucket is empty")
+			return nil
 		}
 		vErr := json.Unmarshal(record, &result)
 		if vErr != nil {
