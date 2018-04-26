@@ -25,6 +25,7 @@ type Binance struct {
 	addresses    *common.ExchangeAddresses
 	exchangeInfo *common.ExchangeInfo
 	fees         common.ExchangeFees
+	minDeposit   common.ExchangesMinDeposit
 }
 
 func (self *Binance) TokenAddresses() map[string]ethereum.Address {
@@ -129,6 +130,10 @@ func (self *Binance) GetExchangeInfo(pair common.TokenPairID) (common.ExchangePr
 
 func (self *Binance) GetFee() common.ExchangeFees {
 	return self.fees
+}
+
+func (self *Binance) GetMinDeposit() common.ExchangesMinDeposit {
+	return self.minDeposit
 }
 
 func (self *Binance) ID() common.ExchangeID {
@@ -480,8 +485,9 @@ func (self *Binance) OrderStatus(id string, base, quote string) (string, error) 
 	}
 }
 
-func NewBinance(addressConfig map[string]string, feeConfig common.ExchangeFees, interf BinanceInterface) *Binance {
-	tokens, pairs, fees := getExchangePairsAndFeesFromConfig(addressConfig, feeConfig, "binance")
+func NewBinance(addressConfig map[string]string, feeConfig common.ExchangeFees, interf BinanceInterface,
+	minDepositConfig common.ExchangesMinDeposit) *Binance {
+	tokens, pairs, fees, minDeposit := getExchangePairsAndFeesFromConfig(addressConfig, feeConfig, minDepositConfig, "binance")
 	return &Binance{
 		interf,
 		pairs,
@@ -489,5 +495,6 @@ func NewBinance(addressConfig map[string]string, feeConfig common.ExchangeFees, 
 		common.NewExchangeAddresses(),
 		common.NewExchangeInfo(),
 		fees,
+		minDeposit,
 	}
 }

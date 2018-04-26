@@ -155,6 +155,12 @@ func (self *Config) AddCoreConfig(settingPath SettingPaths, addressConfig common
 		log.Fatalf("Fees file %s cannot found at: %s", settingPath.feePath, err)
 	}
 
+	minDepositPath := "/go/src/github.com/KyberNetwork/reserve-data/cmd/min_deposit.json"
+	minDeposit, err := common.GetMinDepositFromFile(minDepositPath)
+	if err != nil {
+		log.Fatalf("Fees file %s cannot found at: %s", minDepositPath, err.Error())
+	}
+
 	dataStorage, err := storage.NewBoltStorage(settingPath.dataStoragePath)
 	if err != nil {
 		panic(err)
@@ -204,6 +210,7 @@ func (self *Config) AddCoreConfig(settingPath SettingPaths, addressConfig common
 		addressConfig,
 		settingPath,
 		self.Blockchain,
+		minDeposit,
 		kyberENV)
 	self.FetcherExchanges = exchangePool.FetcherExchanges()
 	self.Exchanges = exchangePool.CoreExchanges()

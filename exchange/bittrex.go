@@ -24,6 +24,7 @@ type Bittrex struct {
 	storage      BittrexStorage
 	exchangeInfo *common.ExchangeInfo
 	fees         common.ExchangeFees
+	minDeposit   common.ExchangesMinDeposit
 }
 
 func (self *Bittrex) TokenAddresses() map[string]ethereum.Address {
@@ -41,6 +42,10 @@ func (self *Bittrex) Address(token common.Token) (ethereum.Address, bool) {
 
 func (self *Bittrex) GetFee() common.ExchangeFees {
 	return self.fees
+}
+
+func (self *Bittrex) GetMinDeposit() common.ExchangesMinDeposit {
+	return self.minDeposit
 }
 
 func (self *Bittrex) UpdateAllDepositAddresses(address string) {
@@ -401,8 +406,9 @@ func (self *Bittrex) FetchTradeHistory(timepoint uint64) (map[common.TokenPairID
 	return result, nil
 }
 
-func NewBittrex(addressConfig map[string]string, feeConfig common.ExchangeFees, interf BittrexInterface, storage BittrexStorage) *Bittrex {
-	tokens, pairs, fees := getExchangePairsAndFeesFromConfig(addressConfig, feeConfig, "bittrex")
+func NewBittrex(addressConfig map[string]string, feeConfig common.ExchangeFees, interf BittrexInterface, storage BittrexStorage,
+	minDepositConfig common.ExchangesMinDeposit) *Bittrex {
+	tokens, pairs, fees, minDeposit := getExchangePairsAndFeesFromConfig(addressConfig, feeConfig, minDepositConfig, "bittrex")
 	return &Bittrex{
 		interf,
 		pairs,
@@ -411,5 +417,6 @@ func NewBittrex(addressConfig map[string]string, feeConfig common.ExchangeFees, 
 		storage,
 		common.NewExchangeInfo(),
 		fees,
+		minDeposit,
 	}
 }

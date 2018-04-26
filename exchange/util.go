@@ -7,7 +7,8 @@ import (
 func getExchangePairsAndFeesFromConfig(
 	addressConfig map[string]string,
 	feeConfig common.ExchangeFees,
-	exchange string) ([]common.Token, []common.TokenPair, common.ExchangeFees) {
+	minDepositConfig common.ExchangesMinDeposit,
+	exchange string) ([]common.Token, []common.TokenPair, common.ExchangeFees, common.ExchangesMinDeposit) {
 
 	tokens := []common.Token{}
 	pairs := []common.TokenPair{}
@@ -17,6 +18,9 @@ func getExchangePairsAndFeesFromConfig(
 			map[string]float64{},
 			map[string]float64{},
 		},
+	}
+	minDeposit := common.ExchangesMinDeposit{
+		map[string]float64{},
 	}
 	for tokenID := range addressConfig {
 		tokens = append(tokens, common.MustGetInternalToken(tokenID))
@@ -34,6 +38,9 @@ func getExchangePairsAndFeesFromConfig(
 		} else {
 			panic(tokenID + " is not found in " + exchange + " binance deposit fee config file")
 		}
+		if _, exist := minDepositConfig.MinDeposit[tokenID]; exist {
+			minDeposit.MinDeposit[tokenID] = minDepositConfig.MinDeposit[tokenID] * 2
+		}
 	}
-	return tokens, pairs, fees
+	return tokens, pairs, fees, minDeposit
 }
