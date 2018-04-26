@@ -151,9 +151,7 @@ func (self FundingFee) GetTokenFee(token string) float64 {
 	return withdrawFee[token]
 }
 
-type ExchangesMinDeposit struct {
-	MinDeposit map[string]float64 `json:"min_deposit"`
-}
+type ExchangesMinDeposit map[string]float64
 
 type ExchangesMinDepositConfig struct {
 	Exchanges map[string]ExchangesMinDeposit `json:"exchanges"`
