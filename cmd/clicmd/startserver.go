@@ -31,6 +31,7 @@ var endpointOW string
 var base_url, auth_url string
 var enableStat bool
 var noCore bool
+var stdoutLog bool
 
 func loadTimestamp(path string) []uint64 {
 	raw, err := ioutil.ReadFile(path)
@@ -58,7 +59,7 @@ func GetConfigFromENV(kyberENV string) *configuration.Config {
 }
 
 //set config log
-func configLog() {
+func configLog(stdoutLog bool) {
 	logger := &lumberjack.Logger{
 		Filename: "/go/src/github.com/KyberNetwork/reserve-data/log/core.log",
 		// MaxSize:  1, // megabytes
@@ -67,8 +68,7 @@ func configLog() {
 		// Compress:   true, // disabled by default
 	}
 
-	kyberENV := os.Getenv("KYBER_ENV")
-	if kyberENV == "" || kyberENV == "dev" {
+	if stdoutLog {
 		mw := io.MultiWriter(os.Stdout, logger)
 		log.SetOutput(mw)
 	} else {
@@ -91,7 +91,7 @@ func InitInterface(kyberENV string) {
 func serverStart(cmd *cobra.Command, args []string) {
 	numCPU := runtime.NumCPU()
 	runtime.GOMAXPROCS(numCPU)
-	configLog()
+	configLog(stdoutLog)
 
 	//get configuration from ENV variable
 	kyberENV := os.Getenv("KYBER_ENV")
@@ -233,5 +233,6 @@ func init() {
 	startServer.PersistentFlags().StringVar(&base_url, "base_url", "http://127.0.0.1", "base_url for authenticated enpoint")
 	startServer.Flags().BoolVarP(&enableStat, "enable-stat", "", false, "enable stat related fetcher and api, event logs will not be fetched")
 	startServer.Flags().BoolVarP(&noCore, "no-core", "", false, "disable core related fetcher and api, this should be used only when we want to run an independent stat server")
+	startServer.Flags().BoolVarP(&stdoutLog, "log-to-stdout", "", false, "send log to both log file and stdout terminal")
 	RootCmd.AddCommand(startServer)
 }
