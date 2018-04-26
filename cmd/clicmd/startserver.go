@@ -67,9 +67,14 @@ func configLog() {
 		// Compress:   true, // disabled by default
 	}
 
-	mw := io.MultiWriter(os.Stdout, logger)
+	kyberENV := os.Getenv("KYBER_ENV")
+	if kyberENV == "" || kyberENV == "dev" {
+		mw := io.MultiWriter(os.Stdout, logger)
+		log.SetOutput(mw)
+	} else {
+		log.SetOutput(logger)
+	}
 	log.SetFlags(log.LstdFlags | log.Lmicroseconds | log.Lshortfile)
-	log.SetOutput(mw)
 
 	c := cron.New()
 	c.AddFunc("@daily", func() { logger.Rotate() })
