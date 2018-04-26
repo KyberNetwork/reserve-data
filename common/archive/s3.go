@@ -2,6 +2,7 @@ package archive
 
 import (
 	"os"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -51,8 +52,11 @@ func (archive *s3Archive) CheckFileIntergrity(awsfolderPath string, filename str
 	if err != nil {
 		return false, err
 	}
+
 	for _, item := range resp.Contents {
-		if (*item.Key == filename) && (*item.Size == fi.Size()) {
+		elems := strings.Split(*item.Key, "/")
+		remoteFileName := elems[len(elems)-1]
+		if (remoteFileName == filename) && (*item.Size == fi.Size()) {
 			return true, nil
 		}
 	}

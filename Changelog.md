@@ -1,8 +1,41 @@
-# 0.6.0 (2018-04-10)
+# 0.6.1 (2018-04-25)
+## Features:
+- Getting aws info from config file
+
+## Bug fixes:
+- Get correct filename from AWS's Item key for intergrity check
+
+## Compatability:
+- This version only works with KyberNetwork smart contracts version 0.3.0 or later
+
+# 0.6.0 (2018-04-25)
 
 ## Features:
+- support Huobi as backend centralized exchange
+- API for analytic to submit notifications on exchange status
+- API to enable/disable a particular exchange
+- More graph data such as (timezone, heatmap, trade summary, trade summary for a wallet)
+- Support more tokens (including DAI)
+- Support multiple token mode (internal use, external use, unlisted tokens)
+- API to support status server, dashboard notifications
+- Analytic dev mode to support dev environment for analytic team
+- API for analytic to submit pricing data
+
+
 ## Bug fixes:
+- fix bunch of errors in order to ensure stat server will not miss any tradelogs (including making log aggregation and last log id persistence atomic)
+- return log in correct order to ensure consistent stat results
+- enable authentication in stat server (it was ignored before)
+
 ## Improvements:
+- Fallback to other nodes when primary node is down with contract calls
+- Massive refactor the codebase which is related to blockchain interaction
+- Add more tests to make the whole component more stable
+- Improve a lot log aggregration performance by process in group and reduce number of database transactions
+- Using ethereum.Address type in database interfaces to ensure it's consistency
+- Update bittrex constants and settings
+- Persist error messages for all kind of activities (deposit/withdraw/trade)
+
 ## Compatability:
 - This version only works with KyberNetwork smart contracts version 0.3.0 or later
 
