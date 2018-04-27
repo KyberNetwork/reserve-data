@@ -38,6 +38,8 @@ func getExchangePairsAndFeesFromConfig(
 		}
 		if _, exist := minDepositConfig[tokenID]; exist {
 			minDeposit[tokenID] = minDepositConfig[tokenID] * 2
+		} else {
+			panic(tokenID + " is not found in " + exchange + " min deposit config file")
 		}
 	}
 	return tokens, pairs, fees, minDeposit
