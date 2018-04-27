@@ -851,12 +851,27 @@ func (self *BoltStorage) StoreTradeHistory(data common.AllTradeHistory, timepoin
 		// prune out old data
 		c := b.Cursor()
 		k, _ := c.First()
+		currentData := common.AllTradeHistory{
+			Timestamp: common.GetTimestamp(),
+			Data:      map[common.ExchangeID]common.ExchangeTradeHistory{},
+		}
 		if k != nil {
-			b.Delete([]byte(k))
+			json.Unmarshal(k, &currentData)
 		}
 
+		// override old data
+		for exchanges, dataHistory := range data.Data {
+			currentDataHistory, exist := currentData.Data[exchanges]
+			if !exist {
+				currentData.Data[exchanges] = dataHistory
+			} else {
+				for pair, pairHistory := range dataHistory {
+					currentDataHistory[pair] = pairHistory
+				}
+			}
+		}
 		// add new data
-		dataJson, err = json.Marshal(data)
+		dataJson, err = json.Marshal(currentData)
 		if err != nil {
 			return err
 		}

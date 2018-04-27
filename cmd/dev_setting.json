@@ -243,21 +243,14 @@
       "RDN": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90"
     },
     "bittrex": {
-      "ETH": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
-      "OMG": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
-      "KNC": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
-      "SNT": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
-      "EOS": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
-      "ELF": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
-      "POWR": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
-      "MANA": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
-      "BAT": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
-      "REQ": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
-      "GTO": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
-      "ENG": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
-      "SALT": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
-      "APPC": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
-      "RDN": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547"
+      "ETH": "0xe0355aa3cc0a4e0e4b2a70acd90c2fa961f61b23",
+      "OMG": "0xe0355aa3cc0a4e0e4b2a70acd90c2fa961f61b23",
+      "SNT": "0xe0355aa3cc0a4e0e4b2a70acd90c2fa961f61b23",
+      "POWR": "0xe0355aa3cc0a4e0e4b2a70acd90c2fa961f61b23",
+      "MANA": "0xe0355aa3cc0a4e0e4b2a70acd90c2fa961f61b23",
+      "BAT": "0xe0355aa3cc0a4e0e4b2a70acd90c2fa961f61b23",
+      "ENG": "0xe0355aa3cc0a4e0e4b2a70acd90c2fa961f61b23",
+      "SALT": "0xe0355aa3cc0a4e0e4b2a70acd90c2fa961f61b23"
     },
     "huobi": {
       "ETH": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
