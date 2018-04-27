@@ -39,8 +39,8 @@ func (self *FetcherRunnerTest) TestFetcherConcurrency(nanosec int64) error {
 	}
 	wg.Wait()
 	timeTook := time.Since(startTime).Nanoseconds()
-	upperRange := nanosec + nanosec/10
-	lowerRange := nanosec - nanosec/10
+	upperRange := nanosec + nanosec/2
+	lowerRange := nanosec - nanosec/2
 	if timeTook < lowerRange || timeTook > upperRange {
 		return fmt.Errorf("expect ticker in between %d and %d nanosec, but it came in %d instead", lowerRange, upperRange, timeTook)
 	}
@@ -58,8 +58,8 @@ func (self *FetcherRunnerTest) TestIndividualTicker(ticker func() <-chan time.Ti
 
 	t := <-ticker()
 	timeTook := t.Sub(startTime).Nanoseconds()
-	upperRange := nanosec + nanosec/10
-	lowerRange := nanosec - nanosec/10
+	upperRange := nanosec + nanosec/2
+	lowerRange := nanosec - nanosec/2
 	if timeTook < lowerRange || timeTook > upperRange {
 		return fmt.Errorf("expect ticker in between %d and %d nanosec, but it came in %d instead", lowerRange, upperRange, timeTook)
 	}
@@ -69,36 +69,36 @@ func (self *FetcherRunnerTest) TestIndividualTicker(ticker func() <-chan time.Ti
 	return nil
 }
 
-func (self *FetcherRunnerTest) TestBlockTicker() error {
-	if err := self.TestIndividualTicker(self.fr.GetBlockTicker, 1*time.Second.Nanoseconds()); err != nil {
+func (self *FetcherRunnerTest) TestBlockTicker(limit int64) error {
+	if err := self.TestIndividualTicker(self.fr.GetBlockTicker, limit); err != nil {
 		return fmt.Errorf("GetBlockTicker failed(%s) ", err)
 	}
 	return nil
 }
 
-func (self *FetcherRunnerTest) TestLogTicker() error {
-	if err := self.TestIndividualTicker(self.fr.GetLogTicker, 1*time.Second.Nanoseconds()); err != nil {
+func (self *FetcherRunnerTest) TestLogTicker(limit int64) error {
+	if err := self.TestIndividualTicker(self.fr.GetLogTicker, limit); err != nil {
 		return fmt.Errorf("GetLogTicker failed(%s) ", err)
 	}
 	return nil
 }
 
-func (self *FetcherRunnerTest) TestReserveRateTicker() error {
-	if err := self.TestIndividualTicker(self.fr.GetReserveRatesTicker, 1*time.Second.Nanoseconds()); err != nil {
+func (self *FetcherRunnerTest) TestReserveRateTicker(limit int64) error {
+	if err := self.TestIndividualTicker(self.fr.GetReserveRatesTicker, limit); err != nil {
 		return fmt.Errorf("GetReserveRates ticker failed(%s) ", err)
 	}
 	return nil
 }
 
-func (self *FetcherRunnerTest) TestTradelogProcessorTicker() error {
-	if err := self.TestIndividualTicker(self.fr.GetCatLogProcessorTicker, 1*time.Second.Nanoseconds()); err != nil {
+func (self *FetcherRunnerTest) TestTradelogProcessorTicker(limit int64) error {
+	if err := self.TestIndividualTicker(self.fr.GetCatLogProcessorTicker, limit); err != nil {
 		return fmt.Errorf("GetCatLogProcessorTicker failed(%s) ", err)
 	}
 	return nil
 }
 
-func (self *FetcherRunnerTest) TestCatlogProcessorTicker() error {
-	if err := self.TestIndividualTicker(self.fr.GetCatLogProcessorTicker, 1*time.Second.Nanoseconds()); err != nil {
+func (self *FetcherRunnerTest) TestCatlogProcessorTicker(limit int64) error {
+	if err := self.TestIndividualTicker(self.fr.GetCatLogProcessorTicker, limit); err != nil {
 		return fmt.Errorf("GetCatLogProcessorTicker failed(%s) ", err)
 	}
 	return nil

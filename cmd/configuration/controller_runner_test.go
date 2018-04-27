@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	TESTDURATION time.Duration = time.Second * 5
+	TESTDURATION time.Duration = time.Millisecond * 1
 )
 
 func SetupTickerTestForControllerRunner(duration time.Duration) (*stat.ControllerRunnerTest, error) {
@@ -27,7 +27,7 @@ func doTickerforControllerRunnerTest(f func(tester *stat.ControllerRunnerTest, t
 func TestTickerRunnerForControllerRunner(t *testing.T) {
 	doTickerforControllerRunnerTest(func(tester *stat.ControllerRunnerTest, t *testing.T) {
 		if err := tester.TestAnalyticStorageControlTicker(TESTDURATION.Nanoseconds()); err != nil {
-			t.Fatalf("Testing Ticker Runner ")
+			t.Fatalf("Testing Ticker Runner failed :%s", err)
 		}
 	}, t)
 }
