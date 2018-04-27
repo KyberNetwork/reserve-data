@@ -36,6 +36,9 @@ func (self testExchange) GetExchangeInfo(pair common.TokenPairID) (common.Exchan
 func (self testExchange) GetFee() common.ExchangeFees {
 	return common.ExchangeFees{}
 }
+func (self testExchange) GetMinDeposit() common.ExchangesMinDeposit {
+	return common.ExchangesMinDeposit{}
+}
 func (self testExchange) GetInfo() (common.ExchangeInfo, error) {
 	return common.ExchangeInfo{}, nil
 }
