@@ -215,8 +215,15 @@
       "name": "Digix Gold",
       "decimals": 9,
       "address": "0x4f3afec4e5a3f2a6a1a411def7d7dfe50ee057bf",
-      "internal use": true,
+      "internal use": false,
       "listed": false
+    },
+    "MOT": {
+      "name": "Olympus Labs",
+      "decimals": 18,
+      "address": "0x263c618480dbe35c300d8d5ecda19bbb986acaed",
+      "internal use": false,
+      "listed": true
     },
     "IOST": {
       "name": "IOStoken",

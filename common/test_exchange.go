@@ -33,6 +33,9 @@ func (self TestExchange) GetExchangeInfo(pair TokenPairID) (ExchangePrecisionLim
 func (self TestExchange) GetFee() ExchangeFees {
 	return ExchangeFees{}
 }
+func (self TestExchange) GetMinDeposit() ExchangesMinDeposit {
+	return ExchangesMinDeposit{}
+}
 func (self TestExchange) GetInfo() (ExchangeInfo, error) {
 	return ExchangeInfo{}, nil
 }
