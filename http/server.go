@@ -1018,6 +1018,19 @@ func (self *HTTPServer) GetFee(c *gin.Context) {
 	return
 }
 
+func (self *HTTPServer) GetMinDeposit(c *gin.Context) {
+	data := map[string]common.ExchangesMinDeposit{}
+	for _, exchange := range common.SupportedExchanges {
+		minDeposit := exchange.GetMinDeposit()
+		data[string(exchange.ID())] = minDeposit
+	}
+	c.JSON(
+		http.StatusOK,
+		gin.H{"success": true, "data": data},
+	)
+	return
+}
+
 func (self *HTTPServer) GetTargetQty(c *gin.Context) {
 	log.Println("Getting target quantity")
 	_, ok := self.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
@@ -2560,6 +2573,7 @@ func (self *HTTPServer) Run() {
 		self.r.GET("/exchangeinfo", self.GetExchangeInfo)
 		self.r.GET("/exchangeinfo/:exchangeid/:base/:quote", self.GetPairInfo)
 		self.r.GET("/exchangefees", self.GetFee)
+		self.r.GET("/exchange-min-deposit", self.GetMinDeposit)
 		self.r.GET("/exchangefees/:exchangeid", self.GetExchangeFee)
 		self.r.GET("/core/addresses", self.GetAddress)
 		self.r.GET("/tradehistory", self.GetTradeHistory)

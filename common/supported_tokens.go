@@ -8,16 +8,22 @@ import (
 )
 
 type SupportedTokens struct {
-	mu           sync.RWMutex
-	tokens       []Token
-	idToToken    map[string]Token
-	addrToToken  map[string]Token
-	iTokens      []Token
-	iIDToToken   map[string]Token
-	iAddrToToken map[string]Token
-	eTokens      []Token
-	eIDToToken   map[string]Token
-	eAddrToToken map[string]Token
+	mu          sync.RWMutex
+	tokens      []Token          // all active tokens
+	idToToken   map[string]Token // map ID to active token
+	addrToToken map[string]Token // map address to active token
+
+	iTokens      []Token          // all internal active tokens
+	iIDToToken   map[string]Token // map ID to internal active tokens
+	iAddrToToken map[string]Token // map address to internal active tokens
+
+	eTokens      []Token          // all external active tokens
+	eIDToToken   map[string]Token // map ID to external active tokens
+	eAddrToToken map[string]Token // map address to external active tokens
+
+	aTokens      []Token          // all active and inactive tokens
+	aIDToToken   map[string]Token // map ID to active or inactive tokens
+	aAddrToToken map[string]Token // map address to active or inactive tokens
 }
 
 func NewSupportedTokens() *SupportedTokens {
@@ -32,10 +38,13 @@ func NewSupportedTokens() *SupportedTokens {
 		eTokens:      []Token{},
 		eIDToToken:   map[string]Token{},
 		eAddrToToken: map[string]Token{},
+		aTokens:      []Token{},
+		aIDToToken:   map[string]Token{},
+		aAddrToToken: map[string]Token{},
 	}
 }
 
-func (self *SupportedTokens) AddInternalToken(t Token) {
+func (self *SupportedTokens) AddInternalActiveToken(t Token) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -46,9 +55,13 @@ func (self *SupportedTokens) AddInternalToken(t Token) {
 	self.iTokens = append(self.iTokens, t)
 	self.iIDToToken[strings.ToUpper(t.ID)] = t
 	self.iAddrToToken[strings.ToLower(t.Address)] = t
+
+	self.aTokens = append(self.aTokens, t)
+	self.aIDToToken[strings.ToUpper(t.ID)] = t
+	self.aAddrToToken[strings.ToLower(t.Address)] = t
 }
 
-func (self *SupportedTokens) AddExternalToken(t Token) {
+func (self *SupportedTokens) AddExternalActiveToken(t Token) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -59,6 +72,45 @@ func (self *SupportedTokens) AddExternalToken(t Token) {
 	self.eTokens = append(self.eTokens, t)
 	self.eIDToToken[strings.ToUpper(t.ID)] = t
 	self.eAddrToToken[strings.ToLower(t.Address)] = t
+
+	self.aTokens = append(self.aTokens, t)
+	self.aIDToToken[strings.ToUpper(t.ID)] = t
+	self.aAddrToToken[strings.ToLower(t.Address)] = t
+}
+
+func (self *SupportedTokens) AddInactiveToken(t Token) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.aTokens = append(self.aTokens, t)
+	self.aIDToToken[strings.ToUpper(t.ID)] = t
+	self.aAddrToToken[strings.ToLower(t.Address)] = t
+}
+
+func (self *SupportedTokens) GetSupportedTokens() []Token {
+	self.mu.RLock()
+	defer self.mu.RUnlock()
+	return self.aTokens
+}
+
+func (self *SupportedTokens) GetSupportedTokenByID(id string) (Token, error) {
+	self.mu.RLock()
+	defer self.mu.RUnlock()
+	t, found := self.aIDToToken[strings.ToUpper(id)]
+	if !found {
+		return t, errors.New(fmt.Sprintf("Token %s is not supported by core", id))
+	}
+	return t, nil
+}
+
+func (self *SupportedTokens) GetSupportedTokenByAddress(addr string) (Token, error) {
+	self.mu.RLock()
+	defer self.mu.RUnlock()
+	t, found := self.aAddrToToken[strings.ToLower(addr)]
+	if !found {
+		return t, errors.New(fmt.Sprintf("Token %s is not supported by core", addr))
+	}
+	return t, nil
 }
 
 func (self *SupportedTokens) GetTokens() []Token {
@@ -145,12 +197,16 @@ func ETHToken() Token {
 	return MustGetInternalToken("ETH")
 }
 
-func RegisterInternalToken(t Token) {
-	supportedTokens.AddInternalToken(t)
+func RegisterInternalActiveToken(t Token) {
+	supportedTokens.AddInternalActiveToken(t)
 }
 
-func RegisterExternalToken(t Token) {
-	supportedTokens.AddExternalToken(t)
+func RegisterExternalActiveToken(t Token) {
+	supportedTokens.AddExternalActiveToken(t)
+}
+
+func RegisterInactiveToken(t Token) {
+	supportedTokens.AddInactiveToken(t)
 }
 
 func InternalTokens() []Token {
@@ -183,8 +239,12 @@ func MustGetInternalToken(id string) Token {
 	return t
 }
 
-func MustGetNetworkTokenByAddress(addr string) Token {
-	t, e := GetNetworkTokenByAddr(addr)
+func GetSupportedTokenByAddr(addr string) (Token, error) {
+	return supportedTokens.GetSupportedTokenByAddress(addr)
+}
+
+func MustGetSupportedTokenByAddress(addr string) Token {
+	t, e := GetSupportedTokenByAddr(addr)
 	if e != nil {
 		panic(e)
 	}

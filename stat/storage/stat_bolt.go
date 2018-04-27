@@ -625,12 +625,16 @@ func (self *BoltStatStorage) SetUserList(userInfos map[string]common.UserInfoTim
 					if err != nil {
 						return err
 					}
-					dataJSON, _ := json.Marshal(userData)
 					currentUserData := common.UserInfo{}
 					currentValue := timestampBk.Get([]byte(userAddr))
 					if currentValue != nil {
 						json.Unmarshal(currentValue, &currentUserData)
 					}
+					currentUserData.USDVolume += userData.USDVolume
+					currentUserData.ETHVolume += userData.ETHVolume
+					currentUserData.Addr = userData.Addr
+					currentUserData.Email = userData.Email
+					dataJSON, _ := json.Marshal(currentUserData)
 					err = timestampBk.Put([]byte(userAddr), dataJSON)
 					if err != nil {
 						log.Printf("cannot saved user list: %s", err.Error())

@@ -29,7 +29,7 @@ func GetChainType(kyberENV string) string {
 		return "homestead"
 	case "staging":
 		return "byzantium"
-	case "simulation":
+	case "simulation", "analytic_dev":
 		return "homestead"
 	case "ropsten":
 		return "byzantium"
@@ -52,6 +52,8 @@ func GetConfigPaths(kyberENV string) SettingPaths {
 		return (ConfigPaths["simulation"])
 	case "ropsten":
 		return (ConfigPaths["ropsten"])
+	case "analytic_dev":
+		return (ConfigPaths["analytic_dev"])
 	default:
 		log.Println("Environment setting paths is not found, using dev...")
 		return (ConfigPaths["dev"])
@@ -78,10 +80,14 @@ func GetConfig(kyberENV string, authEnbl bool, endpointOW string, noCore, enable
 		tok := common.Token{
 			id, t.Address, t.Decimals,
 		}
-		if t.KNReserveSupport {
-			common.RegisterInternalToken(tok)
+		if t.Active {
+			if t.KNReserveSupport {
+				common.RegisterInternalActiveToken(tok)
+			} else {
+				common.RegisterExternalActiveToken(tok)
+			}
 		} else {
-			common.RegisterExternalToken(tok)
+			common.RegisterInactiveToken(tok)
 		}
 	}
 

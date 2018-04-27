@@ -722,13 +722,13 @@ func (self *Fetcher) getTradeInfo(trade common.TradeLog) (float64, float64, floa
 
 	var srcAmount, destAmount, ethAmount, burnFee float64
 
-	srcToken := common.MustGetNetworkTokenByAddress(srcAddr)
+	srcToken := common.MustGetSupportedTokenByAddress(srcAddr)
 	srcAmount = common.BigToFloat(trade.SrcAmount, srcToken.Decimal)
 	if srcToken.IsETH() {
 		ethAmount = srcAmount
 	}
 
-	destToken := common.MustGetNetworkTokenByAddress(dstAddr)
+	destToken := common.MustGetSupportedTokenByAddress(dstAddr)
 	destAmount = common.BigToFloat(trade.DestAmount, destToken.Decimal)
 	if destToken.IsETH() {
 		ethAmount = destAmount
@@ -859,13 +859,13 @@ func (self *Fetcher) aggregateUserInfo(trade common.TradeLog, userInfos map[stri
 
 	var srcAmount, destAmount, ethAmount float64
 
-	srcToken := common.MustGetNetworkTokenByAddress(srcAddr)
+	srcToken := common.MustGetSupportedTokenByAddress(srcAddr)
 	srcAmount = common.BigToFloat(trade.SrcAmount, srcToken.Decimal)
 	if srcToken.IsETH() {
 		ethAmount = srcAmount
 	}
 
-	destToken := common.MustGetNetworkTokenByAddress(dstAddr)
+	destToken := common.MustGetSupportedTokenByAddress(dstAddr)
 	destAmount = common.BigToFloat(trade.DestAmount, destToken.Decimal)
 	if destToken.IsETH() {
 		ethAmount = destAmount

@@ -46,6 +46,8 @@ cmd/mainnet.db
 cmd/mainnet_config.json
 cmd/mainnet_deposit_keystore
 cmd/mainnet_keystore
+cmd/mainnet_intermediate_account_keystore
+cmd/staging_intermediate_account_keystore
 debugger.txt
 log.log
 run.sh

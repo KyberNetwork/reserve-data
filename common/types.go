@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"math"
 	"math/big"
 	"strconv"
@@ -150,6 +151,12 @@ func (self FundingFee) GetTokenFee(token string) float64 {
 	return withdrawFee[token]
 }
 
+type ExchangesMinDeposit map[string]float64
+
+type ExchangesMinDepositConfig struct {
+	Exchanges map[string]ExchangesMinDeposit `json:"exchanges"`
+}
+
 type ExchangeFees struct {
 	Trading TradingFee
 	Funding FundingFee
@@ -166,6 +173,18 @@ func GetFeeFromFile(path string) (ExchangeFeesConfig, error) {
 	} else {
 		result := ExchangeFeesConfig{}
 		err := json.Unmarshal(data, &result)
+		return result, err
+	}
+}
+
+func GetMinDepositFromFile(path string) (ExchangesMinDepositConfig, error) {
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return ExchangesMinDepositConfig{}, err
+	} else {
+		result := ExchangesMinDepositConfig{}
+		err := json.Unmarshal(data, &result)
+		log.Printf("min deposit: %+v", result)
 		return result, err
 	}
 }

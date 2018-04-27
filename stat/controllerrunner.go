@@ -10,33 +10,33 @@ type ControllerRunner interface {
 	Stop() error
 }
 
-type TickerRunner struct {
+type ControllerTickerRunner struct {
 	ascduration time.Duration
 	ascclock    *time.Ticker
 	signal      chan bool
 }
 
-func (self *TickerRunner) GetAnalyticStorageControlTicker() <-chan time.Time {
+func (self *ControllerTickerRunner) GetAnalyticStorageControlTicker() <-chan time.Time {
 	if self.ascclock == nil {
 		<-self.signal
 	}
 	return self.ascclock.C
 }
 
-func (self *TickerRunner) Start() error {
+func (self *ControllerTickerRunner) Start() error {
 	self.ascclock = time.NewTicker(self.ascduration)
 	self.signal <- true
 	return nil
 }
 
-func (self *TickerRunner) Stop() error {
+func (self *ControllerTickerRunner) Stop() error {
 	self.ascclock.Stop()
 	return nil
 }
 
-func NewTickerRunner(
-	ascduration time.Duration) *TickerRunner {
-	return &TickerRunner{
+func NewControllerTickerRunner(
+	ascduration time.Duration) *ControllerTickerRunner {
+	return &ControllerTickerRunner{
 		ascduration,
 		nil,
 		make(chan bool, 1),

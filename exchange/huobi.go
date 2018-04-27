@@ -31,6 +31,7 @@ type Huobi struct {
 	blockchain        HuobiBlockchain
 	intermediatorAddr ethereum.Address
 	storage           HuobiStorage
+	minDeposit        common.ExchangesMinDeposit
 }
 
 func (self *Huobi) MarshalText() (text []byte, err error) {
@@ -71,6 +72,7 @@ func (self *Huobi) UpdatePrecisionLimit(pair common.TokenPair, symbols HuobiExch
 			exchangePrecisionLimit := common.ExchangePrecisionLimit{}
 			exchangePrecisionLimit.Precision.Amount = symbol.AmountPrecision
 			exchangePrecisionLimit.Precision.Price = symbol.PricePrecision
+			exchangePrecisionLimit.MinNotional = 0.02
 			self.exchangeInfo.Update(pair.PairID(), exchangePrecisionLimit)
 			break
 		}
@@ -99,6 +101,10 @@ func (self *Huobi) GetExchangeInfo(pair common.TokenPairID) (common.ExchangePrec
 
 func (self *Huobi) GetFee() common.ExchangeFees {
 	return self.fees
+}
+
+func (self *Huobi) GetMinDeposit() common.ExchangesMinDeposit {
+	return self.minDeposit
 }
 
 func (self *Huobi) ID() common.ExchangeID {
@@ -544,9 +550,10 @@ func NewHuobi(
 	addressConfig map[string]string,
 	feeConfig common.ExchangeFees,
 	interf HuobiInterface, blockchain *blockchain.BaseBlockchain,
-	signer blockchain.Signer, nonce blockchain.NonceCorpus, storage HuobiStorage) *Huobi {
+	signer blockchain.Signer, nonce blockchain.NonceCorpus, storage HuobiStorage,
+	minDepositConfig common.ExchangesMinDeposit) *Huobi {
 
-	tokens, pairs, fees := getExchangePairsAndFeesFromConfig(addressConfig, feeConfig, "huobi")
+	tokens, pairs, fees, minDeposit := getExchangePairsAndFeesFromConfig(addressConfig, feeConfig, minDepositConfig, "huobi")
 	bc, err := huobiblockchain.NewBlockchain(blockchain, signer, nonce)
 	if err != nil {
 		log.Printf("Cant create Huobi's blockchain: %v", err)
@@ -563,6 +570,7 @@ func NewHuobi(
 		bc,
 		signer.GetAddress(),
 		storage,
+		minDeposit,
 	}
 	huobiServer := huobihttp.NewHuobiHTTPServer(&huobiObj)
 	go huobiServer.Run()

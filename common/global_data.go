@@ -12,3 +12,5 @@ type GoldData struct {
 	Status    string     `json:"success"`
 	Data      []GoldRate `json:"data"`
 }
+
+// {"value":2.00591,"text":"1 XAU is worth 2.00591 ETH","timestamp":1524811993}

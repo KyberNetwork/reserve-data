@@ -120,19 +120,13 @@ func (self *Config) AddStatConfig(settingPath SettingPaths, addressConfig common
 	if os.Getenv("KYBER_ENV") == "simulation" {
 		statFetcherRunner = http_runner.NewHttpRunner(8002)
 	} else {
-		statFetcherRunner = fetcher.NewTickerRunner(
-			7*time.Second,  // orderbook fetching interval
-			5*time.Second,  // authdata fetching interval
-			3*time.Second,  // rate fetching interval
+		statFetcherRunner = stat.NewTickerRunner(
 			5*time.Second,  // block fetching interval
-			10*time.Minute, // tradeHistory fetching interval
-			10*time.Second, // reserve rates fetching interval
 			7*time.Second,  // log fetching interval
-			2*time.Second,  // trade log processing interval
-			2*time.Second,  // cat log processing interval
-			10*time.Second, // global data fetching interval
-		)
-		ControllerRunner = stat.NewTickerRunner(24 * time.Hour)
+			10*time.Second, // rate fetching interval
+			2*time.Second,  // tradelog processing interval
+			2*time.Second)  // catlog processing interval
+		ControllerRunner = stat.NewControllerTickerRunner(24 * time.Hour)
 	}
 
 	self.StatStorage = statStorage
@@ -158,6 +152,12 @@ func (self *Config) AddCoreConfig(settingPath SettingPaths, addressConfig common
 		log.Fatalf("Fees file %s cannot found at: %s", settingPath.feePath, err)
 	}
 
+	minDepositPath := "/go/src/github.com/KyberNetwork/reserve-data/cmd/min_deposit.json"
+	minDeposit, err := common.GetMinDepositFromFile(minDepositPath)
+	if err != nil {
+		log.Fatalf("Fees file %s cannot found at: %s", minDepositPath, err.Error())
+	}
+
 	dataStorage, err := storage.NewBoltStorage(settingPath.dataStoragePath)
 	if err != nil {
 		panic(err)
@@ -173,13 +173,7 @@ func (self *Config) AddCoreConfig(settingPath SettingPaths, addressConfig common
 			5*time.Second,  // authdata fetching interval
 			3*time.Second,  // rate fetching interval
 			5*time.Second,  // block fetching interval
-			10*time.Minute, // tradeHistory fetching interval
-			10*time.Second, // reserve rates fetching interval
-			7*time.Second,  // log fetching interval
-			2*time.Second,  // trade log processing interval
-			2*time.Second,  // cat log processing interval
-			10*time.Second, // global data fetching interval
-		)
+			10*time.Minute) // tradeHistory fetching interval
 	}
 
 	pricingSigner := PricingSignerFromConfigFile(settingPath.secretPath)
@@ -211,6 +205,7 @@ func (self *Config) AddCoreConfig(settingPath SettingPaths, addressConfig common
 		addressConfig,
 		settingPath,
 		self.Blockchain,
+		minDeposit,
 		kyberENV)
 	self.FetcherExchanges = exchangePool.FetcherExchanges()
 	self.Exchanges = exchangePool.CoreExchanges()
@@ -267,10 +262,9 @@ var ConfigPaths = map[string]SettingPaths{
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/mainnet_rates.db",
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/mainnet_users.db",
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/mainnet_config.json",
-		"https://semi-node.kyber.network",
+		"https://mainnet.infura.io",
 		[]string{
 			"https://semi-node.kyber.network",
-			"https://mainnet.infura.io",
 			"https://api.mycryptoapi.com/eth",
 			"https://api.myetherapi.com/eth",
 			"https://mew.giveth.io/",
@@ -286,10 +280,10 @@ var ConfigPaths = map[string]SettingPaths{
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/mainnet_rates.db",
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/mainnet_users.db",
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/mainnet_config.json",
-		"https://semi-node.kyber.network",
+		"https://mainnet.infura.io",
 		[]string{
-			"https://semi-node.kyber.network",
 			"https://mainnet.infura.io",
+			"https://semi-node.kyber.network",
 			"https://api.mycryptoapi.com/eth",
 			"https://api.myetherapi.com/eth",
 			"https://mew.giveth.io/",
@@ -305,10 +299,10 @@ var ConfigPaths = map[string]SettingPaths{
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/staging_rates.db",
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/staging_users.db",
 		"/go/src/github.com/KyberNetwork/reserve-data/cmd/staging_config.json",
-		"https://semi-node.kyber.network",
+		"https://mainnet.infura.io",
 		[]string{
-			"https://semi-node.kyber.network",
 			"https://mainnet.infura.io",
+			"https://semi-node.kyber.network",
 			"https://api.mycryptoapi.com/eth",
 			"https://api.myetherapi.com/eth",
 			"https://mew.giveth.io/",
@@ -344,6 +338,21 @@ var ConfigPaths = map[string]SettingPaths{
 			"https://api.myetherapi.com/rop",
 		},
 	},
+	"analytic_dev": {
+		"/go/src/github.com/KyberNetwork/reserve-data/cmd/shared/deployment_dev.json",
+		"/go/src/github.com/KyberNetwork/reserve-data/cmd/fee.json",
+		"/go/src/github.com/KyberNetwork/reserve-data/cmd/core.db",
+		"/go/src/github.com/KyberNetwork/reserve-data/cmd/core_analytics.db",
+		"/go/src/github.com/KyberNetwork/reserve-data/cmd/core_stats.db",
+		"/go/src/github.com/KyberNetwork/reserve-data/cmd/core_logs.db",
+		"/go/src/github.com/KyberNetwork/reserve-data/cmd/core_rates.db",
+		"/go/src/github.com/KyberNetwork/reserve-data/cmd/core_users.db",
+		"/go/src/github.com/KyberNetwork/reserve-data/cmd/config.json",
+		"http://blockchain:8545",
+		[]string{
+			"http://blockchain:8545",
+		},
+	},
 }
 
 var Baseurl string = "http://127.0.0.1"
@@ -360,6 +369,7 @@ func SetInterface(base_url string) {
 	BittrexInterfaces["staging"] = bittrex.NewRealInterface()
 	BittrexInterfaces["simulation"] = bittrex.NewSimulatedInterface(base_url)
 	BittrexInterfaces["ropsten"] = bittrex.NewRopstenInterface(base_url)
+	BittrexInterfaces["analytic_dev"] = bittrex.NewRopstenInterface(base_url)
 
 	HuobiInterfaces["dev"] = huobi.NewDevInterface()
 	HuobiInterfaces["kovan"] = huobi.NewKovanInterface(base_url)
@@ -367,6 +377,7 @@ func SetInterface(base_url string) {
 	HuobiInterfaces["staging"] = huobi.NewRealInterface()
 	HuobiInterfaces["simulation"] = huobi.NewSimulatedInterface(base_url)
 	HuobiInterfaces["ropsten"] = huobi.NewRopstenInterface(base_url)
+	HuobiInterfaces["analytic_dev"] = huobi.NewRopstenInterface(base_url)
 
 	BinanceInterfaces["dev"] = binance.NewDevInterface()
 	BinanceInterfaces["kovan"] = binance.NewKovanInterface(base_url)
@@ -374,4 +385,5 @@ func SetInterface(base_url string) {
 	BinanceInterfaces["staging"] = binance.NewRealInterface()
 	BinanceInterfaces["simulation"] = binance.NewSimulatedInterface(base_url)
 	BinanceInterfaces["ropsten"] = binance.NewRopstenInterface(base_url)
+	BinanceInterfaces["analytic_dev"] = binance.NewRopstenInterface(base_url)
 }
