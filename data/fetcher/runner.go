@@ -36,27 +36,6 @@ type TickerRunner struct {
 	signal             chan bool
 }
 
-// func (self *TickerRunner) GetTradeLogProcessorTicker() <-chan time.Time {
-// 	if self.tradeLogProcessorClock == nil {
-// 		<-self.signal
-// 	}
-// 	return self.tradeLogProcessorClock.C
-// }
-
-// func (self *TickerRunner) GetCatLogProcessorTicker() <-chan time.Time {
-// 	if self.catLogProcessorClock == nil {
-// 		<-self.signal
-// 	}
-// 	return self.catLogProcessorClock.C
-// }
-
-// func (self *TickerRunner) GetLogTicker() <-chan time.Time {
-// 	if self.lclock == nil {
-// 		<-self.signal
-// 	}
-// 	return self.lclock.C
-// }
-
 func (self *TickerRunner) GetGlobalDataTicker() <-chan time.Time {
 	if self.globalDataClock == nil {
 		<-self.signal
@@ -113,6 +92,8 @@ func (self *TickerRunner) Start() error {
 	self.signal <- true
 	self.tclock = time.NewTicker(self.tduration)
 	self.signal <- true
+	self.globalDataClock = time.NewTicker(self.globalDataDuration)
+	self.signal <- true
 	return nil
 }
 
@@ -122,6 +103,7 @@ func (self *TickerRunner) Stop() error {
 	self.rclock.Stop()
 	self.bclock.Stop()
 	self.tclock.Stop()
+	self.globalDataClock.Stop()
 	return nil
 }
 

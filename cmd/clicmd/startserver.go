@@ -19,7 +19,6 @@ import (
 	"github.com/KyberNetwork/reserve-data/data/fetcher"
 	"github.com/KyberNetwork/reserve-data/http"
 	"github.com/KyberNetwork/reserve-data/stat"
-	"github.com/KyberNetwork/reserve-data/world"
 	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/robfig/cron"
 	"github.com/spf13/cobra"
@@ -118,7 +117,7 @@ func serverStart(cmd *cobra.Command, args []string) {
 		dataFetcher = fetcher.NewFetcher(
 			config.FetcherStorage,
 			config.FetcherGlobalStorage,
-			world.NewTheWorld(kyberENV),
+			config.World,
 			config.FetcherRunner,
 			config.ReserveAddress,
 			kyberENV == "simulation",

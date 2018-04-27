@@ -1207,7 +1207,7 @@ response:
 ```
 response:
 ```
-  {"data":{"Valid":true,"Timestamp":1524240996931,"success":"","data":[{"symbol":"ETHDGX","price":0.08453708,"time":1524240993},{"symbol":"ETHUSD","price":586.6,"time":1524240993},{"symbol":"ETHSGD","price":771.8,"time":1524240993},{"symbol":"DGXUSD","price":49.59,"time":1524240993},{"symbol":"EURUSD","price":1.22871,"time":1524240993},{"symbol":"USDSGD","price":1.31572,"time":1524240993},{"symbol":"XAUUSD","price":1338.35,"time":1524240993},{"symbol":"USDJPY","price":107.608,"time":1524240993}]},"success":true}
+  {"data":{"Timestamp":1524852506656,"DGX":{"Valid":false,"Timestamp":0,"success":"","data":[{"symbol":"ETHDGX","price":0.07238485,"time":1524852506},{"symbol":"ETHUSD","price":713,"time":1524852506},{"symbol":"ETHSGD","price":944,"time":1524852506},{"symbol":"DGXUSD","price":49,"time":1524852506},{"symbol":"EURUSD","price":1.21063,"time":1524852505},{"symbol":"USDSGD","price":1.32439,"time":1524852505},{"symbol":"XAUUSD","price":1322.62,"time":1524852505},{"symbol":"USDJPY","price":109.105,"time":1524852505}],"Error":""},"OneForge":{"Value":1.9465,"Text":"1 XAU is worth 1.9465 ETH","Timestamp":1524852506,"Error":false,"Message":""}},"success":true}
 ```
 
 ## Authentication

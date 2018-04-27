@@ -19,6 +19,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/metric"
 	"github.com/KyberNetwork/reserve-data/stat"
 	statstorage "github.com/KyberNetwork/reserve-data/stat/storage"
+	"github.com/KyberNetwork/reserve-data/world"
 	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
@@ -50,6 +51,7 @@ type Config struct {
 	MetricStorage        metric.MetricStorage
 	//ExchangeStorage exchange.Storage
 
+	World                *world.TheWorld
 	FetcherRunner        fetcher.FetcherRunner
 	StatFetcherRunner    stat.FetcherRunner
 	StatControllerRunner stat.ControllerRunner

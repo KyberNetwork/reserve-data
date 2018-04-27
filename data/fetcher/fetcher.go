@@ -94,14 +94,9 @@ func (self *Fetcher) RunGlobalDataFetcher() {
 }
 
 func (self *Fetcher) FetchGlobalData(timepoint uint64) {
-	data, err := self.theworld.GetGoldInfo()
-	if err != nil {
-		log.Printf("Fetching gold data failed: %s", err.Error())
-		data.Valid = false
-	}
-	data.Valid = true
+	data, _ := self.theworld.GetGoldInfo()
 	data.Timestamp = common.GetTimepoint()
-	err = self.globalStorage.StoreGoldInfo(data)
+	err := self.globalStorage.StoreGoldInfo(data)
 	if err != nil {
 		log.Printf("Storing gold info failed: %s", err.Error())
 	}
