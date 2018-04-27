@@ -11,6 +11,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/data/fetcher/http_runner"
 	"github.com/KyberNetwork/reserve-data/data/storage"
+	"github.com/KyberNetwork/reserve-data/world"
 	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
@@ -118,7 +119,7 @@ func TestExchangeDown(t *testing.T) {
 	}
 	defer os.Remove(tmpDir)
 	runner := http_runner.NewHttpRunner(9000)
-	fetcher := NewFetcher(fstorage, runner, ethereum.Address{}, true)
+	fetcher := NewFetcher(fstorage, fstorage, &world.TheWorld{}, runner, ethereum.Address{}, true)
 
 	// mock normal data
 	var estatuses, bstatuses sync.Map

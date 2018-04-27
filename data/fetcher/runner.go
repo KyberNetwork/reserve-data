@@ -21,17 +21,19 @@ type FetcherRunner interface {
 }
 
 type TickerRunner struct {
-	oduration time.Duration
-	aduration time.Duration
-	rduration time.Duration
-	bduration time.Duration
-	tduration time.Duration
-	oclock    *time.Ticker
-	aclock    *time.Ticker
-	rclock    *time.Ticker
-	bclock    *time.Ticker
-	tclock    *time.Ticker
-	signal    chan bool
+	oduration          time.Duration
+	aduration          time.Duration
+	rduration          time.Duration
+	bduration          time.Duration
+	tduration          time.Duration
+	globalDataDuration time.Duration
+	oclock             *time.Ticker
+	aclock             *time.Ticker
+	rclock             *time.Ticker
+	bclock             *time.Ticker
+	tclock             *time.Ticker
+	globalDataClock    *time.Ticker
+	signal             chan bool
 }
 
 // func (self *TickerRunner) GetTradeLogProcessorTicker() <-chan time.Time {
@@ -54,6 +56,13 @@ type TickerRunner struct {
 // 	}
 // 	return self.lclock.C
 // }
+
+func (self *TickerRunner) GetGlobalDataTicker() <-chan time.Time {
+	if self.globalDataClock == nil {
+		<-self.signal
+	}
+	return self.globalDataClock.C
+}
 
 func (self *TickerRunner) GetBlockTicker() <-chan time.Time {
 	if self.bclock == nil {
@@ -118,18 +127,20 @@ func (self *TickerRunner) Stop() error {
 
 func NewTickerRunner(
 	oduration, aduration, rduration,
-	bduration, tduration time.Duration) *TickerRunner {
+	bduration, tduration, globalDataDuration time.Duration) *TickerRunner {
 	return &TickerRunner{
 		oduration,
 		aduration,
 		rduration,
 		bduration,
 		tduration,
+		globalDataDuration,
 		nil,
 		nil,
 		nil,
 		nil,
 		nil,
-		make(chan bool, 5),
+		nil,
+		make(chan bool, 6),
 	}
 }

@@ -22,3 +22,7 @@ type SimulatedEndpoint struct {
 func (self SimulatedEndpoint) GoldDataEndpoint() string {
 	return ""
 }
+
+func (self SimulatedEndpoint) BackupGoldDataEndpoint() string {
+	return ""
+}

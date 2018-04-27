@@ -127,7 +127,7 @@ func (self *StableEx) OrderStatus(id string, base, quote string) (string, error)
 }
 
 func NewStableEx(addressConfig map[string]string, feeConfig common.ExchangeFees) *StableEx {
-	_, pairs, fees := getExchangePairsAndFeesFromConfig(addressConfig, feeConfig, "stable_exchange")
+	_, pairs, fees, _ := getExchangePairsAndFeesFromConfig(addressConfig, feeConfig, common.ExchangesMinDeposit{}, "stable_exchange")
 	return &StableEx{
 		pairs,
 		common.NewExchangeInfo(),
