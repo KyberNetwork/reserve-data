@@ -36,9 +36,9 @@ type SimulatedEndpoint struct {
 }
 
 func (self SimulatedEndpoint) GoldDataEndpoint() string {
-	return ""
+	return "http://simulator:5400/tick"
 }
 
 func (self SimulatedEndpoint) BackupGoldDataEndpoint() string {
-	return ""
+	return "http://simulator:5500/1.0.3/convert?from=XAU&to=ETH&quantity=1&api_key="
 }
