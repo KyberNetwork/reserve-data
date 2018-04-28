@@ -92,7 +92,9 @@ func (self *TheWorld) getDGXGoldInfo() common.DGXGoldData {
 			}
 		}
 		log.Printf("request to %s, got response from gold feed %s", req.URL, resp_body)
-		result := common.DGXGoldData{}
+		result := common.DGXGoldData{
+			Valid: true,
+		}
 		err = json.Unmarshal(resp_body, &result)
 		if err != nil {
 			result.Valid = false
