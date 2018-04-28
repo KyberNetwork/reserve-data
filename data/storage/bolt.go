@@ -838,7 +838,7 @@ func (self *BoltStorage) GetTradeHistory(timepoint uint64) (common.AllTradeHisto
 		} else {
 			err = json.Unmarshal(data, &result)
 		}
-		return nil
+		return err
 	})
 	return result, err
 }

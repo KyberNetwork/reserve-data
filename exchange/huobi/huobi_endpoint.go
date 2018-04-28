@@ -293,7 +293,7 @@ func (self *HuobiEndpoint) GetAccountTradeHistory(
 		"GET",
 		self.interf.AuthenticatedEndpoint()+"/v1/order/orders",
 		map[string]string{
-			"symbol": symbol,
+			"symbol": strings.ToLower(symbol),
 			"states": "filled",
 		},
 		true,
