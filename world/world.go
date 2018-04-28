@@ -113,7 +113,7 @@ func (self *TheWorld) GetGoldInfo() (common.GoldData, error) {
 
 func NewTheWorld(env string, keyfile string) (*TheWorld, error) {
 	switch env {
-	case "dev", "kovan", "mainnet", "staging", "ropsten":
+	case "dev", "kovan", "mainnet", "staging", "ropsten", "analytic_dev":
 		endpoint, err := NewRealEndpointFromFile(keyfile)
 		if err != nil {
 			return nil, err
