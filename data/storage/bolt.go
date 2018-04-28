@@ -848,15 +848,31 @@ func (self *BoltStorage) StoreTradeHistory(data common.AllTradeHistory, timepoin
 	err = self.db.Update(func(tx *bolt.Tx) error {
 		var dataJson []byte
 		b := tx.Bucket([]byte(TRADE_HISTORY))
-		// prune out old data
 		c := b.Cursor()
-		k, _ := c.First()
+		k, v := c.First()
+		currentData := common.AllTradeHistory{
+			Timestamp: common.GetTimestamp(),
+			Data:      map[common.ExchangeID]common.ExchangeTradeHistory{},
+		}
 		if k != nil {
-			b.Delete([]byte(k))
+			json.Unmarshal(v, &currentData)
 		}
 
+		// override old data
+		for exchange, dataHistory := range data.Data {
+			currentDataHistory, exist := currentData.Data[exchange]
+			if !exist {
+				currentData.Data[exchange] = dataHistory
+			} else {
+				for pair, pairHistory := range dataHistory {
+					currentDataHistory[pair] = pairHistory
+				}
+			}
+		}
+		log.Printf("History: %+v", data)
+
 		// add new data
-		dataJson, err = json.Marshal(data)
+		dataJson, err = json.Marshal(currentData)
 		if err != nil {
 			return err
 		}
