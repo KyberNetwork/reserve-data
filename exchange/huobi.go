@@ -499,7 +499,7 @@ func (self *Huobi) DepositStatus(id common.ActivityID, tx1Hash, currency string,
 			for _, deposit := range deposits.Data {
 				// log.Printf("deposit tx is %s, with token %s", deposit.TxHash, deposit.Currency)
 				if deposit.TxHash == tx2Entry.Hash {
-					if deposit.State == "safe" {
+					if deposit.State == "safe" || deposit.State == "confirmed" {
 						data = common.TXEntry{tx2Entry.Hash, self.Name(), currency, "mined", "done", sentAmount, common.GetTimestamp()}
 						err = self.storage.StoreIntermediateTx(id, data)
 						if err != nil {
