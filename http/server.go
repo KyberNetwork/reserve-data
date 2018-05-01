@@ -2577,6 +2577,32 @@ func (self *HTTPServer) GetTokenHeatmap(c *gin.Context) {
 	)
 }
 
+func (self *HTTPServer) GetFeeSetRateByDay(c *gin.Context) {
+	fromTime, toTime, ok := self.ValidateTimeInput(c)
+	if !ok {
+		return
+	}
+
+	data, err := self.stat.GetFeeSetRateByDay(fromTime, toTime)
+	if err != nil {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  err.Error(),
+			},
+		)
+		return
+	}
+	c.JSON(
+		http.StatusOK,
+		gin.H{
+			"success": true,
+			"data":    data,
+		},
+	)
+}
+
 func (self *HTTPServer) Run() {
 	if self.core != nil && self.app != nil {
 		self.r.GET("/prices-version", self.AllPricesVersion)
@@ -2667,6 +2693,7 @@ func (self *HTTPServer) Run() {
 		self.r.GET("/get-reserve-volume", self.GetReserveVolume)
 		self.r.GET("/get-user-list", self.GetUserList)
 		self.r.GET("/get-token-heatmap", self.GetTokenHeatmap)
+		self.r.GET("/get-fee-setrate", self.GetFeeSetRateByDay)
 	}
 
 	self.r.Run(self.host)

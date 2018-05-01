@@ -778,3 +778,41 @@ func (t TokenHeatmapResponse) Len() int      { return len(t) }
 func (t TokenHeatmapResponse) Swap(i, j int) { t[i], t[j] = t[j], t[i] }
 
 type UsersVolume map[string]StatTicks
+
+type TransactionInfo struct {
+	BlockNumber string `json:"blockNumber"`
+	TimeStamp   string `json:"timeStamp"`
+	Value       string `json:"value"`
+	GasPrice    string `json:"gasPrice"`
+	GasUsed     string `json:"gasUsed"`
+}
+
+type StoreTransaction struct {
+	BlockNumber string `json:"blockNumber"`
+	GasPrice    uint64 `json:"gasPrice"`
+	GasUsed     uint64 `json:"gasUsed"`
+}
+
+func GetStoreTx(txInfo TransactionInfo) (StoreTransaction, error) {
+	gasPriceUint, err := strconv.ParseUint(txInfo.GasPrice, 10, 64)
+	if err != nil {
+		log.Printf("can't convert string to uint: %s", err)
+		return StoreTransaction{}, err
+	}
+	gasUsedUint, err := strconv.ParseUint(txInfo.GasUsed, 10, 64)
+	if err != nil {
+		log.Printf("can't convert string to uint: %s", err)
+		return StoreTransaction{}, err
+	}
+	storeTransaction :=  StoreTransaction{
+		BlockNumber: txInfo.BlockNumber,
+		GasPrice:    gasPriceUint,
+		GasUsed:     gasUsedUint,
+	}
+	return storeTransaction, nil
+}
+
+type FeeSetRate struct {
+	TimeStamp uint64  `json:"timeStamp"`
+	GasUsed   float64 `json:"gasUsed"`
+}

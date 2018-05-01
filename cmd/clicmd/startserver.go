@@ -137,9 +137,12 @@ func serverStart(cmd *cobra.Command, args []string) {
 			config.LogStorage,
 			config.RateStorage,
 			config.UserStorage,
+			config.FeeSetRateStorage,
 			config.StatFetcherRunner,
 			deployBlock,
 			config.ReserveAddress,
+			config.SetRateAddress,
+			config.ApiKey,
 			config.ThirdPartyReserves,
 		)
 	}
@@ -196,6 +199,7 @@ func serverStart(cmd *cobra.Command, args []string) {
 				config.LogStorage,
 				config.RateStorage,
 				config.UserStorage,
+				config.FeeSetRateStorage,
 				config.StatControllerRunner,
 				statFetcher,
 			)

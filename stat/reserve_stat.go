@@ -18,13 +18,14 @@ const (
 )
 
 type ReserveStats struct {
-	analyticStorage  AnalyticStorage
-	statStorage      StatStorage
-	logStorage       LogStorage
-	userStorage      UserStorage
-	rateStorage      RateStorage
-	fetcher          *Fetcher
-	controllerRunner ControllerRunner
+	analyticStorage   AnalyticStorage
+	statStorage       StatStorage
+	logStorage        LogStorage
+	userStorage       UserStorage
+	rateStorage       RateStorage
+	feeSetRateStorage FeeSetRateStorage
+	fetcher           *Fetcher
+	controllerRunner  ControllerRunner
 }
 
 func NewReserveStats(
@@ -33,16 +34,18 @@ func NewReserveStats(
 	logStorage LogStorage,
 	rateStorage RateStorage,
 	userStorage UserStorage,
+	feeSetRateStorage FeeSetRateStorage,
 	controllerRunner ControllerRunner,
 	fetcher *Fetcher) *ReserveStats {
 	return &ReserveStats{
-		analyticStorage:  analyticStorage,
-		statStorage:      statStorage,
-		logStorage:       logStorage,
-		rateStorage:      rateStorage,
-		userStorage:      userStorage,
-		fetcher:          fetcher,
-		controllerRunner: controllerRunner,
+		analyticStorage:   analyticStorage,
+		statStorage:       statStorage,
+		logStorage:        logStorage,
+		rateStorage:       rateStorage,
+		userStorage:       userStorage,
+		feeSetRateStorage: feeSetRateStorage,
+		fetcher:           fetcher,
+		controllerRunner:  controllerRunner,
 	}
 }
 
@@ -490,4 +493,8 @@ func (self ReserveStats) UpdatePriceAnalyticData(timestamp uint64, value []byte)
 
 func (self ReserveStats) GetPriceAnalyticData(fromTime uint64, toTime uint64) ([]common.AnalyticPriceResponse, error) {
 	return self.analyticStorage.GetPriceAnalyticData(fromTime, toTime)
+}
+
+func (self ReserveStats) GetFeeSetRateByDay(fromTime uint64, toTime uint64) ([]common.FeeSetRate, error) {
+	return self.feeSetRateStorage.GetFeeSetRateByDay(fromTime, toTime)
 }

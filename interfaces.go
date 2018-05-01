@@ -36,6 +36,7 @@ type ReserveStats interface {
 	GetCountries() ([]string, error)
 
 	GetUserList(fromTime, toTime uint64, timezone int64) (common.UserListResponse, error)
+	GetFeeSetRateByDay(fromTime uint64, toTime uint64) ([]common.FeeSetRate, error)
 
 	RunDBController() error
 	Run() error
