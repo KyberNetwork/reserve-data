@@ -99,9 +99,9 @@ func (self *StableEx) FetchEBalanceData(timepoint uint64) (common.EBalanceEntry,
 	result.Valid = true
 	// TODO: Get balance data from dgx connector
 	result.ReturnTime = common.GetTimestamp()
-	result.AvailableBalance = map[string]float64{"DGX": 0}
-	result.LockedBalance = map[string]float64{"DGX": 0}
-	result.DepositBalance = map[string]float64{"DGX": 0}
+	result.AvailableBalance = map[string]float64{"DGX": 0, "ETH": 0}
+	result.LockedBalance = map[string]float64{"DGX": 0, "ETH": 0}
+	result.DepositBalance = map[string]float64{"DGX": 0, "ETH": 0}
 	return result, nil
 }
 
