@@ -25,6 +25,7 @@ type ReserveStats struct {
 	logStorage        LogStorage
 	userStorage       UserStorage
 	rateStorage       RateStorage
+	feeSetRateStorage FeeSetRateStorage
 	fetcher           *Fetcher
 	storageController statpruner.StorageController
 }
@@ -35,6 +36,7 @@ func NewReserveStats(
 	logStorage LogStorage,
 	rateStorage RateStorage,
 	userStorage UserStorage,
+	feeSetRateStorage FeeSetRateStorage,
 	controllerRunner statpruner.ControllerRunner,
 	fetcher *Fetcher,
 	arch archive.Archive) *ReserveStats {
@@ -48,6 +50,7 @@ func NewReserveStats(
 		logStorage:        logStorage,
 		rateStorage:       rateStorage,
 		userStorage:       userStorage,
+		feeSetRateStorage: feeSetRateStorage,
 		fetcher:           fetcher,
 		storageController: storageController,
 	}
@@ -518,4 +521,8 @@ func (self ReserveStats) UpdatePriceAnalyticData(timestamp uint64, value []byte)
 
 func (self ReserveStats) GetPriceAnalyticData(fromTime uint64, toTime uint64) ([]common.AnalyticPriceResponse, error) {
 	return self.analyticStorage.GetPriceAnalyticData(fromTime, toTime)
+}
+
+func (self ReserveStats) GetFeeSetRateByDay(fromTime uint64, toTime uint64) ([]common.FeeSetRate, error) {
+	return self.feeSetRateStorage.GetFeeSetRateByDay(fromTime, toTime)
 }
