@@ -22,6 +22,8 @@ const (
 	TIMEZONE_BUCKET_PREFIX string = "utc"
 	START_TIMEZONE         int64  = -11
 	END_TIMEZONE           int64  = 14
+	BEGIN_BLOCK            uint64 = 5049223
+	BLOCK_RANGE            uint64 = 200
 
 	TRADE_SUMMARY_AGGREGATION  string = "trade_summary_aggregation"
 	WALLET_AGGREGATION         string = "wallet_aggregation"
@@ -38,12 +40,15 @@ type Fetcher struct {
 	userStorage            UserStorage
 	logStorage             LogStorage
 	rateStorage            RateStorage
+	feeSetRateStorage      FeeSetRateStorage
 	blockchain             Blockchain
 	runner                 FetcherRunner
 	currentBlock           uint64
 	currentBlockUpdateTime uint64
 	deployBlock            uint64
 	reserveAddress         ethereum.Address
+	setRateAddress         ethereum.Address
+	apiKey                 string
 	thirdPartyReserves     []ethereum.Address
 }
 
@@ -52,19 +57,25 @@ func NewFetcher(
 	logStorage LogStorage,
 	rateStorage RateStorage,
 	userStorage UserStorage,
+	feeSetRateStorage FeeSetRateStorage,
 	runner FetcherRunner,
 	deployBlock uint64,
 	reserve ethereum.Address,
+	setRateAddress ethereum.Address,
+	apiKey string,
 	thirdPartyReserves []ethereum.Address) *Fetcher {
 	return &Fetcher{
 		statStorage:        statStorage,
 		logStorage:         logStorage,
 		rateStorage:        rateStorage,
 		userStorage:        userStorage,
+		feeSetRateStorage:  feeSetRateStorage,
 		blockchain:         nil,
 		runner:             runner,
 		deployBlock:        deployBlock,
 		reserveAddress:     reserve,
+		setRateAddress:     setRateAddress,
+		apiKey:             apiKey,
 		thirdPartyReserves: thirdPartyReserves,
 	}
 }
@@ -86,8 +97,94 @@ func (self *Fetcher) Run() error {
 	go self.RunReserveRatesFetcher()
 	go self.RunTradeLogProcessor()
 	go self.RunCatLogProcessor()
+	go self.RunFeeSetrateFetcher()
 	log.Printf("Fetcher runner is running...")
 	return nil
+}
+
+var sleepTime time.Duration
+var blockNumMarker uint64
+
+func (self *Fetcher) RunFeeSetrateFetcher() {
+	lastBlockChecked, err := self.feeSetRateStorage.GetLastBlockChecked()
+	if err != nil {
+		log.Printf("can't get last block checked from db: %s", err)
+	}
+	if lastBlockChecked == 0 {
+		lastBlockChecked = BEGIN_BLOCK
+	}
+	blockNumMarker = lastBlockChecked
+	client := http.Client{
+		Timeout: 6 * time.Second,
+	}
+
+	for {
+		self.FetchTxs(client)
+		time.Sleep(sleepTime)
+	}
+}
+
+type APIResponse struct {
+	Message string                   `json:"message"`
+	Result  []common.TransactionInfo `json:"result"`
+}
+
+func (self *Fetcher) FetchTxs(client http.Client) {
+	fromBlock := blockNumMarker
+	toBlock := self.GetToBlock()
+	if toBlock == 0 {
+		log.Println("Cannot get latest block nummber")
+		return
+	}
+	api := fmt.Sprintf("http://api.etherscan.io/api?module=account&action=txlist&address=%s&startblock=%d&endblock=%d&sort=desc&apikey=%s", self.setRateAddress.String(), fromBlock, toBlock, self.apiKey)
+	log.Println("api: ", api)
+	resp, err := client.Get(api)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	apiResponse := APIResponse{}
+	err = json.Unmarshal(body, &apiResponse)
+	if err != nil {
+		log.Printf("can't unmarshal data from etherscan: %s", err)
+		return
+	}
+
+	if apiResponse.Message == "OK" {
+		txsInfo := apiResponse.Result
+		for _, tx := range txsInfo {
+			if tx.Value == "0" {
+				err = self.feeSetRateStorage.StoreTransaction(tx)
+				if err != nil {
+					log.Printf("can't store transaction info: %s", err)
+					return
+				}
+			}
+		}
+	}
+	log.Println("fetch done!")
+	blockNumMarker = toBlock
+}
+
+func (self *Fetcher) GetToBlock() uint64 {
+	currentBlock := self.currentBlock
+	if currentBlock == 0 {
+		return 0
+	}
+	if currentBlock - blockNumMarker <= BLOCK_RANGE {
+		blockNumMarker = currentBlock
+		sleepTime = 2 * time.Minute
+		return currentBlock
+	}
+	toBlock := blockNumMarker + BLOCK_RANGE
+	sleepTime = time.Second
+	return toBlock
 }
 
 func (self *Fetcher) RunCatLogProcessor() {

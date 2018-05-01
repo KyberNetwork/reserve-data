@@ -34,6 +34,7 @@ type AddressConfig struct {
 	Whitelist          string              `json:"whitelist"`
 	ThirdPartyReserves []string            `json:"third_party_reserves"`
 	Intermediator      string              `json:"intermediator"`
+	SetRate            string              `json:"setrate"`
 }
 
 func GetAddressConfigFromFile(path string) (AddressConfig, error) {
