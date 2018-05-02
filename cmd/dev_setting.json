@@ -216,6 +216,27 @@
       "internal use": false,
       "listed": true
     },
+    "MOT": {
+      "name": "Olympus Labs",
+      "decimals": 18,
+      "address": "0x263c618480dbe35c300d8d5ecda19bbb986acaed",
+      "internal use": false,
+      "listed": true
+    },
+    "IOST": {
+      "name": "IOStoken",
+      "decimals": 18,
+      "address": "0xfa1a856cfa3409cfa145fa4e20eb270df3eb21ab",
+      "internal use": false,
+      "listed": true
+    },
+    "STORM": {
+      "name": "Storm",
+      "decimals": 18,
+      "address": "0xd0a4b8946cb52f0661273bfbc6fd0e0c75fc6433",
+      "internal use": false,
+      "listed": true
+    },
     "ETH": {
       "name": "Ethereum",
       "decimals": 18,
