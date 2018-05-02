@@ -776,3 +776,5 @@ func (t TokenHeatmapResponse) Less(i, j int) bool {
 
 func (t TokenHeatmapResponse) Len() int      { return len(t) }
 func (t TokenHeatmapResponse) Swap(i, j int) { t[i], t[j] = t[j], t[i] }
+
+type UsersVolume map[string]StatTicks

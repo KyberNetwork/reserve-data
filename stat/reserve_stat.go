@@ -124,6 +124,22 @@ func (self ReserveStats) GetUserVolume(fromTime, toTime uint64, freq, userAddr s
 	return data, err
 }
 
+func (self ReserveStats) GetUsersVolume(fromTime, toTime uint64, freq string, userAddrs []string) (common.UsersVolume, error) {
+	data := common.StatTicks{}
+	result := common.UsersVolume{}
+
+	fromTime, toTime, err := validateTimeWindow(fromTime, toTime, freq)
+	if err != nil {
+		return result, err
+	}
+	for _, userAddr := range userAddrs {
+		data, err = self.statStorage.GetUserVolume(fromTime, toTime, freq, ethereum.HexToAddress(userAddr))
+		result[userAddr] = data
+	}
+
+	return result, err
+}
+
 func (self ReserveStats) GetReserveVolume(fromTime, toTime uint64, freq, reserveAddr, tokenAddr string) (common.StatTicks, error) {
 	data := common.StatTicks{}
 

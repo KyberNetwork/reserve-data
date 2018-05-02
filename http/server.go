@@ -1631,6 +1631,42 @@ func (self *HTTPServer) GetUserVolume(c *gin.Context) {
 	)
 }
 
+func (self *HTTPServer) GetUsersVolume(c *gin.Context) {
+	fromTime, _ := strconv.ParseUint(c.Query("fromTime"), 10, 64)
+	toTime, _ := strconv.ParseUint(c.Query("toTime"), 10, 64)
+	freq := c.Query("freq")
+	userAddr := c.Query("userAddr")
+	if userAddr == "" {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  "User address is required",
+			},
+		)
+		return
+	}
+	userAddrs := strings.Split(userAddr, ",")
+	data, err := self.stat.GetUsersVolume(fromTime, toTime, freq, userAddrs)
+	if err != nil {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  err.Error(),
+			},
+		)
+		return
+	}
+	c.JSON(
+		http.StatusOK,
+		gin.H{
+			"success": true,
+			"data":    data,
+		},
+	)
+}
+
 func (self *HTTPServer) ValidateTimeInput(c *gin.Context) (uint64, uint64, bool) {
 	fromTime, ok := strconv.ParseUint(c.Query("fromTime"), 10, 64)
 	if ok != nil {
@@ -2616,6 +2652,7 @@ func (self *HTTPServer) Run() {
 		self.r.GET("/get-burn-fee", self.GetBurnFee)
 		self.r.GET("/get-wallet-fee", self.GetWalletFee)
 		self.r.GET("/get-user-volume", self.GetUserVolume)
+		self.r.GET("/get-users-volume", self.GetUsersVolume)
 		self.r.GET("/get-trade-summary", self.GetTradeSummary)
 		self.r.POST("/update-user-addresses", self.UpdateUserAddresses)
 		self.r.GET("/get-pending-addresses", self.GetPendingAddresses)
