@@ -915,32 +915,47 @@ type TransactionInfo struct {
 	GasUsed     string `json:"gasUsed"`
 }
 
-type StoreTransaction struct {
-	BlockNumber string `json:"blockNumber"`
+type SetRateTxInfo struct {
+	BlockNumber       string `json:"blockNumber"`
+	TimeStamp         string `json:"timeStamp"`
+	TransactionIndex  string `json:"transactionIndex"`
+	Value             string `json:"value"`
+	GasPrice          string `json:"gasPrice"`
+	GasUsed           string `json:"gasUsed"`
+}
+
+type StoreSetRateTx struct {
+	TimeStamp   uint64 `json:"timeStamp"`
 	GasPrice    uint64 `json:"gasPrice"`
 	GasUsed     uint64 `json:"gasUsed"`
 }
 
-func GetStoreTx(txInfo TransactionInfo) (StoreTransaction, error) {
-	gasPriceUint, err := strconv.ParseUint(txInfo.GasPrice, 10, 64)
+func GetStoreTx(tx SetRateTxInfo) (StoreSetRateTx, error) {
+	var storeTx StoreSetRateTx
+	gasPriceUint, err := strconv.ParseUint(tx.GasPrice, 10, 64)
 	if err != nil {
-		log.Printf("can't convert string to uint: %s", err)
-		return StoreTransaction{}, err
+		log.Printf("Cant convert %s to uint64", tx.GasPrice)
+		return storeTx, err
 	}
-	gasUsedUint, err := strconv.ParseUint(txInfo.GasUsed, 10, 64)
+	gasUsedUint, err := strconv.ParseUint(tx.GasUsed, 10, 64)
 	if err != nil {
-		log.Printf("can't convert string to uint: %s", err)
-		return StoreTransaction{}, err
+		log.Printf("Cant convert %s to uint64", tx.GasUsed)
+		return storeTx, err
 	}
-	storeTransaction :=  StoreTransaction{
-		BlockNumber: txInfo.BlockNumber,
-		GasPrice:    gasPriceUint,
-		GasUsed:     gasUsedUint,
+	timeStampUint, err := strconv.ParseUint(tx.TimeStamp, 10, 64)
+	if err != nil {
+		log.Printf("Cant convert %s to uint64", tx.TimeStamp)
+		return storeTx, err
 	}
-	return storeTransaction, nil
+	storeTx = StoreSetRateTx{
+		TimeStamp: timeStampUint,
+		GasPrice:  gasPriceUint,
+		GasUsed:   gasUsedUint,
+	}
+	return storeTx, nil
 }
 
 type FeeSetRate struct {
-	TimeStamp uint64  `json:"timeStamp"`
-	GasUsed   float64 `json:"gasUsed"`
+	TimeStamp uint64     `json:"timeStamp"`
+	GasUsed   *big.Float `json:"gasUsed"`
 }

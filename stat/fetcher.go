@@ -22,7 +22,7 @@ const (
 	TIMEZONE_BUCKET_PREFIX string = "utc"
 	START_TIMEZONE         int64  = -11
 	END_TIMEZONE           int64  = 14
-	BEGIN_BLOCK            uint64 = 5049223
+	// BEGIN_BLOCK            uint64 = 5049223
 	BLOCK_RANGE            uint64 = 200
 
 	TRADE_SUMMARY_AGGREGATION  string = "trade_summary_aggregation"
@@ -48,6 +48,7 @@ type Fetcher struct {
 	deployBlock            uint64
 	reserveAddress         ethereum.Address
 	setRateAddress         ethereum.Address
+	beginBlockSetRate      uint64
 	apiKey                 string
 	thirdPartyReserves     []ethereum.Address
 }
@@ -62,6 +63,7 @@ func NewFetcher(
 	deployBlock uint64,
 	reserve ethereum.Address,
 	setRateAddress ethereum.Address,
+	beginBlockSetRate uint64,
 	apiKey string,
 	thirdPartyReserves []ethereum.Address) *Fetcher {
 	return &Fetcher{
@@ -75,6 +77,7 @@ func NewFetcher(
 		deployBlock:        deployBlock,
 		reserveAddress:     reserve,
 		setRateAddress:     setRateAddress,
+		beginBlockSetRate:  beginBlockSetRate,
 		apiKey:             apiKey,
 		thirdPartyReserves: thirdPartyReserves,
 	}
@@ -111,9 +114,9 @@ func (self *Fetcher) RunFeeSetrateFetcher() {
 		log.Printf("can't get last block checked from db: %s", err)
 	}
 	if lastBlockChecked == 0 {
-		lastBlockChecked = BEGIN_BLOCK
+		lastBlockChecked = self.beginBlockSetRate
 	}
-	blockNumMarker = lastBlockChecked
+	blockNumMarker = lastBlockChecked + 1
 	client := http.Client{
 		Timeout: 6 * time.Second,
 	}
@@ -125,8 +128,8 @@ func (self *Fetcher) RunFeeSetrateFetcher() {
 }
 
 type APIResponse struct {
-	Message string                   `json:"message"`
-	Result  []common.TransactionInfo `json:"result"`
+	Message string                 `json:"message"`
+	Result  []common.SetRateTxInfo `json:"result"`
 }
 
 func (self *Fetcher) FetchTxs(client http.Client) {
@@ -157,19 +160,28 @@ func (self *Fetcher) FetchTxs(client http.Client) {
 	}
 
 	if apiResponse.Message == "OK" {
-		txsInfo := apiResponse.Result
-		for _, tx := range txsInfo {
-			if tx.Value == "0" {
-				err = self.feeSetRateStorage.StoreTransaction(tx)
+		sameBlockBucket := []common.SetRateTxInfo{}
+		setRateTxsInfo := apiResponse.Result
+		numberEle := len(setRateTxsInfo)
+		var blockNumber string
+		for index, transaction := range setRateTxsInfo {
+			if transaction.Value == "0" {
+				blockNumber = transaction.BlockNumber
+				sameBlockBucket = append(sameBlockBucket, transaction)
+				if index < numberEle - 1 && setRateTxsInfo[index + 1].BlockNumber == blockNumber {
+					continue
+				}
+				err = self.feeSetRateStorage.StoreTransaction(sameBlockBucket)
 				if err != nil {
-					log.Printf("can't store transaction info: %s", err)
+					log.Println(err)
 					return
 				}
+				sameBlockBucket = []common.SetRateTxInfo{}
 			}
 		}
 	}
 	log.Println("fetch done!")
-	blockNumMarker = toBlock
+	blockNumMarker = toBlock + 1
 }
 
 func (self *Fetcher) GetToBlock() uint64 {
