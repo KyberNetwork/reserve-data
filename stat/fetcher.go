@@ -22,7 +22,6 @@ const (
 	TIMEZONE_BUCKET_PREFIX string = "utc"
 	START_TIMEZONE         int64  = -11
 	END_TIMEZONE           int64  = 14
-	// BEGIN_BLOCK            uint64 = 5049223
 	BLOCK_RANGE            uint64 = 200
 
 	TRADE_SUMMARY_AGGREGATION  string = "trade_summary_aggregation"
@@ -114,9 +113,10 @@ func (self *Fetcher) RunFeeSetrateFetcher() {
 		log.Printf("can't get last block checked from db: %s", err)
 	}
 	if lastBlockChecked == 0 {
-		lastBlockChecked = self.beginBlockSetRate
+		blockNumMarker = self.beginBlockSetRate
+	} else {
+		blockNumMarker = lastBlockChecked + 1		
 	}
-	blockNumMarker = lastBlockChecked + 1
 	client := http.Client{
 		Timeout: 6 * time.Second,
 	}
@@ -139,7 +139,8 @@ func (self *Fetcher) FetchTxs(client http.Client) {
 		log.Println("Cannot get latest block nummber")
 		return
 	}
-	api := fmt.Sprintf("http://api.etherscan.io/api?module=account&action=txlist&address=%s&startblock=%d&endblock=%d&sort=desc&apikey=%s", self.setRateAddress.String(), fromBlock, toBlock, self.apiKey)
+	log.Println("toBlock: ", toBlock)
+	api := fmt.Sprintf("http://api.etherscan.io/api?module=account&action=txlist&address=%s&startblock=%d&endblock=%d&apikey=%s", self.setRateAddress.String(), fromBlock, toBlock, self.apiKey)
 	log.Println("api: ", api)
 	resp, err := client.Get(api)
 	if err != nil {
@@ -179,21 +180,23 @@ func (self *Fetcher) FetchTxs(client http.Client) {
 				sameBlockBucket = []common.SetRateTxInfo{}
 			}
 		}
+		log.Println("fetch done!")
+		blockNumMarker = toBlock + 1
 	}
-	log.Println("fetch done!")
-	blockNumMarker = toBlock + 1
 }
 
 func (self *Fetcher) GetToBlock() uint64 {
 	currentBlock := self.currentBlock
+	log.Println("toBlock current: ", currentBlock)
 	if currentBlock == 0 {
 		return 0
 	}
 	if currentBlock - blockNumMarker <= BLOCK_RANGE {
-		blockNumMarker = currentBlock
+		log.Println("run this")
 		sleepTime = 2 * time.Minute
 		return currentBlock
 	}
+	log.Println("run that")
 	toBlock := blockNumMarker + BLOCK_RANGE
 	sleepTime = time.Second
 	return toBlock
