@@ -150,26 +150,38 @@ func (self *BoltFeeSetRateStorage) GetFeeSetRateByDay(fromTime, toTime uint64) (
 					return err
 				}
 				seqFeeSetRate = append(seqFeeSetRate, feeSetRate)
+			} else {
+				break
 			}
 			tickTime = nextTick
 			nextTick = uint64ToBytes(bytesToUint64(nextTick) + DAY)
 		}
 		return nil
 	})
+	log.Println("run this")
+	calculate(seqFeeSetRate)
 	return seqFeeSetRate, err
+}
+
+func calculate(seqFeeSetRate []common.FeeSetRate) {
+	sum := big.NewFloat(0)
+	quoValue := big.NewFloat(0)
+	for _, v := range seqFeeSetRate {
+		sum.Add(sum, v.GasUsed)
+	}
+	log.Printf("sum: %v, average: %v", sum, quoValue.Quo(sum, big.NewFloat(float64(len(seqFeeSetRate)))))
 }
 
 func getFeeSetRate(c *bolt.Cursor, tickBlock, nextTickBlock, tickTime []byte) (common.FeeSetRate, error) {
 	sumFee := big.NewFloat(0)
 	gasInEther := big.NewFloat(0)
 	var feeSetRate common.FeeSetRate
-
+	
 	for k, v := c.Seek(tickBlock); k != nil && bytes.Compare(k, nextTickBlock) < 0; k, v = c.Next() {
 		record := common.StoreSetRateTx{}
 		if err := json.Unmarshal(v, &record); err != nil {
 			return feeSetRate, err
 		}
-		log.Println("record: ", record)
 		gasInWei := big.NewFloat(float64(record.GasPrice * record.GasUsed))
 		gasInEther.Quo(gasInWei, big.NewFloat(ETH_TO_WEI))
 		sumFee.Add(sumFee, gasInEther)
