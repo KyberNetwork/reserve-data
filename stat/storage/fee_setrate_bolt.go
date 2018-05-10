@@ -5,7 +5,7 @@ import (
 	"log"
 	"strconv"
 	"encoding/json"
-	// "fmt"
+	"fmt"
 	"time"
 	"math/big"
 
@@ -15,13 +15,13 @@ import (
 )
 
 const (
-	TRANSACTION_INFO_BUCKET string = "transaction"
+	TRANSACTION_INFO_BUCKET  string = "transaction"
 	INDEXED_TIMESTAMP_BUCKET string = "indexed_timestamp"
 
-	MAX_TIME_DISTANCE uint64 = 86400
 	ETH_TO_WEI float64 = 1000000000000000000
-	DAY uint64 = 86400 // a day in seconds
+	DAY        uint64 = 86400 // a day in seconds
 	MAX_FEE_SETRATE_TIME_RAGE uint64 = 7776000 // 3 months in seconds
+	MAX_TIME_DISTANCE         uint64 = 86400
 )
 
 type BoltFeeSetRateStorage struct {
@@ -61,15 +61,13 @@ func (self *BoltFeeSetRateStorage) GetLastBlockChecked() (uint64, error) {
 
 		if k != nil {
 			keyUint := bytesToUint64(k)
-			latestBlockChecked = keyUint / 1000
+			latestBlockChecked = keyUint / 1000000
 		}
 		return nil
 	})
 	if err != nil {
-		log.Println(err)
 		return 0, err
 	}
-	log.Println("lastBlockChecked: ", latestBlockChecked)
 	return latestBlockChecked, nil
 }
 
@@ -90,26 +88,22 @@ func (self *BoltFeeSetRateStorage) StoreTransaction(txs []common.SetRateTxInfo) 
 				log.Printf("Cant convert %s to uint64", transaction.TransactionIndex)
 				return err
 			}
-			keyStoreUint := blockNumUint * 1000 + txIndexUint
+			keyStoreUint := blockNumUint * 1000000 + txIndexUint
 			keyStore := uint64ToBytes(keyStoreUint)
 			storeTx, err := common.GetStoreTx(transaction)
 			if err != nil {
-				log.Println(err)
 				return err
 			}
 			err = bIndex.Put(uint64ToBytes(storeTx.TimeStamp), keyStore)
 			if err != nil {
-				log.Println(err)
 				return err
 			}
 			dataJson, err = json.Marshal(storeTx)
 			if err != nil {
-				log.Println(err)
 				return err
 			}
 			err = b.Put(keyStore, dataJson)
 			if err != nil {
-				log.Println(err)
 				return err
 			}
 		}
@@ -121,9 +115,9 @@ func (self *BoltFeeSetRateStorage) StoreTransaction(txs []common.SetRateTxInfo) 
 func (self *BoltFeeSetRateStorage) GetFeeSetRateByDay(fromTime, toTime uint64) ([]common.FeeSetRate, error) {
 	fromTimeSecond := fromTime / 1000
 	toTimeSecond := toTime / 1000
-	// if toTimeSecond - fromTimeSecond > MAX_FEE_SETRATE_TIME_RAGE {
-	// 	return []common.FeeSetRate{}, fmt.Errorf("Time range is too broad, it must be smaller or equal to three months (%d seconds)", MAX_FEE_SETRATE_TIME_RAGE)
-	// }
+	if toTimeSecond - fromTimeSecond > MAX_FEE_SETRATE_TIME_RAGE {
+		return []common.FeeSetRate{}, fmt.Errorf("Time range is too broad, it must be smaller or equal to three months (%d seconds)", MAX_FEE_SETRATE_TIME_RAGE)
+	}
 
 	seqFeeSetRate := []common.FeeSetRate{}
 	var err error
@@ -158,25 +152,14 @@ func (self *BoltFeeSetRateStorage) GetFeeSetRateByDay(fromTime, toTime uint64) (
 		}
 		return nil
 	})
-	log.Println("run this")
-	calculate(seqFeeSetRate)
 	return seqFeeSetRate, err
-}
-
-func calculate(seqFeeSetRate []common.FeeSetRate) {
-	sum := big.NewFloat(0)
-	quoValue := big.NewFloat(0)
-	for _, v := range seqFeeSetRate {
-		sum.Add(sum, v.GasUsed)
-	}
-	log.Printf("sum: %v, average: %v", sum, quoValue.Quo(sum, big.NewFloat(float64(len(seqFeeSetRate)))))
 }
 
 func getFeeSetRate(c *bolt.Cursor, tickBlock, nextTickBlock, tickTime []byte) (common.FeeSetRate, error) {
 	sumFee := big.NewFloat(0)
 	gasInEther := big.NewFloat(0)
 	var feeSetRate common.FeeSetRate
-	
+
 	for k, v := c.Seek(tickBlock); k != nil && bytes.Compare(k, nextTickBlock) < 0; k, v = c.Next() {
 		record := common.StoreSetRateTx{}
 		if err := json.Unmarshal(v, &record); err != nil {
