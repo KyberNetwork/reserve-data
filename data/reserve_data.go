@@ -1,13 +1,21 @@
 package data
 
 import (
+	"fmt"
+	"log"
+	"os"
+	"time"
+
 	"github.com/KyberNetwork/reserve-data/common"
+	"github.com/KyberNetwork/reserve-data/common/archive"
+	"github.com/KyberNetwork/reserve-data/data/storagecontroller"
 )
 
 type ReserveData struct {
-	storage       Storage
-	globalStorage GlobalStorage
-	fetcher       Fetcher
+	storage           Storage
+	fetcher           Fetcher
+	storageController storagecontroller.StorageController
+	globalStorage     GlobalStorage
 }
 
 func (self ReserveData) CurrentGoldInfoVersion(timepoint uint64) (common.Version, error) {
@@ -253,6 +261,41 @@ func (self ReserveData) Stop() error {
 	return self.fetcher.Stop()
 }
 
-func NewReserveData(storage Storage, globalStorage GlobalStorage, fetcher Fetcher) *ReserveData {
-	return &ReserveData{storage, globalStorage, fetcher}
+func (self ReserveData) ControlAuthDataSize() error {
+	for {
+		log.Printf("StorageController: waiting for signal from runner AuthData controller channel")
+		t := <-self.storageController.Runner.GetAuthBucketTicker()
+		timepoint := common.TimeToTimepoint(t)
+		log.Printf("StorageController: got signal in AuthData controller channel with timestamp %d", common.TimeToTimepoint(t))
+		fileName := fmt.Sprintf("ExpiredAuthData_at_%s", time.Unix(int64(timepoint/1000), 0).UTC())
+		nRecord, err := self.storage.ExportExpiredAuthData(common.TimeToTimepoint(t), fileName)
+		if err != nil {
+			log.Printf("ERROR: StorageController export and prune AuthData operation failed: %s, err")
+		} else {
+			if nRecord > 0 {
+				err = self.storageController.Arch.BackupFile(self.storageController.Arch.GetReserveDataBucketName(), self.storageController.Arch.GetAuthDataPath(), fileName)
+				if err != nil {
+					log.Printf("StorageController: Back up file failed: %s", err)
+				}
+			}
+			if err == nil {
+				os.Remove(fileName)
+				log.Printf("StorageController: exported and pruned %d expired records from AuthData", nRecord)
+			}
+		}
+	}
+}
+
+func (self ReserveData) RunStorageController() error {
+	self.storageController.Runner.Start()
+	go self.ControlAuthDataSize()
+	return nil
+}
+
+func NewReserveData(storage Storage, fetcher Fetcher, storageControllerRunner storagecontroller.StorageControllerRunner, arch archive.Archive, globalStorage GlobalStorage) *ReserveData {
+	storageController, err := storagecontroller.NewStorageController(storageControllerRunner, arch)
+	if err != nil {
+		panic(err)
+	}
+	return &ReserveData{storage, fetcher, storageController, globalStorage}
 }

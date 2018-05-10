@@ -501,6 +501,10 @@ type AuthDataSnapshot struct {
 	Block             uint64
 }
 
+type AuthDataRecord struct {
+	Timestamp Timestamp
+	Data      AuthDataSnapshot
+}
 type AuthDataResponse struct {
 	Version    Version
 	Timestamp  Timestamp

@@ -7,12 +7,14 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"regexp"
 	"runtime"
 
 	"github.com/KyberNetwork/reserve-data"
 	"github.com/KyberNetwork/reserve-data/blockchain"
 	"github.com/KyberNetwork/reserve-data/cmd/configuration"
 	"github.com/KyberNetwork/reserve-data/common"
+	"github.com/KyberNetwork/reserve-data/common/archive"
 	"github.com/KyberNetwork/reserve-data/common/blockchain/nonce"
 	"github.com/KyberNetwork/reserve-data/core"
 	"github.com/KyberNetwork/reserve-data/data"
@@ -23,6 +25,10 @@ import (
 	"github.com/robfig/cron"
 	"github.com/spf13/cobra"
 	lumberjack "gopkg.in/natefinch/lumberjack.v2"
+)
+
+const (
+	LOG_PATH string = "/go/src/github.com/KyberNetwork/reserve-data/log/"
 )
 
 var noAuthEnable bool
@@ -61,7 +67,7 @@ func GetConfigFromENV(kyberENV string) *configuration.Config {
 //set config log
 func configLog(stdoutLog bool) {
 	logger := &lumberjack.Logger{
-		Filename: "/go/src/github.com/KyberNetwork/reserve-data/log/core.log",
+		Filename: LOG_PATH + "core.log",
 		// MaxSize:  1, // megabytes
 		MaxBackups: 0,
 		MaxAge:     0, //days
@@ -88,11 +94,47 @@ func InitInterface(kyberENV string) {
 	configuration.SetInterface(base_url)
 }
 
+func backupLog(arch archive.Archive) {
+	c := cron.New()
+	c.AddFunc("@daily", func() {
+		files, err := ioutil.ReadDir(LOG_PATH)
+		if err != nil {
+			log.Printf("ERROR: Log backup: Can not view log folder")
+		}
+		for _, file := range files {
+			matched, err := regexp.MatchString("core.*.log", file.Name())
+			if (!file.IsDir()) && (matched) && (err == nil) {
+				log.Printf("File name is %s", file.Name())
+				err := arch.UploadFile(arch.GetLogBucketName(), arch.GetLogFolderPath(), LOG_PATH+file.Name())
+				if err != nil {
+					log.Printf("ERROR: Log backup: Can not upload Log file %s", err)
+				} else {
+					var err error
+					var ok bool
+					if file.Name() != "core.log" {
+						ok, err = arch.CheckFileIntergrity(arch.GetLogBucketName(), arch.GetLogFolderPath(), LOG_PATH+file.Name())
+						if !ok || (err != nil) {
+							log.Printf("ERROR: Log backup: File intergrity is corrupted")
+						}
+						err = os.Remove(LOG_PATH + file.Name())
+					}
+					if err != nil {
+						log.Printf("ERROR: Log backup: Cannot remove local log file %s", err)
+					} else {
+						log.Printf("Log backup: backup file %s succesfully", file.Name())
+					}
+				}
+			}
+		}
+		return
+	})
+	c.Start()
+}
+
 func serverStart(cmd *cobra.Command, args []string) {
 	numCPU := runtime.NumCPU()
 	runtime.GOMAXPROCS(numCPU)
 	configLog(stdoutLog)
-
 	//get configuration from ENV variable
 	kyberENV := os.Getenv("KYBER_ENV")
 	if kyberENV == "" {
@@ -100,7 +142,7 @@ func serverStart(cmd *cobra.Command, args []string) {
 	}
 	InitInterface(kyberENV)
 	config := GetConfigFromENV(kyberENV)
-
+	backupLog(config.Archive)
 	var dataFetcher *fetcher.Fetcher
 	var statFetcher *stat.Fetcher
 	var rData reserve.ReserveData
@@ -182,9 +224,14 @@ func serverStart(cmd *cobra.Command, args []string) {
 			dataFetcher.SetBlockchain(bc)
 			rData = data.NewReserveData(
 				config.DataStorage,
-				config.DataGlobalStorage,
 				dataFetcher,
+				config.DataControllerRunner,
+				config.Archive,
+				config.DataGlobalStorage,
 			)
+			if kyberENV != "simulation" {
+				rData.RunStorageController()
+			}
 			rData.Run()
 			rCore = core.NewReserveCore(bc, config.ActivityStorage, config.ReserveAddress)
 		}
@@ -198,9 +245,10 @@ func serverStart(cmd *cobra.Command, args []string) {
 				config.UserStorage,
 				config.StatControllerRunner,
 				statFetcher,
+				config.Archive,
 			)
 			if kyberENV != "simulation" {
-				rStat.RunDBController()
+				rStat.RunStorageController()
 			}
 			rStat.Run()
 		}

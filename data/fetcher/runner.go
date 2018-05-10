@@ -74,13 +74,6 @@ func (self *TickerRunner) GetTradeHistoryTicker() <-chan time.Time {
 	return self.tclock.C
 }
 
-// func (self *TickerRunner) GetReserveRatesTicker() <-chan time.Time {
-// 	if self.rsclock == nil {
-// 		<-self.signal
-// 	}
-// 	return self.rsclock.C
-// }
-
 func (self *TickerRunner) Start() error {
 	self.oclock = time.NewTicker(self.oduration)
 	self.signal <- true

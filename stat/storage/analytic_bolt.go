@@ -5,11 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/KyberNetwork/reserve-data/common"
-	"github.com/KyberNetwork/reserve-data/common/archive"
 
 	"github.com/boltdb/bolt"
 )
@@ -21,10 +19,7 @@ const (
 )
 
 type BoltAnalyticStorage struct {
-	db            *bolt.DB
-	arch          archive.Archive
-	bucketName    string
-	awsFolderPath string
+	db *bolt.DB
 }
 
 func NewBoltAnalyticStorage(dbPath, awsKeyPath string) (*BoltAnalyticStorage, error) {
@@ -34,19 +29,8 @@ func NewBoltAnalyticStorage(dbPath, awsKeyPath string) (*BoltAnalyticStorage, er
 	if err != nil {
 		panic(err)
 	}
-	awsConf, err := archive.GetAWSconfigFromFile(awsKeyPath)
-	if err != nil {
-		return nil, err
-	}
-	err = db.Update(func(tx *bolt.Tx) error {
-		_, uErr := tx.CreateBucketIfNotExists([]byte(PRICE_ANALYTIC_BUCKET))
-		return uErr
-	})
-	if err != nil {
-		return nil, err
-	}
-	s3archive := archive.NewS3Archive(awsConf)
-	storage := BoltAnalyticStorage{db, s3archive, awsConf.ExpiredAnalyticBucketName, awsConf.ExpiredAnalyticFolderPath}
+
+	storage := BoltAnalyticStorage{db}
 	return &storage, nil
 }
 
@@ -65,26 +49,7 @@ func (self *BoltAnalyticStorage) UpdatePriceAnalyticData(timestamp uint64, value
 	return err
 }
 
-func (self *BoltAnalyticStorage) BackupFile(fileName string) error {
-	log.Printf("AnalyticPriceData: uploading file... ")
-	err := self.arch.UploadFile(self.awsFolderPath, fileName, self.bucketName)
-	if err != nil {
-		return err
-	}
-	intergrity, err := self.arch.CheckFileIntergrity(self.awsFolderPath, fileName, self.bucketName)
-	if err != nil {
-		return err
-	}
-	if intergrity {
-		return os.Remove(fileName)
-	} else {
-		return errors.New("AnalyticPriceData: File uploading corrupted")
-	}
-
-	return nil
-}
-
-func (self *BoltAnalyticStorage) ExportPruneExpired(currentTime uint64, fileName string) (nRecord uint64, err error) {
+func (self *BoltAnalyticStorage) ExportPruneExpiredPriceAnalyticData(currentTime uint64, fileName string) (nRecord uint64, err error) {
 	expiredTimestampByte := uint64ToBytes(currentTime - PRICE_ANALYTIC_EXPIRED)
 	outFile, err := os.Create(fileName)
 	defer outFile.Close()

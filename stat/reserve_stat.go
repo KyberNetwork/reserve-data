@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/KyberNetwork/reserve-data/common"
+	"github.com/KyberNetwork/reserve-data/common/archive"
+	"github.com/KyberNetwork/reserve-data/stat/statpruner"
 	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
@@ -18,13 +20,13 @@ const (
 )
 
 type ReserveStats struct {
-	analyticStorage  AnalyticStorage
-	statStorage      StatStorage
-	logStorage       LogStorage
-	userStorage      UserStorage
-	rateStorage      RateStorage
-	fetcher          *Fetcher
-	controllerRunner ControllerRunner
+	analyticStorage   AnalyticStorage
+	statStorage       StatStorage
+	logStorage        LogStorage
+	userStorage       UserStorage
+	rateStorage       RateStorage
+	fetcher           *Fetcher
+	storageController statpruner.StorageController
 }
 
 func NewReserveStats(
@@ -33,16 +35,21 @@ func NewReserveStats(
 	logStorage LogStorage,
 	rateStorage RateStorage,
 	userStorage UserStorage,
-	controllerRunner ControllerRunner,
-	fetcher *Fetcher) *ReserveStats {
+	controllerRunner statpruner.ControllerRunner,
+	fetcher *Fetcher,
+	arch archive.Archive) *ReserveStats {
+	storageController, err := statpruner.NewStorageController(controllerRunner, arch)
+	if err != nil {
+		panic(err)
+	}
 	return &ReserveStats{
-		analyticStorage:  analyticStorage,
-		statStorage:      statStorage,
-		logStorage:       logStorage,
-		rateStorage:      rateStorage,
-		userStorage:      userStorage,
-		fetcher:          fetcher,
-		controllerRunner: controllerRunner,
+		analyticStorage:   analyticStorage,
+		statStorage:       statStorage,
+		logStorage:        logStorage,
+		rateStorage:       rateStorage,
+		userStorage:       userStorage,
+		fetcher:           fetcher,
+		storageController: storageController,
 	}
 }
 
@@ -301,40 +308,38 @@ func (self ReserveStats) GetPendingAddresses() ([]string, error) {
 	return result, nil
 }
 
-func (self ReserveStats) RunAnalyticStorageController() {
+func (self ReserveStats) ControllPriceAnalyticSize() error {
 	for {
-		log.Printf("waiting for signal from analytic storage control channel")
-		t := <-self.controllerRunner.GetAnalyticStorageControlTicker()
+		log.Printf("statpruner: waiting for signal from analytic storage control channel")
+		t := <-self.storageController.Runner.GetAnalyticStorageControlTicker()
 		timepoint := common.TimeToTimepoint(t)
-		log.Printf("got signal in analytic storage control channel with timestamp %d", timepoint)
+		log.Printf("statpruner: got signal in analytic storage control channel with timestamp %d", timepoint)
 		fileName := fmt.Sprintf("ExpiredPriceAnalyticData_%s", time.Unix(int64(timepoint/1000), 0).UTC())
-		nRecord, err := self.analyticStorage.ExportPruneExpired(common.GetTimepoint(), fileName)
+		nRecord, err := self.analyticStorage.ExportPruneExpiredPriceAnalyticData(common.GetTimepoint(), fileName)
 		if err != nil {
-			log.Printf("export and prune operation failed: %s", err)
+			log.Printf("ERROR: statpruner export and prune Price Analytic operation failed: %s", err)
 		} else {
 			if nRecord > 0 {
-				err := self.analyticStorage.BackupFile(fileName)
+				err := self.storageController.Arch.BackupFile(self.storageController.Arch.GetStatDataBucketName(), self.storageController.Arch.GetPriceAnalyticPath(), fileName)
 				if err != nil {
-					log.Printf("AnalyticPriceData: Back up file failed: %s", err)
-				} else {
-					log.Printf("AnalyticPriceData: Back up file successfully.")
+					log.Printf("statpruner: Back up file failed: %s", err)
 				}
-
-			} else {
+			}
+			if err == nil {
 				//remove the empty file
 				os.Remove(fileName)
+				log.Printf("statpruner: exported and pruned %d expired records from storage controll block from blockchain", nRecord)
 			}
-			log.Printf("AnalyticPriceData: exported and pruned %d expired records from storage controll block from blockchain", nRecord)
 		}
 	}
 }
 
-func (self ReserveStats) RunDBController() error {
-	err := self.controllerRunner.Start()
+func (self ReserveStats) RunStorageController() error {
+	err := self.storageController.Runner.Start()
 	if err != nil {
 		return err
 	}
-	go self.RunAnalyticStorageController()
+	go self.ControllPriceAnalyticSize()
 	return err
 }
 

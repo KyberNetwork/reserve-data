@@ -6,18 +6,21 @@ import (
 	"time"
 
 	"github.com/KyberNetwork/reserve-data/common"
+	"github.com/KyberNetwork/reserve-data/common/archive"
 	"github.com/KyberNetwork/reserve-data/common/blockchain"
 	"github.com/KyberNetwork/reserve-data/core"
 	"github.com/KyberNetwork/reserve-data/data"
 	"github.com/KyberNetwork/reserve-data/data/fetcher"
 	"github.com/KyberNetwork/reserve-data/data/fetcher/http_runner"
 	"github.com/KyberNetwork/reserve-data/data/storage"
+	"github.com/KyberNetwork/reserve-data/data/storagecontroller"
 	"github.com/KyberNetwork/reserve-data/exchange/binance"
 	"github.com/KyberNetwork/reserve-data/exchange/bittrex"
 	"github.com/KyberNetwork/reserve-data/exchange/huobi"
 	"github.com/KyberNetwork/reserve-data/http"
 	"github.com/KyberNetwork/reserve-data/metric"
 	"github.com/KyberNetwork/reserve-data/stat"
+	"github.com/KyberNetwork/reserve-data/stat/statpruner"
 	statstorage "github.com/KyberNetwork/reserve-data/stat/storage"
 	"github.com/KyberNetwork/reserve-data/world"
 	ethereum "github.com/ethereum/go-ethereum/common"
@@ -49,12 +52,14 @@ type Config struct {
 	FetcherStorage       fetcher.Storage
 	FetcherGlobalStorage fetcher.GlobalStorage
 	MetricStorage        metric.MetricStorage
+	Archive              archive.Archive
 	//ExchangeStorage exchange.Storage
 
 	World                *world.TheWorld
 	FetcherRunner        fetcher.FetcherRunner
+	DataControllerRunner storagecontroller.StorageControllerRunner
 	StatFetcherRunner    stat.FetcherRunner
-	StatControllerRunner stat.ControllerRunner
+	StatControllerRunner statpruner.ControllerRunner
 	FetcherExchanges     []fetcher.Exchange
 	Exchanges            []common.Exchange
 	BlockchainSigner     blockchain.Signer
@@ -118,7 +123,7 @@ func (self *Config) AddStatConfig(settingPath SettingPaths, addressConfig common
 	}
 
 	var statFetcherRunner stat.FetcherRunner
-	var ControllerRunner stat.ControllerRunner
+	var statControllerRunner statpruner.ControllerRunner
 	if os.Getenv("KYBER_ENV") == "simulation" {
 		statFetcherRunner = http_runner.NewHttpRunner(8002)
 	} else {
@@ -128,7 +133,8 @@ func (self *Config) AddStatConfig(settingPath SettingPaths, addressConfig common
 			10*time.Second, // rate fetching interval
 			2*time.Second,  // tradelog processing interval
 			2*time.Second)  // catlog processing interval
-		ControllerRunner = stat.NewControllerTickerRunner(24 * time.Hour)
+		statControllerRunner = statpruner.NewControllerTickerRunner(24 * time.Hour)
+
 	}
 
 	self.StatStorage = statStorage
@@ -136,7 +142,7 @@ func (self *Config) AddStatConfig(settingPath SettingPaths, addressConfig common
 	self.UserStorage = userStorage
 	self.LogStorage = logStorage
 	self.RateStorage = rateStorage
-	self.StatControllerRunner = ControllerRunner
+	self.StatControllerRunner = statControllerRunner
 	self.StatFetcherRunner = statFetcherRunner
 	self.ThirdPartyReserves = thirdpartyReserves
 	self.FeeBurnerAddress = burnerAddr
@@ -166,7 +172,7 @@ func (self *Config) AddCoreConfig(settingPath SettingPaths, addressConfig common
 	}
 
 	var fetcherRunner fetcher.FetcherRunner
-
+	var dataControllerRunner storagecontroller.StorageControllerRunner
 	if os.Getenv("KYBER_ENV") == "simulation" {
 		fetcherRunner = http_runner.NewHttpRunner(8001)
 	} else {
@@ -178,6 +184,7 @@ func (self *Config) AddCoreConfig(settingPath SettingPaths, addressConfig common
 			10*time.Minute, // tradeHistory fetching interval
 			10*time.Second, // global data fetching interval
 		)
+		dataControllerRunner = storagecontroller.NewStorageControllerTickerRunner(24 * time.Hour)
 	}
 
 	pricingSigner := PricingSignerFromConfigFile(settingPath.secretPath)
@@ -190,6 +197,7 @@ func (self *Config) AddCoreConfig(settingPath SettingPaths, addressConfig common
 	self.FetcherGlobalStorage = dataStorage
 	self.MetricStorage = dataStorage
 	self.FetcherRunner = fetcherRunner
+	self.DataControllerRunner = dataControllerRunner
 	self.BlockchainSigner = pricingSigner
 	//self.IntermediatorSigner = huoBiintermediatorSigner
 	self.DepositSigner = depositSigner

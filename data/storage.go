@@ -11,6 +11,7 @@ type Storage interface {
 
 	CurrentAuthDataVersion(timepoint uint64) (common.Version, error)
 	GetAuthData(common.Version) (common.AuthDataSnapshot, error)
+	ExportExpiredAuthData(timepoint uint64, fileName string) (uint64, error)
 
 	CurrentRateVersion(timepoint uint64) (common.Version, error)
 	GetRate(common.Version) (common.AllRateEntry, error)

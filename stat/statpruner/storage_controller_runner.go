@@ -1,4 +1,4 @@
-package stat
+package statpruner
 
 import (
 	"time"
