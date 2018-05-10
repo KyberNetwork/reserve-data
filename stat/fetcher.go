@@ -23,6 +23,8 @@ const (
 	START_TIMEZONE         int64  = -11
 	END_TIMEZONE           int64  = 14
 	BLOCK_RANGE            uint64 = 200
+	SUCCESS                string = "OK"
+	NO_TXS_FOUND           string = "No transactions found"
 
 	TRADE_SUMMARY_AGGREGATION  string = "trade_summary_aggregation"
 	WALLET_AGGREGATION         string = "wallet_aggregation"
@@ -47,9 +49,10 @@ type Fetcher struct {
 	deployBlock            uint64
 	reserveAddress         ethereum.Address
 	setRateAddress         ethereum.Address
-	beginBlockSetRate      uint64
 	apiKey                 string
 	thirdPartyReserves     []ethereum.Address
+	sleepTime              time.Duration
+	blockNumMarker         uint64
 }
 
 func NewFetcher(
@@ -65,7 +68,8 @@ func NewFetcher(
 	beginBlockSetRate uint64,
 	apiKey string,
 	thirdPartyReserves []ethereum.Address) *Fetcher {
-	return &Fetcher{
+	sleepTime := time.Second
+	fetcher := &Fetcher{
 		statStorage:        statStorage,
 		logStorage:         logStorage,
 		rateStorage:        rateStorage,
@@ -76,10 +80,20 @@ func NewFetcher(
 		deployBlock:        deployBlock,
 		reserveAddress:     reserve,
 		setRateAddress:     setRateAddress,
-		beginBlockSetRate:  beginBlockSetRate,
 		apiKey:             apiKey,
 		thirdPartyReserves: thirdPartyReserves,
+		sleepTime:          sleepTime,
 	}
+	lastBlockChecked, err := fetcher.feeSetRateStorage.GetLastBlockChecked()
+	if err != nil {
+		log.Printf("can't get last block checked from db: %s", err)
+	}
+	if lastBlockChecked == 0 {
+		fetcher.blockNumMarker = beginBlockSetRate
+	} else {
+		fetcher.blockNumMarker = lastBlockChecked + 1
+	}
+	return fetcher
 }
 
 func (self *Fetcher) Stop() error {
@@ -104,26 +118,13 @@ func (self *Fetcher) Run() error {
 	return nil
 }
 
-var sleepTime time.Duration
-var blockNumMarker uint64
-
 func (self *Fetcher) RunFeeSetrateFetcher() {
-	lastBlockChecked, err := self.feeSetRateStorage.GetLastBlockChecked()
-	if err != nil {
-		log.Printf("can't get last block checked from db: %s", err)
-	}
-	if lastBlockChecked == 0 {
-		blockNumMarker = self.beginBlockSetRate
-	} else {
-		blockNumMarker = lastBlockChecked + 1		
-	}
 	client := http.Client{
-		Timeout: 6 * time.Second,
+		Timeout: 5 * time.Second,
 	}
-
 	for {
 		self.FetchTxs(client)
-		time.Sleep(sleepTime)
+		time.Sleep(self.sleepTime)
 	}
 }
 
@@ -133,13 +134,12 @@ type APIResponse struct {
 }
 
 func (self *Fetcher) FetchTxs(client http.Client) {
-	fromBlock := blockNumMarker
+	fromBlock := self.blockNumMarker
 	toBlock := self.GetToBlock()
 	if toBlock == 0 {
 		log.Println("Cannot get latest block nummber")
 		return
 	}
-	log.Println("toBlock: ", toBlock)
 	api := fmt.Sprintf("http://api.etherscan.io/api?module=account&action=txlist&address=%s&startblock=%d&endblock=%d&apikey=%s", self.setRateAddress.String(), fromBlock, toBlock, self.apiKey)
 	log.Println("api: ", api)
 	resp, err := client.Get(api)
@@ -160,7 +160,7 @@ func (self *Fetcher) FetchTxs(client http.Client) {
 		return
 	}
 
-	if apiResponse.Message == "OK" {
+	if apiResponse.Message == SUCCESS || apiResponse.Message == NO_TXS_FOUND {
 		sameBlockBucket := []common.SetRateTxInfo{}
 		setRateTxsInfo := apiResponse.Result
 		numberEle := len(setRateTxsInfo)
@@ -181,24 +181,26 @@ func (self *Fetcher) FetchTxs(client http.Client) {
 			}
 		}
 		log.Println("fetch done!")
-		blockNumMarker = toBlock + 1
+		if toBlock == self.currentBlock {
+			self.blockNumMarker = toBlock	
+		} else {
+			self.blockNumMarker = toBlock + 1			
+		}
 	}
 }
 
 func (self *Fetcher) GetToBlock() uint64 {
 	currentBlock := self.currentBlock
-	log.Println("toBlock current: ", currentBlock)
+	blockNumMarker := self.blockNumMarker
 	if currentBlock == 0 {
 		return 0
 	}
-	if currentBlock - blockNumMarker <= BLOCK_RANGE {
-		log.Println("run this")
-		sleepTime = 2 * time.Minute
+	if currentBlock <= blockNumMarker + BLOCK_RANGE {
+		self.sleepTime = 5 * time.Minute
 		return currentBlock
 	}
-	log.Println("run that")
 	toBlock := blockNumMarker + BLOCK_RANGE
-	sleepTime = time.Second
+	self.sleepTime = time.Second
 	return toBlock
 }
 
