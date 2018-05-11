@@ -655,7 +655,7 @@ func (self *Fetcher) FetchLogs(fromBlock uint64, toBlock uint64, timepoint uint6
 		return enforceFromBlock(fromBlock), err
 	} else {
 		if len(logs) > 0 {
-			var maxBlock uint64 = fromBlock - 1
+			var maxBlock uint64 = enforceFromBlock(fromBlock)
 			for _, il := range logs {
 				if il.Type() == "TradeLog" {
 					l := il.(common.TradeLog)
