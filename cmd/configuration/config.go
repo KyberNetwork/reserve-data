@@ -82,7 +82,6 @@ type Config struct {
 	FeeBurnerAddress   ethereum.Address
 	NetworkAddress     ethereum.Address
 	WhitelistAddress   ethereum.Address
-	SetRateAddress     ethereum.Address
 	ThirdPartyReserves []ethereum.Address
 
 	BeginBlockSetRate uint64
@@ -96,7 +95,6 @@ func (self *Config) AddStatConfig(settingPath SettingPaths, addressConfig common
 	networkAddr := ethereum.HexToAddress(addressConfig.Network)
 	burnerAddr := ethereum.HexToAddress(addressConfig.FeeBurner)
 	whitelistAddr := ethereum.HexToAddress(addressConfig.Whitelist)
-	setRateAddr := ethereum.HexToAddress(addressConfig.SetRate)
 
 	thirdpartyReserves := []ethereum.Address{}
 	for _, address := range addressConfig.ThirdPartyReserves {
@@ -165,7 +163,6 @@ func (self *Config) AddStatConfig(settingPath SettingPaths, addressConfig common
 	self.FeeBurnerAddress = burnerAddr
 	self.NetworkAddress = networkAddr
 	self.WhitelistAddress = whitelistAddr
-	self.SetRateAddress = setRateAddr
 	self.BeginBlockSetRate = beginBlockSetRate
 	self.ApiKey = apiKey
 }

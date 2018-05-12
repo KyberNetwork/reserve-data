@@ -11,6 +11,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"errors"
 
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/stat/util"
@@ -48,7 +49,7 @@ type Fetcher struct {
 	currentBlockUpdateTime uint64
 	deployBlock            uint64
 	reserveAddress         ethereum.Address
-	setRateAddress         ethereum.Address
+	pricingAddress         ethereum.Address
 	apiKey                 string
 	thirdPartyReserves     []ethereum.Address
 	sleepTime              time.Duration
@@ -64,7 +65,7 @@ func NewFetcher(
 	runner FetcherRunner,
 	deployBlock uint64,
 	reserve ethereum.Address,
-	setRateAddress ethereum.Address,
+	pricingAddress ethereum.Address,
 	beginBlockSetRate uint64,
 	apiKey string,
 	thirdPartyReserves []ethereum.Address) *Fetcher {
@@ -79,7 +80,7 @@ func NewFetcher(
 		runner:             runner,
 		deployBlock:        deployBlock,
 		reserveAddress:     reserve,
-		setRateAddress:     setRateAddress,
+		pricingAddress:     pricingAddress,
 		apiKey:             apiKey,
 		thirdPartyReserves: thirdPartyReserves,
 		sleepTime:          sleepTime,
@@ -87,6 +88,7 @@ func NewFetcher(
 	lastBlockChecked, err := fetcher.feeSetRateStorage.GetLastBlockChecked()
 	if err != nil {
 		log.Printf("can't get last block checked from db: %s", err)
+		panic(err)
 	}
 	if lastBlockChecked == 0 {
 		fetcher.blockNumMarker = beginBlockSetRate
@@ -123,7 +125,10 @@ func (self *Fetcher) RunFeeSetrateFetcher() {
 		Timeout: 5 * time.Second,
 	}
 	for {
-		self.FetchTxs(client)
+		err := self.FetchTxs(client)
+		if err != nil {
+			log.Printf("failed to fetch data from etherescan: %s", err)
+		}
 		time.Sleep(self.sleepTime)
 	}
 }
@@ -133,31 +138,28 @@ type APIResponse struct {
 	Result  []common.SetRateTxInfo `json:"result"`
 }
 
-func (self *Fetcher) FetchTxs(client http.Client) {
+func (self *Fetcher) FetchTxs(client http.Client) error {
 	fromBlock := self.blockNumMarker
 	toBlock := self.GetToBlock()
 	if toBlock == 0 {
-		log.Println("Cannot get latest block nummber")
-		return
+		return errors.New("Can't get latest block nummber")
 	}
-	api := fmt.Sprintf("http://api.etherscan.io/api?module=account&action=txlist&address=%s&startblock=%d&endblock=%d&apikey=%s", self.setRateAddress.String(), fromBlock, toBlock, self.apiKey)
-	log.Println("api: ", api)
+	api := fmt.Sprintf("http://api.etherscan.io/api?module=account&action=txlist&address=%s&startblock=%d&endblock=%d&apikey=%s", self.pricingAddress.String(), fromBlock, toBlock, self.apiKey)
+	log.Println("api get txs of setrate: ", api)
 	resp, err := client.Get(api)
 	if err != nil {
-		log.Println(err)
-		return
+		return err
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Println(err)
-		return
+		return err
 	}
 	apiResponse := APIResponse{}
 	err = json.Unmarshal(body, &apiResponse)
 	if err != nil {
 		log.Printf("can't unmarshal data from etherscan: %s", err)
-		return
+		return err
 	}
 
 	if apiResponse.Message == SUCCESS || apiResponse.Message == NO_TXS_FOUND {
@@ -174,19 +176,20 @@ func (self *Fetcher) FetchTxs(client http.Client) {
 				}
 				err = self.feeSetRateStorage.StoreTransaction(sameBlockBucket)
 				if err != nil {
-					log.Println(err)
-					return
+					log.Printf("failed to store pricing's txs: %s", err)
+					return err
 				}
 				sameBlockBucket = []common.SetRateTxInfo{}
 			}
 		}
-		log.Println("fetch done!")
+		log.Println("fetch and store pricing's txs done!")
 		if toBlock == self.currentBlock {
 			self.blockNumMarker = toBlock	
 		} else {
 			self.blockNumMarker = toBlock + 1			
 		}
 	}
+	return nil
 }
 
 func (self *Fetcher) GetToBlock() uint64 {
@@ -914,7 +917,7 @@ func (self *Fetcher) aggregateCountryStats(trade common.TradeLog,
 	userAddr := common.AddrToString(trade.UserAddress)
 	err := self.statStorage.SetCountry(trade.Country)
 	if err != nil {
-		log.Printf("Cannot store country: %s", err.Error())
+		// log.Printf("Cannot store country: %s", err.Error())
 		return err
 	}
 	_, _, ethAmount, burnFee := self.getTradeInfo(trade)
