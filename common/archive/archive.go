@@ -1,7 +1,9 @@
 package archive
 
 type Archive interface {
-	RemoveFile(filePath string, bucketName string) error
-	UploadFile(destinationFolder string, fileName string, bucketName string) error
-	CheckFileIntergrity(destinationFolder string, fileName string, bucketName string) (bool, error)
+	RemoveFile(bucketName string, destinationFolder string, filePath string) error
+	UploadFile(bucketName string, destinationFolder string, filePath string) error
+	CheckFileIntergrity(bucketName string, destinationFolder string, filePath string) (bool, error)
+	GetReserveDataBucketName() string
+	GetStatDataBucketName() string
 }

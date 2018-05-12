@@ -92,7 +92,11 @@ func serverStart(cmd *cobra.Command, args []string) {
 	numCPU := runtime.NumCPU()
 	runtime.GOMAXPROCS(numCPU)
 	configLog(stdoutLog)
-
+	//create temp folder for exported file
+	err := os.MkdirAll("./exported", 0730)
+	if err != nil {
+		panic(err)
+	}
 	//get configuration from ENV variable
 	kyberENV := os.Getenv("KYBER_ENV")
 	if kyberENV == "" {
@@ -182,9 +186,14 @@ func serverStart(cmd *cobra.Command, args []string) {
 			dataFetcher.SetBlockchain(bc)
 			rData = data.NewReserveData(
 				config.DataStorage,
-				config.DataGlobalStorage,
 				dataFetcher,
+				config.DataControllerRunner,
+				config.Archive,
+				config.DataGlobalStorage,
 			)
+			if kyberENV != "simulation" {
+				rData.RunStorageController()
+			}
 			rData.Run()
 			rCore = core.NewReserveCore(bc, config.ActivityStorage, config.ReserveAddress)
 		}
@@ -198,9 +207,10 @@ func serverStart(cmd *cobra.Command, args []string) {
 				config.UserStorage,
 				config.StatControllerRunner,
 				statFetcher,
+				config.Archive,
 			)
 			if kyberENV != "simulation" {
-				rStat.RunDBController()
+				rStat.RunStorageController()
 			}
 			rStat.Run()
 		}

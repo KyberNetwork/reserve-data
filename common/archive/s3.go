@@ -15,26 +15,54 @@ import (
 type s3Archive struct {
 	uploader *s3manager.Uploader
 	svc      *s3.S3
+	awsConf  AWSConfig
 }
 
-func (archive *s3Archive) UploadFile(awsfolderPath string, filename string, bucketName string) error {
-	file, err := os.Open(filename)
+func enforceFolderPath(fp string) string {
+	if len(fp) < 1 {
+		return fp
+	}
+	if string(fp[len(fp)-1]) != "/" {
+		fp = fp + "/"
+	}
+	return fp
+}
+
+func (archive *s3Archive) UploadFile(bucketName string, awsfolderPath string, filePath string) error {
+	file, err := os.Open(filePath)
 	defer file.Close()
 	if err != nil {
 		return err
 	}
 	_, err = archive.uploader.Upload(&s3manager.UploadInput{
 		Bucket: aws.String(bucketName),
-		Key:    aws.String(awsfolderPath + filename),
+		Key:    aws.String(enforceFolderPath(awsfolderPath) + getFileNameFromFilePath(filePath)),
 		Body:   file,
 	})
-
 	return err
 }
 
-func (archive *s3Archive) CheckFileIntergrity(awsfolderPath string, filename string, bucketName string) (bool, error) {
+func (archive *s3Archive) RemoveFile(bucketName string, awsfolderPath string, filePath string) error {
+	input := &s3.DeleteObjectInput{
+		Bucket: aws.String(bucketName),
+		Key:    aws.String(enforceFolderPath(awsfolderPath) + getFileNameFromFilePath(filePath)),
+	}
+	_, err := archive.svc.DeleteObject(input)
+	return err
+}
+
+func getFileNameFromFilePath(filePath string) string {
+	elems := strings.Split(filePath, "/")
+	if len(elems) < 1 {
+		return filePath
+	}
+	fileName := elems[len(elems)-1]
+	return fileName
+}
+
+func (archive *s3Archive) CheckFileIntergrity(bucketName string, awsfolderPath string, filePath string) (bool, error) {
 	//get File info
-	file, err := os.Open(filename)
+	file, err := os.Open(filePath)
 	defer file.Close()
 	if err != nil {
 		return false, err
@@ -44,9 +72,10 @@ func (archive *s3Archive) CheckFileIntergrity(awsfolderPath string, filename str
 		return false, err
 	}
 	//get AWS's file info
+
 	x := s3.ListObjectsInput{
 		Bucket: aws.String(bucketName),
-		Prefix: aws.String(awsfolderPath + filename),
+		Prefix: aws.String(enforceFolderPath(awsfolderPath) + getFileNameFromFilePath(filePath)),
 	}
 	resp, err := archive.svc.ListObjects(&x)
 	if err != nil {
@@ -54,21 +83,26 @@ func (archive *s3Archive) CheckFileIntergrity(awsfolderPath string, filename str
 	}
 
 	for _, item := range resp.Contents {
-		elems := strings.Split(*item.Key, "/")
-		remoteFileName := elems[len(elems)-1]
-		if (remoteFileName == filename) && (*item.Size == fi.Size()) {
+		remoteFileName := getFileNameFromFilePath(*item.Key)
+		localFileName := getFileNameFromFilePath(filePath)
+		if (remoteFileName == localFileName) && (*item.Size == fi.Size()) {
 			return true, nil
 		}
 	}
 	return false, nil
 }
 
-func (archive *s3Archive) RemoveFile(filePath string, bucketName string) error {
-	var err error
-	return err
+func (archive *s3Archive) GetReserveDataBucketName() string {
+	return archive.awsConf.ExpiredReserveDataBucketName
 }
 
-func NewS3Archive(conf AWSConfig) Archive {
+//GetStatDataBucketName returns the bucket in which the backup Data is stored.
+//This should be passed in from JSON configure file
+func (archive *s3Archive) GetStatDataBucketName() string {
+	return archive.awsConf.ExpiredStatDataBucketName
+}
+
+func NewS3Archive(conf AWSConfig) *s3Archive {
 
 	crdtl := credentials.NewStaticCredentials(conf.AccessKeyID, conf.SecretKey, conf.Token)
 	sess := session.Must(session.NewSession(&aws.Config{
@@ -79,7 +113,8 @@ func NewS3Archive(conf AWSConfig) Archive {
 	svc := s3.New(sess)
 	archive := s3Archive{uploader,
 		svc,
+		conf,
 	}
 
-	return Archive(&archive)
+	return &archive
 }

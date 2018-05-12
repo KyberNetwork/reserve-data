@@ -169,7 +169,8 @@
             "RDN": 1,
             "ZIL": 100,
             "AST": 5,
-            "LINK": 1
+            "LINK": 1,
+            "ABT": 2
         },
         "stable_exchange": {
           "ETH": 0,
