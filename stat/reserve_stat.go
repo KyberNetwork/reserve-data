@@ -321,11 +321,11 @@ func (self ReserveStats) ControllPriceAnalyticSize() error {
 		} else {
 			var integrity bool
 			if nRecord > 0 {
-				err := self.storageController.Arch.UploadFile(self.storageController.Arch.GetStatDataBucketName(), self.storageController.Arch.GetPriceAnalyticPath(), fileName)
+				err := self.storageController.Arch.UploadFile(self.storageController.Arch.GetStatDataBucketName(), self.storageController.ExpiredPriceAnalyticPath, fileName)
 				if err != nil {
 					log.Printf("StatPruner: Upload file failed: %s", err)
 				} else {
-					integrity, err = self.storageController.Arch.CheckFileIntergrity(self.storageController.Arch.GetStatDataBucketName(), self.storageController.Arch.GetPriceAnalyticPath(), fileName)
+					integrity, err = self.storageController.Arch.CheckFileIntergrity(self.storageController.Arch.GetStatDataBucketName(), self.storageController.ExpiredPriceAnalyticPath, fileName)
 					if err != nil {
 						log.Printf("ERROR: StatPruner: error in file integrity check (%s):", err)
 					}
@@ -335,7 +335,7 @@ func (self ReserveStats) ControllPriceAnalyticSize() error {
 					}
 					if err != nil || !integrity {
 						//if the intergrity check failed, remove the remote file.
-						removalErr := self.storageController.Arch.RemoveFile(self.storageController.Arch.GetStatDataBucketName(), self.storageController.Arch.GetPriceAnalyticPath(), fileName)
+						removalErr := self.storageController.Arch.RemoveFile(self.storageController.Arch.GetStatDataBucketName(), self.storageController.ExpiredPriceAnalyticPath, fileName)
 						if removalErr != nil {
 							log.Printf("ERROR: StatPruner: cannot remove remote file :(%s)", removalErr)
 						}

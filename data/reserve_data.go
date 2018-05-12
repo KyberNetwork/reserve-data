@@ -274,11 +274,11 @@ func (self ReserveData) ControlAuthDataSize() error {
 		} else {
 			var integrity bool
 			if nRecord > 0 {
-				err = self.storageController.Arch.UploadFile(self.storageController.Arch.GetReserveDataBucketName(), self.storageController.Arch.GetAuthDataPath(), fileName)
+				err = self.storageController.Arch.UploadFile(self.storageController.Arch.GetReserveDataBucketName(), self.storageController.ExpiredAuthDataPath, fileName)
 				if err != nil {
 					log.Printf("DataPruner: Upload file failed: %s", err)
 				} else {
-					integrity, err = self.storageController.Arch.CheckFileIntergrity(self.storageController.Arch.GetReserveDataBucketName(), self.storageController.Arch.GetAuthDataPath(), fileName)
+					integrity, err = self.storageController.Arch.CheckFileIntergrity(self.storageController.Arch.GetReserveDataBucketName(), self.storageController.ExpiredAuthDataPath, fileName)
 					if err != nil {
 						log.Printf("ERROR: DataPruner: error in file integrity check (%s):", err)
 					} else if !integrity {
@@ -287,7 +287,7 @@ func (self ReserveData) ControlAuthDataSize() error {
 					}
 					if err != nil || !integrity {
 						//if the intergrity check failed, remove the remote file.
-						removalErr := self.storageController.Arch.RemoveFile(self.storageController.Arch.GetReserveDataBucketName(), self.storageController.Arch.GetAuthDataPath(), fileName)
+						removalErr := self.storageController.Arch.RemoveFile(self.storageController.Arch.GetReserveDataBucketName(), self.storageController.ExpiredAuthDataPath, fileName)
 						if removalErr != nil {
 							log.Printf("ERROR: DataPruner: cannot remove remote file :(%s)", removalErr)
 						}

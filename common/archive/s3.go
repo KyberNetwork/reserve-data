@@ -92,11 +92,6 @@ func (archive *s3Archive) CheckFileIntergrity(bucketName string, awsfolderPath s
 	return false, nil
 }
 
-func (archive *s3Archive) GetAuthDataPath() string {
-	return archive.awsConf.ExpiredAuthDataFolderPath
-
-}
-
 func (archive *s3Archive) GetReserveDataBucketName() string {
 	return archive.awsConf.ExpiredReserveDataBucketName
 }
@@ -105,12 +100,6 @@ func (archive *s3Archive) GetReserveDataBucketName() string {
 //This should be passed in from JSON configure file
 func (archive *s3Archive) GetStatDataBucketName() string {
 	return archive.awsConf.ExpiredStatDataBucketName
-}
-
-//GetPriceAnalyticPath returns the folder path to store Expired Price Analytic Data.
-//Ths should be passed in from JSON configure file
-func (archive *s3Archive) GetPriceAnalyticPath() string {
-	return archive.awsConf.ExpiredPriceAnalyticFolderPath
 }
 
 func NewS3Archive(conf AWSConfig) *s3Archive {
