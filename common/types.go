@@ -897,7 +897,7 @@ type SetRateTxInfo struct {
 	BlockNumber       string `json:"blockNumber"`
 	TimeStamp         string `json:"timeStamp"`
 	TransactionIndex  string `json:"transactionIndex"`
-	Value             string `json:"value"`
+	Input             string `json:"input"`
 	GasPrice          string `json:"gasPrice"`
 	GasUsed           string `json:"gasUsed"`
 }

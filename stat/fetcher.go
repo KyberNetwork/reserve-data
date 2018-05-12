@@ -168,7 +168,7 @@ func (self *Fetcher) FetchTxs(client http.Client) error {
 		numberEle := len(setRateTxsInfo)
 		var blockNumber string
 		for index, transaction := range setRateTxsInfo {
-			if transaction.Value == "0" {
+			if self.isPricingMethod(transaction.Input) {
 				blockNumber = transaction.BlockNumber
 				sameBlockBucket = append(sameBlockBucket, transaction)
 				if index < numberEle - 1 && setRateTxsInfo[index + 1].BlockNumber == blockNumber {
@@ -190,6 +190,22 @@ func (self *Fetcher) FetchTxs(client http.Client) error {
 		}
 	}
 	return nil
+}
+
+func (self *Fetcher) isPricingMethod(inputData string) bool {
+	if inputData == "0x" {
+		return false
+	}
+	method, err := self.blockchain.GetPricingMethod(inputData)
+	if err != nil {
+		log.Printf("Cannot find method from input data: ", err)
+		return false
+	}
+	methodName := method.Name
+	if methodName == "setCompactData" || methodName == "setBaseRate" {
+		return true
+	}
+	return false
 }
 
 func (self *Fetcher) GetToBlock() uint64 {
