@@ -22,9 +22,9 @@ func (self *LogStorageTest) TestCatLog() error {
 	var catLog = common.SetCatLog{
 		Timestamp:       111,
 		BlockNumber:     222,
-		TransactionHash: ethereum.StringToHash("TESTHASH"),
+		TransactionHash: ethereum.HexToHash("TESTHASH"),
 		Index:           1,
-		Address:         ethereum.StringToAddress(TESTUSERADDR),
+		Address:         ethereum.HexToAddress(TESTUSERADDR),
 		Category:        "test",
 	}
 	err = self.storage.StoreCatLog(catLog)
@@ -34,9 +34,9 @@ func (self *LogStorageTest) TestCatLog() error {
 	catLog = common.SetCatLog{
 		Timestamp:       333,
 		BlockNumber:     444,
-		TransactionHash: ethereum.StringToHash("TESTHASH"),
+		TransactionHash: ethereum.HexToHash("TESTHASH"),
 		Index:           2,
-		Address:         ethereum.StringToAddress(TESTUSERADDR),
+		Address:         ethereum.HexToAddress(TESTUSERADDR),
 		Category:        "test",
 	}
 	err = self.storage.StoreCatLog(catLog)
@@ -72,7 +72,7 @@ func (self *LogStorageTest) TestTradeLog() error {
 	var tradeLog = common.TradeLog{
 		Timestamp:       111,
 		BlockNumber:     222,
-		TransactionHash: ethereum.StringToHash("TESTHASH"),
+		TransactionHash: ethereum.HexToHash("TESTHASH"),
 		Index:           1,
 	}
 	err = self.storage.StoreTradeLog(tradeLog, 111)
@@ -82,7 +82,7 @@ func (self *LogStorageTest) TestTradeLog() error {
 	tradeLog = common.TradeLog{
 		Timestamp:       333,
 		BlockNumber:     444,
-		TransactionHash: ethereum.StringToHash("TESTHASH"),
+		TransactionHash: ethereum.HexToHash("TESTHASH"),
 		Index:           2,
 	}
 	err = self.storage.StoreTradeLog(tradeLog, 333)

@@ -71,7 +71,7 @@ type ContractWrapperTransactorRaw struct {
 
 // NewContractWrapper creates a new instance of ContractWrapper, bound to a specific deployed contract.
 func NewContractWrapper(address common.Address, backend bind.ContractBackend) (*ContractWrapper, error) {
-	contract, err := bindContractWrapper(address, backend, backend)
+	contract, err := bindContractWrapper(address, backend, backend, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func NewContractWrapper(address common.Address, backend bind.ContractBackend) (*
 
 // NewContractWrapperCaller creates a new read-only instance of ContractWrapper, bound to a specific deployed contract.
 func NewContractWrapperCaller(address common.Address, caller bind.ContractCaller) (*ContractWrapperCaller, error) {
-	contract, err := bindContractWrapper(address, caller, nil)
+	contract, err := bindContractWrapper(address, caller, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func NewContractWrapperCaller(address common.Address, caller bind.ContractCaller
 
 // NewContractWrapperTransactor creates a new write-only instance of ContractWrapper, bound to a specific deployed contract.
 func NewContractWrapperTransactor(address common.Address, transactor bind.ContractTransactor) (*ContractWrapperTransactor, error) {
-	contract, err := bindContractWrapper(address, nil, transactor)
+	contract, err := bindContractWrapper(address, nil, transactor, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -97,12 +97,12 @@ func NewContractWrapperTransactor(address common.Address, transactor bind.Contra
 }
 
 // bindContractWrapper binds a generic wrapper to an already deployed contract.
-func bindContractWrapper(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor) (*bind.BoundContract, error) {
+func bindContractWrapper(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filter bind.ContractFilterer) (*bind.BoundContract, error) {
 	parsed, err := abi.JSON(strings.NewReader(ContractWrapperABI))
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor), nil
+	return bind.NewBoundContract(address, parsed, caller, transactor, filter), nil
 }
 
 // Call invokes the (constant) contract method with params as input values and

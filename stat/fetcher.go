@@ -933,7 +933,7 @@ func (self *Fetcher) aggregateCountryStats(trade common.TradeLog,
 	userAddr := common.AddrToString(trade.UserAddress)
 	err := self.statStorage.SetCountry(trade.Country)
 	if err != nil {
-		// log.Printf("Cannot store country: %s", err.Error())
+		log.Printf("Cannot store country: %s", err.Error())
 		return err
 	}
 	_, _, ethAmount, burnFee := self.getTradeInfo(trade)

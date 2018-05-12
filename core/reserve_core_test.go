@@ -63,7 +63,7 @@ func (self testBlockchain) Send(
 		0,
 		ethereum.Address{},
 		big.NewInt(0),
-		big.NewInt(300000),
+		300000,
 		big.NewInt(1000000000),
 		[]byte{})
 	return tx, nil
@@ -80,7 +80,7 @@ func (self testBlockchain) SetRates(
 		0,
 		ethereum.Address{},
 		big.NewInt(0),
-		big.NewInt(300000),
+		300000,
 		big.NewInt(1000000000),
 		[]byte{})
 	return tx, nil
