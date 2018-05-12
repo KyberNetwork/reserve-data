@@ -11,6 +11,8 @@ import (
 	"github.com/KyberNetwork/reserve-data/common/blockchain"
 	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
 const (
@@ -559,6 +561,20 @@ func (self *Blockchain) GetLogs(fromBlock uint64, toBlock uint64) ([]common.KNLo
 
 func (self *Blockchain) SetRateMinedNonce() (uint64, error) {
 	return self.GetMinedNonce(PRICING_OP)
+}
+
+func (self *Blockchain) GetPricingMethod(inputData string) (*abi.Method, error) {
+	abiPricing := &self.pricing.ABI
+	inputDataByte, err := hexutil.Decode(inputData)
+	if err != nil {
+		log.Printf("Cannot decode data: ", err)
+		return nil, err
+	}
+	method, err := abiPricing.MethodById(inputDataByte)
+	if err != nil {
+		return nil, err
+	}
+	return method, nil
 }
 
 func NewBlockchain(

@@ -10,7 +10,7 @@ type TxOpts struct {
 
 	Value    *big.Int // Funds to transfer along along the transaction (nil = 0 = no funds)
 	GasPrice *big.Int // Gas price to use for the transaction execution (nil = gas price oracle)
-	GasLimit *big.Int // Gas limit to set for the transaction execution (0 = estimate)
+	GasLimit uint64   // Gas limit to set for the transaction execution (0 = estimate)
 }
 
 type CallOpts struct {
