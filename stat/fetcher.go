@@ -609,7 +609,7 @@ func (self *Fetcher) RunBlockFetcher() {
 	}
 }
 
-func (self *Fetcher) GetTradeGeo(txHash string) (string, string, error) {
+func GetTradeGeo(txHash string) (string, string, error) {
 	url := fmt.Sprintf("https://broadcast.kyber.network/get-tx-info/%s", txHash)
 
 	resp, err := http.Get(url)
@@ -647,6 +647,20 @@ func enforceFromBlock(fromBlock uint64) uint64 {
 
 }
 
+// func (self *Fetcher) isDuplicateLog(blockNum, index uint64) bool{
+// 	block, index,
+// }
+
+func SetcountryFields(l *common.TradeLog) {
+	txHash := l.TxHash()
+	ip, country, err := GetTradeGeo(txHash.Hex())
+	if err != nil {
+		log.Printf("LogFetcher - Getting country failed")
+	}
+	l.IP = ip
+	l.Country = country
+}
+
 // return block number that we just fetched the logs
 func (self *Fetcher) FetchLogs(fromBlock uint64, toBlock uint64, timepoint uint64) (uint64, error) {
 	logs, err := self.blockchain.GetLogs(fromBlock, toBlock)
@@ -659,10 +673,7 @@ func (self *Fetcher) FetchLogs(fromBlock uint64, toBlock uint64, timepoint uint6
 			for _, il := range logs {
 				if il.Type() == "TradeLog" {
 					l := il.(common.TradeLog)
-					txHash := il.TxHash()
-					ip, country, err := self.GetTradeGeo(txHash.Hex())
-					l.IP = ip
-					l.Country = country
+					SetcountryFields(&l)
 					block, index, uErr := self.logStorage.LoadLastTradeLogIndex()
 					if uErr == nil && (block > l.BlockNumber || (block == l.BlockNumber && index >= l.Index)) {
 						log.Printf("LogFetcher - Duplicated trade log %+v (new block number %d is smaller or equal to latest block number %d and tx index %d is smaller or equal to last log tx index %d)", l, block, l.BlockNumber, index, l.Index)
