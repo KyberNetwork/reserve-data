@@ -572,7 +572,7 @@ func (self *Huobi) WithdrawStatus(
 func (self *Huobi) OrderStatus(id string, base, quote string) (string, error) {
 	orderID, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 	symbol := base + quote
 	order, err := self.interf.OrderStatus(symbol, orderID)

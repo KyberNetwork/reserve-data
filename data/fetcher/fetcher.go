@@ -539,7 +539,9 @@ func (self *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []commo
 				orderID := id.EID
 				base := activity.Params["base"].(string)
 				quote := activity.Params["quote"].(string)
-				status, err = exchange.OrderStatus(orderID, base, quote)
+				// we ignore error of order status because it doesn't affect
+				// authdata. Analytic will ignore order status anyway.
+				status, _ = exchange.OrderStatus(orderID, base, quote)
 			} else if activity.Action == "deposit" {
 				txHash := activity.Result["tx"].(string)
 				amountStr := activity.Params["amount"].(string)

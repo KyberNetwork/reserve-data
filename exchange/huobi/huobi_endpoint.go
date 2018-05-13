@@ -235,7 +235,7 @@ func (self *HuobiEndpoint) OrderStatus(symbol string, id uint64) (exchange.Huobi
 	if err == nil {
 		json.Unmarshal(resp_body, &result)
 		if result.Status != "ok" {
-			err = errors.New(fmt.Sprintf("Get order status failed: %s \n", result.Reason))
+			err = errors.New(fmt.Sprintf("Get order status failed: %s", result.Reason))
 		}
 	}
 	return result, err
