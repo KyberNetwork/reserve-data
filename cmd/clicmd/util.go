@@ -133,9 +133,6 @@ func CreateDataCore(config *configuration.Config, kyberENV string, bc *blockchai
 		config.Archive,
 		config.DataGlobalStorage,
 	)
-	if kyberENV != "simulation" {
-		rData.RunStorageController()
-	}
 
 	rCore := core.NewReserveCore(bc, config.ActivityStorage, config.ReserveAddress)
 	return rData, rCore

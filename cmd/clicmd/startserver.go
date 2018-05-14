@@ -57,7 +57,6 @@ func serverStart(cmd *cobra.Command, args []string) {
 	if !noCore {
 		rData, rCore = CreateDataCore(config, kyberENV, bc)
 		if !dryrun {
-			log.Printf("run RData \n======================\n")
 			if kyberENV != "simulation" {
 				rData.RunStorageController()
 			}
@@ -69,8 +68,6 @@ func serverStart(cmd *cobra.Command, args []string) {
 	if enableStat {
 		rStat = CreateStat(config, kyberENV, bc)
 		if !dryrun {
-			log.Printf("run RStat \n======================\n")
-
 			if kyberENV != "simulation" {
 				rStat.RunStorageController()
 			}
@@ -90,8 +87,9 @@ func serverStart(cmd *cobra.Command, args []string) {
 	)
 
 	if !dryrun {
-		log.Printf("run server \n======================\n")
 		server.Run()
+	} else {
+		log.Printf("Dry run finished. All configs are corrected")
 	}
 }
 
