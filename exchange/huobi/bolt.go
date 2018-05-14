@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
 	"sync"
 
 	"github.com/KyberNetwork/reserve-data/common"
@@ -172,7 +173,7 @@ func (self *BoltStorage) StoreTradeHistory(data common.ExchangeTradeHistory) err
 				return err
 			}
 			for _, history := range pairHistory {
-				idBytes := uint64ToBytes(history.Timestamp)
+				idBytes := []byte(fmt.Sprintf("%s%s", strconv.FormatUint(history.Timestamp, 10), history.ID))
 				dataJSON, err := json.Marshal(history)
 				if err != nil {
 					log.Printf("Cannot marshal history: %s", err.Error())
@@ -195,8 +196,8 @@ func (self *BoltStorage) GetTradeHistory(fromTime, toTime uint64) (common.Exchan
 	if toTime-fromTime > MAX_GET_TRADE_HISTORY {
 		return result, errors.New(fmt.Sprintf("Time range is too broad, it must be smaller or equal to 3 days (miliseconds)"))
 	}
-	min := uint64ToBytes(fromTime)
-	max := uint64ToBytes(toTime)
+	min := []byte(strconv.FormatUint(fromTime, 10))
+	max := []byte(strconv.FormatUint(toTime, 10))
 	err = self.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(TRADE_HISTORY))
 		c := b.Cursor()

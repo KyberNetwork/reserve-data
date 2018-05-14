@@ -48,6 +48,10 @@ func (self testExchange) TokenAddresses() map[string]ethereum.Address {
 func (self testExchange) UpdateDepositAddress(token common.Token, address string) {
 }
 
+func (self testExchange) GetTradeHistory(fromTime, toTime uint64) (common.ExchangeTradeHistory, error) {
+	return common.ExchangeTradeHistory{}, nil
+}
+
 type testBlockchain struct {
 }
 

@@ -44,3 +44,6 @@ func (self TestExchange) TokenAddresses() map[string]ethereum.Address {
 }
 func (self TestExchange) UpdateDepositAddress(token Token, address string) {
 }
+func (self TestExchange) GetTradeHistory(fromTime, toTime uint64) (ExchangeTradeHistory, error) {
+	return ExchangeTradeHistory{}, nil
+}
