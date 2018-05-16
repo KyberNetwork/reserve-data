@@ -125,6 +125,8 @@ func CreateDataCore(config *configuration.Config, kyberENV string, bc *blockchai
 	nonceDeposit := nonce.NewTimeWindow(config.DepositSigner.GetAddress(), 10000)
 	bc.RegisterPricingOperator(config.BlockchainSigner, nonceCorpus)
 	bc.RegisterDepositOperator(config.DepositSigner, nonceDeposit)
+	gasOracle := blockchain.NewGasOracle()
+	bc.AddGasOracle(gasOracle)
 	dataFetcher.SetBlockchain(bc)
 	rData := data.NewReserveData(
 		config.DataStorage,

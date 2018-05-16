@@ -51,6 +51,11 @@ type Blockchain struct {
 	oldBurners    []ethereum.Address
 	tokens        []common.Token
 	tokenIndices  map[string]tbindex
+	gasOracle     *GasOracle
+}
+
+func (self *Blockchain) AddGasOracle(gasOracle *GasOracle) {
+	self.gasOracle = gasOracle
 }
 
 func (self *Blockchain) AddOldNetwork(addr ethereum.Address) {
