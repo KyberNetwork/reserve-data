@@ -114,8 +114,8 @@ func (self testActivityStorage) GetActivity(id common.ActivityID) (common.Activi
 	return common.ActivityRecord{}, nil
 }
 
-func (self testActivityStorage) PendingSetrate(minedNonce uint64) (*common.ActivityRecord, error) {
-	return nil, nil
+func (self testActivityStorage) PendingSetrate(minedNonce uint64) (*common.ActivityRecord, uint64, error) {
+	return nil, 0, nil
 }
 
 func (self testActivityStorage) HasPendingDeposit(

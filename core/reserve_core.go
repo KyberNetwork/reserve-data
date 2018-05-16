@@ -232,17 +232,34 @@ func (self ReserveCore) Withdraw(
 	return uid, err
 }
 
-func (self ReserveCore) pendingSetrateInfo(minedNonce uint64) (*big.Int, *big.Int, error) {
-	act, err := self.activityStorage.PendingSetrate(minedNonce)
+func calculateNewGasPrice(old *big.Int, count uint64) *big.Int {
+	// in this case after 5 tries the tx is still not mined.
+	// at this point, 50.1 gwei is not enough but it doesn't matter
+	// if the tx is mined or not because users' tx is not mined neither
+	// so we can just increase the gas price a tiny amount (0.1 gwei) to make
+	// the node accept tx with up to date price
+	if count > 4 {
+		return old.Add(old, big.NewInt(100000000))
+	} else {
+		// new = old + (50.1 - old) / (5 - count)
+		return old.Add(
+			old,
+			big.NewInt(0).Div(big.NewInt(0).Sub(big.NewInt(50100000000), old), big.NewInt(int64(5-count))),
+		)
+	}
+}
+
+func (self ReserveCore) pendingSetrateInfo(minedNonce uint64) (*big.Int, *big.Int, uint64, error) {
+	act, count, err := self.activityStorage.PendingSetrate(minedNonce)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, 0, err
 	}
 	if act != nil {
 		nonce, _ := strconv.ParseUint(act.Result["nonce"].(string), 10, 64)
 		gasPrice, _ := strconv.ParseUint(act.Result["gasPrice"].(string), 10, 64)
-		return big.NewInt(int64(nonce)), big.NewInt(int64(gasPrice)), nil
+		return big.NewInt(int64(nonce)), big.NewInt(int64(gasPrice)), count, nil
 	} else {
-		return nil, nil, nil
+		return nil, nil, 0, nil
 	}
 }
 
@@ -278,16 +295,17 @@ func (self ReserveCore) SetRates(
 			var oldNonce *big.Int
 			var oldPrice *big.Int
 			var minedNonce uint64
+			var count uint64
 			minedNonce, err = self.blockchain.SetRateMinedNonce()
 			if err != nil {
 				err = errors.New("Couldn't get mined nonce of set rate operator")
 			} else {
-				oldNonce, oldPrice, err = self.pendingSetrateInfo(minedNonce)
+				oldNonce, oldPrice, count, err = self.pendingSetrateInfo(minedNonce)
 				if err != nil {
 					err = errors.New("Couldn't check pending set rate tx pool. Please try later")
 				} else {
 					if oldNonce != nil {
-						newPrice := big.NewInt(0).Add(oldPrice, big.NewInt(10000000000))
+						newPrice := calculateNewGasPrice(oldPrice, count)
 						log.Printf("Trying to replace old tx with new price: %s", newPrice.Text(10))
 						tx, err = self.blockchain.SetRates(
 							tokenAddrs, buys, sells, block,
@@ -295,10 +313,11 @@ func (self ReserveCore) SetRates(
 							newPrice,
 						)
 					} else {
+						initPrice := big.NewInt(10000000000)
 						tx, err = self.blockchain.SetRates(
 							tokenAddrs, buys, sells, block,
 							nil,
-							big.NewInt(50100000000),
+							initPrice,
 						)
 					}
 				}

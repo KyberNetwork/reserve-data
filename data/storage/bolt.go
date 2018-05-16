@@ -556,10 +556,11 @@ func (self *BoltStorage) GetAllRecords(fromTime, toTime uint64) ([]common.Activi
 	return result, err
 }
 
-func getLastPendingSetrate(pendings []common.ActivityRecord, minedNonce uint64) (*common.ActivityRecord, error) {
+func getLastAndCountPendingSetrate(pendings []common.ActivityRecord, minedNonce uint64) (*common.ActivityRecord, uint64, error) {
 	var maxNonce uint64 = 0
 	var maxPrice uint64 = 0
 	var result *common.ActivityRecord
+	var count uint64 = 0
 	for _, act := range pendings {
 		if act.Action == "set_rates" {
 			log.Printf("looking for pending set_rates: %+v", act)
@@ -587,14 +588,16 @@ func getLastPendingSetrate(pendings []common.ActivityRecord, minedNonce uint64) 
 					result = &act
 					maxPrice = gasPrice
 				}
+				count += 1
 			} else if nonce > maxNonce {
 				maxNonce = nonce
 				result = &act
 				maxPrice = gasPrice
+				count = 1
 			}
 		}
 	}
-	return result, nil
+	return result, count, nil
 }
 
 func (self *BoltStorage) RemoveStalePendingActivities(tx *bolt.Tx, stales []common.ActivityRecord) error {
@@ -608,12 +611,12 @@ func (self *BoltStorage) RemoveStalePendingActivities(tx *bolt.Tx, stales []comm
 	return nil
 }
 
-func (self *BoltStorage) PendingSetrate(minedNonce uint64) (*common.ActivityRecord, error) {
+func (self *BoltStorage) PendingSetrate(minedNonce uint64) (*common.ActivityRecord, uint64, error) {
 	pendings, err := self.GetPendingActivities()
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	} else {
-		return getLastPendingSetrate(pendings, minedNonce)
+		return getLastAndCountPendingSetrate(pendings, minedNonce)
 	}
 }
 
