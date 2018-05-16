@@ -41,7 +41,7 @@ const (
 	MAX_GET_RATES_PERIOD               uint64 = 86400000 //1 days in milisec
 	UI64DAY                            uint64 = uint64(time.Hour * 24)
 	EXPORT_BATCH                       int    = 1
-	AUTH_DATA_EXPIRED_DURATION         uint64 = 1 * 86400000 //10day in milisec
+	AUTH_DATA_EXPIRED_DURATION         uint64 = 10 * 86400000 //10day in milisec
 	STABLE_TOKEN_PARAMS_BUCKET         string = "stable-token-params"
 	PENDING_STABLE_TOKEN_PARAMS_BUCKET string = "pending-stable-token-params"
 	GOLD_BUCKET                        string = "gold_feeds"
