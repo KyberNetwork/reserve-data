@@ -332,7 +332,7 @@ func (self *HTTPServer) GetRate(c *gin.Context) {
 }
 
 func (self *HTTPServer) SetRate(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{"tokens", "buys", "sells", "block", "afp_mid"}, []Permission{RebalancePermission})
+	postForm, ok := self.Authenticated(c, []string{"tokens", "buys", "sells", "block", "afp_mid", "msg"}, []Permission{RebalancePermission})
 	if !ok {
 		return
 	}
@@ -341,6 +341,7 @@ func (self *HTTPServer) SetRate(c *gin.Context) {
 	sells := postForm.Get("sells")
 	block := postForm.Get("block")
 	afpMid := postForm.Get("afp_mid")
+	msgs := strings.Split(postForm.Get("msg"), "-")
 	tokens := []common.Token{}
 	for _, tok := range strings.Split(tokenAddrs, "-") {
 		token, err := common.GetInternalToken(tok)
@@ -401,7 +402,7 @@ func (self *HTTPServer) SetRate(c *gin.Context) {
 			bigAfpMid = append(bigAfpMid, r)
 		}
 	}
-	id, err := self.core.SetRates(tokens, bigBuys, bigSells, big.NewInt(intBlock), bigAfpMid)
+	id, err := self.core.SetRates(tokens, bigBuys, bigSells, big.NewInt(intBlock), bigAfpMid, msgs)
 	if err != nil {
 		c.JSON(
 			http.StatusOK,
