@@ -341,7 +341,7 @@ func (self *HTTPServer) SetRate(c *gin.Context) {
 	sells := postForm.Get("sells")
 	block := postForm.Get("block")
 	afpMid := postForm.Get("afp_mid")
-	msgs := strings.Split(postForm.Get("msg"), "-")
+	msgs := strings.Split(postForm.Get("msgs"), "-")
 	tokens := []common.Token{}
 	for _, tok := range strings.Split(tokenAddrs, "-") {
 		token, err := common.GetInternalToken(tok)
