@@ -45,6 +45,8 @@ const (
 	STABLE_TOKEN_PARAMS_BUCKET         string = "stable-token-params"
 	PENDING_STABLE_TOKEN_PARAMS_BUCKET string = "pending-stable-token-params"
 	GOLD_BUCKET                        string = "gold_feeds"
+	PENDING_TARGET_QUANTITY_V2         string = "pending_target_qty_v2"
+	TARGET_QUANTITY_V2                 string = "target_quantity_v2"
 )
 
 type BoltStorage struct {
@@ -140,6 +142,14 @@ func NewBoltStorage(path string) (*BoltStorage, error) {
 			return err
 		}
 		_, err = tx.CreateBucketIfNotExists([]byte(STABLE_TOKEN_PARAMS_BUCKET))
+		if err != nil {
+			return err
+		}
+		_, err = tx.CreateBucketIfNotExists([]byte(PENDING_TARGET_QUANTITY_V2))
+		if err != nil {
+			return err
+		}
+		_, err = tx.CreateBucketIfNotExists([]byte(TARGET_QUANTITY_V2))
 		if err != nil {
 			return err
 		}
@@ -1427,4 +1437,109 @@ func (self *BoltStorage) RemovePendingStableTokenParams() error {
 		return b.Delete(k)
 	})
 	return err
+}
+
+func (self *BoltStorage) StorePendingTargetQtyV2(value []byte) error {
+	k := uint64ToBytes(1)
+	temp := make(map[string]interface{})
+	vErr := json.Unmarshal(value, &temp)
+	if vErr != nil {
+		return fmt.Errorf("Rejected: Data could not be unmarshalled to defined format: %s", vErr.Error())
+	}
+	err := self.db.Update(func(tx *bolt.Tx) error {
+		b, uErr := tx.CreateBucketIfNotExists([]byte(PENDING_TARGET_QUANTITY_V2))
+		if uErr != nil {
+			return uErr
+		}
+		if b.Get(k) != nil {
+			return fmt.Errorf("Currently there is a pending record")
+		}
+		return b.Put(k, value)
+	})
+	return err
+}
+
+func (self *BoltStorage) GetPendingTargetQtyV2() (map[string]interface{}, error) {
+	k := uint64ToBytes(1)
+	result := make(map[string]interface{})
+	err := self.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(PENDING_TARGET_QUANTITY_V2))
+		if b == nil {
+			return fmt.Errorf("Bucket hasn't exist yet")
+		}
+		record := b.Get(k)
+		if record == nil {
+			return nil
+		}
+		vErr := json.Unmarshal(record, &result)
+		if vErr != nil {
+			return vErr
+		}
+		return nil
+	})
+	return result, err
+}
+
+func (self *BoltStorage) ConfirmTargetQtyV2(value []byte) error {
+	var err error
+	k := uint64ToBytes(1)
+	temp := make(map[string]interface{})
+	vErr := json.Unmarshal(value, &temp)
+	if vErr != nil {
+		return fmt.Errorf("Rejected: Data could not be unmarshalled to defined format: %s", vErr)
+	}
+	pending, err := self.GetPendingTargetQtyV2()
+	if eq := reflect.DeepEqual(pending, temp); !eq {
+		return fmt.Errorf("Rejected: confiming data isn't consistent")
+	}
+
+	err = self.db.Update(func(tx *bolt.Tx) error {
+		b, uErr := tx.CreateBucketIfNotExists([]byte(TARGET_QUANTITY_V2))
+		if uErr != nil {
+			return uErr
+		}
+		return b.Put(k, value)
+	})
+	if err != nil {
+		return err
+	}
+	err = self.RemovePendingTargetQtyV2()
+	return err
+}
+
+func (self *BoltStorage) RemovePendingTargetQtyV2() error {
+	k := uint64ToBytes(1)
+	err := self.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(PENDING_TARGET_QUANTITY_V2))
+		if b == nil {
+			return fmt.Errorf("Bucket hasn't existed yet")
+		}
+		record := b.Get(k)
+		if record == nil {
+			return fmt.Errorf("Bucket is empty")
+		}
+		return b.Delete(k)
+	})
+	return err
+}
+
+func (self *BoltStorage) GetTargetQtyV2() (map[string]interface{}, error) {
+	k := uint64ToBytes(1)
+	result := make(map[string]interface{})
+	err := self.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(TARGET_QUANTITY_V2))
+		if b == nil {
+			return fmt.Errorf("Bucket hasn't exist yet")
+		}
+		record := b.Get(k)
+		if record == nil {
+			return nil
+		}
+		vErr := json.Unmarshal(record, &result)
+		if vErr != nil {
+			return vErr
+		}
+		return nil
+	})
+	return result, err
 }

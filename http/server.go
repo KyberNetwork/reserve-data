@@ -1126,7 +1126,6 @@ func (self *HTTPServer) CancelTargetQty(c *gin.Context) {
 }
 
 func (self *HTTPServer) SetTargetQty(c *gin.Context) {
-	log.Println("Storing target quantity")
 	postForm, ok := self.Authenticated(c, []string{"data", "type"}, []Permission{ConfigurePermission})
 	if !ok {
 		return
@@ -2484,7 +2483,6 @@ func (self *HTTPServer) RejectStableTokenParams(c *gin.Context) {
 			"success": true,
 		},
 	)
-
 }
 
 func (self *HTTPServer) GetPendingStableTokenParams(c *gin.Context) {
@@ -2577,6 +2575,152 @@ func (self *HTTPServer) GetTokenHeatmap(c *gin.Context) {
 	)
 }
 
+func (self *HTTPServer) SetTargetQtyV2(c *gin.Context) {
+	postForm, ok := self.Authenticated(c, []string{}, []Permission{ConfigurePermission})
+	if !ok {
+		return
+	}
+	value := []byte(postForm.Get("value"))
+	if len(value) > MAX_DATA_SIZE {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  "the data size must be less than 1 MB",
+			},
+		)
+		return
+	}
+	err := self.metric.StorePendingTargetQtyV2(value)
+	if err != nil {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  err.Error(),
+			},
+		)
+		return
+	}
+	c.JSON(
+		http.StatusOK,
+		gin.H{
+			"success": true,
+		},
+	)
+}
+
+func (self *HTTPServer) GetPendingTargetQtyV2(c *gin.Context) {
+	_, ok := self.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, ConfigurePermission, ConfirmConfPermission, RebalancePermission})
+	if !ok {
+		return
+	}
+
+	data, err := self.metric.GetPendingTargetQtyV2()
+	if err != nil {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  err.Error(),
+			},
+		)
+		return
+	}
+	c.JSON(
+		http.StatusOK,
+		gin.H{
+			"success": true,
+			"data":    data,
+		},
+	)
+}
+
+func (self *HTTPServer) ConfirmTargetQtyV2(c *gin.Context) {
+	postForm, ok := self.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
+	if !ok {
+		return
+	}
+	value := []byte(postForm.Get("value"))
+	if len(value) > MAX_DATA_SIZE {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  "the data size must be less than 1 MB",
+			},
+		)
+		return
+	}
+	err := self.metric.ConfirmTargetQtyV2(value)
+	if err != nil {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  err.Error(),
+			},
+		)
+		return
+	}
+	c.JSON(
+		http.StatusOK,
+		gin.H{
+			"success": true,
+		},
+	)
+}
+
+func (self *HTTPServer) CancelTargetQtyV2(c *gin.Context) {
+	_, ok := self.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
+	if !ok {
+		return
+	}
+	err := self.metric.RemovePendingTargetQtyV2()
+	if err != nil {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  err.Error(),
+			},
+		)
+		return
+	}
+	c.JSON(
+		http.StatusOK,
+		gin.H{
+			"success": true,
+		},
+	)
+}
+
+func (self *HTTPServer) GetTargetQtyV2(c *gin.Context) {
+	_, ok := self.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, ConfigurePermission, ConfirmConfPermission, RebalancePermission})
+	if !ok {
+		return
+	}
+
+	data, err := self.metric.GetTargetQtyV2()
+	if err != nil {
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"success": false,
+				"reason":  err.Error(),
+			},
+		)
+		return
+	}
+	c.JSON(
+		http.StatusOK,
+		gin.H{
+			"success": true,
+			"data":    data,
+		},
+	)
+}
+
 func (self *HTTPServer) Run() {
 	if self.core != nil && self.app != nil {
 		self.r.GET("/prices-version", self.AllPricesVersion)
@@ -2610,6 +2754,12 @@ func (self *HTTPServer) Run() {
 		self.r.POST("/settargetqty", self.SetTargetQty)
 		self.r.POST("/confirmtargetqty", self.ConfirmTargetQty)
 		self.r.POST("/canceltargetqty", self.CancelTargetQty)
+
+		self.r.GET("/targetqty/v2", self.GetTargetQtyV2)
+		self.r.GET("/pendingtargetqty/v2", self.GetPendingTargetQtyV2)
+		self.r.POST("/settargetqty/v2", self.SetTargetQtyV2)
+		self.r.POST("/confirmtargetqty/v2", self.ConfirmTargetQtyV2)
+		self.r.POST("/canceltargetqty/v2", self.CancelTargetQtyV2)
 
 		self.r.GET("/timeserver", self.GetTimeServer)
 
