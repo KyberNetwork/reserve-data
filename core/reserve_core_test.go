@@ -136,7 +136,7 @@ func TestNotAllowDeposit(t *testing.T) {
 	core := getTestCore(alreadyHasDepositForOMGOnBittrex)
 	_, err := core.Deposit(
 		testExchange{},
-		common.Token{"OMG", "0x1111111111111111111111111111111111111111", 18},
+		common.Token{ID: "OMG", Address: "0x1111111111111111111111111111111111111111", Decimal: 18},
 		big.NewInt(10),
 		common.GetTimepoint(),
 	)
@@ -145,7 +145,7 @@ func TestNotAllowDeposit(t *testing.T) {
 	}
 	_, err = core.Deposit(
 		testExchange{},
-		common.Token{"KNC", "0x1111111111111111111111111111111111111111", 18},
+		common.Token{ID: "KNC", Address: "0x1111111111111111111111111111111111111111", Decimal: 18},
 		big.NewInt(10),
 		common.GetTimepoint(),
 	)

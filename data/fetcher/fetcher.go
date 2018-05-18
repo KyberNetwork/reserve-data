@@ -228,8 +228,8 @@ func (self *Fetcher) FetchTradeHistoryFromExchange(
 
 func (self *Fetcher) FetchAllTradeHistory(timepoint uint64) {
 	tradeHistory := common.AllTradeHistory{
-		common.GetTimestamp(),
-		map[common.ExchangeID]common.ExchangeTradeHistory{},
+		Timestamp: common.GetTimestamp(),
+		Data:      map[common.ExchangeID]common.ExchangeTradeHistory{},
 	}
 	wait := sync.WaitGroup{}
 	data := sync.Map{}
@@ -337,41 +337,41 @@ func (self *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord)
 						nonce, _ := strconv.ParseUint(actNonce.(string), 10, 64)
 						if nonce < minedNonce {
 							result[activity.ID] = common.ActivityStatus{
-								activity.ExchangeStatus,
-								activity.Result["tx"].(string),
-								blockNum,
-								"failed",
-								err,
+								ExchangeStatus: activity.ExchangeStatus,
+								Tx:             activity.Result["tx"].(string),
+								BlockNumber:    blockNum,
+								MiningStatus:   "failed",
+								Error:          err,
 							}
 						}
 					}
 				}
 			case "mined":
 				result[activity.ID] = common.ActivityStatus{
-					activity.ExchangeStatus,
-					activity.Result["tx"].(string),
-					blockNum,
-					"mined",
-					err,
+					ExchangeStatus: activity.ExchangeStatus,
+					Tx:             activity.Result["tx"].(string),
+					BlockNumber:    blockNum,
+					MiningStatus:   "mined",
+					Error:          err,
 				}
 			case "failed":
 				result[activity.ID] = common.ActivityStatus{
-					activity.ExchangeStatus,
-					activity.Result["tx"].(string),
-					blockNum,
-					"failed",
-					err,
+					ExchangeStatus: activity.ExchangeStatus,
+					Tx:             activity.Result["tx"].(string),
+					BlockNumber:    blockNum,
+					MiningStatus:   "failed",
+					Error:          err,
 				}
 			case "lost":
 				elapsed := common.GetTimepoint() - activity.Timestamp.ToUint64()
 				if elapsed > uint64(15*time.Minute/time.Millisecond) {
 					log.Printf("Fetcher tx status: tx(%s) is lost, elapsed time: %d", activity.Result["tx"].(string), elapsed)
 					result[activity.ID] = common.ActivityStatus{
-						activity.ExchangeStatus,
-						activity.Result["tx"].(string),
-						blockNum,
-						"failed",
-						err,
+						ExchangeStatus: activity.ExchangeStatus,
+						Tx:             activity.Result["tx"].(string),
+						BlockNumber:    blockNum,
+						MiningStatus:   "failed",
+						Error:          err,
 					}
 				}
 			}
@@ -558,7 +558,7 @@ func (self *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []commo
 				continue
 			}
 			result[id] = common.ActivityStatus{
-				status, tx, blockNum, activity.MiningStatus, err,
+				ExchangeStatus: status, Tx: tx, BlockNumber: blockNum, MiningStatus: activity.MiningStatus, Error: err,
 			}
 		}
 	}

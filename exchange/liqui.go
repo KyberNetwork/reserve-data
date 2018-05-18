@@ -180,8 +180,8 @@ func (self *Liqui) FetchPriceData(timepoint uint64) (map[common.TokenPairID]comm
 				one_pair_result.Bids = append(
 					one_pair_result.Bids,
 					common.PriceEntry{
-						buy[1],
-						buy[0],
+						Quantity: buy[1],
+						Rate:     buy[0],
 					},
 				)
 			}
@@ -189,8 +189,8 @@ func (self *Liqui) FetchPriceData(timepoint uint64) (map[common.TokenPairID]comm
 				one_pair_result.Asks = append(
 					one_pair_result.Asks,
 					common.PriceEntry{
-						sell[1],
-						sell[0],
+						Quantity: sell[1],
+						Rate:     sell[0],
 					},
 				)
 			}

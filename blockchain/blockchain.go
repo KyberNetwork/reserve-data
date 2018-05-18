@@ -358,11 +358,11 @@ func (self *Blockchain) FetchRates(atBlock uint64, currentBlock uint64) (common.
 		result.Data = map[string]common.RateEntry{}
 		for i, token := range validTokens {
 			result.Data[token.ID] = common.RateEntry{
-				baseBuys[i],
-				int8(compactBuys[i]),
-				baseSells[i],
-				int8(compactSells[i]),
-				blocks[i].Uint64(),
+				BaseBuy:     baseBuys[i],
+				CompactBuy:  int8(compactBuys[i]),
+				BaseSell:    baseSells[i],
+				CompactSell: int8(compactSells[i]),
+				Block:       blocks[i].Uint64(),
 			}
 		}
 		return result, nil
@@ -427,11 +427,11 @@ func (self *Blockchain) GetRawLogs(fromBlock uint64, toBlock uint64) ([]types.Lo
 	addresses = append(addresses, self.oldNetworks...)
 	addresses = append(addresses, self.oldBurners...)
 	param := ether.FilterQuery{
-		big.NewInt(int64(fromBlock)),
-		to,
-		addresses,
-		[][]ethereum.Hash{
-			[]ethereum.Hash{
+		FromBlock: big.NewInt(int64(fromBlock)),
+		ToBlock:   to,
+		Addresses: addresses,
+		Topics: [][]ethereum.Hash{
+			{
 				ethereum.HexToHash(TradeEvent),
 				ethereum.HexToHash(BurnFeeEvent),
 				ethereum.HexToHash(FeeToWalletEvent),

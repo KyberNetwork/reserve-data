@@ -13,12 +13,12 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/exchange"
 	ethereum "github.com/ethereum/go-ethereum/common"
-	"sync"
 )
 
 type BitfinexEndpoint struct {
@@ -99,8 +99,8 @@ func (self *BitfinexEndpoint) FetchOnePairData(
 					result.Bids = append(
 						result.Bids,
 						common.PriceEntry{
-							quantity,
-							rate,
+							Quantity: quantity,
+							Rate:     rate,
 						},
 					)
 				}
@@ -110,8 +110,8 @@ func (self *BitfinexEndpoint) FetchOnePairData(
 					result.Asks = append(
 						result.Asks,
 						common.PriceEntry{
-							quantity,
-							rate,
+							Quantity: quantity,
+							Rate:     rate,
 						},
 					)
 				}

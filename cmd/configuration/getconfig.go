@@ -85,7 +85,7 @@ func GetConfig(kyberENV string, authEnbl bool, endpointOW string, noCore, enable
 
 	for id, t := range addressConfig.Tokens {
 		tok := common.Token{
-			id, t.Address, t.Decimals,
+			ID: id, Address: t.Address, Decimal: t.Decimals,
 		}
 		if t.Active {
 			if t.KNReserveSupport {

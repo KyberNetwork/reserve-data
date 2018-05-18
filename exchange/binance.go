@@ -221,8 +221,8 @@ func (self *Binance) FetchOnePairData(
 				result.Bids = append(
 					result.Bids,
 					common.PriceEntry{
-						quantity,
-						rate,
+						Quantity: quantity,
+						Rate:     rate,
 					},
 				)
 			}
@@ -232,8 +232,8 @@ func (self *Binance) FetchOnePairData(
 				result.Asks = append(
 					result.Asks,
 					common.PriceEntry{
-						quantity,
-						rate,
+						Quantity: quantity,
+						Rate:     rate,
 					},
 				)
 			}
@@ -392,11 +392,11 @@ func (self *Binance) FetchOnePairTradeHistory(
 			historyType = "buy"
 		}
 		tradeHistory := common.TradeHistory{
-			strconv.FormatUint(trade.ID, 10),
-			price,
-			quantity,
-			historyType,
-			trade.Time,
+			ID:        strconv.FormatUint(trade.ID, 10),
+			Price:     price,
+			Qty:       quantity,
+			Type:      historyType,
+			Timestamp: trade.Time,
 		}
 		result = append(result, tradeHistory)
 	}

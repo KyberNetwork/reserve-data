@@ -28,15 +28,13 @@ func NewStatStorageTest(storage StatStorage) *StatStorageTest {
 func (self *StatStorageTest) TestTradeStatsSummary() error {
 	var err error
 	mtStat := common.MetricStats{
-		10.0,
-		4567.8,
-		11.1,
-		3,
-		2,
-		4,
-		5,
-		0,
-		0,
+		ETHVolume:          10.0,
+		USDVolume:          4567.8,
+		BurnFee:            11.1,
+		TradeCount:         3,
+		UniqueAddr:         2,
+		KYCEd:              4,
+		NewUniqueAddresses: 5,
 	}
 	tzmtStat := common.MetricStatsTimeZone{0: {0: mtStat}}
 	updates := map[string]common.MetricStatsTimeZone{"trade_summary": tzmtStat}
@@ -69,15 +67,13 @@ func (self *StatStorageTest) TestWalletStats() error {
 	var err error
 
 	mtStat := common.MetricStats{
-		10.0,
-		4567.8,
-		11.1,
-		3,
-		2,
-		4,
-		5,
-		0,
-		0,
+		ETHVolume:          10.0,
+		USDVolume:          4567.8,
+		BurnFee:            11.1,
+		TradeCount:         3,
+		UniqueAddr:         2,
+		KYCEd:              4,
+		NewUniqueAddresses: 5,
 	}
 	testWallet := ethereum.HexToAddress(TESTASSETADDR)
 
@@ -108,15 +104,13 @@ func (self *StatStorageTest) TestWalletStats() error {
 func (self *StatStorageTest) TestCountryStats() error {
 	var err error
 	mtStat := common.MetricStats{
-		10.0,
-		4567.8,
-		11.1,
-		3,
-		2,
-		4,
-		5,
-		0,
-		0,
+		ETHVolume:          10.0,
+		USDVolume:          4567.8,
+		BurnFee:            11.1,
+		TradeCount:         3,
+		UniqueAddr:         2,
+		KYCEd:              4,
+		NewUniqueAddresses: 5,
 	}
 	tzmtStat := common.MetricStatsTimeZone{0: {0: mtStat}}
 	updates := map[string]common.MetricStatsTimeZone{TESTCOUNTRY: tzmtStat}
@@ -162,9 +156,9 @@ func (self *StatStorageTest) TestCountryStats() error {
 func (self *StatStorageTest) TestVolumeStats() error {
 	var err error
 	vlStat := common.VolumeStats{
-		10.0,
-		4567.8,
-		11.1,
+		ETHVolume: 10.0,
+		USDAmount: 4567.8,
+		Volume:    11.1,
 	}
 	testAsset := ethereum.HexToAddress(TESTASSETADDR)
 
@@ -256,7 +250,7 @@ func (self *StatStorageTest) TestVolumeStats() error {
 func (self *StatStorageTest) TestBurnFee() error {
 	var err error
 	bfStat := common.BurnFeeStats{
-		4567.8,
+		TotalBurnFee: 4567.8,
 	}
 
 	tzbfStat := common.BurnFeeStatsTimeZone{"D": {0: bfStat}}
