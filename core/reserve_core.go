@@ -236,10 +236,10 @@ func calculateNewGasPrice(old *big.Int, count uint64) *big.Int {
 	// in this case after 5 tries the tx is still not mined.
 	// at this point, 50.1 gwei is not enough but it doesn't matter
 	// if the tx is mined or not because users' tx is not mined neither
-	// so we can just increase the gas price a tiny amount (0.1 gwei) to make
+	// so we can just increase the gas price a tiny amount (1 gwei) to make
 	// the node accept tx with up to date price
 	if count > 4 {
-		return old.Add(old, big.NewInt(100000000))
+		return old.Add(old, big.NewInt(1000000000))
 	} else {
 		// new = old + (50.1 - old) / (5 - count)
 		return old.Add(
