@@ -638,7 +638,7 @@ func (self *Blockchain) GetPricingMethod(inputData string) (*abi.Method, error) 
 	abiPricing := &self.pricing.ABI
 	inputDataByte, err := hexutil.Decode(inputData)
 	if err != nil {
-		log.Printf("Cannot decode data: ", err)
+		log.Printf("Cannot decode data: %v", err)
 		return nil, err
 	}
 	method, err := abiPricing.MethodById(inputDataByte)

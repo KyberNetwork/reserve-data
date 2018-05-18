@@ -148,13 +148,14 @@ func CreateStat(config *configuration.Config, kyberENV string, bc *blockchain.Bl
 		config.LogStorage,
 		config.RateStorage,
 		config.UserStorage,
+		config.FeeSetRateStorage,
 		config.StatFetcherRunner,
 		deployBlock,
 		config.ReserveAddress,
-		config.ThirdPartyReserves,
 		config.PricingAddress,
 		config.BeginBlockSetRate,
 		config.ApiKey,
+		config.ThirdPartyReserves,
 	)
 	statFetcher.SetBlockchain(bc)
 	rStat := stat.NewReserveStats(
@@ -163,6 +164,7 @@ func CreateStat(config *configuration.Config, kyberENV string, bc *blockchain.Bl
 		config.LogStorage,
 		config.RateStorage,
 		config.UserStorage,
+		config.FeeSetRateStorage,
 		config.StatControllerRunner,
 		statFetcher,
 		config.Archive,
