@@ -198,7 +198,7 @@ func (self *Fetcher) isPricingMethod(inputData string) bool {
 	}
 	method, err := self.blockchain.GetPricingMethod(inputData)
 	if err != nil {
-		log.Printf("Cannot find method from input data: ", err)
+		log.Printf("Cannot find method from input data: %v", err)
 		return false
 	}
 	methodName := method.Name
