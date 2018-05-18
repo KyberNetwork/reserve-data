@@ -561,7 +561,7 @@ func getLastAndCountPendingSetrate(pendings []common.ActivityRecord, minedNonce 
 	var maxPrice uint64 = 0
 	var result *common.ActivityRecord
 	var count uint64 = 0
-	for _, act := range pendings {
+	for i, act := range pendings {
 		if act.Action == "set_rates" {
 			log.Printf("looking for pending set_rates: %+v", act)
 			var nonce uint64
@@ -571,7 +571,7 @@ func getLastAndCountPendingSetrate(pendings []common.ActivityRecord, minedNonce 
 			} else {
 				nonce = 0
 			}
-			if nonce <= minedNonce {
+			if nonce < minedNonce {
 				// this is a stale actitivity, ignore it
 				continue
 			}
@@ -585,13 +585,13 @@ func getLastAndCountPendingSetrate(pendings []common.ActivityRecord, minedNonce 
 			if nonce == maxNonce {
 				if gasPrice > maxPrice {
 					maxNonce = nonce
-					result = &act
+					result = &pendings[i]
 					maxPrice = gasPrice
 				}
 				count += 1
 			} else if nonce > maxNonce {
 				maxNonce = nonce
-				result = &act
+				result = &pendings[i]
 				maxPrice = gasPrice
 				count = 1
 			}

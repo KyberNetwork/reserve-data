@@ -318,7 +318,7 @@ func (self ReserveCore) SetRates(
 						initPrice := big.NewInt(10000000000)
 						tx, err = self.blockchain.SetRates(
 							tokenAddrs, buys, sells, block,
-							big.NewInt(int64(minedNonce+1)),
+							big.NewInt(int64(minedNonce)),
 							initPrice,
 						)
 					}
