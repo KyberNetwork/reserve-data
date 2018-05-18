@@ -1548,10 +1548,11 @@ func (self *BoltStorage) GetTargetQtyV2() (map[string]interface{}, error) {
 			return result, err
 		}
 		strTargets := strings.Split(targetQty.Data, "|")
-		log.Printf("string target: %+v", strTargets)
-		for index, target := range strTargets {
-			log.Printf("so thu tu: %d", index)
+		for _, target := range strTargets {
 			elements := strings.Split(target, "_")
+			if len(elements) != 5 {
+				continue
+			}
 			totalTarget, _ := strconv.ParseFloat(elements[1], 10)
 			reserveTarget, _ := strconv.ParseFloat(elements[2], 10)
 			rebalance, _ := strconv.ParseFloat(elements[3], 10)
