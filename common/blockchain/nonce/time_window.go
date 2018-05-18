@@ -35,14 +35,14 @@ func (self *TimeWindow) GetAddress() ethereum.Address {
 }
 
 func (self *TimeWindow) getNonceFromNode(ethclient *ethclient.Client) (*big.Int, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Second)
 	defer cancel()
 	nonce, err := ethclient.PendingNonceAt(ctx, self.GetAddress())
 	return big.NewInt(int64(nonce)), err
 }
 
 func (self *TimeWindow) MinedNonce(ethclient *ethclient.Client) (*big.Int, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Second)
 	defer cancel()
 	nonce, err := ethclient.NonceAt(ctx, self.GetAddress(), nil)
 	return big.NewInt(int64(nonce)), err

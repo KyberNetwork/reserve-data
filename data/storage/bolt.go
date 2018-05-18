@@ -571,7 +571,7 @@ func getLastAndCountPendingSetrate(pendings []common.ActivityRecord, minedNonce 
 			} else {
 				nonce = 0
 			}
-			if nonce < minedNonce {
+			if nonce <= minedNonce {
 				// this is a stale actitivity, ignore it
 				continue
 			}

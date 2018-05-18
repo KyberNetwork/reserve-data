@@ -278,7 +278,7 @@ func (self *BaseBlockchain) BuildSendERC20Tx(opts TxOpts, amount *big.Int, to et
 		return nil, err
 	}
 	msg := ether.CallMsg{From: opts.Operator.Address, To: &tokenAddress, Value: value, Data: data}
-	timeout, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	timeout, cancel := context.WithTimeout(context.Background(), 7*time.Second)
 	defer cancel()
 	gasLimit, err := self.client.EstimateGas(timeout, msg)
 	if err != nil {
