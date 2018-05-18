@@ -1454,6 +1454,7 @@ func (self *BoltStorage) StorePendingTargetQtyV2(value []byte) error {
 		if b.Get(k) != nil {
 			return fmt.Errorf("Currently there is a pending record")
 		}
+		log.Printf("Token target qty: %s", value)
 		return b.Put(k, value)
 	})
 	return err
@@ -1541,5 +1542,27 @@ func (self *BoltStorage) GetTargetQtyV2() (map[string]interface{}, error) {
 		}
 		return nil
 	})
+	if len(result) == 0 {
+		targetQty, err := self.GetTokenTargetQty()
+		if err != nil {
+			return result, err
+		}
+		strTargets := strings.Split(targetQty.Data, "|")
+		log.Printf("string target: %+v", strTargets)
+		for index, target := range strTargets {
+			log.Printf("so thu tu: %d", index)
+			elements := strings.Split(target, "_")
+			totalTarget, _ := strconv.ParseFloat(elements[1], 10)
+			reserveTarget, _ := strconv.ParseFloat(elements[2], 10)
+			rebalance, _ := strconv.ParseFloat(elements[3], 10)
+			withdraw, _ := strconv.ParseFloat(elements[4], 10)
+			result[elements[0]] = metric.TargetQtyStruct{
+				TotalTarget:       totalTarget,
+				ReserveTarget:     reserveTarget,
+				RebalanceThresold: rebalance,
+				TransferThresold:  withdraw,
+			}
+		}
+	}
 	return result, err
 }

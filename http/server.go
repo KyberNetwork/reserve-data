@@ -15,9 +15,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/metric"
 	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	raven "github.com/getsentry/raven-go"
 	"github.com/gin-contrib/cors"
-	"github.com/gin-contrib/sentry"
 	"github.com/gin-gonic/gin"
 )
 
@@ -2833,19 +2831,19 @@ func NewHTTPServer(
 	env string) *HTTPServer {
 
 	r := gin.Default()
-	sentryCli, err := raven.NewWithTags(
-		"https://bf15053001464a5195a81bc41b644751:eff41ac715114b20b940010208271b13@sentry.io/228067",
-		map[string]string{
-			"env": env,
-		},
-	)
-	if err != nil {
-		panic(err)
-	}
-	r.Use(sentry.Recovery(
-		sentryCli,
-		false,
-	))
+	// sentryCli, err := raven.NewWithTags(
+	// 	"https://bf15053001464a5195a81bc41b644751:eff41ac715114b20b940010208271b13@sentry.io/228067",
+	// 	map[string]string{
+	// 		"env": env,
+	// 	},
+	// )
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// r.Use(sentry.Recovery(
+	// 	sentryCli,
+	// 	false,
+	// ))
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AddAllowHeaders("signed")
 	corsConfig.AllowAllOrigins = true
