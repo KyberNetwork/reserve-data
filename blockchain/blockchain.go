@@ -146,6 +146,19 @@ func readablePrint(data map[ethereum.Address]byte) string {
 	return result
 }
 
+func allZero(a, b, c, d []*big.Int) bool {
+	all := append(a, b...)
+	all = append(all, c...)
+	all = append(all, d...)
+	big0 := big.NewInt(0)
+	for _, i := range all {
+		if i.Cmp(big0) != 0 {
+			return false
+		}
+	}
+	return true
+}
+
 //====================== Write calls ===============================
 
 // TODO: Need better test coverage
@@ -168,6 +181,15 @@ func (self *Blockchain) SetRates(
 	if err != nil {
 		return nil, err
 	}
+
+	// This is commented out because we dont want to make too much of change. Don't remove
+	// this check, it can be useful in the future.
+	//
+	// Don't submit any txs if it is just trying to set all tokens to 0 when they are already 0
+	// if allZero(buys, sells, baseBuys, baseSells) {
+	// 	return nil, errors.New("Trying to set all rates to 0 but they are already 0. Skip the tx.")
+	// }
+
 	baseTokens := []ethereum.Address{}
 	newBSells := []*big.Int{}
 	newBBuys := []*big.Int{}

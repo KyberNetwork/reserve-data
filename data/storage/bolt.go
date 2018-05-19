@@ -428,7 +428,10 @@ func (self *BoltStorage) StoreRate(data common.AllRateEntry, timepoint uint64) e
 		c := b.Cursor()
 		_, lastEntry := c.Last()
 		json.Unmarshal(lastEntry, &lastEntryjson)
-		if lastEntryjson.BlockNumber < data.BlockNumber {
+		// we still update when blocknumber is not changed because we want
+		// to update the version and timestamp so api users will get
+		// the newest data even it is identical to the old one.
+		if lastEntryjson.BlockNumber <= data.BlockNumber {
 			dataJson, err = json.Marshal(data)
 			if err != nil {
 				return err
