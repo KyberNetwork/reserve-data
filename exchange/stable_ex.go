@@ -41,8 +41,8 @@ func (self *StableEx) UpdateDepositAddress(token common.Token, address string) {
 	panic("dgx doesn't support update deposit addresses")
 }
 
-func (self *StableEx) GetInfo() (common.ExchangeInfo, error) {
-	return *self.exchangeInfo, nil
+func (self *StableEx) GetInfo() (*common.ExchangeInfo, error) {
+	return self.exchangeInfo, nil
 }
 
 func (self *StableEx) GetExchangeInfo(pair common.TokenPairID) (common.ExchangePrecisionLimit, error) {
