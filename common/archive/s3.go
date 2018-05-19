@@ -27,7 +27,6 @@ func enforceFolderPath(fp string) string {
 	}
 	return fp
 }
-
 func (archive *s3Archive) UploadFile(bucketName string, awsfolderPath string, filePath string) error {
 	file, err := os.Open(filePath)
 	defer file.Close()
@@ -100,6 +99,14 @@ func (archive *s3Archive) GetReserveDataBucketName() string {
 //This should be passed in from JSON configure file
 func (archive *s3Archive) GetStatDataBucketName() string {
 	return archive.awsConf.ExpiredStatDataBucketName
+}
+
+func (archive *s3Archive) GetLogFolderPath() string {
+	return archive.awsConf.LogFolderPath
+}
+
+func (archive *s3Archive) GetLogBucketName() string {
+	return archive.awsConf.LogBucketName
 }
 
 func NewS3Archive(conf AWSConfig) *s3Archive {

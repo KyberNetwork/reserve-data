@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	ether "github.com/ethereum/go-ethereum"
 	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
@@ -196,10 +197,11 @@ func NewExchangeFee(tradingFee TradingFee, fundingFee FundingFee) ExchangeFees {
 	}
 }
 
-func NewFundingFee(withdraw map[string]float64, deposit map[string]float64) FundingFee {
+// NewFundingFee creates a new instance of FundingFee instance.
+func NewFundingFee(widthraw, deposit map[string]float64) FundingFee {
 	return FundingFee{
-		withdraw,
-		deposit,
+		Withdraw: widthraw,
+		Deposit:  deposit,
 	}
 }
 
@@ -264,8 +266,12 @@ func StringToActivityID(id string) (ActivityID, error) {
 	}
 }
 
-func NewActivityID(t uint64, id string) ActivityID {
-	return ActivityID{t, id}
+// NewActivityStatus creates new Activity ID.
+func NewActivityID(timepoint uint64, eid string) ActivityID {
+	return ActivityID{
+		Timepoint: timepoint,
+		EID:       eid,
+	}
 }
 
 type ActivityRecord struct {
@@ -329,9 +335,28 @@ type ActivityStatus struct {
 	Error          error
 }
 
+// NewActivityStatus creates a new ActivityStatus instance.
+func NewActivityStatus(exchangeStatus, tx string, blockNumber uint64, miningStatus string, err error) ActivityStatus {
+	return ActivityStatus{
+		ExchangeStatus: exchangeStatus,
+		Tx:             tx,
+		BlockNumber:    blockNumber,
+		MiningStatus:   miningStatus,
+		Error:          err,
+	}
+}
+
 type PriceEntry struct {
 	Quantity float64
 	Rate     float64
+}
+
+// NewPriceEntry creates new instance of PriceEntry.
+func NewPriceEntry(quantity, rate float64) PriceEntry {
+	return PriceEntry{
+		Quantity: quantity,
+		Rate:     rate,
+	}
 }
 
 type AllPriceEntry struct {
@@ -505,6 +530,15 @@ type AuthDataRecord struct {
 	Timestamp Timestamp
 	Data      AuthDataSnapshot
 }
+
+// NewAuthDataRecord creates a new AuthDataRecord instance.
+func NewAuthDataRecord(timestamp Timestamp, data AuthDataSnapshot) AuthDataRecord {
+	return AuthDataRecord{
+		Timestamp: timestamp,
+		Data:      data,
+	}
+}
+
 type AuthDataResponse struct {
 	Version    Version
 	Timestamp  Timestamp
@@ -529,6 +563,17 @@ type RateEntry struct {
 	Block       uint64
 }
 
+// NewRateEntry creates a new RateEntry instance.
+func NewRateEntry(baseBuy *big.Int, compactBuy int8, baseSell *big.Int, compactSell int8, block uint64) RateEntry {
+	return RateEntry{
+		BaseBuy:     baseBuy,
+		CompactBuy:  compactBuy,
+		BaseSell:    baseSell,
+		CompactSell: compactSell,
+		Block:       block,
+	}
+}
+
 type TXEntry struct {
 	Hash           string
 	Exchange       string
@@ -537,6 +582,19 @@ type TXEntry struct {
 	ExchangeStatus string
 	Amount         float64
 	Timestamp      Timestamp
+}
+
+// NewTXEntry creates new instance of TXEntry.
+func NewTXEntry(hash, exchange, token, miningStatus, exchangeStatus string, amount float64, timestamp Timestamp) TXEntry {
+	return TXEntry{
+		Hash:           hash,
+		Exchange:       exchange,
+		Token:          token,
+		MiningStatus:   miningStatus,
+		ExchangeStatus: exchangeStatus,
+		Amount:         amount,
+		Timestamp:      timestamp,
+	}
 }
 
 type RateResponse struct {
@@ -644,8 +702,22 @@ type VolumeStats struct {
 	Volume    float64 `json:"volume"`
 }
 
+// NewVolumeStats creates a new instance of VolumeStats.
+func NewVolumeStats(ethVolume, usdAmount, volume float64) VolumeStats {
+	return VolumeStats{
+		ETHVolume: ethVolume,
+		USDAmount: usdAmount,
+		Volume:    volume,
+	}
+}
+
 type BurnFeeStats struct {
 	TotalBurnFee float64
+}
+
+// NewBurnFeeStats creates a new instance of BurnFeeStats.
+func NewBurnFeeStats(totalBurnFee float64) BurnFeeStats {
+	return BurnFeeStats{TotalBurnFee: totalBurnFee}
 }
 
 type BurnFeeStatsTimeZone map[string]map[uint64]BurnFeeStats
@@ -664,6 +736,23 @@ type MetricStats struct {
 	NewUniqueAddresses int     `json:"new_unique_addresses"`
 	USDPerTrade        float64 `json:"usd_per_trade"`
 	ETHPerTrade        float64 `json:"eth_per_trade"`
+}
+
+// NewMetricStats creates a new instance of MetricStats.
+func NewMetricStats(ethVolume, usdVolume, burnFee float64,
+	tradeCount, uniqueAddr, kycEd, newUniqueAddresses int,
+	usdPerTrade, ethPerTrade float64) MetricStats {
+	return MetricStats{
+		ETHVolume:          ethVolume,
+		USDVolume:          usdVolume,
+		BurnFee:            burnFee,
+		TradeCount:         tradeCount,
+		UniqueAddr:         uniqueAddr,
+		KYCEd:              kycEd,
+		NewUniqueAddresses: newUniqueAddresses,
+		USDPerTrade:        usdPerTrade,
+		ETHPerTrade:        ethPerTrade,
+	}
 }
 
 type MetricStatsTimeZone map[int64]map[uint64]MetricStats
@@ -694,11 +783,30 @@ type TradeHistory struct {
 	Timestamp uint64
 }
 
+// NewTradeHistory creates a new TradeHistory instance.
+// typ: "buy" or "sell"
+func NewTradeHistory(id string, price, qty float64, typ string, timestamp uint64) TradeHistory {
+	return TradeHistory{
+		ID:        id,
+		Price:     price,
+		Type:      typ,
+		Timestamp: timestamp,
+	}
+}
+
 type ExchangeTradeHistory map[TokenPairID][]TradeHistory
 
 type AllTradeHistory struct {
 	Timestamp Timestamp
 	Data      map[ExchangeID]ExchangeTradeHistory
+}
+
+// NewAllTradeHistory creates a new AllTradeHistory instance.
+func NewAllTradeHistory(timestamp Timestamp, data map[ExchangeID]ExchangeTradeHistory) AllTradeHistory {
+	return AllTradeHistory{
+		Timestamp: timestamp,
+		Data:      data,
+	}
 }
 
 type ExStatus struct {
@@ -750,6 +858,12 @@ type AnalyticPriceResponse struct {
 	Timestamp uint64
 	Data      map[string]interface{}
 }
+
+// NewAnalyticPriceResponse creates a new instance of AnalyticPriceResponse.
+func NewAnalyticPriceResponse(timestamp uint64, data map[string]interface{}) AnalyticPriceResponse {
+	return AnalyticPriceResponse{Timestamp: timestamp, Data: data}
+}
+
 type ExchangeNotiContent struct {
 	FromTime  uint64 `json:"fromTime"`
 	ToTime    uint64 `json:"toTime"`
@@ -782,3 +896,13 @@ func (t TokenHeatmapResponse) Len() int      { return len(t) }
 func (t TokenHeatmapResponse) Swap(i, j int) { t[i], t[j] = t[j], t[i] }
 
 type UsersVolume map[string]StatTicks
+
+// NewFilterQuery creates a new ether.FilterQuery instance.
+func NewFilterQuery(fromBlock, toBlock *big.Int, addresses []ethereum.Address, topics [][]ethereum.Hash) ether.FilterQuery {
+	return ether.FilterQuery{
+		FromBlock: fromBlock,
+		ToBlock:   toBlock,
+		Addresses: addresses,
+		Topics:    topics,
+	}
+}

@@ -91,8 +91,8 @@ func (self *Huobi) UpdatePairsPrecision() {
 	}
 }
 
-func (self *Huobi) GetInfo() (common.ExchangeInfo, error) {
-	return *self.exchangeInfo, nil
+func (self *Huobi) GetInfo() (*common.ExchangeInfo, error) {
+	return self.exchangeInfo, nil
 }
 
 func (self *Huobi) GetExchangeInfo(pair common.TokenPairID) (common.ExchangePrecisionLimit, error) {
@@ -199,10 +199,10 @@ func (self *Huobi) FetchOnePairData(
 				rate := buy[0]
 				result.Bids = append(
 					result.Bids,
-					common.PriceEntry{
+					common.NewPriceEntry(
 						quantity,
 						rate,
-					},
+					),
 				)
 			}
 			for _, sell := range resp_data.Tick.Asks {
@@ -210,10 +210,10 @@ func (self *Huobi) FetchOnePairData(
 				rate := sell[0]
 				result.Asks = append(
 					result.Asks,
-					common.PriceEntry{
+					common.NewPriceEntry(
 						quantity,
 						rate,
-					},
+					),
 				)
 			}
 		}
@@ -335,13 +335,13 @@ func (self *Huobi) FetchOnePairTradeHistory(
 		if trade.Type == "buy-limit" {
 			historyType = "buy"
 		}
-		tradeHistory := common.TradeHistory{
+		tradeHistory := common.NewTradeHistory(
 			strconv.FormatUint(trade.ID, 10),
 			price,
 			quantity,
 			historyType,
 			trade.Timestamp,
-		}
+		)
 		result = append(result, tradeHistory)
 	}
 	data.Store(pairString, result)
@@ -466,7 +466,15 @@ func (self *Huobi) DepositStatus(id common.ActivityID, tx1Hash, currency string,
 				return "", nil
 			}
 			//store tx2 to pendingIntermediateTx
-			data = common.TXEntry{tx2.Hash().Hex(), self.Name(), currency, "submitted", "", sentAmount, common.GetTimestamp()}
+			data = common.NewTXEntry(
+				tx2.Hash().Hex(),
+				self.Name(),
+				currency,
+				"submitted",
+				"",
+				sentAmount,
+				common.GetTimestamp(),
+			)
 			err = self.storage.StorePendingIntermediateTx(id, data)
 			if err != nil {
 				log.Printf("Trying to store 2nd tx to pending tx storage failed, error: %s. It will be ignored and can make us to send to huobi again and the deposit will be marked as failed because the fund is not efficient", err.Error())
@@ -484,7 +492,15 @@ func (self *Huobi) DepositStatus(id common.ActivityID, tx1Hash, currency string,
 		}
 		if status == "mined" {
 			log.Println("2nd Transaction is mined. Processed to store it and check the Huobi Deposit history")
-			data = common.TXEntry{tx2Entry.Hash, self.Name(), currency, "mined", "", sentAmount, common.GetTimestamp()}
+			data = common.NewTXEntry(
+				tx2Entry.Hash,
+				self.Name(),
+				currency,
+				"mined",
+				"",
+				sentAmount,
+				common.GetTimestamp(),
+			)
 			err = self.storage.StorePendingIntermediateTx(id, data)
 			if err != nil {
 				log.Printf("Trying to store intermediate tx to huobi storage, error: %s. Ignore it and try later", err.Error())
@@ -500,7 +516,15 @@ func (self *Huobi) DepositStatus(id common.ActivityID, tx1Hash, currency string,
 				// log.Printf("deposit tx is %s, with token %s", deposit.TxHash, deposit.Currency)
 				if deposit.TxHash == tx2Entry.Hash {
 					if deposit.State == "safe" || deposit.State == "confirmed" {
-						data = common.TXEntry{tx2Entry.Hash, self.Name(), currency, "mined", "done", sentAmount, common.GetTimestamp()}
+						data = common.NewTXEntry(
+							tx2Entry.Hash,
+							self.Name(),
+							currency,
+							"mined",
+							"done",
+							sentAmount,
+							common.GetTimestamp(),
+						)
 						err = self.storage.StoreIntermediateTx(id, data)
 						if err != nil {
 							log.Printf("Trying to store intermediate tx to huobi storage, error: %s. Ignore it and try later", err.Error())
@@ -522,13 +546,29 @@ func (self *Huobi) DepositStatus(id common.ActivityID, tx1Hash, currency string,
 			log.Printf("Deposit doesn't exist. Huobi hasn't recognized the deposit yet or in theory, you have more than %d deposits at the same time.", len(common.InternalTokens())*2)
 			return "", nil
 		} else if status == "failed" {
-			data = common.TXEntry{tx2Entry.Hash, self.Name(), currency, "failed", "failed", sentAmount, common.GetTimestamp()}
+			data = common.NewTXEntry(
+				tx2Entry.Hash,
+				self.Name(),
+				currency,
+				"failed",
+				"failed",
+				sentAmount,
+				common.GetTimestamp(),
+			)
 
 			return "failed", nil
 		} else if status == "lost" {
 			elapsed := common.GetTimepoint() - tx2Entry.Timestamp.ToUint64()
 			if elapsed > uint64(15*time.Minute/time.Millisecond) {
-				data = common.TXEntry{tx2Entry.Hash, self.Name(), currency, "lost", "lost", sentAmount, common.GetTimestamp()}
+				data = common.NewTXEntry(
+					tx2Entry.Hash,
+					self.Name(),
+					currency,
+					"lost",
+					"lost",
+					sentAmount,
+					common.GetTimestamp(),
+				)
 				err = self.storage.StoreIntermediateTx(id, data)
 				if err != nil {
 					log.Printf("Trying to store intermediate tx failed, error: %s. Ignore it and treat it like it is still pending", err.Error())

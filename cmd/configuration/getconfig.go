@@ -84,9 +84,7 @@ func GetConfig(kyberENV string, authEnbl bool, endpointOW string, noCore, enable
 	}
 
 	for id, t := range addressConfig.Tokens {
-		tok := common.Token{
-			id, t.Address, t.Decimals,
-		}
+		tok := common.NewToken(id, t.Address, t.Decimals)
 		if t.Active {
 			if t.KNReserveSupport {
 				common.RegisterInternalActiveToken(tok)

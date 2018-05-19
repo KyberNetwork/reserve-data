@@ -227,10 +227,10 @@ func (self *Fetcher) FetchTradeHistoryFromExchange(
 }
 
 func (self *Fetcher) FetchAllTradeHistory(timepoint uint64) {
-	tradeHistory := common.AllTradeHistory{
+	tradeHistory := common.NewAllTradeHistory(
 		common.GetTimestamp(),
 		map[common.ExchangeID]common.ExchangeTradeHistory{},
-	}
+	)
 	wait := sync.WaitGroup{}
 	data := sync.Map{}
 	for _, exchange := range self.exchanges {
@@ -336,43 +336,43 @@ func (self *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord)
 					if actNonce != nil {
 						nonce, _ := strconv.ParseUint(actNonce.(string), 10, 64)
 						if nonce < minedNonce {
-							result[activity.ID] = common.ActivityStatus{
+							result[activity.ID] = common.NewActivityStatus(
 								activity.ExchangeStatus,
 								activity.Result["tx"].(string),
 								blockNum,
 								"failed",
 								err,
-							}
+							)
 						}
 					}
 				}
 			case "mined":
-				result[activity.ID] = common.ActivityStatus{
+				result[activity.ID] = common.NewActivityStatus(
 					activity.ExchangeStatus,
 					activity.Result["tx"].(string),
 					blockNum,
 					"mined",
 					err,
-				}
+				)
 			case "failed":
-				result[activity.ID] = common.ActivityStatus{
+				result[activity.ID] = common.NewActivityStatus(
 					activity.ExchangeStatus,
 					activity.Result["tx"].(string),
 					blockNum,
 					"failed",
 					err,
-				}
+				)
 			case "lost":
 				elapsed := common.GetTimepoint() - activity.Timestamp.ToUint64()
 				if elapsed > uint64(15*time.Minute/time.Millisecond) {
 					log.Printf("Fetcher tx status: tx(%s) is lost, elapsed time: %d", activity.Result["tx"].(string), elapsed)
-					result[activity.ID] = common.ActivityStatus{
+					result[activity.ID] = common.NewActivityStatus(
 						activity.ExchangeStatus,
 						activity.Result["tx"].(string),
 						blockNum,
 						"failed",
 						err,
-					}
+					)
 				}
 			}
 		}
@@ -557,9 +557,7 @@ func (self *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []commo
 			} else {
 				continue
 			}
-			result[id] = common.ActivityStatus{
-				status, tx, blockNum, activity.MiningStatus, err,
-			}
+			result[id] = common.NewActivityStatus(status, tx, blockNum, activity.MiningStatus, err)
 		}
 	}
 	return result

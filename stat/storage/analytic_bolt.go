@@ -75,10 +75,10 @@ func (self *BoltAnalyticStorage) ExportExpiredPriceAnalyticData(currentTime uint
 			if err != nil {
 				return err
 			}
-			record := common.AnalyticPriceResponse{
+			record := common.NewAnalyticPriceResponse(
 				timestamp,
 				temp,
-			}
+			)
 			var output []byte
 			output, err = json.Marshal(record)
 			if err != nil {
