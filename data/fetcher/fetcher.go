@@ -136,13 +136,18 @@ func (self *Fetcher) FetchRate(timepoint uint64) {
 		data, err = self.blockchain.FetchRates(self.currentBlock-1, self.currentBlock)
 	}
 	if err != nil {
-		log.Printf("Fetching rates from blockchain failed: %s", err.Error())
-	}
-	log.Printf("Got rates from blockchain: %+v", data)
-	err = self.storage.StoreRate(data, timepoint)
-	// fmt.Printf("balance data: %v\n", data)
-	if err != nil {
-		log.Printf("Storing rates failed: %s", err.Error())
+		log.Printf("Fetching rates from blockchain failed: %s. Will not store it to storage.", err.Error())
+	} else {
+		if data.Valid {
+			log.Printf("Got rates from blockchain: %+v", data)
+			err = self.storage.StoreRate(data, timepoint)
+			// fmt.Printf("balance data: %v\n", data)
+			if err != nil {
+				log.Printf("Storing rates failed: %s", err.Error())
+			}
+		} else {
+			log.Printf("Got invalid rates from blockchain: %s. Will not store it to storage.", data.Error)
+		}
 	}
 }
 

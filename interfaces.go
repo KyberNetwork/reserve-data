@@ -51,6 +51,9 @@ type ReserveData interface {
 	CurrentAuthDataVersion(timestamp uint64) (common.Version, error)
 	GetAuthData(timestamp uint64) (common.AuthDataResponse, error)
 
+	// all rates here must be valid rates. A rate is considered valid
+	// when it is collected from the node without any errors or
+	// strange values.
 	CurrentRateVersion(timestamp uint64) (common.Version, error)
 	GetRate(timestamp uint64) (common.AllRateResponse, error)
 	GetRates(fromTime, toTime uint64) ([]common.AllRateResponse, error)
