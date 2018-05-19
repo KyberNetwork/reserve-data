@@ -1210,6 +1210,115 @@ response:
   {"data":{"Timestamp":1524852506656,"DGX":{"Valid":false,"Timestamp":0,"success":"","data":[{"symbol":"ETHDGX","price":0.07238485,"time":1524852506},{"symbol":"ETHUSD","price":713,"time":1524852506},{"symbol":"ETHSGD","price":944,"time":1524852506},{"symbol":"DGXUSD","price":49,"time":1524852506},{"symbol":"EURUSD","price":1.21063,"time":1524852505},{"symbol":"USDSGD","price":1.32439,"time":1524852505},{"symbol":"XAUUSD","price":1322.62,"time":1524852505},{"symbol":"USDJPY","price":109.105,"time":1524852505}],"Error":""},"OneForge":{"Value":1.9465,"Text":"1 XAU is worth 1.9465 ETH","Timestamp":1524852506,"Error":false,"Message":""}},"success":true}
 ```
 
+
+### set target quantity v2- (signing required)
+```
+<host>:8000/settargetqty/v2
+POST request
+URL Params:
+  - value (string) : the json enconded string, represent a map (string : interface)
+```
+
+
+response:
+```
+on success:
+{"success":true}
+on failure:
+{"success":false,
+ "reason":<error>}
+```
+### confirm target quantity v2- (signing required)
+```
+<host>:8000/confirmtargetqty/v2
+POST request
+URL Params:
+  - value (string) : the json enconded string, represent a map (string : interface), must be equal to current pending.
+```
+
+
+response:
+```
+on success:
+{"success":true}
+on failure:
+{"success":false,
+ "reason":<error>}
+```
+
+### cancel set target quantity v2- (signing required)
+```
+<host>:8000/canceltargetqty/v2
+POST request
+URL Params:
+  nil
+```
+
+
+response:
+```
+on success:
+{"success":true}
+on failure:
+{"success":false,
+ "reason":<error>}
+```
+### Get pending target quantity - (signing required) return the current pending target quantity 
+```
+<host>:8000/pendingtargetqty/v2
+GET request
+params:
+  - nonce (uint64) : the nonce to conform to signing requirement
+```
+example:
+```
+curl -x GET \
+  http://localhost:8000/pendingtargetqty/v2?nonce=111111
+```
+ 
+response:
+```
+{
+  "data": {
+     "OMG" : {
+        "TotalTarget": 1500,
+        "ReserveTarget": 1005,
+        "RebalanceThreshold": 0.33,
+        "TransferThreshold": 0.2
+    }
+  },
+  "success": true
+}
+```
+
+### Get target quantity - (signing required) return the current confirmed target quantity 
+```
+<host>:8000/targetqty/v2
+GET request
+params:
+  - nonce (uint64) : the nonce to conform to signing requirement
+```
+example:
+```
+curl -x GET \
+  http://localhost:8000/targetqty/v2?nonce=111111
+```
+ 
+response:
+```
+{
+  "data": {
+    "OMG" : {
+      "TotalTarget": 1500,
+      "ReserveTarget": 1005,
+      "RebalanceThreshold": 0.33,
+      "TransferThreshold": 0.2
+    }
+  },
+  "success": true
+}
+```
+
 ## Authentication
 All APIs that are marked with (signing required) must follow authentication mechanism below:
 
