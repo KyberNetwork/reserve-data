@@ -2755,11 +2755,11 @@ func (self *HTTPServer) Run() {
 		self.r.POST("/confirmtargetqty", self.ConfirmTargetQty)
 		self.r.POST("/canceltargetqty", self.CancelTargetQty)
 
-		self.r.GET("/targetqty/v2", self.GetTargetQtyV2)
-		self.r.GET("/pendingtargetqty/v2", self.GetPendingTargetQtyV2)
-		self.r.POST("/settargetqty/v2", self.SetTargetQtyV2)
-		self.r.POST("/confirmtargetqty/v2", self.ConfirmTargetQtyV2)
-		self.r.POST("/canceltargetqty/v2", self.CancelTargetQtyV2)
+		self.r.GET("/v2/targetqty", self.GetTargetQtyV2)
+		self.r.GET("/v2/pendingtargetqty", self.GetPendingTargetQtyV2)
+		self.r.POST("/v2/settargetqty", self.SetTargetQtyV2)
+		self.r.POST("/v2/confirmtargetqty", self.ConfirmTargetQtyV2)
+		self.r.POST("/v2/canceltargetqty", self.CancelTargetQtyV2)
 
 		self.r.GET("/timeserver", self.GetTimeServer)
 

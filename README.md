@@ -1213,9 +1213,9 @@ response:
 ```
 
 
-### set target quantity v2- (signing required)
+### set target quantity v2 - (signing required)
 ```
-<host>:8000/settargetqty/v2
+<host>:8000/v2/settargetqty
 POST request
 URL Params:
   - value (string) : the json enconded string, represent a map (string : interface)
@@ -1232,7 +1232,7 @@ on failure:
 ```
 ### confirm target quantity v2- (signing required)
 ```
-<host>:8000/confirmtargetqty/v2
+<host>:8000/v2/confirmtargetqty
 POST request
 URL Params:
   - value (string) : the json enconded string, represent a map (string : interface), must be equal to current pending.
@@ -1250,7 +1250,7 @@ on failure:
 
 ### cancel set target quantity v2- (signing required)
 ```
-<host>:8000/canceltargetqty/v2
+<host>:8000/v2/canceltargetqty
 POST request
 URL Params:
   nil
@@ -1267,7 +1267,7 @@ on failure:
 ```
 ### Get pending target quantity - (signing required) return the current pending target quantity 
 ```
-<host>:8000/pendingtargetqty/v2
+<host>:8000/v2/pendingtargetqty
 GET request
 params:
   - nonce (uint64) : the nonce to conform to signing requirement
@@ -1275,7 +1275,7 @@ params:
 example:
 ```
 curl -x GET \
-  http://localhost:8000/pendingtargetqty/v2?nonce=111111
+  http://localhost:8000/v2/pendingtargetqty?nonce=111111
 ```
  
 response:
@@ -1295,7 +1295,7 @@ response:
 
 ### Get target quantity - (signing required) return the current confirmed target quantity 
 ```
-<host>:8000/targetqty/v2
+<host>:8000/v2/targetqty
 GET request
 params:
   - nonce (uint64) : the nonce to conform to signing requirement
@@ -1303,7 +1303,7 @@ params:
 example:
 ```
 curl -x GET \
-  http://localhost:8000/targetqty/v2?nonce=111111
+  http://localhost:8000/v2/targetqty?nonce=111111
 ```
  
 response:

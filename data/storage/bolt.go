@@ -1445,7 +1445,6 @@ func (self *BoltStorage) RemovePendingStableTokenParams() error {
 }
 
 func (self *BoltStorage) StorePendingTargetQtyV2(value []byte) error {
-	k := uint64ToBytes(1)
 	temp := make(map[string]interface{})
 	vErr := json.Unmarshal(value, &temp)
 	if vErr != nil {
@@ -1453,30 +1452,26 @@ func (self *BoltStorage) StorePendingTargetQtyV2(value []byte) error {
 	}
 	err := self.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(PENDING_TARGET_QUANTITY_V2))
+		k := []byte("current_pending_target_qty")
 		if b.Get(k) != nil {
 			return fmt.Errorf("Currently there is a pending record")
 		}
-		log.Printf("Token target qty: %s", value)
 		return b.Put(k, value)
 	})
 	return err
 }
 
 func (self *BoltStorage) GetPendingTargetQtyV2() (map[string]interface{}, error) {
-	k := uint64ToBytes(1)
 	result := make(map[string]interface{})
 	err := self.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(PENDING_TARGET_QUANTITY_V2))
-		if b == nil {
-			return fmt.Errorf("Bucket hasn't exist yet")
-		}
+		k := []byte("current_pending_target_qty")
 		record := b.Get(k)
-		if record == nil {
-			return nil
-		}
-		vErr := json.Unmarshal(record, &result)
-		if vErr != nil {
-			return vErr
+		if record != nil {
+			vErr := json.Unmarshal(record, &result)
+			if vErr != nil {
+				return vErr
+			}
 		}
 		return nil
 	})
@@ -1485,7 +1480,6 @@ func (self *BoltStorage) GetPendingTargetQtyV2() (map[string]interface{}, error)
 
 func (self *BoltStorage) ConfirmTargetQtyV2(value []byte) error {
 	var err error
-	k := uint64ToBytes(1)
 	temp := make(map[string]interface{})
 	vErr := json.Unmarshal(value, &temp)
 	if vErr != nil {
@@ -1498,23 +1492,25 @@ func (self *BoltStorage) ConfirmTargetQtyV2(value []byte) error {
 
 	err = self.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(TARGET_QUANTITY_V2))
-		if err := b.Put(k, value); err != nil {
+		targetKey := []byte("current_target_qty")
+		if err := b.Put(targetKey, value); err != nil {
 			return err
 		}
 		pendingBk := tx.Bucket([]byte(PENDING_TARGET_QUANTITY_V2))
-		return pendingBk.Delete(k)
+		pendingKey := []byte("current_pending_target_qty")
+		return pendingBk.Delete(pendingKey)
 	})
 	return err
 }
 
 // RemovePendingTargetQtyV2 remove pending data from db
 func (self *BoltStorage) RemovePendingTargetQtyV2() error {
-	k := uint64ToBytes(1)
 	err := self.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(PENDING_TARGET_QUANTITY_V2))
 		if b == nil {
 			return fmt.Errorf("Bucket hasn't existed yet")
 		}
+		k := []byte("current_pending_target_qty")
 		return b.Delete(k)
 	})
 	return err
@@ -1522,13 +1518,13 @@ func (self *BoltStorage) RemovePendingTargetQtyV2() error {
 
 // GetTargetQtyV2 return the current target quantity
 func (self *BoltStorage) GetTargetQtyV2() (map[string]interface{}, error) {
-	k := uint64ToBytes(1)
 	result := make(map[string]interface{})
 	err := self.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(TARGET_QUANTITY_V2))
 		if b == nil {
 			return fmt.Errorf("Bucket hasn't exist yet")
 		}
+		k := []byte("current_target_qty")
 		record := b.Get(k)
 		if record == nil {
 			return nil
