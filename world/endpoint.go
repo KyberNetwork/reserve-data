@@ -8,6 +8,9 @@ import (
 type Endpoint interface {
 	GoldDataEndpoint() string
 	BackupGoldDataEndpoint() string
+	GDAXDataEndpoint() string
+	KrakenDataEndpoint() string
+	GeminiDataEndpoint() string
 }
 
 type RealEndpoint struct {
@@ -20,6 +23,18 @@ func (self RealEndpoint) GoldDataEndpoint() string {
 
 func (self RealEndpoint) BackupGoldDataEndpoint() string {
 	return "https://forex.1forge.com/1.0.3/convert?from=XAU&to=ETH&quantity=1&api_key=" + self.OneForgeKey
+}
+
+func (self RealEndpoint) GDAXDataEndpoint() string {
+	return "https://api.gdax.com/products/eth-usd/ticker"
+}
+
+func (self RealEndpoint) KrakenDataEndpoint() string {
+	return "https://api.kraken.com/0/public/Ticker?pair=ETHUSD"
+}
+
+func (self RealEndpoint) GeminiDataEndpoint() string {
+	return "https://api.gemini.com/v1/pubticker/ethusd"
 }
 
 func NewRealEndpointFromFile(path string) (*RealEndpoint, error) {
@@ -41,4 +56,16 @@ func (self SimulatedEndpoint) GoldDataEndpoint() string {
 
 func (self SimulatedEndpoint) BackupGoldDataEndpoint() string {
 	return "http://simulator:5500/1.0.3/convert?from=XAU&to=ETH&quantity=1&api_key="
+}
+
+func (self SimulatedEndpoint) GDAXDataEndpoint() string {
+	return ""
+}
+
+func (self SimulatedEndpoint) KrakenDataEndpoint() string {
+	return ""
+}
+
+func (self SimulatedEndpoint) GeminiDataEndpoint() string {
+	return ""
 }
