@@ -3,6 +3,7 @@ package liqui
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -58,7 +59,7 @@ func (self *LiquiEndpoint) Depth(tokens string, timepoint uint64) (exchange.Liqr
 				json.Unmarshal(resp_body, &result)
 			}
 		} else {
-			err = fmt.Errorf("Unsuccessful response from Liqui: Status " + resp.Status)
+			err = errors.New("Unsuccessful response from Liqui: Status " + resp.Status)
 		}
 	}
 	return result, err
@@ -93,7 +94,7 @@ func (self *LiquiEndpoint) CancelOrder(id string) (exchange.Liqcancel, error) {
 		}
 		return result, err
 	} else {
-		return result, fmt.Errorf("Cancel rejected by Liqui")
+		return result, errors.New("Cancel rejected by Liqui")
 	}
 }
 
@@ -131,12 +132,12 @@ func (self *LiquiEndpoint) Trade(tradeType string, base, quote common.Token, rat
 			return "", 0, 0, false, err
 		}
 		if result.Error != "" {
-			return "", 0, 0, false, fmt.Errorf(result.Error)
+			return "", 0, 0, false, errors.New(result.Error)
 		}
 		return strconv.FormatUint(result.Return.OrderID, 10), result.Return.Done, result.Return.Remaining, result.Return.OrderID == 0, nil
 	} else {
 		log.Printf("Error: %v, Code: %v\n", err, resp)
-		return "", 0, 0, false, fmt.Errorf("Trade rejected by Liqui")
+		return "", 0, 0, false, errors.New("Trade rejected by Liqui")
 	}
 }
 
@@ -175,12 +176,12 @@ func (self *LiquiEndpoint) Withdraw(token common.Token, amount *big.Int, address
 			return err
 		}
 		if result.Error != "" {
-			return fmt.Errorf(result.Error)
+			return errors.New(result.Error)
 		}
 		return nil
 	} else {
 		log.Printf("Error: %v, Code: %v\n", err, resp)
-		return fmt.Errorf("withdraw rejected by Liqui")
+		return errors.New("withdraw rejected by Liqui")
 	}
 }
 
@@ -214,7 +215,7 @@ func (self *LiquiEndpoint) GetInfo(timepoint uint64) (exchange.Liqinfo, error) {
 			}
 			log.Printf("Liqui GetInfo data: %v", result)
 		} else {
-			err = fmt.Errorf("Unsuccessful response from Liqui: Status " + resp.Status)
+			err = errors.New("Unsuccessful response from Liqui: Status " + resp.Status)
 		}
 	}
 	return result, err
@@ -250,7 +251,7 @@ func (self *LiquiEndpoint) OrderInfo(orderID string, timepoint uint64) (exchange
 			}
 			log.Printf("Liqui Order info data: %v", result)
 		} else {
-			err = fmt.Errorf("Unsuccessful response from Liqui: Status " + resp.Status)
+			err = errors.New("Unsuccessful response from Liqui: Status " + resp.Status)
 		}
 	}
 	return result, err
@@ -286,7 +287,7 @@ func (self *LiquiEndpoint) ActiveOrders(timepoint uint64) (exchange.Liqorders, e
 			}
 			log.Printf("Liqui ActiveOrders data: %v", result)
 		} else {
-			err = fmt.Errorf("Unsuccessful response from Liqui: Status " + resp.Status)
+			err = errors.New("Unsuccessful response from Liqui: Status " + resp.Status)
 		}
 	}
 	return result, err

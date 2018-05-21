@@ -1,6 +1,7 @@
 package exchange
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"math/big"
@@ -129,7 +130,7 @@ func (self *Bittrex) Trade(tradeType string, base common.Token, quote common.Tok
 	result, err := self.interf.Trade(tradeType, base, quote, rate, amount)
 
 	if err != nil {
-		return "", 0, 0, false, fmt.Errorf("Trade rejected by Bittrex")
+		return "", 0, 0, false, errors.New("Trade rejected by Bittrex")
 	} else {
 		if result.Success {
 			uuid := result.Result["uuid"]
@@ -137,7 +138,7 @@ func (self *Bittrex) Trade(tradeType string, base common.Token, quote common.Tok
 				uuid, timepoint+20)
 			return uuid, done, remaining, finished, err
 		} else {
-			return "", 0, 0, false, fmt.Errorf(result.Error)
+			return "", 0, 0, false, errors.New(result.Error)
 		}
 	}
 }
@@ -150,7 +151,7 @@ func (self *Bittrex) Withdraw(token common.Token, amount *big.Int, address ether
 		if resp.Success {
 			return resp.Result["uuid"], nil
 		} else {
-			return "", fmt.Errorf(resp.Error)
+			return "", errors.New(resp.Error)
 		}
 	}
 }
@@ -180,7 +181,7 @@ func (self *Bittrex) DepositStatus(
 		// here, the exchange id part in id is malformed
 		// 1. because analytic didn't pass original ID
 		// 2. id is not constructed correctly in a form of uuid + "|" + token + "|" + amount
-		return "", fmt.Errorf("Invalid deposit id")
+		return "", errors.New("Invalid deposit id")
 	}
 	amount, err := strconv.ParseFloat(idParts[2], 64)
 	if err != nil {
@@ -224,7 +225,7 @@ func (self *Bittrex) CancelOrder(id, base, quote string) error {
 		if resp.Success {
 			return nil
 		} else {
-			return fmt.Errorf(resp.Error)
+			return errors.New(resp.Error)
 		}
 	}
 }

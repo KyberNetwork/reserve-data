@@ -2,7 +2,7 @@ package blockchain
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"log"
 	"math/big"
 
@@ -51,7 +51,7 @@ type senderFromServer struct {
 	blockhash ethereum.Hash
 }
 
-var errNotCached = fmt.Errorf("sender not cached")
+var errNotCached = errors.New("sender not cached")
 
 func setSenderFromServer(tx *types.Transaction, addr ethereum.Address, block ethereum.Hash) {
 	// Use types.Sender for side-effect to store our signer into the cache.

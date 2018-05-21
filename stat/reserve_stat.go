@@ -1,6 +1,7 @@
 package stat
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -51,18 +52,18 @@ func validateTimeWindow(fromTime, toTime uint64, freq string) (uint64, uint64, e
 	switch freq {
 	case "m", "M":
 		if to-from > uint64((time.Hour * 24).Nanoseconds()) {
-			return 0, 0, fmt.Errorf("Minute frequency limit is 1 day")
+			return 0, 0, errors.New("Minute frequency limit is 1 day")
 		}
 	case "h", "H":
 		if to-from > uint64((time.Hour * 24 * 180).Nanoseconds()) {
-			return 0, 0, fmt.Errorf("Hour frequency limit is 180 days")
+			return 0, 0, errors.New("Hour frequency limit is 180 days")
 		}
 	case "d", "D":
 		if to-from > uint64((time.Hour * 24 * 365 * 3).Nanoseconds()) {
-			return 0, 0, fmt.Errorf("Day frequency limit is 3 years")
+			return 0, 0, errors.New("Day frequency limit is 3 years")
 		}
 	default:
-		return 0, 0, fmt.Errorf("Invalid frequencies")
+		return 0, 0, errors.New("Invalid frequencies")
 	}
 	return from, to, nil
 }

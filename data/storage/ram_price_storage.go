@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"fmt"
+	"errors"
 	"github.com/KyberNetwork/reserve-data/common"
 	"sync"
 )
@@ -31,7 +31,7 @@ func (self *RamPriceStorage) GetAllPrices(version int64) (common.AllPriceEntry, 
 	defer self.mu.RUnlock()
 	all := self.data[version]
 	if all.Data == nil {
-		return common.AllPriceEntry{}, fmt.Errorf("Version doesn't exist")
+		return common.AllPriceEntry{}, errors.New("Version doesn't exist")
 	} else {
 		return all, nil
 	}
@@ -42,11 +42,11 @@ func (self *RamPriceStorage) GetOnePrice(pair common.TokenPairID, version int64)
 	defer self.mu.RUnlock()
 	all := self.data[version]
 	if all.Data == nil {
-		return common.OnePrice{}, fmt.Errorf("Version doesn't exist")
+		return common.OnePrice{}, errors.New("Version doesn't exist")
 	} else {
 		data := all.Data[pair]
 		if len(data) == 0 {
-			return common.OnePrice{}, fmt.Errorf("Pair of token is not supported")
+			return common.OnePrice{}, errors.New("Pair of token is not supported")
 		} else {
 			return data, nil
 		}

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -136,7 +137,7 @@ func (self *BoltStatStorage) GetLastProcessedTradeLogTimepoint(statType string) 
 	err = self.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(TRADELOG_PROCESSOR_STATE))
 		if b == nil {
-			return (fmt.Errorf("Can not find last processed bucket"))
+			return (errors.New("Can not find last processed bucket"))
 		}
 		result = bytesToUint64(b.Get([]byte(statType)))
 		return nil
@@ -185,7 +186,7 @@ func getBucketNameByFreq(freq string) (bucketName string, err error) {
 	default:
 		offset, ok := strconv.ParseInt(strings.TrimPrefix(freq, "utc"), 10, 64)
 		if (offset < START_TIMEZONE) || (offset > END_TIMEZONE) {
-			err = fmt.Errorf("Frequency is wrong, can not get bucket name")
+			err = errors.New("Frequency is wrong, can not get bucket name")
 		}
 		if ok != nil {
 			err = ok

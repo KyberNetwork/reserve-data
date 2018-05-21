@@ -3,6 +3,7 @@ package storage
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -57,7 +58,7 @@ func (self *BoltAnalyticStorage) UpdatePriceAnalyticData(timestamp uint64, value
 		c := b.Cursor()
 		existedKey, _ := c.Seek(k)
 		if existedKey != nil {
-			return fmt.Errorf("The timestamp is already existed.")
+			return errors.New("The timestamp is already existed.")
 		}
 		return b.Put(k, value)
 	})
@@ -77,7 +78,7 @@ func (self *BoltAnalyticStorage) BackupFile(fileName string) error {
 	if intergrity {
 		return os.Remove(fileName)
 	} else {
-		return fmt.Errorf("AnalyticPriceData: File uploading corrupted")
+		return errors.New("AnalyticPriceData: File uploading corrupted")
 	}
 
 	return nil

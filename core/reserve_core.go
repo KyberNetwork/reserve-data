@@ -1,6 +1,7 @@
 package core
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"math/big"
@@ -43,7 +44,7 @@ func (self ReserveCore) CancelOrder(id common.ActivityID, exchange common.Exchan
 		return err
 	}
 	if activity.Action != "trade" {
-		return fmt.Errorf("This is not an order activity so cannot cancel")
+		return errors.New("This is not an order activity so cannot cancel")
 	}
 	base := activity.Params["base"].(string)
 	quote := activity.Params["quote"].(string)
@@ -286,7 +287,7 @@ func (self ReserveCore) SetRates(
 	var status string
 
 	if lentokens != lenbuys || lentokens != lensells || lentokens != lenafps {
-		err = fmt.Errorf("Tokens, buys sells and afpMids must have the same length")
+		err = errors.New("Tokens, buys sells and afpMids must have the same length")
 	} else {
 		err = sanityCheck(buys, afpMids, sells)
 		if err == nil {
@@ -301,12 +302,12 @@ func (self ReserveCore) SetRates(
 			var count uint64
 			minedNonce, err = self.blockchain.SetRateMinedNonce()
 			if err != nil {
-				err = fmt.Errorf("Couldn't get mined nonce of set rate operator")
+				err = errors.New("Couldn't get mined nonce of set rate operator")
 			} else {
 				oldNonce, oldPrice, count, err = self.pendingSetrateInfo(minedNonce)
 				log.Printf("old nonce: %v, old price: %v, count: %d, err: %v", oldNonce, oldPrice, count, err)
 				if err != nil {
-					err = fmt.Errorf("Couldn't check pending set rate tx pool. Please try later")
+					err = errors.New("Couldn't check pending set rate tx pool. Please try later")
 				} else {
 					if oldNonce != nil {
 						newPrice := calculateNewGasPrice(oldPrice, count)
@@ -378,12 +379,12 @@ func sanityCheck(buys, afpMid, sells []*big.Int) error {
 			aMFloat := big.NewFloat(0).SetInt(afpMid[i])
 			aMRate := calculateRate(aMFloat, eth)
 			if bRate.Cmp(sRate) <= 0 || bRate.Cmp(aMRate) <= 0 {
-				return fmt.Errorf("Sell price must be bigger than buy price and afpMid price")
+				return errors.New("Sell price must be bigger than buy price and afpMid price")
 			}
 		case 0:
 			return nil
 		case -1:
-			return fmt.Errorf("Rate cannot be zero on only sell or buy side")
+			return errors.New("Rate cannot be zero on only sell or buy side")
 		}
 	}
 	return nil
@@ -399,7 +400,7 @@ func sanityCheckTrading(exchange common.Exchange, base, quote common.Token, rate
 	minNotional := exchangeInfo.MinNotional
 	if minNotional != float64(0) {
 		if currentNotional < minNotional {
-			return fmt.Errorf("Notional must be bigger than exchange's MinNotional")
+			return errors.New("Notional must be bigger than exchange's MinNotional")
 		}
 	}
 	return nil
@@ -414,7 +415,7 @@ func sanityCheckAmount(exchange common.Exchange, token common.Token, amount *big
 
 	minAmountWithdraw.Mul(big.NewFloat(feeWithdrawing), big.NewFloat(0).SetInt(expDecimal))
 	if amountFloat.Cmp(minAmountWithdraw) < 0 {
-		return fmt.Errorf("Amount is too small!!!")
+		return errors.New("Amount is too small!!!")
 	}
 	return nil
 }

@@ -2,6 +2,7 @@ package blockchain
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"math/big"
@@ -92,7 +93,7 @@ func (self *BaseBlockchain) GetNextNonce(operator string) (*big.Int, error) {
 func (self *BaseBlockchain) SignAndBroadcast(tx *types.Transaction, from string) (*types.Transaction, error) {
 	signer := self.GetOperator(from).Signer
 	if tx == nil {
-		panic(fmt.Errorf("Nil tx is forbidden here"))
+		panic(errors.New("Nil tx is forbidden here"))
 	} else {
 		signedTx, err := signer.Sign(tx)
 		if err != nil {
@@ -166,13 +167,13 @@ func (self *BaseBlockchain) transactTx(context context.Context, opts TxOpts, con
 	}
 	var nonce uint64
 	if opts.Nonce == nil {
-		return nil, fmt.Errorf("nonce must be specified")
+		return nil, errors.New("nonce must be specified")
 	} else {
 		nonce = opts.Nonce.Uint64()
 	}
 	// Figure out the gas allowance and gas price values
 	if opts.GasPrice == nil {
-		return nil, fmt.Errorf("gas price must be specified")
+		return nil, errors.New("gas price must be specified")
 	}
 	gasLimit := opts.GasLimit
 	if gasLimit == nil {
@@ -264,13 +265,13 @@ func (self *BaseBlockchain) BuildSendERC20Tx(opts TxOpts, amount *big.Int, to et
 	}
 	var nonce uint64
 	if opts.Nonce == nil {
-		return nil, fmt.Errorf("nonce must be specified")
+		return nil, errors.New("nonce must be specified")
 	} else {
 		nonce = opts.Nonce.Uint64()
 	}
 	// Figure out the gas allowance and gas price values
 	if opts.GasPrice == nil {
-		return nil, fmt.Errorf("gas price must be specified")
+		return nil, errors.New("gas price must be specified")
 	}
 	data, err := self.PackERC20Data("transfer", to, amount)
 	if err != nil {
@@ -296,13 +297,13 @@ func (self *BaseBlockchain) BuildSendETHTx(opts TxOpts, to ethereum.Address) (*t
 	}
 	var nonce uint64
 	if opts.Nonce == nil {
-		return nil, fmt.Errorf("nonce must be specified")
+		return nil, errors.New("nonce must be specified")
 	} else {
 		nonce = opts.Nonce.Uint64()
 	}
 	// Figure out the gas allowance and gas price values
 	if opts.GasPrice == nil {
-		return nil, fmt.Errorf("gas price must be specified")
+		return nil, errors.New("gas price must be specified")
 	}
 	gasLimit := big.NewInt(50000)
 	rawTx := types.NewTransaction(nonce, to, value, gasLimit, opts.GasPrice, nil)
@@ -317,7 +318,7 @@ func (self *BaseBlockchain) TransactionByHash(ctx context.Context, hash ethereum
 	} else if json == nil {
 		return nil, false, ether.NotFound
 	} else if _, r, _ := json.tx.RawSignatureValues(); r == nil {
-		return nil, false, fmt.Errorf("server returned transaction without signature")
+		return nil, false, errors.New("server returned transaction without signature")
 	}
 	setSenderFromServer(json.tx, json.From, json.BlockHash)
 	return json, json.BlockNumber().Cmp(ethereum.Big0) == 0, nil
@@ -386,7 +387,7 @@ func NewMinimalBaseBlockchain(
 	endpoints []string, operators map[string]*Operator, chainType string) (*BaseBlockchain, error) {
 
 	if len(endpoints) == 0 {
-		return nil, fmt.Errorf("At least one endpoint is required to init a blockchain")
+		return nil, errors.New("At least one endpoint is required to init a blockchain")
 	}
 	endpoint := endpoints[0]
 	rpcClient, err := rpc.Dial(endpoint)

@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"fmt"
+	"errors"
 	"github.com/KyberNetwork/reserve-data/common"
 	"sync"
 )
@@ -33,7 +33,7 @@ func (self *RamAuthStorage) GetSnapshot(version int64) (common.AuthDataSnapshot,
 	if found {
 		return all, nil
 	} else {
-		return common.AuthDataSnapshot{}, fmt.Errorf("Version doesn't exist")
+		return common.AuthDataSnapshot{}, errors.New("Version doesn't exist")
 	}
 }
 

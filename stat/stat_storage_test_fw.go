@@ -1,6 +1,7 @@
 package stat
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -47,15 +48,15 @@ func (self *StatStorageTest) TestTradeStatsSummary() error {
 		return err
 	}
 	if tradeSum == nil || len(tradeSum) == 0 {
-		return fmt.Errorf("Can't find such record")
+		return errors.New("Can't find such record")
 	}
 	result, ok := (tradeSum[0]).(common.MetricStats)
 	if !ok {
-		return fmt.Errorf("Type mismatched: get trade stat summary return wrong type")
+		return errors.New("Type mismatched: get trade stat summary return wrong type")
 	}
 	usdVol := (result.USDVolume)
 	if !ok {
-		return fmt.Errorf("Type mismatched: get trade stat summary return missing field")
+		return errors.New("Type mismatched: get trade stat summary return missing field")
 	}
 	if usdVol != 4567.8 {
 		return fmt.Errorf("Wrong usd volume value returned: %v expected 4567.8 ", usdVol)
@@ -88,15 +89,15 @@ func (self *StatStorageTest) TestWalletStats() error {
 	}
 	walletStat, err := self.storage.GetWalletStats(0, 86400000, testWallet, 0)
 	if walletStat == nil || len(walletStat) == 0 {
-		return fmt.Errorf("Can't find such record, addressess might not be in the correct case")
+		return errors.New("Can't find such record, addressess might not be in the correct case")
 	}
 	result, ok := (walletStat[0]).(common.MetricStats)
 	if !ok {
-		return fmt.Errorf("Type mismatched: get wallet stat return wrong type (UPPER CASE ADDR)")
+		return errors.New("Type mismatched: get wallet stat return wrong type (UPPER CASE ADDR)")
 	}
 	usdVol := (result.USDVolume)
 	if !ok {
-		return fmt.Errorf("Type mismatched: get wallet stat return missing field (UPPER CASE ADDR)")
+		return errors.New("Type mismatched: get wallet stat return missing field (UPPER CASE ADDR)")
 	}
 	if usdVol != 4567.8 {
 		return fmt.Errorf("Wrong usd volume value returned: %v expected 4567.8 (UPPER CASE ADDR)", usdVol)
@@ -105,15 +106,15 @@ func (self *StatStorageTest) TestWalletStats() error {
 
 	walletStat, err = self.storage.GetWalletStats(0, 86400000, testWallet, 0)
 	if walletStat == nil || len(walletStat) == 0 {
-		return fmt.Errorf("Can't find such record, addressess might not be in the correct case")
+		return errors.New("Can't find such record, addressess might not be in the correct case")
 	}
 	result, ok = (walletStat[0]).(common.MetricStats)
 	if !ok {
-		return fmt.Errorf("Type mismatched: get wallet stat return wrong type (LOWER CASE ADDR)")
+		return errors.New("Type mismatched: get wallet stat return wrong type (LOWER CASE ADDR)")
 	}
 	usdVol = (result.USDVolume)
 	if !ok {
-		return fmt.Errorf("Type mismatched: get wallet stat return missing field (LOWER CASE ADDR)")
+		return errors.New("Type mismatched: get wallet stat return missing field (LOWER CASE ADDR)")
 	}
 	if usdVol != 4567.8 {
 		return fmt.Errorf("Wrong usd volume value returned: %v expected 4567.8 (LOWER CASE ADDR)", usdVol)
@@ -143,15 +144,15 @@ func (self *StatStorageTest) TestCountryStats() error {
 
 	countryStat, err := self.storage.GetCountryStats(0, 86400000, TESTCOUNTRY, 0)
 	if countryStat == nil || len(countryStat) == 0 {
-		return fmt.Errorf("Can't find such record, addressess might not be in the correct case")
+		return errors.New("Can't find such record, addressess might not be in the correct case")
 	}
 	result, ok := (countryStat[0]).(common.MetricStats)
 	if !ok {
-		return fmt.Errorf("Type mismatched: get country stats return wrong type (LOWER CASE COUNTRY) ")
+		return errors.New("Type mismatched: get country stats return wrong type (LOWER CASE COUNTRY) ")
 	}
 	usdVol := (result.USDVolume)
 	if !ok {
-		return fmt.Errorf("Type mismatched: get country stats return missing field (LOWER CASE COUNTRY)")
+		return errors.New("Type mismatched: get country stats return missing field (LOWER CASE COUNTRY)")
 	}
 	if usdVol != 4567.8 {
 		return fmt.Errorf("Wrong usd volume value returned: %v expected 4567.8 (LOWER CASE COUNTRY)", usdVol)
@@ -159,15 +160,15 @@ func (self *StatStorageTest) TestCountryStats() error {
 	}
 	countryStat, err = self.storage.GetCountryStats(0, 86400000, strings.ToUpper(TESTCOUNTRY), 0)
 	if countryStat == nil || len(countryStat) == 0 {
-		return fmt.Errorf("Can't find such record, addressess might not be in the correct case")
+		return errors.New("Can't find such record, addressess might not be in the correct case")
 	}
 	result, ok = (countryStat[0]).(common.MetricStats)
 	if !ok {
-		return fmt.Errorf("Type mismatched: get country stats return wrong type (UPPER CASE COUNTRY) ")
+		return errors.New("Type mismatched: get country stats return wrong type (UPPER CASE COUNTRY) ")
 	}
 	usdVol = (result.USDVolume)
 	if !ok {
-		return fmt.Errorf("Type mismatched: get country stats return missing field (UPPER CASE COUNTRY)")
+		return errors.New("Type mismatched: get country stats return missing field (UPPER CASE COUNTRY)")
 	}
 	if usdVol != 4567.8 {
 		return fmt.Errorf("Wrong usd volume value returned: %v expected 4567.8 (UPPER CASE COUNTRY)", usdVol)
@@ -192,15 +193,15 @@ func (self *StatStorageTest) TestVolumeStats() error {
 	}
 	assetVol, err := self.storage.GetAssetVolume(0, 86400000, "D", testAsset)
 	if assetVol == nil || len(assetVol) == 0 {
-		return fmt.Errorf("Can't find such record, addressess might not be in the correct case")
+		return errors.New("Can't find such record, addressess might not be in the correct case")
 	}
 	result, ok := (assetVol[0]).(common.VolumeStats)
 	if !ok {
-		return fmt.Errorf("Type mismatched: get volume stat return wrong type (LOWER CASE ADDR)")
+		return errors.New("Type mismatched: get volume stat return wrong type (LOWER CASE ADDR)")
 	}
 	usdVol := (result.USDAmount)
 	if !ok {
-		return fmt.Errorf("Type mismatched: get volume stat return missing field (LOWER CASE ADDR)")
+		return errors.New("Type mismatched: get volume stat return missing field (LOWER CASE ADDR)")
 	}
 	if usdVol != 4567.8 {
 		return fmt.Errorf("Wrong usd volume value returned: %v expected 4567.8 (LOWER CASE ADDR)", usdVol)
@@ -208,15 +209,15 @@ func (self *StatStorageTest) TestVolumeStats() error {
 
 	assetVol, err = self.storage.GetAssetVolume(0, 86400000, "D", testAsset)
 	if assetVol == nil || len(assetVol) == 0 {
-		return fmt.Errorf("Can't find such record, addressess might not be in the correct case")
+		return errors.New("Can't find such record, addressess might not be in the correct case")
 	}
 	result, ok = (assetVol[0]).(common.VolumeStats)
 	if !ok {
-		return fmt.Errorf("Type mismatched: get volume stat return wrong type (UPPER CASE ADDR)")
+		return errors.New("Type mismatched: get volume stat return wrong type (UPPER CASE ADDR)")
 	}
 	usdVol = (result.USDAmount)
 	if !ok {
-		return fmt.Errorf("Type mismatched: get volume stat return missing field (UPPER CASE ADDR)")
+		return errors.New("Type mismatched: get volume stat return missing field (UPPER CASE ADDR)")
 	}
 	if usdVol != 4567.8 {
 		return fmt.Errorf("Wrong usd volume value returned: %v expected 4567.8 (UPPER CASE ADDR)", usdVol)
@@ -231,15 +232,15 @@ func (self *StatStorageTest) TestVolumeStats() error {
 	}
 	userVol, err := self.storage.GetUserVolume(0, 86400000, "D", testUser)
 	if (userVol == nil) || len(userVol) == 0 {
-		return fmt.Errorf("Test uservolume failed. Can't find such record, addressess might not be in the correct case")
+		return errors.New("Test uservolume failed. Can't find such record, addressess might not be in the correct case")
 	}
 	result, ok = (userVol[0]).(common.VolumeStats)
 	if !ok {
-		return fmt.Errorf("Type mismatched: get user volume summary return wrong type")
+		return errors.New("Type mismatched: get user volume summary return wrong type")
 	}
 	usdVol = (result.USDAmount)
 	if !ok {
-		return fmt.Errorf("Type mismatched: get user volume summary return missing field")
+		return errors.New("Type mismatched: get user volume summary return missing field")
 	}
 	if usdVol != 4567.8 {
 		return fmt.Errorf("Wrong usd volume value returned: %v expected 4567.8", usdVol)
@@ -252,15 +253,15 @@ func (self *StatStorageTest) TestVolumeStats() error {
 	}
 	reserveVol, err := self.storage.GetReserveVolume(0, 86400000, "D", testAsset, testUser)
 	if (reserveVol == nil) || len(reserveVol) == 0 {
-		return fmt.Errorf("Can't find such record, addressess might not be in the correct case")
+		return errors.New("Can't find such record, addressess might not be in the correct case")
 	}
 	result, ok = (reserveVol[0]).(common.VolumeStats)
 	if !ok {
-		return fmt.Errorf("Type mismatched: get user volume summary return wrong type")
+		return errors.New("Type mismatched: get user volume summary return wrong type")
 	}
 	usdVol = (result.USDAmount)
 	if !ok {
-		return fmt.Errorf("Type mismatched: get user volume summary return missing field")
+		return errors.New("Type mismatched: get user volume summary return missing field")
 	}
 	if usdVol != 4567.8 {
 		return fmt.Errorf("Wrong usd volume value returned: %v expected 4567.8", usdVol)
@@ -287,16 +288,16 @@ func (self *StatStorageTest) TestBurnFee() error {
 		return err
 	}
 	if (burnFee == nil) || len(burnFee) == 0 {
-		return fmt.Errorf("Can't find such record, addressess might not be in the correct case")
+		return errors.New("Can't find such record, addressess might not be in the correct case")
 	}
 	//Note : This is only temporary, burn fee return needs to be casted to common.BurnFeeStats for consistent in design
 	result, ok := (burnFee[0]).(float64)
 	if !ok {
-		return fmt.Errorf(" Type mismatched: get burn fee return wrong type")
+		return errors.New(" Type mismatched: get burn fee return wrong type")
 	}
 	burnVol := (result)
 	if !ok {
-		return fmt.Errorf("Type mismatched: get burn fee return missing field ")
+		return errors.New("Type mismatched: get burn fee return missing field ")
 	}
 	if burnVol != 4567.8 {
 		return fmt.Errorf("Wrong burn fee value returned: %v expected 4567.8 ", burnVol)
@@ -310,15 +311,15 @@ func (self *StatStorageTest) TestBurnFee() error {
 	}
 	burnFee, err = self.storage.GetWalletFee(0, 86400000, "D", testAsset, testWallet)
 	if burnFee == nil || len(burnFee) == 0 {
-		return fmt.Errorf("Can't find such record, addressess might not be in the correct case ")
+		return errors.New("Can't find such record, addressess might not be in the correct case ")
 	}
 	result, ok = (burnFee[0]).(float64)
 	if !ok {
-		return fmt.Errorf("Type mismatched: get burn fee return wrong type ")
+		return errors.New("Type mismatched: get burn fee return wrong type ")
 	}
 	burnVol = (result)
 	if !ok {
-		return fmt.Errorf("Type mismatched: get burn fee return missing field ")
+		return errors.New("Type mismatched: get burn fee return missing field ")
 	}
 	if burnVol != 4567.8 {
 		return fmt.Errorf("Wrong wallet fee value returned: %v expected 4567.8", burnVol)

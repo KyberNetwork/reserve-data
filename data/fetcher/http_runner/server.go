@@ -1,7 +1,7 @@
 package http_runner
 
 import (
-	"fmt"
+	"errors"
 	"log"
 	"net/http"
 	"strconv"
@@ -121,7 +121,7 @@ func (self *HttpRunnerServer) Start() error {
 		}
 		return self.http.ListenAndServe()
 	} else {
-		return fmt.Errorf("server start already")
+		return errors.New("server start already")
 	}
 }
 
@@ -131,7 +131,7 @@ func (self *HttpRunnerServer) Stop() error {
 		self.http = nil
 		return err
 	} else {
-		return fmt.Errorf("server stop already")
+		return errors.New("server stop already")
 	}
 }
 

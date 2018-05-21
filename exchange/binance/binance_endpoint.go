@@ -2,6 +2,7 @@ package binance
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -71,16 +72,16 @@ func (self *BinanceEndpoint) GetResponse(
 		defer resp.Body.Close()
 		switch resp.StatusCode {
 		case 429:
-			err = fmt.Errorf("breaking a request rate limit.")
+			err = errors.New("breaking a request rate limit.")
 			break
 		case 418:
-			err = fmt.Errorf("IP has been auto-banned for continuing to send requests after receiving 429 codes.")
+			err = errors.New("IP has been auto-banned for continuing to send requests after receiving 429 codes.")
 			break
 		case 500:
-			err = fmt.Errorf("500 from Binance, its fault.")
+			err = errors.New("500 from Binance, its fault.")
 			break
 		case 401:
-			err = fmt.Errorf("API key not valid.")
+			err = errors.New("API key not valid.")
 			break
 		case 200:
 			resp_body, err = ioutil.ReadAll(resp.Body)
@@ -223,7 +224,7 @@ func (self *BinanceEndpoint) WithdrawHistory(startTime, endTime uint64) (exchang
 	if err == nil {
 		json.Unmarshal(resp_body, &result)
 		if !result.Success {
-			err = fmt.Errorf("Getting withdraw history from Binance failed: " + result.Msg)
+			err = errors.New("Getting withdraw history from Binance failed: " + result.Msg)
 		}
 	}
 	return result, err
@@ -244,7 +245,7 @@ func (self *BinanceEndpoint) DepositHistory(startTime, endTime uint64) (exchange
 	if err == nil {
 		err = json.Unmarshal(resp_body, &result)
 		if !result.Success {
-			err = fmt.Errorf("Getting deposit history from Binance failed: " + result.Msg)
+			err = errors.New("Getting deposit history from Binance failed: " + result.Msg)
 		}
 	}
 	return result, err
@@ -265,7 +266,7 @@ func (self *BinanceEndpoint) CancelOrder(symbol string, id uint64) (exchange.Bin
 	if err == nil {
 		json.Unmarshal(resp_body, &result)
 		if result.Code != 0 {
-			err = fmt.Errorf("Canceling order from Binance failed: " + result.Msg)
+			err = errors.New("Canceling order from Binance failed: " + result.Msg)
 		}
 	}
 	return result, err
@@ -286,7 +287,7 @@ func (self *BinanceEndpoint) OrderStatus(symbol string, id uint64) (exchange.Bin
 	if err == nil {
 		json.Unmarshal(resp_body, &result)
 		if result.Code != 0 {
-			err = fmt.Errorf(result.Msg)
+			err = errors.New(result.Msg)
 		}
 	}
 	return result, err
@@ -309,7 +310,7 @@ func (self *BinanceEndpoint) Withdraw(token common.Token, amount *big.Int, addre
 	if err == nil {
 		json.Unmarshal(resp_body, &result)
 		if !result.Success {
-			return "", fmt.Errorf(result.Msg)
+			return "", errors.New(result.Msg)
 		}
 		return result.ID, nil
 	} else {
@@ -369,7 +370,7 @@ func (self *BinanceEndpoint) GetDepositAddress(asset string) (exchange.Binadepos
 	if err == nil {
 		err = json.Unmarshal(resp_body, &result)
 		if !result.Success {
-			err = fmt.Errorf(result.Msg)
+			err = errors.New(result.Msg)
 		}
 	}
 	return result, err

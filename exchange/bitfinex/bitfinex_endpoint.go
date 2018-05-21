@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -189,12 +190,12 @@ func (self *BitfinexEndpoint) Withdraw(token common.Token, amount *big.Int, addr
 			return err
 		}
 		if result.Error != "" {
-			return fmt.Errorf(result.Error)
+			return errors.New(result.Error)
 		}
 		return nil
 	} else {
 		log.Printf("Error: %v, Code: %v\n", err, resp)
-		return fmt.Errorf("withdraw rejected by Bitfinex")
+		return errors.New("withdraw rejected by Bitfinex")
 	}
 }
 

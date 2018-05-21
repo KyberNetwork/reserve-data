@@ -2,6 +2,7 @@ package huobi
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -131,7 +132,7 @@ func (self *HuobiEndpoint) Trade(tradeType string, base, quote common.Token, rat
 	orderType := tradeType + "-limit"
 	accounts, _ := self.GetAccounts()
 	if len(accounts.Data) == 0 {
-		return result, fmt.Errorf("Cannot get account")
+		return result, errors.New("Cannot get account")
 	}
 	params := map[string]string{
 		"account-id": strconv.FormatUint(accounts.Data[0].ID, 10),
@@ -174,7 +175,7 @@ func (self *HuobiEndpoint) WithdrawHistory() (exchange.HuobiWithdraws, error) {
 	if err == nil {
 		json.Unmarshal(resp_body, &result)
 		if result.Status != "ok" {
-			err = fmt.Errorf(result.Reason)
+			err = errors.New(result.Reason)
 		}
 	}
 	return result, err
@@ -262,7 +263,7 @@ func (self *HuobiEndpoint) Withdraw(token common.Token, amount *big.Int, address
 		return strconv.FormatUint(result.ID, 10), nil
 	} else {
 		log.Printf("Error: %v", err)
-		return "", fmt.Errorf("Withdraw rejected by Huobi")
+		return "", errors.New("Withdraw rejected by Huobi")
 	}
 }
 
@@ -270,7 +271,7 @@ func (self *HuobiEndpoint) GetInfo() (exchange.HuobiInfo, error) {
 	result := exchange.HuobiInfo{}
 	accounts, _ := self.GetAccounts()
 	if len(accounts.Data) == 0 {
-		return result, fmt.Errorf("Cannot get account")
+		return result, errors.New("Cannot get account")
 	}
 	resp_body, err := self.GetResponse(
 		"GET",
