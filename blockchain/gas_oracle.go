@@ -1,32 +1,28 @@
 package blockchain
 
 import (
-	"log"
-	"time"
-	"sync"
-	"net/http"
-	"io/ioutil"
 	"encoding/json"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"time"
 )
 
 const GasStationUrl = "https://ethgasstation.info/json/ethgasAPI.json"
 
 type GasOracle struct {
-	mu       *sync.RWMutex     
-	Standard float64  `json:"average"`
-	Fast     float64  `json:"fast"`
-	SafeLow  float64  `json:"safeLow"`
+	Standard float64 `json:"average"`
+	Fast     float64 `json:"fast"`
+	SafeLow  float64 `json:"safeLow"`
 }
 
 func NewGasOracle() *GasOracle {
-	gasOracle := &GasOracle{
-		mu: &sync.RWMutex{},
-	}
+	gasOracle := &GasOracle{}
 	gasOracle.GasPricing()
 	return gasOracle
 }
 
-func (self *GasOracle) GasPricing() {	
+func (self *GasOracle) GasPricing() {
 	ticker := time.NewTicker(10 * time.Second)
 	go func() {
 		for {
@@ -40,7 +36,7 @@ func (self *GasOracle) GasPricing() {
 }
 
 func (self *GasOracle) RunGasPricing() error {
-	client := &http.Client{Timeout: 3 * time.Second}
+	client := &http.Client{Timeout: 10 * time.Second}
 	r, err := client.Get(GasStationUrl)
 	if err != nil {
 		return err
@@ -61,8 +57,6 @@ func (self *GasOracle) RunGasPricing() error {
 }
 
 func (self *GasOracle) Set(gasOracle GasOracle) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
 	self.SafeLow = gasOracle.SafeLow
 	self.Standard = gasOracle.Standard
 	self.Fast = gasOracle.Fast
