@@ -1558,10 +1558,10 @@ func (self *BoltStorage) GetTargetQtyV2() (map[string]interface{}, error) {
 			rebalance, _ := strconv.ParseFloat(elements[3], 10)
 			withdraw, _ := strconv.ParseFloat(elements[4], 10)
 			result[elements[0]] = metric.TargetQtyStruct{
-				TotalTarget:       totalTarget,
-				ReserveTarget:     reserveTarget,
-				RebalanceThresold: rebalance,
-				TransferThresold:  withdraw,
+				TotalTarget:        totalTarget,
+				ReserveTarget:      reserveTarget,
+				RebalanceThreshold: rebalance,
+				TransferThreshold:  withdraw,
 			}
 		}
 	}

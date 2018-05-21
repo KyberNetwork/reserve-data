@@ -48,8 +48,8 @@ type SetrateControl struct {
 }
 
 type TargetQtyStruct struct {
-	TotalTarget       float64 `json:"TotalTarget"`
-	ReserveTarget     float64 `json:"ReseveTarget"`
-	RebalanceThresold float64 `json:"RebalanceThresold"`
-	TransferThresold  float64 `json:"TransferThresold"`
+	TotalTarget        float64 `json:"TotalTarget"`
+	ReserveTarget      float64 `json:"ReseveTarget"`
+	RebalanceThreshold float64 `json:"RebalanceThreshold"`
+	TransferThreshold  float64 `json:"TransferThreshold"`
 }
