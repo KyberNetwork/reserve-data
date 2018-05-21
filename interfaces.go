@@ -54,8 +54,11 @@ type ReserveData interface {
 	// all rates here must be valid rates. A rate is considered valid
 	// when it is collected from the node without any errors or
 	// strange values.
+	// CurrentRateVersio returns the latest version of valid rate data.
 	CurrentRateVersion(timestamp uint64) (common.Version, error)
+	// GetRate returns latest valid rates for all tokens that is before timestamp.
 	GetRate(timestamp uint64) (common.AllRateResponse, error)
+	// GetRates returns list of valid rates for all tokens that is collected between [fromTime, toTime).
 	GetRates(fromTime, toTime uint64) ([]common.AllRateResponse, error)
 
 	GetRecords(fromTime, toTime uint64) ([]common.ActivityRecord, error)

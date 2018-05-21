@@ -13,6 +13,10 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 )
 
+// HIGH_BOUND_GAS_PRICE is the price we will try to use to get higher priority
+// than trade tx to avoid price front running from users.
+const HIGH_BOUND_GAS_PRICE float64 = 50.1
+
 type ReserveCore struct {
 	blockchain      Blockchain
 	activityStorage ActivityStorage
@@ -239,12 +243,12 @@ func calculateNewGasPrice(old *big.Int, count uint64) *big.Int {
 	// so we can just increase the gas price a tiny amount (1 gwei) to make
 	// the node accept tx with up to date price
 	if count > 4 {
-		return old.Add(old, big.NewInt(1000000000))
+		return old.Add(old, common.GweiToWei(1))
 	} else {
 		// new = old + (50.1 - old) / (5 - count)
 		return old.Add(
 			old,
-			big.NewInt(0).Div(big.NewInt(0).Sub(big.NewInt(50100000000), old), big.NewInt(int64(5-count))),
+			big.NewInt(0).Div(big.NewInt(0).Sub(common.GweiToWei(HIGH_BOUND_GAS_PRICE), old), big.NewInt(int64(5-count))),
 		)
 	}
 }
@@ -254,13 +258,12 @@ func (self ReserveCore) pendingSetrateInfo(minedNonce uint64) (*big.Int, *big.In
 	if err != nil {
 		return nil, nil, 0, err
 	}
-	if act != nil {
-		nonce, _ := strconv.ParseUint(act.Result["nonce"].(string), 10, 64)
-		gasPrice, _ := strconv.ParseUint(act.Result["gasPrice"].(string), 10, 64)
-		return big.NewInt(int64(nonce)), big.NewInt(int64(gasPrice)), count, nil
-	} else {
+	if act == nil {
 		return nil, nil, 0, nil
 	}
+	nonce, _ := strconv.ParseUint(act.Result["nonce"].(string), 10, 64)
+	gasPrice, _ := strconv.ParseUint(act.Result["gasPrice"].(string), 10, 64)
+	return big.NewInt(int64(nonce)), big.NewInt(int64(gasPrice)), count, nil
 }
 
 func (self ReserveCore) SetRates(
@@ -315,7 +318,7 @@ func (self ReserveCore) SetRates(
 							newPrice,
 						)
 					} else {
-						initPrice := big.NewInt(10000000000)
+						initPrice := common.GweiToWei(10)
 						tx, err = self.blockchain.SetRates(
 							tokenAddrs, buys, sells, block,
 							big.NewInt(int64(minedNonce)),
@@ -364,7 +367,7 @@ func (self ReserveCore) SetRates(
 }
 
 func sanityCheck(buys, afpMid, sells []*big.Int) error {
-	eth := big.NewFloat(0).SetInt(big.NewInt(1000000000000000000))
+	eth := big.NewFloat(0).SetInt(common.EthToWei(1))
 	for i, s := range sells {
 		check := checkZeroValue(buys[i], s)
 		switch check {

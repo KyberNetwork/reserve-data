@@ -146,19 +146,6 @@ func readablePrint(data map[ethereum.Address]byte) string {
 	return result
 }
 
-func allZero(a, b, c, d []*big.Int) bool {
-	all := append(a, b...)
-	all = append(all, c...)
-	all = append(all, d...)
-	big0 := big.NewInt(0)
-	for _, i := range all {
-		if i.Cmp(big0) != 0 {
-			return false
-		}
-	}
-	return true
-}
-
 //====================== Write calls ===============================
 
 // TODO: Need better test coverage
@@ -186,7 +173,7 @@ func (self *Blockchain) SetRates(
 	// this check, it can be useful in the future.
 	//
 	// Don't submit any txs if it is just trying to set all tokens to 0 when they are already 0
-	// if allZero(buys, sells, baseBuys, baseSells) {
+	// if common.AllZero(buys, sells, baseBuys, baseSells) {
 	// 	return nil, errors.New("Trying to set all rates to 0 but they are already 0. Skip the tx.")
 	// }
 
@@ -584,6 +571,9 @@ func (self *Blockchain) GetLogs(fromBlock uint64, toBlock uint64) ([]common.KNLo
 	return result, nil
 }
 
+// SetRateMinedNonce returns nonce of the pricing operator in confirmed
+// state (not pending state).
+//
 // Getting mined nonce is not simple because there might be lag between
 // node leading us to get outdated mined nonce from an unsynced node.
 // To overcome this situation, we will keep a local nonce and require

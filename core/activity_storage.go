@@ -19,6 +19,6 @@ type ActivityStorage interface {
 
 	GetActivity(id common.ActivityID) (common.ActivityRecord, error)
 
-	// return the last pending set rate and number of pendint txs
+	// PendingSetrate return the last pending set rate and number of pendint txs
 	PendingSetrate(minedNonce uint64) (*common.ActivityRecord, uint64, error)
 }

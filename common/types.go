@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"math"
 	"math/big"
 	"strconv"
 	"strings"
@@ -364,26 +363,6 @@ type ExchangePrice struct {
 	Bids       []PriceEntry
 	Asks       []PriceEntry
 	ReturnTime Timestamp
-}
-
-func FloatToBigInt(amount float64, decimal int64) *big.Int {
-	// 6 is our smallest precision
-	if decimal < 6 {
-		return big.NewInt(int64(amount * math.Pow10(int(decimal))))
-	} else {
-		result := big.NewInt(int64(amount * math.Pow10(6)))
-		return result.Mul(result, big.NewInt(0).Exp(big.NewInt(10), big.NewInt(decimal-6), nil))
-	}
-}
-
-func BigToFloat(b *big.Int, decimal int64) float64 {
-	f := new(big.Float).SetInt(b)
-	power := new(big.Float).SetInt(new(big.Int).Exp(
-		big.NewInt(10), big.NewInt(decimal), nil,
-	))
-	res := new(big.Float).Quo(f, power)
-	result, _ := res.Float64()
-	return result
 }
 
 func AddrToString(addr ethereum.Address) string {
