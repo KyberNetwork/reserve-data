@@ -4,20 +4,21 @@ import (
 	"time"
 )
 
-// Runner to trigger fetcher
+// FetcherRunner is the common interface of runners that will periodically trigger fetcher jobs.
 type FetcherRunner interface {
+	// Start initializes all tickers. It must be called before runner is usable.
+	Start() error
+	// Stop stops all tickers and free usage resources.
+	// It must only be called after runner is started.
+	Stop() error
+
+	// All following methods should only becalled after Start() is executed
 	GetGlobalDataTicker() <-chan time.Time
 	GetOrderbookTicker() <-chan time.Time
 	GetAuthDataTicker() <-chan time.Time
 	GetRateTicker() <-chan time.Time
 	GetBlockTicker() <-chan time.Time
 	GetTradeHistoryTicker() <-chan time.Time
-	// Start must be non-blocking and must only return after runner
-	// gets to ready state before GetOrderbookTicker() and
-	// GetAuthDataTicker() get called
-	Start() error
-	// Stop should only be invoked when the runner is already running
-	Stop() error
 }
 
 type TickerRunner struct {
@@ -33,60 +34,35 @@ type TickerRunner struct {
 	bclock             *time.Ticker
 	tclock             *time.Ticker
 	globalDataClock    *time.Ticker
-	signal             chan bool
 }
 
 func (self *TickerRunner) GetGlobalDataTicker() <-chan time.Time {
-	if self.globalDataClock == nil {
-		<-self.signal
-	}
 	return self.globalDataClock.C
 }
 
 func (self *TickerRunner) GetBlockTicker() <-chan time.Time {
-	if self.bclock == nil {
-		<-self.signal
-	}
 	return self.bclock.C
 }
 func (self *TickerRunner) GetOrderbookTicker() <-chan time.Time {
-	if self.oclock == nil {
-		<-self.signal
-	}
 	return self.oclock.C
 }
 func (self *TickerRunner) GetAuthDataTicker() <-chan time.Time {
-	if self.aclock == nil {
-		<-self.signal
-	}
 	return self.aclock.C
 }
 func (self *TickerRunner) GetRateTicker() <-chan time.Time {
-	if self.rclock == nil {
-		<-self.signal
-	}
 	return self.rclock.C
 }
 func (self *TickerRunner) GetTradeHistoryTicker() <-chan time.Time {
-	if self.tclock == nil {
-		<-self.signal
-	}
 	return self.tclock.C
 }
 
 func (self *TickerRunner) Start() error {
 	self.oclock = time.NewTicker(self.oduration)
-	self.signal <- true
 	self.aclock = time.NewTicker(self.aduration)
-	self.signal <- true
 	self.rclock = time.NewTicker(self.rduration)
-	self.signal <- true
 	self.bclock = time.NewTicker(self.bduration)
-	self.signal <- true
 	self.tclock = time.NewTicker(self.tduration)
-	self.signal <- true
 	self.globalDataClock = time.NewTicker(self.globalDataDuration)
-	self.signal <- true
 	return nil
 }
 
@@ -116,6 +92,5 @@ func NewTickerRunner(
 		nil,
 		nil,
 		nil,
-		make(chan bool, 6),
 	}
 }
