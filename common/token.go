@@ -1,7 +1,6 @@
 package common
 
 import (
-	"errors"
 	"fmt"
 )
 
@@ -35,7 +34,7 @@ func NewTokenPair(base, quote string) (TokenPair, error) {
 	bToken, err1 := GetInternalToken(base)
 	qToken, err2 := GetInternalToken(quote)
 	if err1 != nil || err2 != nil {
-		return TokenPair{}, errors.New(fmt.Sprintf("%s or %s is not supported", base, quote))
+		return TokenPair{}, fmt.Errorf("%s or %s is not supported", base, quote)
 	} else {
 		return TokenPair{bToken, qToken}, nil
 	}

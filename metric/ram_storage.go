@@ -1,7 +1,7 @@
 package metric
 
 import (
-	"errors"
+	"fmt"
 	"log"
 	"strconv"
 	"sync"
@@ -79,7 +79,7 @@ func (self *RamMetricStorage) StorePendingTargetQty(data, dataType string) error
 	self.mu.Lock()
 	defer self.mu.Unlock()
 	if self.pendingTargetQty.ID != 0 {
-		return errors.New("There is one pending target quantity, please confirm or cancel it before adding a new one")
+		return fmt.Errorf("There is one pending target quantity, please confirm or cancel it before adding a new one")
 	}
 	self.pendingTargetQty.Type, _ = strconv.ParseInt(dataType, 10, 64)
 	self.pendingTargetQty.Data = data
@@ -106,7 +106,7 @@ func (self *RamMetricStorage) StoreTokenTargetQty(id, data string) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 	if self.pendingTargetQty.ID == 0 {
-		return errors.New("There is not pending data. Please set before confirm")
+		return fmt.Errorf("There is not pending data. Please set before confirm")
 	}
 	self.tokenTargetQty = self.pendingTargetQty
 	self.tokenTargetQty.Status = "confirmed"

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -155,7 +154,7 @@ func (self *BoltStorage) GetIntermedatorTx(id common.ActivityID) (common.TXEntry
 			}
 			return nil
 		} else {
-			err = errors.New("Can not find 2nd transaction tx for the deposit, please try later")
+			err = fmt.Errorf("Can not find 2nd transaction tx for the deposit, please try later")
 			return err
 		}
 	})
@@ -194,7 +193,7 @@ func (self *BoltStorage) GetTradeHistory(fromTime, toTime uint64) (common.Exchan
 	result := common.ExchangeTradeHistory{}
 	var err error
 	if toTime-fromTime > MAX_GET_TRADE_HISTORY {
-		return result, errors.New(fmt.Sprintf("Time range is too broad, it must be smaller or equal to 3 days (miliseconds)"))
+		return result, fmt.Errorf("Time range is too broad, it must be smaller or equal to 3 days (miliseconds)")
 	}
 	min := []byte(strconv.FormatUint(fromTime, 10))
 	max := []byte(strconv.FormatUint(toTime, 10))

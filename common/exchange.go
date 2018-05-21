@@ -1,7 +1,6 @@
 package common
 
 import (
-	"errors"
 	"fmt"
 	"math/big"
 
@@ -29,7 +28,7 @@ var SupportedExchanges = map[ExchangeID]Exchange{}
 func GetExchange(id string) (Exchange, error) {
 	ex := SupportedExchanges[ExchangeID(id)]
 	if ex == nil {
-		return ex, errors.New(fmt.Sprintf("Exchange %s is not supported", id))
+		return ex, fmt.Errorf("Exchange %s is not supported", id)
 	} else {
 		return ex, nil
 	}

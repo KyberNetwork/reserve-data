@@ -1,7 +1,6 @@
 package exchange
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"math/big"
@@ -70,7 +69,7 @@ func (self *Liqui) CancelOrder(id common.ActivityID) error {
 		return err
 	}
 	if result.Success != 1 {
-		return errors.New("Couldn't cancel order id " + id.EID + " err: " + result.Error)
+		return fmt.Errorf("Couldn't cancel order id " + id.EID + " err: " + result.Error)
 	}
 	return nil
 }
@@ -236,7 +235,7 @@ func (self *Liqui) OrderStatus(id common.ActivityID, timepoint uint64) (string, 
 			}
 			panic("Malformed response from liqui")
 		} else {
-			return "", errors.New(result.Error)
+			return "", fmt.Errorf(result.Error)
 		}
 	}
 }

@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -170,7 +169,7 @@ func (self *Verification) Deposit(
 	}
 	json.Unmarshal(resp_body, &result)
 	if result.Success != true {
-		err = errors.New(fmt.Sprintf("Cannot deposit: %s", result.Reason))
+		err = fmt.Errorf("Cannot deposit: %s", result.Reason)
 	}
 	return result.ID, err
 }
@@ -193,7 +192,7 @@ func (self *Verification) Withdraw(
 	}
 	json.Unmarshal(resp_body, &result)
 	if result.Success != true {
-		err = errors.New(fmt.Sprintf("Cannot withdraw: %s", result.Reason))
+		err = fmt.Errorf("Cannot withdraw: %s", result.Reason)
 	}
 	return result.ID, nil
 }

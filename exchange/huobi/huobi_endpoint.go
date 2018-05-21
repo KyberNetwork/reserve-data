@@ -2,7 +2,6 @@ package huobi
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -132,7 +131,7 @@ func (self *HuobiEndpoint) Trade(tradeType string, base, quote common.Token, rat
 	orderType := tradeType + "-limit"
 	accounts, _ := self.GetAccounts()
 	if len(accounts.Data) == 0 {
-		return result, errors.New("Cannot get account")
+		return result, fmt.Errorf("Cannot get account")
 	}
 	params := map[string]string{
 		"account-id": strconv.FormatUint(accounts.Data[0].ID, 10),
@@ -153,7 +152,7 @@ func (self *HuobiEndpoint) Trade(tradeType string, base, quote common.Token, rat
 	} else {
 		json.Unmarshal(resp_body, &result)
 		if result.Status != "ok" {
-			return result, errors.New(fmt.Sprintf("Create order failed: %s\n", result.Reason))
+			return result, fmt.Errorf("Create order failed: %s\n", result.Reason)
 		}
 		return result, nil
 	}
@@ -175,7 +174,7 @@ func (self *HuobiEndpoint) WithdrawHistory() (exchange.HuobiWithdraws, error) {
 	if err == nil {
 		json.Unmarshal(resp_body, &result)
 		if result.Status != "ok" {
-			err = errors.New(result.Reason)
+			err = fmt.Errorf(result.Reason)
 		}
 	}
 	return result, err
@@ -197,7 +196,7 @@ func (self *HuobiEndpoint) DepositHistory() (exchange.HuobiDeposits, error) {
 	if err == nil {
 		err = json.Unmarshal(resp_body, &result)
 		if result.Status != "ok" {
-			err = errors.New(fmt.Sprintf("Getting deposit history from Huobi failed: %s\n", result.Reason))
+			err = fmt.Errorf("Getting deposit history from Huobi failed: %s\n", result.Reason)
 		}
 	}
 	return result, err
@@ -216,7 +215,7 @@ func (self *HuobiEndpoint) CancelOrder(symbol string, id uint64) (exchange.Huobi
 	if err == nil {
 		json.Unmarshal(resp_body, &result)
 		if result.Status != "ok" {
-			err = errors.New(fmt.Sprintf("Cancel order failed: %s\n", result.Reason))
+			err = fmt.Errorf("Cancel order failed: %s\n", result.Reason)
 		}
 	}
 	return result, err
@@ -235,7 +234,7 @@ func (self *HuobiEndpoint) OrderStatus(symbol string, id uint64) (exchange.Huobi
 	if err == nil {
 		json.Unmarshal(resp_body, &result)
 		if result.Status != "ok" {
-			err = errors.New(fmt.Sprintf("Get order status failed: %s", result.Reason))
+			err = fmt.Errorf("Get order status failed: %s", result.Reason)
 		}
 	}
 	return result, err
@@ -257,13 +256,13 @@ func (self *HuobiEndpoint) Withdraw(token common.Token, amount *big.Int, address
 		json.Unmarshal(resp_body, &result)
 		log.Printf("Response body: %+v\n", result)
 		if result.Status != "ok" {
-			return "", errors.New(fmt.Sprintf("Withdraw from Huobi failed: %s\n", result.Reason))
+			return "", fmt.Errorf("Withdraw from Huobi failed: %s\n", result.Reason)
 		}
 		log.Printf("Withdraw id: %s", fmt.Sprintf("%v", result.ID))
 		return strconv.FormatUint(result.ID, 10), nil
 	} else {
 		log.Printf("Error: %v", err)
-		return "", errors.New("Withdraw rejected by Huobi")
+		return "", fmt.Errorf("Withdraw rejected by Huobi")
 	}
 }
 
@@ -271,7 +270,7 @@ func (self *HuobiEndpoint) GetInfo() (exchange.HuobiInfo, error) {
 	result := exchange.HuobiInfo{}
 	accounts, _ := self.GetAccounts()
 	if len(accounts.Data) == 0 {
-		return result, errors.New("Cannot get account")
+		return result, fmt.Errorf("Cannot get account")
 	}
 	resp_body, err := self.GetResponse(
 		"GET",
@@ -337,7 +336,7 @@ func (self *HuobiEndpoint) GetDepositAddress(asset string) (exchange.HuobiDeposi
 	if err == nil {
 		err = json.Unmarshal(resp_body, &result)
 		if !result.Success {
-			err = errors.New(fmt.Sprintf("Get deposit address failed: %s\n", result.Reason))
+			err = fmt.Errorf("Get deposit address failed: %s\n", result.Reason)
 		}
 	}
 	return result, err

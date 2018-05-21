@@ -2,7 +2,7 @@ package storage
 
 import (
 	"container/list"
-	"errors"
+	"fmt"
 	"sync"
 
 	"github.com/KyberNetwork/reserve-data/common"
@@ -61,7 +61,7 @@ func (self *RamLogStorage) StoreTradeLog(stat common.TradeLog, timepoint uint64)
 	if ele != nil {
 		record := ele.Value.(common.TradeLog)
 		if record.BlockNumber >= stat.BlockNumber {
-			return errors.New("Duplicated log (new block number is smaller or equal to latest block number)")
+			return fmt.Errorf("Duplicated log (new block number is smaller or equal to latest block number)")
 		}
 	}
 	self.records.PushBack(stat)

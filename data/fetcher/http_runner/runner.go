@@ -1,7 +1,6 @@
 package http_runner
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -63,7 +62,7 @@ func (self *HttpRunner) GetReserveRatesTicker() <-chan time.Time {
 
 func (self *HttpRunner) Start() error {
 	if self.server != nil {
-		return errors.New("runner start already")
+		return fmt.Errorf("runner start already")
 	} else {
 		self.server = NewHttpRunnerServer(self, fmt.Sprintf(":%d", self.port))
 		go func() {
@@ -82,7 +81,7 @@ func (self *HttpRunner) Stop() error {
 		self.server = nil
 		return err
 	} else {
-		return errors.New("runner stop already")
+		return fmt.Errorf("runner stop already")
 	}
 }
 

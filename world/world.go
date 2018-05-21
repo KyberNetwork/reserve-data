@@ -2,7 +2,6 @@ package world
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -35,7 +34,7 @@ func (self *TheWorld) getOneForgeGoldInfo() common.OneForgeGoldData {
 	} else {
 		defer resp.Body.Close()
 		if resp.StatusCode != 200 {
-			err = errors.New(fmt.Sprintf("Gold feed returned with code: %d", resp.StatusCode))
+			err = fmt.Errorf("Gold feed returned with code: %d", resp.StatusCode)
 			return common.OneForgeGoldData{
 				Error:   true,
 				Message: err.Error(),
@@ -78,7 +77,7 @@ func (self *TheWorld) getDGXGoldInfo() common.DGXGoldData {
 	} else {
 		defer resp.Body.Close()
 		if resp.StatusCode != 200 {
-			err = errors.New(fmt.Sprintf("Gold feed returned with code: %d", resp.StatusCode))
+			err = fmt.Errorf("Gold feed returned with code: %d", resp.StatusCode)
 			return common.DGXGoldData{
 				Valid: false,
 				Error: err.Error(),

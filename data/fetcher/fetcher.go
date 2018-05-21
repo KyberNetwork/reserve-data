@@ -140,8 +140,7 @@ func (self *Fetcher) FetchRate(timepoint uint64) {
 	} else {
 		if data.Valid {
 			log.Printf("Got rates from blockchain: %+v", data)
-			err = self.storage.StoreRate(data, timepoint)
-			if err != nil {
+			if err = self.storage.StoreRate(data, timepoint); err != nil {
 				log.Printf("Storing rates failed: %s", err.Error())
 			}
 		} else {

@@ -3,7 +3,6 @@ package storage
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -58,7 +57,7 @@ func (self *BoltAnalyticStorage) UpdatePriceAnalyticData(timestamp uint64, value
 		c := b.Cursor()
 		existedKey, _ := c.Seek(k)
 		if existedKey != nil {
-			return errors.New("The timestamp is already existed.")
+			return fmt.Errorf("The timestamp is already existed.")
 		}
 		return b.Put(k, value)
 	})
@@ -78,7 +77,7 @@ func (self *BoltAnalyticStorage) BackupFile(fileName string) error {
 	if intergrity {
 		return os.Remove(fileName)
 	} else {
-		return errors.New("AnalyticPriceData: File uploading corrupted")
+		return fmt.Errorf("AnalyticPriceData: File uploading corrupted")
 	}
 
 	return nil
@@ -131,7 +130,7 @@ func (self *BoltAnalyticStorage) GetPriceAnalyticData(fromTime uint64, toTime ui
 	max := uint64ToBytes(toTime)
 	var result []common.AnalyticPriceResponse
 	if toTime-fromTime > MAX_GET_ANALYTIC_PERIOD {
-		return result, errors.New(fmt.Sprintf("Time range is too broad, it must be smaller or equal to %d miliseconds", MAX_GET_RATES_PERIOD))
+		return result, fmt.Errorf("Time range is too broad, it must be smaller or equal to %d miliseconds", MAX_GET_RATES_PERIOD)
 	}
 
 	err = self.db.View(func(tx *bolt.Tx) error {

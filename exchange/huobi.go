@@ -1,7 +1,6 @@
 package exchange
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"math/big"
@@ -167,7 +166,7 @@ func (self *Huobi) CancelOrder(id, base, quote string) error {
 		return err
 	}
 	if result.Status != "ok" {
-		return errors.New("Couldn't cancel order id " + id)
+		return fmt.Errorf("Couldn't cancel order id " + id)
 	}
 	return nil
 }
@@ -468,7 +467,7 @@ func (self *Huobi) DepositStatus(id common.ActivityID, tx1Hash, currency string,
 			}
 			exchangeAddress, ok := self.addresses.Get(currency)
 			if !ok {
-				return "", errors.New("Wrong token address configuration")
+				return "", fmt.Errorf("Wrong token address configuration")
 			}
 			tx2, err := self.Send2ndTransaction(sentAmount, token, exchangeAddress)
 			if err != nil {
@@ -576,7 +575,7 @@ func (self *Huobi) WithdrawStatus(
 			return "", withdraw.TxHash, nil
 		}
 	}
-	return "", "", errors.New("Withdrawal doesn't exist. This shouldn't happen unless tx returned from withdrawal from huobi and activity ID are not consistently designed")
+	return "", "", fmt.Errorf("Withdrawal doesn't exist. This shouldn't happen unless tx returned from withdrawal from huobi and activity ID are not consistently designed")
 }
 
 func (self *Huobi) OrderStatus(id string, base, quote string) (string, error) {

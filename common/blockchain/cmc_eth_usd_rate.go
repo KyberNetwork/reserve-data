@@ -2,7 +2,7 @@ package blockchain
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -124,7 +124,7 @@ func findEthRate(ethRateLog [][]float64, timepoint uint64) (float64, error) {
 			return ethRate, nil
 		}
 	}
-	return 0, errors.New("Cannot find ether rate corresponding with the timepoint")
+	return 0, fmt.Errorf("Cannot find ether rate corresponding with the timepoint")
 }
 
 func (self *CMCEthUSDRate) RunGetEthRate() {

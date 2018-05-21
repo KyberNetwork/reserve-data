@@ -3,7 +3,6 @@ package storage
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"sync"
 
@@ -71,7 +70,7 @@ func (self *BoltLogStorage) LoadLastCatLog(tx *bolt.Tx) (common.SetCatLog, error
 	k, v := c.Last()
 	record := common.SetCatLog{}
 	if k == nil {
-		return record, errors.New("Database is empty")
+		return record, fmt.Errorf("Database is empty")
 	}
 
 	err := json.Unmarshal(v, &record)
@@ -177,7 +176,7 @@ func (self *BoltLogStorage) GetLastCatLog() (common.SetCatLog, error) {
 		c := b.Cursor()
 		k, v := c.Last()
 		if k == nil {
-			return errors.New("there is no catlog")
+			return fmt.Errorf("there is no catlog")
 		}
 		return json.Unmarshal(v, &result)
 	})
@@ -194,7 +193,7 @@ func (self *BoltLogStorage) GetFirstCatLog() (common.SetCatLog, error) {
 		c := b.Cursor()
 		k, v := c.First()
 		if k == nil {
-			return errors.New("there is no catlog")
+			return fmt.Errorf("there is no catlog")
 		}
 		return json.Unmarshal(v, &result)
 	})
@@ -237,7 +236,7 @@ func (self *BoltLogStorage) GetLastTradeLog() (common.TradeLog, error) {
 		c := b.Cursor()
 		k, v := c.Last()
 		if k == nil {
-			return errors.New("there is no tradelog")
+			return fmt.Errorf("there is no tradelog")
 		}
 		return json.Unmarshal(v, &result)
 	})
@@ -254,7 +253,7 @@ func (self *BoltLogStorage) GetFirstTradeLog() (common.TradeLog, error) {
 		c := b.Cursor()
 		k, v := c.First()
 		if k == nil {
-			return errors.New("there is no tradelog")
+			return fmt.Errorf("there is no tradelog")
 		}
 		return json.Unmarshal(v, &result)
 	})
