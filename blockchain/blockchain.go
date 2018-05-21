@@ -55,6 +55,12 @@ type Blockchain struct {
 
 	localSetRateNonce     uint64
 	setRateNonceTimestamp uint64
+
+	gasOracle *GasOracle
+}
+
+func (self *Blockchain) AddGasOracle(gasOracle *GasOracle) {
+	self.gasOracle = gasOracle
 }
 
 func (self *Blockchain) AddOldNetwork(addr ethereum.Address) {

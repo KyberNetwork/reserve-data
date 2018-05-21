@@ -163,6 +163,8 @@ func serverStart(cmd *cobra.Command, args []string) {
 		nonceDeposit := nonce.NewTimeWindow(config.DepositSigner.GetAddress(), 10000)
 		bc.RegisterPricingOperator(config.BlockchainSigner, nonceCorpus)
 		bc.RegisterDepositOperator(config.DepositSigner, nonceDeposit)
+		gasOracle := blockchain.NewGasOracle()
+		bc.AddGasOracle(gasOracle)
 	}
 
 	// we need to implicitly add old contract addresses to production
