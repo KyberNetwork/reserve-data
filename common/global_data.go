@@ -65,10 +65,11 @@ type GeminiGoldData struct {
 }
 
 type GoldData struct {
-	Timestamp uint64
-	DGX       DGXGoldData
-	OneForge  OneForgeGoldData
-	GDAX      GDAXGoldData
-	Kraken    KrakenGoldData
-	Gemini    GeminiGoldData
+	Timestamp   uint64
+	DGX         DGXGoldData
+	OneForgeETH OneForgeGoldData
+	OneForgeUSD OneForgeGoldData
+	GDAX        GDAXGoldData
+	Kraken      KrakenGoldData
+	Gemini      GeminiGoldData
 }

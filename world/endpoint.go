@@ -7,7 +7,8 @@ import (
 
 type Endpoint interface {
 	GoldDataEndpoint() string
-	BackupGoldDataEndpoint() string
+	OneForgeGoldETHDataEndpoint() string
+	OneForgeGoldUSDDataEndpoint() string
 	GDAXDataEndpoint() string
 	KrakenDataEndpoint() string
 	GeminiDataEndpoint() string
@@ -21,8 +22,12 @@ func (self RealEndpoint) GoldDataEndpoint() string {
 	return "https://datafeed.digix.global/tick/"
 }
 
-func (self RealEndpoint) BackupGoldDataEndpoint() string {
+func (self RealEndpoint) OneForgeGoldETHDataEndpoint() string {
 	return "https://forex.1forge.com/1.0.3/convert?from=XAU&to=ETH&quantity=1&api_key=" + self.OneForgeKey
+}
+
+func (self RealEndpoint) OneForgeGoldUSDDataEndpoint() string {
+	return "https://forex.1forge.com/1.0.3/convert?from=XAU&to=USD&quantity=1&api_key=" + self.OneForgeKey
 }
 
 func (self RealEndpoint) GDAXDataEndpoint() string {
@@ -54,8 +59,12 @@ func (self SimulatedEndpoint) GoldDataEndpoint() string {
 	return "http://simulator:5400/tick"
 }
 
-func (self SimulatedEndpoint) BackupGoldDataEndpoint() string {
+func (self SimulatedEndpoint) OneForgeGoldETHDataEndpoint() string {
 	return "http://simulator:5500/1.0.3/convert?from=XAU&to=ETH&quantity=1&api_key="
+}
+
+func (self SimulatedEndpoint) OneForgeGoldUSDDataEndpoint() string {
+	return ""
 }
 
 func (self SimulatedEndpoint) GDAXDataEndpoint() string {
