@@ -1,10 +1,12 @@
 package storage
 
 import (
+	"encoding/json"
 	"os"
 	"testing"
 
 	"github.com/KyberNetwork/reserve-data/common"
+	"github.com/KyberNetwork/reserve-data/metric"
 )
 
 func TestHasPendingDepositBoltStorage(t *testing.T) {
@@ -47,5 +49,26 @@ func TestHasPendingDepositBoltStorage(t *testing.T) {
 	}
 	if out != true {
 		t.Fatalf("Expected ram storage to return true when there is pending deposit")
+	}
+}
+
+func TestConvertTargetQtyV1toV2(t *testing.T) {
+	// Mock v1 data, just data, other fields does not affected
+	v1Data := metric.TokenTargetQty{
+		Data: "KNC_0.12314_0.427482_0.42348_0.423489|EOS_0.124_0.42342_0.42342_0.4246",
+	}
+	v2Data := convertTargetQtyV1toV2(v1Data)
+	if len(v2Data) != 2 {
+		t.Fatalf("Expected convert from v1 to v2 data with length 2, got length %d", len(v2Data))
+	}
+	for _, data := range v2Data {
+		bytes, err := json.Marshal(data)
+		if err != nil {
+			t.Fatalf("Expected data is a interface of metric TargetQtyStruct")
+		}
+		v2Struct := metric.TargetQtyStruct{}
+		if err := json.Unmarshal(bytes, &v2Struct); err != nil {
+			t.Fatalf("Expected data is a inteface of metric")
+		}
 	}
 }

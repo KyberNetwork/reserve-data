@@ -1398,8 +1398,7 @@ func (self *BoltStorage) GetStableTokenParams() (map[string]interface{}, error) 
 		if record == nil {
 			return nil
 		}
-		vErr := json.Unmarshal(record, &result)
-		if vErr != nil {
+		if vErr := json.Unmarshal(record, &result); vErr != nil {
 			return vErr
 		}
 		return nil
@@ -1521,9 +1520,6 @@ func (self *BoltStorage) GetTargetQtyV2() (map[string]interface{}, error) {
 	result := make(map[string]interface{})
 	err := self.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(TARGET_QUANTITY_V2))
-		if b == nil {
-			return fmt.Errorf("Bucket hasn't exist yet")
-		}
 		k := []byte("current_target_qty")
 		record := b.Get(k)
 		if record == nil {
@@ -1532,11 +1528,10 @@ func (self *BoltStorage) GetTargetQtyV2() (map[string]interface{}, error) {
 		return json.Unmarshal(record, &result)
 	})
 
-	// This block below ís for backward compatible for api v1
+	// This block below is for backward compatible for api v1
 	// when the result is empty it means there is not target quantity is set
 	// we need to get current target quantity from v1 bucket and return it as v2 form.
 	if len(result) == 0 {
-
 		// target qty v1
 		targetQty, err := self.GetTokenTargetQty()
 		if err != nil {
