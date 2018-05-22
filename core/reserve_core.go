@@ -320,7 +320,7 @@ func (self ReserveCore) SetRates(
 					} else {
 						recommendedPrice := self.blockchain.StandardGasPrice()
 						var initPrice *big.Int
-						if recommendedPrice == 0 {
+						if recommendedPrice == 0 || recommendedPrice > HIGH_BOUND_GAS_PRICE {
 							initPrice = common.GweiToWei(10)
 						} else {
 							initPrice = common.GweiToWei(recommendedPrice)
