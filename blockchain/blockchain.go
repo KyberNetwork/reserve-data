@@ -60,10 +60,13 @@ type Blockchain struct {
 }
 
 func (self *Blockchain) StandardGasPrice() float64 {
-	if self.gasOracle == nil {
+	// we use node's recommended gas price because gas station is not returning
+	// correct gas price now
+	price, err := self.RecommendedGasPriceFromNode()
+	if err != nil {
 		return 0
 	}
-	return self.gasOracle.Standard
+	return common.BigToFloat(price, 9)
 }
 
 func (self *Blockchain) FastGasPrice() float64 {
