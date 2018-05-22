@@ -195,6 +195,8 @@ func (self *BinanceEndpoint) GetAccountTradeHistory(
 	}
 	if fromID != "" {
 		params["fromId"] = fromID
+	} else {
+		params["fromId"] = "0"
 	}
 	resp_body, err := self.GetResponse(
 		"GET",

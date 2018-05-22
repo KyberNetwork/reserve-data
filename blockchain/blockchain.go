@@ -56,7 +56,7 @@ type Blockchain struct {
 	localSetRateNonce     uint64
 	setRateNonceTimestamp uint64
 
-	gasOracle *GasOracle
+  gasOracle *GasOracle
 }
 
 func (self *Blockchain) StandardGasPrice() float64 {

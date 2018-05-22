@@ -390,7 +390,7 @@ func (self *Bittrex) FetchOnePairTradeHistory(
 }
 
 func (self *Bittrex) FetchTradeHistory() {
-	t := time.NewTicker(10 * time.Second)
+	t := time.NewTicker(10 * time.Minute)
 	go func() {
 		for {
 			result := map[common.TokenPairID][]common.TradeHistory{}
