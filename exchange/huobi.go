@@ -52,7 +52,7 @@ func (self *Huobi) Address(token common.Token) (ethereum.Address, bool) {
 
 func (self *Huobi) UpdateAllDepositAddresses(address string, timepoint uint64) {
 	data := self.addresses.GetData()
-	for k, _ := range data {
+	for k := range data {
 		self.addresses.Update(k, ethereum.HexToAddress(address))
 	}
 }
@@ -347,21 +347,31 @@ func (self *Huobi) FetchOnePairTradeHistory(
 	data.Store(pairString, result)
 }
 
-func (self *Huobi) FetchTradeHistory(timepoint uint64) (map[common.TokenPairID][]common.TradeHistory, error) {
-	result := map[common.TokenPairID][]common.TradeHistory{}
-	data := sync.Map{}
-	pairs := self.pairs
-	wait := sync.WaitGroup{}
-	for _, pair := range pairs {
-		wait.Add(1)
-		go self.FetchOnePairTradeHistory(&wait, &data, pair)
-	}
-	wait.Wait()
-	data.Range(func(key, value interface{}) bool {
-		result[key.(common.TokenPairID)] = value.([]common.TradeHistory)
-		return true
-	})
-	return result, nil
+func (self *Huobi) FetchTradeHistory() {
+	t := time.NewTicker(10 * time.Minute)
+	go func() {
+		for {
+			result := map[common.TokenPairID][]common.TradeHistory{}
+			data := sync.Map{}
+			pairs := self.pairs
+			wait := sync.WaitGroup{}
+			for _, pair := range pairs {
+				wait.Add(1)
+				go self.FetchOnePairTradeHistory(&wait, &data, pair)
+			}
+			wait.Wait()
+			data.Range(func(key, value interface{}) bool {
+				result[key.(common.TokenPairID)] = value.([]common.TradeHistory)
+				return true
+			})
+			self.storage.StoreTradeHistory(result)
+			<-t.C
+		}
+	}()
+}
+
+func (self *Huobi) GetTradeHistory(fromTime, toTime uint64) (common.ExchangeTradeHistory, error) {
+	return self.storage.GetTradeHistory(fromTime, toTime)
 }
 
 func getDepositInfo(id common.ActivityID) (string, float64, string) {
@@ -612,7 +622,7 @@ func (self *Huobi) WithdrawStatus(
 func (self *Huobi) OrderStatus(id string, base, quote string) (string, error) {
 	orderID, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 	symbol := base + quote
 	order, err := self.interf.OrderStatus(symbol, orderID)
@@ -652,6 +662,7 @@ func NewHuobi(
 		storage,
 		minDeposit,
 	}
+	huobiObj.FetchTradeHistory()
 	huobiServer := huobihttp.NewHuobiHTTPServer(&huobiObj)
 	go huobiServer.Run()
 	return &huobiObj

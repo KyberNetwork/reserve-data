@@ -26,6 +26,7 @@ type HTTPServer struct {
 	core        reserve.ReserveCore
 	stat        reserve.ReserveStats
 	metric      metric.MetricStorage
+	exchanges   []common.Exchange
 	host        string
 	authEnabled bool
 	auth        Authentication
@@ -331,7 +332,7 @@ func (self *HTTPServer) GetRate(c *gin.Context) {
 }
 
 func (self *HTTPServer) SetRate(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{"tokens", "buys", "sells", "block", "afp_mid"}, []Permission{RebalancePermission})
+	postForm, ok := self.Authenticated(c, []string{"tokens", "buys", "sells", "block", "afp_mid", "msgs"}, []Permission{RebalancePermission})
 	if !ok {
 		return
 	}
@@ -340,6 +341,7 @@ func (self *HTTPServer) SetRate(c *gin.Context) {
 	sells := postForm.Get("sells")
 	block := postForm.Get("block")
 	afpMid := postForm.Get("afp_mid")
+	msgs := strings.Split(postForm.Get("msgs"), "-")
 	tokens := []common.Token{}
 	for _, tok := range strings.Split(tokenAddrs, "-") {
 		token, err := common.GetInternalToken(tok)
@@ -400,7 +402,7 @@ func (self *HTTPServer) SetRate(c *gin.Context) {
 			bigAfpMid = append(bigAfpMid, r)
 		}
 	}
-	id, err := self.core.SetRates(tokens, bigBuys, bigSells, big.NewInt(intBlock), bigAfpMid)
+	id, err := self.core.SetRates(tokens, bigBuys, bigSells, big.NewInt(intBlock), bigAfpMid, msgs)
 	if err != nil {
 		c.JSON(
 			http.StatusOK,
@@ -1190,22 +1192,31 @@ func (self *HTTPServer) GetAddress(c *gin.Context) {
 }
 
 func (self *HTTPServer) GetTradeHistory(c *gin.Context) {
-	timepoint := common.GetTimepoint()
 	_, ok := self.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
 	if !ok {
 		return
 	}
-
-	data, err := self.app.GetTradeHistory(timepoint)
-	if err != nil {
-		c.JSON(
-			http.StatusOK,
-			gin.H{
-				"success": false,
-				"data":    err.Error(),
-			},
-		)
+	fromTime, toTime, ok := self.ValidateTimeInput(c)
+	if !ok {
 		return
+	}
+	data := common.AllTradeHistory{
+		Timestamp: common.GetTimestamp(),
+		Data:      map[common.ExchangeID]common.ExchangeTradeHistory{},
+	}
+	for _, ex := range self.exchanges {
+		history, err := ex.GetTradeHistory(fromTime, toTime)
+		if err != nil {
+			c.JSON(
+				http.StatusOK,
+				gin.H{
+					"success": false,
+					"data":    err.Error(),
+				},
+			)
+			return
+		}
+		data.Data[ex.ID()] = history
 	}
 	c.JSON(
 		http.StatusOK,
@@ -2828,6 +2839,7 @@ func NewHTTPServer(
 	core reserve.ReserveCore,
 	stat reserve.ReserveStats,
 	metric metric.MetricStorage,
+	exchanges []common.Exchange,
 	host string,
 	enableAuth bool,
 	authEngine Authentication,
@@ -2854,6 +2866,6 @@ func NewHTTPServer(
 	r.Use(cors.New(corsConfig))
 
 	return &HTTPServer{
-		app, core, stat, metric, host, enableAuth, authEngine, r,
+		app, core, stat, metric, exchanges, host, enableAuth, authEngine, r,
 	}
 }

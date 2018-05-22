@@ -85,7 +85,7 @@ func (self ReserveStats) GetAssetVolume(fromTime, toTime uint64, freq, asset str
 
 	token, err := common.GetNetworkToken(asset)
 	if err != nil {
-		return data, errors.New(fmt.Sprintf("assets %s is not supported", asset))
+		return data, fmt.Errorf("assets %s is not supported", asset)
 	}
 
 	data, err = self.statStorage.GetAssetVolume(fromTime, toTime, freq, ethereum.HexToAddress(token.Address))
@@ -177,7 +177,7 @@ func (self ReserveStats) GetTradeLogs(fromTime uint64, toTime uint64) ([]common.
 	result := []common.TradeLog{}
 
 	if toTime-fromTime > MAX_GET_RATES_PERIOD {
-		return result, errors.New(fmt.Sprintf("Time range is too broad, it must be smaller or equal to %d miliseconds", MAX_GET_RATES_PERIOD))
+		return result, fmt.Errorf("Time range is too broad, it must be smaller or equal to %d miliseconds", MAX_GET_RATES_PERIOD)
 	}
 
 	result, err := self.logStorage.GetTradeLogs(fromTime*1000000, toTime*1000000)
@@ -402,7 +402,7 @@ func (self ReserveStats) GetCapByUser(userID string) (*common.UserCap, error) {
 func isDuplicate(currentRate, latestRate common.ReserveRates) bool {
 	currentData := currentRate.Data
 	latestData := latestRate.Data
-	for key, _ := range currentData {
+	for key := range currentData {
 		if currentData[key].BuyReserveRate != latestData[key].BuyReserveRate ||
 			currentData[key].BuySanityRate != latestData[key].BuySanityRate ||
 			currentData[key].SellReserveRate != latestData[key].SellReserveRate ||

@@ -50,7 +50,7 @@ func (self *Bittrex) GetMinDeposit() common.ExchangesMinDeposit {
 
 func (self *Bittrex) UpdateAllDepositAddresses(address string) {
 	data := self.addresses.GetData()
-	for k, _ := range data {
+	for k := range data {
 		self.addresses.Update(k, ethereum.HexToAddress(address))
 	}
 }
@@ -389,27 +389,41 @@ func (self *Bittrex) FetchOnePairTradeHistory(
 	data.Store(pairString, result)
 }
 
-func (self *Bittrex) FetchTradeHistory(timepoint uint64) (map[common.TokenPairID][]common.TradeHistory, error) {
-	result := map[common.TokenPairID][]common.TradeHistory{}
-	data := sync.Map{}
-	pairs := self.pairs
-	wait := sync.WaitGroup{}
-	for _, pair := range pairs {
-		wait.Add(1)
-		go self.FetchOnePairTradeHistory(&wait, &data, pair, timepoint)
-	}
-	wait.Wait()
-	data.Range(func(key, value interface{}) bool {
-		result[key.(common.TokenPairID)] = value.([]common.TradeHistory)
-		return true
-	})
-	return result, nil
+func (self *Bittrex) FetchTradeHistory() {
+	t := time.NewTicker(10 * time.Minute)
+	go func() {
+		for {
+			result := map[common.TokenPairID][]common.TradeHistory{}
+			timepoint := common.GetTimepoint()
+			data := sync.Map{}
+			pairs := self.pairs
+			wait := sync.WaitGroup{}
+			for _, pair := range pairs {
+				wait.Add(1)
+				go self.FetchOnePairTradeHistory(&wait, &data, pair, timepoint)
+			}
+			wait.Wait()
+			data.Range(func(key, value interface{}) bool {
+				result[key.(common.TokenPairID)] = value.([]common.TradeHistory)
+				return true
+			})
+			self.storage.StoreTradeHistory(result)
+			<-t.C
+		}
+	}()
 }
 
-func NewBittrex(addressConfig map[string]string, feeConfig common.ExchangeFees, interf BittrexInterface, storage BittrexStorage,
+func (self *Bittrex) GetTradeHistory(fromTime, toTime uint64) (common.ExchangeTradeHistory, error) {
+	return self.storage.GetTradeHistory(fromTime, toTime)
+}
+
+func NewBittrex(addressConfig map[string]string,
+	feeConfig common.ExchangeFees,
+	interf BittrexInterface,
+	storage BittrexStorage,
 	minDepositConfig common.ExchangesMinDeposit) *Bittrex {
 	tokens, pairs, fees, minDeposit := getExchangePairsAndFeesFromConfig(addressConfig, feeConfig, minDepositConfig, "bittrex")
-	return &Bittrex{
+	bittrex := &Bittrex{
 		interf,
 		pairs,
 		tokens,
@@ -419,4 +433,6 @@ func NewBittrex(addressConfig map[string]string, feeConfig common.ExchangeFees, 
 		fees,
 		minDeposit,
 	}
+	bittrex.FetchTradeHistory()
+	return bittrex
 }

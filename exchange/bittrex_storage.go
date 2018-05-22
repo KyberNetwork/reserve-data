@@ -10,4 +10,8 @@ import (
 type BittrexStorage interface {
 	IsNewBittrexDeposit(id uint64, actID common.ActivityID) bool
 	RegisterBittrexDeposit(id uint64, actID common.ActivityID) error
+	StoreTradeHistory(data common.ExchangeTradeHistory) error
+
+	GetTradeHistory(fromTime, toTime uint64) (common.ExchangeTradeHistory, error)
+	GetLastIDTradeHistory(exchange, pair string) (string, error)
 }

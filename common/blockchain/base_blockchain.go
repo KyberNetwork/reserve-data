@@ -102,11 +102,11 @@ func (self *BaseBlockchain) SignAndBroadcast(tx *types.Transaction, from string)
 		failures, ok := self.broadcaster.Broadcast(signedTx)
 		log.Printf("Rebroadcasting failures: %s", failures)
 		if !ok {
-			log.Printf("Broadcasting transaction failed!!!!!!!, err: %s, retry failures: %s", err, failures)
+			log.Printf("Broadcasting transaction failed! nonce: %d, gas price: %s, retry failures: %s", tx.Nonce(), tx.GasPrice().Text(10), failures)
 			if signedTx != nil {
-				return signedTx, errors.New(fmt.Sprintf("Broadcasting transaction %s failed, err: %s, retry failures: %s", tx.Hash().Hex(), err, failures))
+				return signedTx, fmt.Errorf("Broadcasting transaction %s failed, retry failures: %s", tx.Hash().Hex(), failures)
 			} else {
-				return signedTx, errors.New(fmt.Sprintf("Broadcasting transaction failed, err: %s, retry failures: %s", err, failures))
+				return signedTx, fmt.Errorf("Broadcasting transaction failed, retry failures: %s", failures)
 			}
 		} else {
 			return signedTx, nil
@@ -278,7 +278,7 @@ func (self *BaseBlockchain) BuildSendERC20Tx(opts TxOpts, amount *big.Int, to et
 		return nil, err
 	}
 	msg := ether.CallMsg{From: opts.Operator.Address, To: &tokenAddress, Value: value, Data: data}
-	timeout, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	timeout, cancel := context.WithTimeout(context.Background(), 7*time.Second)
 	defer cancel()
 	gasLimit, err := self.client.EstimateGas(timeout, msg)
 	if err != nil {
@@ -318,7 +318,7 @@ func (self *BaseBlockchain) TransactionByHash(ctx context.Context, hash ethereum
 	} else if json == nil {
 		return nil, false, ether.NotFound
 	} else if _, r, _ := json.tx.RawSignatureValues(); r == nil {
-		return nil, false, fmt.Errorf("server returned transaction without signature")
+		return nil, false, errors.New("server returned transaction without signature")
 	}
 	setSenderFromServer(json.tx, json.From, json.BlockHash)
 	return json, json.BlockNumber().Cmp(ethereum.Big0) == 0, nil

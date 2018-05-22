@@ -102,7 +102,7 @@ func reverseSeek(timepoint uint64, c *bolt.Cursor) (uint64, error) {
 	if version == nil {
 		version, _ = c.Prev()
 		if version == nil {
-			return 0, errors.New(fmt.Sprintf("There is no data before timepoint %d", timepoint))
+			return 0, fmt.Errorf("There is no data before timepoint %d", timepoint)
 		} else {
 			return bytesToUint64(version), nil
 		}
@@ -113,7 +113,7 @@ func reverseSeek(timepoint uint64, c *bolt.Cursor) (uint64, error) {
 		} else {
 			version, _ = c.Prev()
 			if version == nil {
-				return 0, errors.New(fmt.Sprintf("There is no data before timepoint %d", timepoint))
+				return 0, fmt.Errorf("There is no data before timepoint %d", timepoint)
 			} else {
 				return bytesToUint64(version), nil
 			}
@@ -164,7 +164,7 @@ func (self *BoltStatStorage) PruneOutdatedData(tx *bolt.Tx, bucket string) error
 	for self.GetNumberOfVersion(tx, bucket) >= MAX_NUMBER_VERSION {
 		k, _ := c.First()
 		if k == nil {
-			err = errors.New(fmt.Sprintf("There no version in %s", bucket))
+			err = fmt.Errorf("There no version in %s", bucket)
 			return err
 		}
 		err = b.Delete([]byte(k))

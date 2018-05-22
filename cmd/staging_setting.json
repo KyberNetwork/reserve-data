@@ -246,6 +246,13 @@
       "internal use": true,
       "listed": true
     },
+    "ENJ": {
+      "name": "EnjinCoin",
+      "decimals": 18,
+      "address": "0xf629cbd94d3791c9250152bd8dfbdf380e2a3b9c",
+      "internal use": true,
+      "listed": true
+    },
     "ETH": {
       "name": "Ethereum",
       "decimals": 18,
@@ -274,21 +281,12 @@
       "BQX": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
       "ZIL": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
       "AST": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
-      "LINK": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547"
+      "LINK": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
+      "ENJ":  "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547"
     },
     "huobi": {
       "ETH": "0xb48ee85467bf613a22244084c1a46c2deac18dd0",
       "ABT": "0xb48ee85467bf613a22244084c1a46c2deac18dd0"
-    },
-    "bittrex": {
-      "ETH": "0xe0355aa3cc0a4e0e4b2a70acd90c2fa961f61b23",
-      "OMG": "0xe0355aa3cc0a4e0e4b2a70acd90c2fa961f61b23",
-      "SNT": "0xe0355aa3cc0a4e0e4b2a70acd90c2fa961f61b23",
-      "POWR": "0xe0355aa3cc0a4e0e4b2a70acd90c2fa961f61b23",
-      "MANA": "0xe0355aa3cc0a4e0e4b2a70acd90c2fa961f61b23",
-      "BAT": "0xe0355aa3cc0a4e0e4b2a70acd90c2fa961f61b23",
-      "ENG": "0xe0355aa3cc0a4e0e4b2a70acd90c2fa961f61b23",
-      "SALT": "0xe0355aa3cc0a4e0e4b2a70acd90c2fa961f61b23"
     },
     "stable_exchange": {
       "ETH": "0xFDF28Bf25779ED4cA74e958d54653260af604C20",

@@ -107,12 +107,12 @@ func (self *RamStorage) GetPendingActivities() ([]common.ActivityRecord, error) 
 	return self.activity.GetPendingRecords()
 }
 
-func (self *RamStorage) PendingSetrate(minedNonce uint64) (*common.ActivityRecord, error) {
+func (self *RamStorage) PendingSetrate(minedNonce uint64) (*common.ActivityRecord, uint64, error) {
 	pendings, err := self.GetPendingActivities()
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	} else {
-		return getLastPendingSetrate(pendings, minedNonce)
+		return getLastAndCountPendingSetrate(pendings, minedNonce)
 	}
 }
 

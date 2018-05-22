@@ -18,7 +18,7 @@ type BinanceInterface interface {
 
 	GetDepositAddress(tokenID string) (Binadepositaddress, error)
 
-	GetAccountTradeHistory(base, quote common.Token, fromID uint64) (BinaAccountTradeHistory, error)
+	GetAccountTradeHistory(base, quote common.Token, fromID string) (BinaAccountTradeHistory, error)
 
 	Withdraw(
 		token common.Token,

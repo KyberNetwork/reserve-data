@@ -29,7 +29,6 @@ const (
 	METRIC_BUCKET                      string = "metrics"
 	METRIC_TARGET_QUANTITY             string = "target_quantity"
 	PENDING_TARGET_QUANTITY            string = "pending_target_quantity"
-	TRADE_HISTORY                      string = "trade_history"
 	ENABLE_REBALANCE                   string = "enable_rebalance"
 	SETRATE_CONTROL                    string = "setrate_control"
 	PENDING_PWI_EQUATION               string = "pending_pwi_equation"
@@ -108,10 +107,6 @@ func NewBoltStorage(path string) (*BoltStorage, error) {
 			return err
 		}
 		_, err = tx.CreateBucketIfNotExists([]byte(PENDING_TARGET_QUANTITY))
-		if err != nil {
-			return err
-		}
-		_, err = tx.CreateBucketIfNotExists([]byte(TRADE_HISTORY))
 		if err != nil {
 			return err
 		}
@@ -519,7 +514,10 @@ func (self *BoltStorage) StoreRate(data common.AllRateEntry, timepoint uint64) e
 		c := b.Cursor()
 		_, lastEntry := c.Last()
 		json.Unmarshal(lastEntry, &lastEntryjson)
-		if lastEntryjson.BlockNumber < data.BlockNumber {
+		// we still update when blocknumber is not changed because we want
+		// to update the version and timestamp so api users will get
+		// the newest data even it is identical to the old one.
+		if lastEntryjson.BlockNumber <= data.BlockNumber {
 			dataJson, err = json.Marshal(data)
 			if err != nil {
 				return err
@@ -651,7 +649,8 @@ func getLastPendingSetrate(pendings []common.ActivityRecord, minedNonce uint64) 
 	var maxNonce uint64
 	var maxPrice uint64
 	var result *common.ActivityRecord
-	for _, act := range pendings {
+	var count uint64 = 0
+	for i, act := range pendings {
 		if act.Action == "set_rates" {
 			log.Printf("looking for pending set_rates: %+v", act)
 			var nonce uint64
@@ -675,17 +674,19 @@ func getLastPendingSetrate(pendings []common.ActivityRecord, minedNonce uint64) 
 			if nonce == maxNonce {
 				if gasPrice > maxPrice {
 					maxNonce = nonce
-					result = &act
+					result = &pendings[i]
 					maxPrice = gasPrice
 				}
+				count += 1
 			} else if nonce > maxNonce {
 				maxNonce = nonce
-				result = &act
+				result = &pendings[i]
 				maxPrice = gasPrice
+				count = 1
 			}
 		}
 	}
-	return result, nil
+	return result, count, nil
 }
 
 func (self *BoltStorage) RemoveStalePendingActivities(tx *bolt.Tx, stales []common.ActivityRecord) error {
@@ -699,12 +700,12 @@ func (self *BoltStorage) RemoveStalePendingActivities(tx *bolt.Tx, stales []comm
 	return nil
 }
 
-func (self *BoltStorage) PendingSetrate(minedNonce uint64) (*common.ActivityRecord, error) {
+func (self *BoltStorage) PendingSetrate(minedNonce uint64) (*common.ActivityRecord, uint64, error) {
 	pendings, err := self.GetPendingActivities()
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	} else {
-		return getLastPendingSetrate(pendings, minedNonce)
+		return getLastAndCountPendingSetrate(pendings, minedNonce)
 	}
 }
 
@@ -971,61 +972,6 @@ func (self *BoltStorage) StoreTokenTargetQty(id, data string) error {
 		// remove pending target qty
 		return self.RemovePendingTargetQty()
 	}
-	return err
-}
-
-func (self *BoltStorage) GetTradeHistory(timepoint uint64) (common.AllTradeHistory, error) {
-	result := common.AllTradeHistory{}
-	var err error
-	err = self.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(TRADE_HISTORY))
-		_, data := b.Cursor().First()
-		if data == nil {
-			err = fmt.Errorf("There no data before timepoint %d", timepoint)
-		} else {
-			err = json.Unmarshal(data, &result)
-		}
-		return err
-	})
-	return result, err
-}
-
-func (self *BoltStorage) StoreTradeHistory(data common.AllTradeHistory, timepoint uint64) error {
-	var err error
-	err = self.db.Update(func(tx *bolt.Tx) error {
-		var dataJson []byte
-		b := tx.Bucket([]byte(TRADE_HISTORY))
-		c := b.Cursor()
-		k, v := c.First()
-		currentData := common.AllTradeHistory{
-			Timestamp: common.GetTimestamp(),
-			Data:      map[common.ExchangeID]common.ExchangeTradeHistory{},
-		}
-		if k != nil {
-			json.Unmarshal(v, &currentData)
-		}
-
-		// override old data
-		for exchange, dataHistory := range data.Data {
-			currentDataHistory, exist := currentData.Data[exchange]
-			if !exist {
-				currentData.Data[exchange] = dataHistory
-			} else {
-				for pair, pairHistory := range dataHistory {
-					currentDataHistory[pair] = pairHistory
-				}
-			}
-		}
-		log.Printf("History: %+v", data)
-
-		// add new data
-		dataJson, err = json.Marshal(currentData)
-		if err != nil {
-			return err
-		}
-		idByte := uint64ToBytes(timepoint)
-		return b.Put(idByte, dataJson)
-	})
 	return err
 }
 
@@ -1352,7 +1298,7 @@ func (self *BoltStorage) SetStableTokenParams(value []byte) error {
 			return uErr
 		}
 		if b.Get(k) != nil {
-			return fmt.Errorf("Currently there is a pending record")
+			return errors.New("Currently there is a pending record")
 		}
 		return b.Put(k, value)
 	})
@@ -1369,7 +1315,7 @@ func (self *BoltStorage) ConfirmStableTokenParams(value []byte) error {
 	}
 	pending, err := self.GetPendingStableTokenParams()
 	if eq := reflect.DeepEqual(pending, temp); !eq {
-		return fmt.Errorf("Rejected: confiming data isn't consistent")
+		return errors.New("Rejected: confiming data isn't consistent")
 	}
 
 	err = self.db.Update(func(tx *bolt.Tx) error {
@@ -1392,7 +1338,7 @@ func (self *BoltStorage) GetStableTokenParams() (map[string]interface{}, error) 
 	err := self.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(STABLE_TOKEN_PARAMS_BUCKET))
 		if b == nil {
-			return fmt.Errorf("Bucket hasn't exist yet")
+			return errors.New("Bucket hasn't exist yet")
 		}
 		record := b.Get(k)
 		if record == nil {
@@ -1412,7 +1358,7 @@ func (self *BoltStorage) GetPendingStableTokenParams() (map[string]interface{}, 
 	err := self.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(PENDING_STABLE_TOKEN_PARAMS_BUCKET))
 		if b == nil {
-			return fmt.Errorf("Bucket hasn't exist yet")
+			return errors.New("Bucket hasn't exist yet")
 		}
 		record := b.Get(k)
 		if record == nil {
@@ -1432,11 +1378,11 @@ func (self *BoltStorage) RemovePendingStableTokenParams() error {
 	err := self.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(PENDING_STABLE_TOKEN_PARAMS_BUCKET))
 		if b == nil {
-			return fmt.Errorf("Bucket hasn't existed yet")
+			return errors.New("Bucket hasn't existed yet")
 		}
 		record := b.Get(k)
 		if record == nil {
-			return fmt.Errorf("Bucket is empty")
+			return errors.New("Bucket is empty")
 		}
 		return b.Delete(k)
 	})

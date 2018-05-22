@@ -107,6 +107,10 @@ func (self *StableEx) FetchEBalanceData(timepoint uint64) (common.EBalanceEntry,
 	return result, nil
 }
 
+func (self *StableEx) GetTradeHistory(fromTime, toTime uint64) (common.ExchangeTradeHistory, error) {
+	return common.ExchangeTradeHistory{}, nil
+}
+
 func (self *StableEx) FetchTradeHistory(timepoint uint64) (map[common.TokenPairID][]common.TradeHistory, error) {
 	result := map[common.TokenPairID][]common.TradeHistory{}
 	// TODO: get trade history

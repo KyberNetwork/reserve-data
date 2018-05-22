@@ -76,7 +76,6 @@ func (self *Fetcher) Run() error {
 	go self.RunAuthDataFetcher()
 	go self.RunRateFetcher()
 	go self.RunBlockFetcher()
-	go self.RunTradeHistoryFetcher()
 	go self.RunGlobalDataFetcher()
 	log.Printf("Fetcher runner is running...")
 	return nil
@@ -136,13 +135,16 @@ func (self *Fetcher) FetchRate(timepoint uint64) {
 		data, err = self.blockchain.FetchRates(self.currentBlock-1, self.currentBlock)
 	}
 	if err != nil {
-		log.Printf("Fetching rates from blockchain failed: %s", err.Error())
-	}
-	log.Printf("Got rates from blockchain: %+v", data)
-	err = self.storage.StoreRate(data, timepoint)
-	// fmt.Printf("balance data: %v\n", data)
-	if err != nil {
-		log.Printf("Storing rates failed: %s", err.Error())
+		log.Printf("Fetching rates from blockchain failed: %s. Will not store it to storage.", err.Error())
+	} else {
+		if data.Valid {
+			log.Printf("Got rates from blockchain: %+v", data)
+			if err = self.storage.StoreRate(data, timepoint); err != nil {
+				log.Printf("Storing rates failed: %s", err.Error())
+			}
+		} else {
+			log.Printf("Got invalid rates from blockchain: %s. Will not store it to storage.", data.Error)
+		}
 	}
 }
 
@@ -209,54 +211,6 @@ func (self *Fetcher) FetchAllAuthData(timepoint uint64) {
 	if err != nil {
 		log.Printf("Storing exchange balances failed: %s\n", err)
 		return
-	}
-}
-
-func (self *Fetcher) FetchTradeHistoryFromExchange(
-	wait *sync.WaitGroup,
-	exchange Exchange,
-	data *sync.Map,
-	timepoint uint64) {
-
-	defer wait.Done()
-	tradeHistory, err := exchange.FetchTradeHistory(timepoint)
-	if err != nil {
-		log.Printf("Fetch trade history from exchange failed: %s", err.Error())
-	}
-	data.Store(exchange.ID(), tradeHistory)
-}
-
-func (self *Fetcher) FetchAllTradeHistory(timepoint uint64) {
-	tradeHistory := common.NewAllTradeHistory(
-		common.GetTimestamp(),
-		map[common.ExchangeID]common.ExchangeTradeHistory{},
-	)
-	wait := sync.WaitGroup{}
-	data := sync.Map{}
-	for _, exchange := range self.exchanges {
-		wait.Add(1)
-		go self.FetchTradeHistoryFromExchange(&wait, exchange, &data, timepoint)
-	}
-
-	wait.Wait()
-	data.Range(func(key, value interface{}) bool {
-		tradeHistory.Data[key.(common.ExchangeID)] = value.(map[common.TokenPairID][]common.TradeHistory)
-		return true
-	})
-
-	err := self.storage.StoreTradeHistory(tradeHistory, timepoint)
-	if err != nil {
-		log.Printf("Store trade history failed: %s", err.Error())
-	}
-}
-
-func (self *Fetcher) RunTradeHistoryFetcher() {
-	for {
-		log.Printf("waiting for signal from runner trade history channel")
-		t := <-self.runner.GetTradeHistoryTicker()
-		log.Printf("got signal in trade history channel with timestamp %d", common.TimeToTimepoint(t))
-		self.FetchAllTradeHistory(common.TimeToTimepoint(t))
-		log.Printf("fetched trade history from exchanges")
 	}
 }
 
@@ -539,7 +493,9 @@ func (self *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []commo
 				orderID := id.EID
 				base := activity.Params["base"].(string)
 				quote := activity.Params["quote"].(string)
-				status, err = exchange.OrderStatus(orderID, base, quote)
+				// we ignore error of order status because it doesn't affect
+				// authdata. Analytic will ignore order status anyway.
+				status, _ = exchange.OrderStatus(orderID, base, quote)
 			} else if activity.Action == "deposit" {
 				txHash := activity.Result["tx"].(string)
 				amountStr := activity.Params["amount"].(string)

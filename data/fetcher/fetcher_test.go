@@ -92,7 +92,10 @@ func TestExchangeDown(t *testing.T) {
 		log.Fatal(err.Error())
 	}
 	defer os.Remove(tmpDir)
-	runner := http_runner.NewHttpRunner(9000)
+	runner, err := http_runner.NewHttpRunner(http_runner.WithHttpRunnerPort(9000))
+	if err != nil {
+		t.Fatal(err)
+	}
 	fetcher := NewFetcher(fstorage, fstorage, &world.TheWorld{}, runner, ethereum.Address{}, true)
 
 	// mock normal data
