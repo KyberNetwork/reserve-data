@@ -59,6 +59,27 @@ type Blockchain struct {
 	gasOracle *GasOracle
 }
 
+func (self *Blockchain) StandardGasPrice() float64 {
+	if self.gasOracle == nil {
+		return 0
+	}
+	return self.gasOracle.Standard
+}
+
+func (self *Blockchain) FastGasPrice() float64 {
+	if self.gasOracle == nil {
+		return 0
+	}
+	return self.gasOracle.Fast
+}
+
+func (self *Blockchain) SafeLowGasPrice() float64 {
+	if self.gasOracle == nil {
+		return 0
+	}
+	return self.gasOracle.SafeLow
+}
+
 func (self *Blockchain) AddGasOracle(gasOracle *GasOracle) {
 	self.gasOracle = gasOracle
 }

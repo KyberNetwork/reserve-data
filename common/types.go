@@ -3,6 +3,7 @@ package common
 import (
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -112,7 +113,7 @@ func (self *ExchangeInfo) Get(pair TokenPairID) (ExchangePrecisionLimit, error) 
 	if info, exist := self.data[pair]; exist {
 		return info, nil
 	} else {
-		return info, fmt.Errorf("Token pair is not existed")
+		return info, errors.New("Token pair is not existed")
 	}
 }
 
@@ -247,7 +248,7 @@ func StringToActivityID(id string) (ActivityID, error) {
 	result := ActivityID{}
 	parts := strings.Split(id, "|")
 	if len(parts) < 2 {
-		return result, fmt.Errorf("Invalid activity id")
+		return result, errors.New("Invalid activity id")
 	} else {
 		timeStr := parts[0]
 		eid := strings.Join(parts[1:], "|")
