@@ -1467,8 +1467,7 @@ func (self *BoltStorage) GetPendingTargetQtyV2() (map[string]interface{}, error)
 		k := []byte("current_pending_target_qty")
 		record := b.Get(k)
 		if record != nil {
-			vErr := json.Unmarshal(record, &result)
-			if vErr != nil {
+			if vErr := json.Unmarshal(record, &result); vErr != nil {
 				return vErr
 			}
 		}
