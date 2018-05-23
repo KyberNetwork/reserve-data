@@ -64,17 +64,17 @@ func (self SimulatedEndpoint) OneForgeGoldETHDataEndpoint() string {
 }
 
 func (self SimulatedEndpoint) OneForgeGoldUSDDataEndpoint() string {
-	return ""
+	return "http://simulator:5500/1.0.3/convert?from=XAU&to=USD&quantity=1&api_key="
 }
 
 func (self SimulatedEndpoint) GDAXDataEndpoint() string {
-	return ""
+	return "http://simulator:5600/products/eth-usd/ticker"
 }
 
 func (self SimulatedEndpoint) KrakenDataEndpoint() string {
-	return ""
+	return "http://simulator:5700/0/public/Ticker?pair=ETHUSD"
 }
 
 func (self SimulatedEndpoint) GeminiDataEndpoint() string {
-	return ""
+	return "http://simulator:5800/v1/pubticker/ethusd"
 }

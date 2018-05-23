@@ -18,87 +18,61 @@ import (
 func TestUnchangedFunc(t *testing.T) {
 	// test different len
 	a1 := map[common.ActivityID]common.ActivityStatus{
-		{1, "1"}: {
-			"done", "0x123", 0, "mined", nil,
-		},
+		common.NewActivityID(1, "1"): common.NewActivityStatus("done", "0x123", 0, "mined", nil),
 	}
 	b1 := map[common.ActivityID]common.ActivityStatus{
-		{1, "1"}: {
-			"done", "0x123", 0, "mined", nil,
-		},
-		{2, "1"}: {
-			"done", "0x123", 0, "mined", nil,
-		},
+		common.NewActivityID(1, "1"): common.NewActivityStatus("done", "0x123", 0, "mined", nil),
+		common.NewActivityID(2, "1"): common.NewActivityStatus("done", "0x123", 0, "mined", nil),
 	}
 	if unchanged(a1, b1) != false {
 		t.Fatalf("Expected unchanged() to return false, got true")
 	}
 	// test different id
 	a1 = map[common.ActivityID]common.ActivityStatus{
-		{1, "1"}: {
-			"done", "0x123", 0, "mined", nil,
-		},
+		common.NewActivityID(1, "1"): common.NewActivityStatus("done", "0x123", 0, "mined", nil),
 	}
 	b1 = map[common.ActivityID]common.ActivityStatus{
-		{2, "1"}: {
-			"done", "0x123", 0, "mined", nil,
-		},
+		common.NewActivityID(2, "1"): common.NewActivityStatus("done", "0x123", 0, "mined", nil),
 	}
 	if unchanged(a1, b1) != false {
 		t.Fatalf("Expected unchanged() to return false, got true")
 	}
 	// test different exchange status
 	a1 = map[common.ActivityID]common.ActivityStatus{
-		{1, "1"}: {
-			"", "0x123", 0, "mined", nil,
-		},
+		common.NewActivityID(1, "1"): common.NewActivityStatus("", "0x123", 0, "mined", nil),
 	}
 	b1 = map[common.ActivityID]common.ActivityStatus{
-		{1, "1"}: {
-			"done", "0x123", 0, "mined", nil,
-		},
+		common.NewActivityID(1, "1"): common.NewActivityStatus("done", "0x123", 0, "mined", nil),
 	}
 	if unchanged(a1, b1) != false {
 		t.Fatalf("Expected unchanged() to return false, got true")
 	}
 	// test different mining status
 	a1 = map[common.ActivityID]common.ActivityStatus{
-		{1, "1"}: {
-			"done", "0x123", 0, "mined", nil,
-		},
+		common.NewActivityID(1, "1"): common.NewActivityStatus("done", "0x123", 0, "mined", nil),
 	}
 	b1 = map[common.ActivityID]common.ActivityStatus{
-		{1, "1"}: {
-			"done", "0x123", 0, "", nil,
-		},
+		common.NewActivityID(1, "1"): common.NewActivityStatus("done", "0x123", 0, "", nil),
 	}
 	if unchanged(a1, b1) != false {
 		t.Fatalf("Expected unchanged() to return false, got true")
 	}
 	// test different tx
 	a1 = map[common.ActivityID]common.ActivityStatus{
-		{1, "1"}: {
-			"done", "0x123", 0, "mined", nil,
-		},
+		common.NewActivityID(1, "1"): common.NewActivityStatus("done", "0x123", 0, "mined", nil),
 	}
 	b1 = map[common.ActivityID]common.ActivityStatus{
-		{1, "1"}: {
-			"done", "0x124", 0, "mined", nil,
-		},
+		common.NewActivityID(1, "1"): common.NewActivityStatus("done", "0x124", 0, "mined", nil),
 	}
 	if unchanged(a1, b1) != false {
 		t.Fatalf("Expected unchanged() to return false, got true")
 	}
 	// test identical statuses
 	a1 = map[common.ActivityID]common.ActivityStatus{
-		{1, "1"}: {
-			"done", "0x123", 0, "mined", nil,
-		},
+		common.NewActivityID(1, "1"): common.NewActivityStatus("done", "0x123", 0, "mined", nil),
 	}
 	b1 = map[common.ActivityID]common.ActivityStatus{
-		{1, "1"}: {
-			"done", "0x123", 0, "mined", nil,
-		},
+		common.NewActivityID(1, "1"): common.NewActivityStatus("done", "0x123", 0, "mined", nil),
 	}
 	if unchanged(a1, b1) != true {
 		t.Fatalf("Expected unchanged() to return true, got false")
@@ -118,7 +92,10 @@ func TestExchangeDown(t *testing.T) {
 		log.Fatal(err.Error())
 	}
 	defer os.Remove(tmpDir)
-	runner := http_runner.NewHttpRunner(9000)
+	runner, err := http_runner.NewHttpRunner(http_runner.WithHttpRunnerPort(9000))
+	if err != nil {
+		t.Fatal(err)
+	}
 	fetcher := NewFetcher(fstorage, fstorage, &world.TheWorld{}, runner, ethereum.Address{}, true)
 
 	// mock normal data

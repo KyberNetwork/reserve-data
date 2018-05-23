@@ -2,5 +2,15 @@ go_import_path: github.com/KyberNetwork/reserve-data
 
 language: go
 
+before_install:
+  - go get -u github.com/alecthomas/gometalinter
+  - gometalinter --install
+  - go get github.com/mattn/goveralls
+
+script:
+  - gometalinter --config=gometalinter.json ./...
+  - go test -v ./...
+  - $GOPATH/bin/goveralls -v -service=travis-ci
+
 go:
   - "1.10.x"

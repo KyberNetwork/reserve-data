@@ -50,7 +50,7 @@ func (self *Bittrex) GetMinDeposit() common.ExchangesMinDeposit {
 
 func (self *Bittrex) UpdateAllDepositAddresses(address string) {
 	data := self.addresses.GetData()
-	for k, _ := range data {
+	for k := range data {
 		self.addresses.Update(k, ethereum.HexToAddress(address))
 	}
 }
@@ -87,8 +87,8 @@ func (self *Bittrex) GetExchangeInfo(pair common.TokenPairID) (common.ExchangePr
 	return pairInfo, err
 }
 
-func (self *Bittrex) GetInfo() (common.ExchangeInfo, error) {
-	return *self.exchangeInfo, nil
+func (self *Bittrex) GetInfo() (*common.ExchangeInfo, error) {
+	return self.exchangeInfo, nil
 }
 
 func (self *Bittrex) UpdatePairsPrecision() {
@@ -281,19 +281,19 @@ func (self *Bittrex) FetchOnePairData(wq *sync.WaitGroup, pair common.TokenPair,
 			for _, buy := range onePairData.Result["buy"] {
 				result.Bids = append(
 					result.Bids,
-					common.PriceEntry{
+					common.NewPriceEntry(
 						buy["Quantity"],
 						buy["Rate"],
-					},
+					),
 				)
 			}
 			for _, sell := range onePairData.Result["sell"] {
 				result.Asks = append(
 					result.Asks,
-					common.PriceEntry{
+					common.NewPriceEntry(
 						sell["Quantity"],
 						sell["Rate"],
-					},
+					),
 				)
 			}
 		}
@@ -376,13 +376,13 @@ func (self *Bittrex) FetchOnePairTradeHistory(
 		if trade.OrderType == "LIMIT_BUY" {
 			historyType = "buy"
 		}
-		tradeHistory := common.TradeHistory{
+		tradeHistory := common.NewTradeHistory(
 			trade.OrderUuid,
 			trade.Price,
 			trade.Quantity,
 			historyType,
 			common.TimeToTimepoint(t),
-		}
+		)
 		result = append(result, tradeHistory)
 	}
 	pairString := pair.PairID()

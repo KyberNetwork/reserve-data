@@ -26,12 +26,11 @@ func (self *GasOracle) GasPricing() {
 	ticker := time.NewTicker(10 * time.Second)
 	go func() {
 		for {
-			err := self.RunGasPricing()
-			if err != nil {
+			if err := self.RunGasPricing(); err != nil {
 				log.Printf("Error pricing gas from Gasstation: %v", err)
 			}
+			<-ticker.C
 		}
-		<-ticker.C
 	}()
 }
 

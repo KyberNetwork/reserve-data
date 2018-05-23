@@ -1,4 +1,4 @@
-package stat
+package statpruner
 
 import (
 	"fmt"
@@ -20,8 +20,8 @@ func (self *ControllerRunnerTest) TestAnalyticStorageControlTicker(nanosec int64
 	startTime := time.Now()
 	t := <-self.cr.GetAnalyticStorageControlTicker()
 	timeTook := t.Sub(startTime).Nanoseconds()
-	upperRange := nanosec + nanosec/2
-	lowerRange := nanosec - nanosec/2
+	upperRange := nanosec + 5*time.Millisecond.Nanoseconds()
+	lowerRange := nanosec - 5*time.Millisecond.Nanoseconds()
 	if timeTook < lowerRange || timeTook > upperRange {
 		return fmt.Errorf("expect ticker in between %d and %d nanosec, but it came in %d instead", lowerRange, upperRange, timeTook)
 	}

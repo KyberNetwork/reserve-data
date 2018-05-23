@@ -302,6 +302,10 @@
       "ETH": "0x0c8fd73eaf6089ef1b91231d0a07d0d2ca2b9d66",
       "ABT": "0x0c8fd73eaf6089ef1b91231d0a07d0d2ca2b9d66"
     },
+    "huobi": {
+      "ETH": "0x0c8fd73eaf6089ef1b91231d0a07d0d2ca2b9d66",
+      "ABT": "0x0c8fd73eaf6089ef1b91231d0a07d0d2ca2b9d66"
+    },
     "stable_exchange": {
       "ETH": "0xFDF28Bf25779ED4cA74e958d54653260af604C20",
       "DGX": "0xFDF28Bf25779ED4cA74e958d54653260af604C20"

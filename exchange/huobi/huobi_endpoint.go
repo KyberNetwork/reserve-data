@@ -67,7 +67,7 @@ func (self *HuobiEndpoint) GetResponse(
 		params["Timestamp"] = timestamp
 	}
 	var sortedParams []string
-	for k, _ := range params {
+	for k := range params {
 		sortedParams = append(sortedParams, k)
 	}
 	sort.Strings(sortedParams)

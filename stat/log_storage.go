@@ -18,4 +18,6 @@ type LogStorage interface {
 	UpdateLogBlock(block uint64, timepoint uint64) error
 	MaxRange() uint64
 	LastBlock() (uint64, error)
+	LoadLastTradeLogIndex() (block uint64, index uint, err error)
+	LoadLastCatLogIndex() (block uint64, index uint, err error)
 }

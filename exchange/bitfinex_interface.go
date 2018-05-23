@@ -9,7 +9,6 @@ import (
 )
 
 type BitfinexInterface interface {
-
 	GetInfo() (Bitfinfo, error)
 
 	FetchOnePairData(

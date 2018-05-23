@@ -36,8 +36,8 @@ func (self TestExchange) GetFee() ExchangeFees {
 func (self TestExchange) GetMinDeposit() ExchangesMinDeposit {
 	return ExchangesMinDeposit{}
 }
-func (self TestExchange) GetInfo() (ExchangeInfo, error) {
-	return ExchangeInfo{}, nil
+func (self TestExchange) GetInfo() (*ExchangeInfo, error) {
+	return &ExchangeInfo{}, nil
 }
 func (self TestExchange) TokenAddresses() map[string]ethereum.Address {
 	return map[string]ethereum.Address{}

@@ -179,19 +179,19 @@ func (self *Liqui) FetchPriceData(timepoint uint64) (map[common.TokenPairID]comm
 			for _, buy := range one_data["bids"] {
 				one_pair_result.Bids = append(
 					one_pair_result.Bids,
-					common.PriceEntry{
+					common.NewPriceEntry(
 						buy[1],
 						buy[0],
-					},
+					),
 				)
 			}
 			for _, sell := range one_data["asks"] {
 				one_pair_result.Asks = append(
 					one_pair_result.Asks,
-					common.PriceEntry{
+					common.NewPriceEntry(
 						sell[1],
 						sell[0],
-					},
+					),
 				)
 			}
 			result[pair.PairID()] = one_pair_result
