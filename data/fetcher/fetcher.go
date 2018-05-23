@@ -319,12 +319,34 @@ func (self *Fetcher) FetchBalanceFromBlockchain() (map[string]common.BalanceEntr
 	return self.blockchain.FetchBalanceData(self.rmaddr, 0)
 }
 
+func (self *Fetcher) newNonceValidator() func(common.ActivityRecord) bool {
+	// SetRateMinedNonce might be slow, use closure to not invoke it every time
+	minedNonce, err := self.blockchain.SetRateMinedNonce()
+	if err != nil {
+		log.Printf("Getting mined nonce failed: %s", err)
+	}
+
+	return func(act common.ActivityRecord) bool {
+		// this check only works with set rate transaction as:
+		//   - account nonce is record in result field of activity
+		//   - the SetRateMinedNonce method is available
+		if act.Action != "set_rates" {
+			return false
+		}
+
+		actNonce := act.Result["nonce"]
+		if actNonce == nil {
+			return false
+		}
+		nonce, _ := strconv.ParseUint(actNonce.(string), 10, 64)
+		return nonce < minedNonce
+	}
+}
+
 func (self *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord) map[common.ActivityID]common.ActivityStatus {
 	result := map[common.ActivityID]common.ActivityStatus{}
-	minedNonce, nerr := self.blockchain.SetRateMinedNonce()
-	if nerr != nil {
-		log.Printf("Getting mined nonce failed: %s", nerr)
-	}
+	nonceValidator := self.newNonceValidator()
+
 	for _, activity := range pendings {
 		if activity.IsBlockchainPending() && (activity.Action == "set_rates" || activity.Action == "deposit" || activity.Action == "withdraw") {
 			var blockNum uint64
@@ -340,20 +362,14 @@ func (self *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord)
 			}
 			switch status {
 			case "":
-				if activity.Action == "set_rates" {
-					actNonce := activity.Result["nonce"]
-					if actNonce != nil {
-						nonce, _ := strconv.ParseUint(actNonce.(string), 10, 64)
-						if nonce < minedNonce {
-							result[activity.ID] = common.ActivityStatus{
-								activity.ExchangeStatus,
-								activity.Result["tx"].(string),
-								blockNum,
-								"failed",
-								err,
-							}
-						}
-					}
+				if nonceValidator(activity) {
+					result[activity.ID] = common.NewActivityStatus(
+						activity.ExchangeStatus,
+						activity.Result["tx"].(string),
+						blockNum,
+						"failed",
+						err,
+					)
 				}
 			case "mined":
 				result[activity.ID] = common.ActivityStatus{
@@ -372,10 +388,24 @@ func (self *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord)
 					err,
 				}
 			case "lost":
-				elapsed := common.GetTimepoint() - activity.Timestamp.ToUint64()
-				if elapsed > uint64(15*time.Minute/time.Millisecond) {
-					log.Printf("Fetcher tx status: tx(%s) is lost, elapsed time: %d", activity.Result["tx"].(string), elapsed)
-					result[activity.ID] = common.ActivityStatus{
+				var (
+					// expiredDuration is the amount of time after that if a transaction doesn't appear,
+					// it is considered failed
+					expiredDuration = 15 * time.Minute
+					txFailed        = false
+				)
+				if nonceValidator(activity) {
+					txFailed = true
+				} else {
+					elapsed := common.GetTimepoint() - activity.Timestamp.ToUint64()
+					if elapsed > uint64(expiredDuration/time.Millisecond) {
+						log.Printf("Fetcher tx status: tx(%s) is lost, elapsed time: %d", activity.Result["tx"].(string), elapsed)
+						txFailed = true
+					}
+				}
+
+				if txFailed {
+					result[activity.ID] = common.NewActivityStatus(
 						activity.ExchangeStatus,
 						activity.Result["tx"].(string),
 						blockNum,
