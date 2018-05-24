@@ -1,6 +1,8 @@
 package exchange
 
 import (
+	"log"
+
 	"github.com/KyberNetwork/reserve-data/common"
 )
 
@@ -13,11 +15,11 @@ func getExchangePairsAndFeesFromConfig(
 	tokens := []common.Token{}
 	pairs := []common.TokenPair{}
 	fees := common.ExchangeFees{
-		feeConfig.Trading,
-		common.FundingFee{
+		Trading: feeConfig.Trading,
+		Funding: common.NewFundingFee(
 			map[string]float64{},
 			map[string]float64{},
-		},
+		),
 	}
 	minDeposit := common.ExchangesMinDeposit{}
 	for tokenID := range addressConfig {
@@ -36,6 +38,7 @@ func getExchangePairsAndFeesFromConfig(
 		} else {
 			panic(tokenID + " is not found in " + exchange + " binance deposit fee config file")
 		}
+		log.Printf("minDepositConfig: %v", minDepositConfig)
 		if _, exist := minDepositConfig[tokenID]; exist {
 			minDeposit[tokenID] = minDepositConfig[tokenID] * 2
 		} else {

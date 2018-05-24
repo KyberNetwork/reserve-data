@@ -335,8 +335,8 @@ func (self ReserveCore) SetRates(
 		common.GetTimepoint(),
 	)
 	log.Printf(
-		"Core ----------> Set rates: ==> Result: tx: %s, error: %s",
-		txhex, err,
+		"Core ----------> Set rates: ==> Result: tx: %s, nonce: %s, price: %s, error: %s",
+		txhex, txnonce, txprice, err,
 	)
 	return uid, err
 }

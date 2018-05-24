@@ -176,7 +176,7 @@ func (self *BaseBlockchain) transactTx(context context.Context, opts TxOpts, con
 		return nil, errors.New("gas price must be specified")
 	}
 	gasLimit := opts.GasLimit
-	if gasLimit == nil {
+	if gasLimit == 0 {
 		// Gas estimation cannot succeed without code for method invocations
 		if contract.Big().Cmp(ethereum.Big0) == 0 {
 			if code, err := self.client.PendingCodeAt(ensureContext(context), contract); err != nil {
@@ -192,7 +192,7 @@ func (self *BaseBlockchain) transactTx(context context.Context, opts TxOpts, con
 			return nil, fmt.Errorf("failed to estimate gas needed: %v", err)
 		}
 		// add gas limit by 50K gas
-		gasLimit.Add(gasLimit, big.NewInt(50000))
+		gasLimit += 50000
 	}
 	// Create the transaction, sign it and schedule it for execution
 	var rawTx *types.Transaction
@@ -232,7 +232,7 @@ func (self *BaseBlockchain) GetTxOpts(op string, nonce *big.Int, gasPrice *big.I
 	result.Nonce = nonce
 	result.Value = value
 	result.GasPrice = gasPrice
-	result.GasLimit = nil
+	result.GasLimit = 0
 	return result, nil
 }
 
@@ -285,7 +285,7 @@ func (self *BaseBlockchain) BuildSendERC20Tx(opts TxOpts, amount *big.Int, to et
 		log.Printf("Cannot estimate gas limit: %v", err)
 		return nil, err
 	}
-	gasLimit.Add(gasLimit, big.NewInt(50000))
+	gasLimit += 50000
 	rawTx := types.NewTransaction(nonce, tokenAddress, value, gasLimit, opts.GasPrice, data)
 	return rawTx, nil
 }
@@ -305,7 +305,7 @@ func (self *BaseBlockchain) BuildSendETHTx(opts TxOpts, to ethereum.Address) (*t
 	if opts.GasPrice == nil {
 		return nil, errors.New("gas price must be specified")
 	}
-	gasLimit := big.NewInt(50000)
+	gasLimit := uint64(50000)
 	rawTx := types.NewTransaction(nonce, to, value, gasLimit, opts.GasPrice, nil)
 	return rawTx, nil
 }

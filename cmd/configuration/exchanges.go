@@ -61,7 +61,11 @@ func NewExchangePool(
 	for _, exparam := range exparams {
 		switch exparam {
 		case "stable_exchange":
-			stableEx := exchange.NewStableEx(addressConfig.Exchanges["dgx"], feeConfig.Exchanges["dgx"])
+			stableEx := exchange.NewStableEx(
+				addressConfig.Exchanges["stable_exchange"],
+				feeConfig.Exchanges["stable_exchange"],
+				minDeposit.Exchanges["stable_exchange"],
+			)
 			exchanges[stableEx.ID()] = stableEx
 		case "bittrex":
 			bittrexSigner := bittrex.NewSignerFromFile(settingPaths.secretPath)
@@ -96,7 +100,7 @@ func NewExchangePool(
 			endpoint := huobi.NewHuobiEndpoint(huobiSigner, getHuobiInterface(kyberENV))
 			storage, err := huobi.NewBoltStorage("/go/src/github.com/KyberNetwork/reserve-data/cmd/huobi.db")
 			intermediatorSigner := HuobiIntermediatorSignerFromFile(settingPaths.secretPath)
-			intermediatorNonce := nonce.NewTimeWindow(intermediatorSigner.GetAddress())
+			intermediatorNonce := nonce.NewTimeWindow(intermediatorSigner.GetAddress(), 10000)
 			if err != nil {
 				panic(err)
 			}

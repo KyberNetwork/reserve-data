@@ -23,7 +23,7 @@ func NonKycedCap() *UserCap {
 func KycedCap() *UserCap {
 	return &UserCap{
 		Category:   "",
-		DailyLimit: 50000.0,
+		DailyLimit: 200000.0,
 		TxLimit:    6000.0,
 		Type:       "kyced",
 	}

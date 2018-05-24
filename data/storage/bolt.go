@@ -7,10 +7,12 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"reflect"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/metric"
@@ -18,8 +20,6 @@ import (
 )
 
 const (
-	GOLD_BUCKET string = "gold_feeds"
-
 	PRICE_BUCKET                       string = "prices"
 	RATE_BUCKET                        string = "rates"
 	ORDER_BUCKET                       string = "orders"
@@ -39,8 +39,12 @@ const (
 	EXCHANGE_NOTIFICATIONS             string = "exchange_notifications"
 	MAX_NUMBER_VERSION                 int    = 1000
 	MAX_GET_RATES_PERIOD               uint64 = 86400000 //1 days in milisec
+	UI64DAY                            uint64 = uint64(time.Hour * 24)
+	EXPORT_BATCH                       int    = 1
+	AUTH_DATA_EXPIRED_DURATION         uint64 = 10 * 86400000 //10day in milisec
 	STABLE_TOKEN_PARAMS_BUCKET         string = "stable-token-params"
 	PENDING_STABLE_TOKEN_PARAMS_BUCKET string = "pending-stable-token-params"
+	GOLD_BUCKET                        string = "gold_feeds"
 )
 
 type BoltStorage struct {
@@ -225,6 +229,90 @@ func (self *BoltStorage) StoreGoldInfo(data common.GoldData) error {
 	return err
 }
 
+func (self *BoltStorage) ExportExpiredAuthData(currentTime uint64, fileName string) (nRecord uint64, err error) {
+	expiredTimestampByte := uint64ToBytes(currentTime - AUTH_DATA_EXPIRED_DURATION)
+	outFile, err := os.Create(fileName)
+	defer outFile.Close()
+	if err != nil {
+		return 0, err
+	}
+
+	err = self.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(AUTH_DATA_BUCKET))
+		c := b.Cursor()
+
+		for k, v := c.First(); k != nil && bytes.Compare(k, expiredTimestampByte) <= 0; k, v = c.Next() {
+			timestamp := bytesToUint64(k)
+
+			temp := common.AuthDataSnapshot{}
+			err = json.Unmarshal(v, &temp)
+			if err != nil {
+				return err
+			}
+			record := common.NewAuthDataRecord(
+				common.Timestamp(strconv.FormatUint(timestamp, 10)),
+				temp,
+			)
+			var output []byte
+			output, err = json.Marshal(record)
+			if err != nil {
+				return err
+			}
+			_, err = outFile.WriteString(string(output) + "\n")
+			if err != nil {
+				return err
+			}
+			nRecord++
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+
+	return nRecord, err
+}
+
+func (self *BoltStorage) PruneExpiredAuthData(currentTime uint64) (nRecord uint64, err error) {
+	expiredTimestampByte := uint64ToBytes(currentTime - AUTH_DATA_EXPIRED_DURATION)
+
+	err = self.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(AUTH_DATA_BUCKET))
+		c := b.Cursor()
+		for k, _ := c.First(); k != nil && bytes.Compare(k, expiredTimestampByte) <= 0; k, _ = c.Next() {
+			err = b.Delete(k)
+			if err != nil {
+				return err
+			}
+			nRecord++
+		}
+		return err
+	})
+
+	return nRecord, err
+}
+
+// PruneOutdatedData Remove first version out of database
+func (self *BoltStorage) PruneOutdatedData(tx *bolt.Tx, bucket string) error {
+	var err error
+	b := tx.Bucket([]byte(bucket))
+	c := b.Cursor()
+	nExcess := self.GetNumberOfVersion(tx, bucket) - MAX_NUMBER_VERSION
+	for i := 0; i < nExcess; i++ {
+		k, _ := c.First()
+		if k == nil {
+			err = fmt.Errorf("There is no previous version in %s", bucket)
+			return err
+		}
+		err = b.Delete([]byte(k))
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	return err
+}
+
 func (self *BoltStorage) CurrentPriceVersion(timepoint uint64) (common.Version, error) {
 	var result uint64
 	var err error
@@ -247,25 +335,7 @@ func (self *BoltStorage) GetNumberOfVersion(tx *bolt.Tx, bucket string) int {
 	return result
 }
 
-// PruneOutdatedData Remove first version out of database
-func (self *BoltStorage) PruneOutdatedData(tx *bolt.Tx, bucket string) error {
-	var err error
-	b := tx.Bucket([]byte(bucket))
-	c := b.Cursor()
-	for self.GetNumberOfVersion(tx, bucket) >= MAX_NUMBER_VERSION {
-		k, _ := c.First()
-		if k == nil {
-			err = errors.New(fmt.Sprintf("There no version in %s", bucket))
-			return err
-		}
-		err = b.Delete([]byte(k))
-		if err != nil {
-			panic(err)
-		}
-	}
-	return err
-}
-
+//GetAllPrices returns the corresponding AllPriceEntry to a particular Version
 func (self *BoltStorage) GetAllPrices(version common.Version) (common.AllPriceEntry, error) {
 	result := common.AllPriceEntry{}
 	var err error
@@ -305,6 +375,26 @@ func (self *BoltStorage) GetOnePrice(pair common.TokenPairID, version common.Ver
 			return common.OnePrice{}, errors.New("Pair of token is not supported")
 		}
 	}
+}
+
+func (self *BoltStorage) StorePrice(data common.AllPriceEntry, timepoint uint64) error {
+	var err error
+	err = self.db.Update(func(tx *bolt.Tx) error {
+		var dataJson []byte
+		b := tx.Bucket([]byte(PRICE_BUCKET))
+
+		// remove outdated data from bucket
+		log.Printf("Version number: %d\n", self.GetNumberOfVersion(tx, PRICE_BUCKET))
+		self.PruneOutdatedData(tx, PRICE_BUCKET)
+		log.Printf("After prune number version: %d\n", self.GetNumberOfVersion(tx, PRICE_BUCKET))
+
+		dataJson, err = json.Marshal(data)
+		if err != nil {
+			return err
+		}
+		return b.Put(uint64ToBytes(timepoint), dataJson)
+	})
+	return err
 }
 
 func (self *BoltStorage) CurrentAuthDataVersion(timepoint uint64) (common.Version, error) {
@@ -384,26 +474,6 @@ func (self *BoltStorage) GetRate(version common.Version) (common.AllRateEntry, e
 		return nil
 	})
 	return result, err
-}
-
-func (self *BoltStorage) StorePrice(data common.AllPriceEntry, timepoint uint64) error {
-	var err error
-	err = self.db.Update(func(tx *bolt.Tx) error {
-		var dataJson []byte
-		b := tx.Bucket([]byte(PRICE_BUCKET))
-
-		// remove outdated data from bucket
-		log.Printf("Version number: %d\n", self.GetNumberOfVersion(tx, PRICE_BUCKET))
-		self.PruneOutdatedData(tx, PRICE_BUCKET)
-		log.Printf("After prune number version: %d\n", self.GetNumberOfVersion(tx, PRICE_BUCKET))
-
-		dataJson, err = json.Marshal(data)
-		if err != nil {
-			return err
-		}
-		return b.Put(uint64ToBytes(timepoint), dataJson)
-	})
-	return err
 }
 
 func (self *BoltStorage) StoreAuthSnapshot(
@@ -1155,18 +1225,20 @@ func (self *BoltStorage) RemovePendingPWIEquation() error {
 }
 
 func (self *BoltStorage) GetExchangeStatus() (common.ExchangesStatus, error) {
-	var result common.ExchangesStatus
+	result := make(common.ExchangesStatus)
 	var err error
 	err = self.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(EXCHANGE_STATUS))
 		c := b.Cursor()
-		_, v := c.Last()
-		if v == nil {
-			err = errors.New("There is no data yet.")
-			return err
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			var exstat common.ExStatus
+			err := json.Unmarshal(v, &exstat)
+			if err != nil {
+				return err
+			}
+			result[string(k)] = exstat
 		}
-		err := json.Unmarshal(v, &result)
-		return err
+		return nil
 	})
 	return result, err
 }
@@ -1175,12 +1247,17 @@ func (self *BoltStorage) UpdateExchangeStatus(data common.ExchangesStatus) error
 	var err error
 	err = self.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(EXCHANGE_STATUS))
-		idByte := uint64ToBytes(common.GetTimepoint())
-		dataJson, err := json.Marshal(data)
-		if err != nil {
-			return err
+		for k, v := range data {
+			dataJson, err := json.Marshal(v)
+			if err != nil {
+				return err
+			}
+			err = b.Put([]byte(k), dataJson)
+			if err != nil {
+				return err
+			}
 		}
-		return b.Put(idByte, dataJson)
+		return nil
 	})
 	return err
 }

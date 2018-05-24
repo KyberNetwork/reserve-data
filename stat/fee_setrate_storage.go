@@ -6,6 +6,6 @@ import (
 
 type FeeSetRateStorage interface {
 	GetLastBlockChecked() (uint64, error)
-	StoreTransaction(tx common.TransactionInfo) error
+	StoreTransaction(tx []common.SetRateTxInfo) error
 	GetFeeSetRateByDay(fromTime, toTime uint64) ([]common.FeeSetRate, error)
 }

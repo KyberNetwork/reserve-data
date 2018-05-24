@@ -102,7 +102,7 @@ func bindReserveContract(address common.Address, caller bind.ContractCaller, tra
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor), nil
+	return bind.NewBoundContract(address, parsed, caller, transactor, nil), nil
 }
 
 // Call invokes the (constant) contract method with params as input values and

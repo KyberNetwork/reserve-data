@@ -11,6 +11,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"errors"
 
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/stat/util"
@@ -22,8 +23,9 @@ const (
 	TIMEZONE_BUCKET_PREFIX string = "utc"
 	START_TIMEZONE         int64  = -11
 	END_TIMEZONE           int64  = 14
-	BEGIN_BLOCK            uint64 = 5049223
 	BLOCK_RANGE            uint64 = 200
+	SUCCESS                string = "OK"
+	NO_TXS_FOUND           string = "No transactions found"
 
 	TRADE_SUMMARY_AGGREGATION  string = "trade_summary_aggregation"
 	WALLET_AGGREGATION         string = "wallet_aggregation"
@@ -47,9 +49,11 @@ type Fetcher struct {
 	currentBlockUpdateTime uint64
 	deployBlock            uint64
 	reserveAddress         ethereum.Address
-	setRateAddress         ethereum.Address
+	pricingAddress         ethereum.Address
 	apiKey                 string
 	thirdPartyReserves     []ethereum.Address
+	sleepTime              time.Duration
+	blockNumMarker         uint64
 }
 
 func NewFetcher(
@@ -61,10 +65,12 @@ func NewFetcher(
 	runner FetcherRunner,
 	deployBlock uint64,
 	reserve ethereum.Address,
-	setRateAddress ethereum.Address,
+	pricingAddress ethereum.Address,
+	beginBlockSetRate uint64,
 	apiKey string,
 	thirdPartyReserves []ethereum.Address) *Fetcher {
-	return &Fetcher{
+	sleepTime := time.Second
+	fetcher := &Fetcher{
 		statStorage:        statStorage,
 		logStorage:         logStorage,
 		rateStorage:        rateStorage,
@@ -74,10 +80,22 @@ func NewFetcher(
 		runner:             runner,
 		deployBlock:        deployBlock,
 		reserveAddress:     reserve,
-		setRateAddress:     setRateAddress,
+		pricingAddress:     pricingAddress,
 		apiKey:             apiKey,
 		thirdPartyReserves: thirdPartyReserves,
+		sleepTime:          sleepTime,
 	}
+	lastBlockChecked, err := fetcher.feeSetRateStorage.GetLastBlockChecked()
+	if err != nil {
+		log.Printf("can't get last block checked from db: %s", err)
+		panic(err)
+	}
+	if lastBlockChecked == 0 {
+		fetcher.blockNumMarker = beginBlockSetRate
+	} else {
+		fetcher.blockNumMarker = lastBlockChecked + 1
+	}
+	return fetcher
 }
 
 func (self *Fetcher) Stop() error {
@@ -102,88 +120,106 @@ func (self *Fetcher) Run() error {
 	return nil
 }
 
-var sleepTime time.Duration
-var blockNumMarker uint64
-
 func (self *Fetcher) RunFeeSetrateFetcher() {
-	lastBlockChecked, err := self.feeSetRateStorage.GetLastBlockChecked()
-	if err != nil {
-		log.Printf("can't get last block checked from db: %s", err)
-	}
-	if lastBlockChecked == 0 {
-		lastBlockChecked = BEGIN_BLOCK
-	}
-	blockNumMarker = lastBlockChecked
 	client := http.Client{
-		Timeout: 6 * time.Second,
+		Timeout: 5 * time.Second,
 	}
-
 	for {
-		self.FetchTxs(client)
-		time.Sleep(sleepTime)
+		err := self.FetchTxs(client)
+		if err != nil {
+			log.Printf("failed to fetch data from etherescan: %s", err)
+		}
+		time.Sleep(self.sleepTime)
 	}
 }
 
 type APIResponse struct {
-	Message string                   `json:"message"`
-	Result  []common.TransactionInfo `json:"result"`
+	Message string                 `json:"message"`
+	Result  []common.SetRateTxInfo `json:"result"`
 }
 
-func (self *Fetcher) FetchTxs(client http.Client) {
-	fromBlock := blockNumMarker
+func (self *Fetcher) FetchTxs(client http.Client) error {
+	fromBlock := self.blockNumMarker
 	toBlock := self.GetToBlock()
 	if toBlock == 0 {
-		log.Println("Cannot get latest block nummber")
-		return
+		return errors.New("Can't get latest block nummber")
 	}
-	api := fmt.Sprintf("http://api.etherscan.io/api?module=account&action=txlist&address=%s&startblock=%d&endblock=%d&sort=desc&apikey=%s", self.setRateAddress.String(), fromBlock, toBlock, self.apiKey)
-	log.Println("api: ", api)
+	api := fmt.Sprintf("http://api.etherscan.io/api?module=account&action=txlist&address=%s&startblock=%d&endblock=%d&apikey=%s", self.pricingAddress.String(), fromBlock, toBlock, self.apiKey)
+	log.Println("api get txs of setrate: ", api)
 	resp, err := client.Get(api)
 	if err != nil {
-		log.Println(err)
-		return
+		return err
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Println(err)
-		return
+		return err
 	}
 	apiResponse := APIResponse{}
 	err = json.Unmarshal(body, &apiResponse)
 	if err != nil {
 		log.Printf("can't unmarshal data from etherscan: %s", err)
-		return
+		return err
 	}
 
-	if apiResponse.Message == "OK" {
-		txsInfo := apiResponse.Result
-		for _, tx := range txsInfo {
-			if tx.Value == "0" {
-				err = self.feeSetRateStorage.StoreTransaction(tx)
-				if err != nil {
-					log.Printf("can't store transaction info: %s", err)
-					return
+	if apiResponse.Message == SUCCESS || apiResponse.Message == NO_TXS_FOUND {
+		sameBlockBucket := []common.SetRateTxInfo{}
+		setRateTxsInfo := apiResponse.Result
+		numberEle := len(setRateTxsInfo)
+		var blockNumber string
+		for index, transaction := range setRateTxsInfo {
+			if self.isPricingMethod(transaction.Input) {
+				blockNumber = transaction.BlockNumber
+				sameBlockBucket = append(sameBlockBucket, transaction)
+				if index < numberEle - 1 && setRateTxsInfo[index + 1].BlockNumber == blockNumber {
+					continue
 				}
+				err = self.feeSetRateStorage.StoreTransaction(sameBlockBucket)
+				if err != nil {
+					log.Printf("failed to store pricing's txs: %s", err)
+					return err
+				}
+				sameBlockBucket = []common.SetRateTxInfo{}
 			}
 		}
+		log.Println("fetch and store pricing's txs done!")
+		if toBlock == self.currentBlock {
+			self.blockNumMarker = toBlock	
+		} else {
+			self.blockNumMarker = toBlock + 1			
+		}
 	}
-	log.Println("fetch done!")
-	blockNumMarker = toBlock
+	return nil
+}
+
+func (self *Fetcher) isPricingMethod(inputData string) bool {
+	if inputData == "0x" {
+		return false
+	}
+	method, err := self.blockchain.GetPricingMethod(inputData)
+	if err != nil {
+		log.Printf("Cannot find method from input data: %v", err)
+		return false
+	}
+	methodName := method.Name
+	if methodName == "setCompactData" || methodName == "setBaseRate" {
+		return true
+	}
+	return false
 }
 
 func (self *Fetcher) GetToBlock() uint64 {
 	currentBlock := self.currentBlock
+	blockNumMarker := self.blockNumMarker
 	if currentBlock == 0 {
 		return 0
 	}
-	if currentBlock - blockNumMarker <= BLOCK_RANGE {
-		blockNumMarker = currentBlock
-		sleepTime = 2 * time.Minute
+	if currentBlock <= blockNumMarker + BLOCK_RANGE {
+		self.sleepTime = 5 * time.Minute
 		return currentBlock
 	}
 	toBlock := blockNumMarker + BLOCK_RANGE
-	sleepTime = time.Second
+	self.sleepTime = time.Second
 	return toBlock
 }
 
@@ -706,7 +742,7 @@ func (self *Fetcher) RunBlockFetcher() {
 	}
 }
 
-func (self *Fetcher) GetTradeGeo(txHash string) (string, string, error) {
+func GetTradeGeo(txHash string) (string, string, error) {
 	url := fmt.Sprintf("https://broadcast.kyber.network/get-tx-info/%s", txHash)
 
 	resp, err := http.Get(url)
@@ -736,36 +772,88 @@ func (self *Fetcher) GetTradeGeo(txHash string) (string, string, error) {
 	return "", "unknown", err
 }
 
+func enforceFromBlock(fromBlock uint64) uint64 {
+	if fromBlock == 0 {
+		return 0
+	}
+	return fromBlock - 1
+
+}
+
+// func (self *Fetcher) isDuplicateLog(blockNum, index uint64) bool{
+// 	block, index,
+// }
+
+func SetcountryFields(l *common.TradeLog) {
+	txHash := l.TxHash()
+	ip, country, err := GetTradeGeo(txHash.Hex())
+	if err != nil {
+		log.Printf("LogFetcher - Getting country failed")
+	}
+	l.IP = ip
+	l.Country = country
+}
+
+// Check if the tradelog is duplicated, if it is not, manage to store it into DB
+// return error if db operation is not successful
+func (self *Fetcher) CheckDupAndStoreTradeLog(l common.TradeLog, timepoint uint64) error {
+	var err error
+	block, index, uErr := self.logStorage.LoadLastTradeLogIndex()
+	if uErr == nil && (block > l.BlockNumber || (block == l.BlockNumber && index >= l.Index)) {
+		log.Printf("LogFetcher - Duplicated trade log %+v (new block number %d is smaller or equal to latest block number %d and tx index %d is smaller or equal to last log tx index %d)", l, block, l.BlockNumber, index, l.Index)
+	} else {
+		if uErr != nil {
+			log.Printf("Can not check duplicated status of current trade log, process to store it (overwrite the log if duplicated)")
+		}
+		err = self.logStorage.StoreTradeLog(l, timepoint)
+		if err != nil {
+			return err
+		}
+	}
+	return err
+}
+
+// Check if the catlog is duplicated, if it is not, manage to store it into DB
+// return error if db operation is not successful
+func (self *Fetcher) CheckDupAndStoreCatLog(l common.SetCatLog, timepoint uint64) error {
+	var err error
+	block, index, uErr := self.logStorage.LoadLastCatLogIndex()
+	if uErr == nil && (block > l.BlockNumber || (block == l.BlockNumber && index >= l.Index)) {
+		log.Printf("LogFetcher - Duplicated trade log %+v (new block number %d is smaller or equal to latest block number %d and tx index %d is smaller or equal to last log tx index %d)", l, block, l.BlockNumber, index, l.Index)
+	} else {
+		if uErr != nil {
+			log.Printf("Can not check duplicated status of current cat log, process to store it(overwrite the log if duplicated)")
+		}
+		err = self.logStorage.StoreCatLog(l)
+		if err != nil {
+			return err
+		}
+	}
+	return err
+}
+
 // return block number that we just fetched the logs
 func (self *Fetcher) FetchLogs(fromBlock uint64, toBlock uint64, timepoint uint64) (uint64, error) {
 	logs, err := self.blockchain.GetLogs(fromBlock, toBlock)
 	if err != nil {
 		log.Printf("LogFetcher - fetching logs data from block %d failed, error: %v", fromBlock, err)
-		if fromBlock == 0 {
-			return 0, err
-		} else {
-			return fromBlock - 1, err
-		}
+		return enforceFromBlock(fromBlock), err
 	} else {
 		if len(logs) > 0 {
-			var maxBlock uint64 = 0
+			var maxBlock uint64 = enforceFromBlock(fromBlock)
 			for _, il := range logs {
 				if il.Type() == "TradeLog" {
 					l := il.(common.TradeLog)
-					txHash := il.TxHash()
-					ip, country, err := self.GetTradeGeo(txHash.Hex())
-					l.IP = ip
-					l.Country = country
-
-					err = self.logStorage.StoreTradeLog(l, timepoint)
-					if err != nil {
-						log.Printf("LogFetcher - storing trade log failed, ignore that log and proceed with remaining logs, err: %+v", err)
+					SetcountryFields(&l)
+					if dbErr := self.CheckDupAndStoreTradeLog(l, timepoint); dbErr != nil {
+						log.Printf("LogFetcher - at block %d, storing trade log failed, stop at current block and wait till next ticker, err: %+v", l.BlockNo(), err)
+						return maxBlock, dbErr
 					}
 				} else if il.Type() == "SetCatLog" {
 					l := il.(common.SetCatLog)
-					err = self.logStorage.StoreCatLog(l)
-					if err != nil {
-						log.Printf("LogFetcher - storing cat log failed, ignore that log and proceed with remaining logs, err: %+v", err)
+					if dbErr := self.CheckDupAndStoreCatLog(l, timepoint); dbErr != nil {
+						log.Printf("LogFetcher - at block %d, storing cat log failed, stop at current block and wait till next ticker, err: %+v", l.BlockNo(), err)
+						return maxBlock, dbErr
 					}
 				}
 				if il.BlockNo() > maxBlock {
@@ -775,7 +863,7 @@ func (self *Fetcher) FetchLogs(fromBlock uint64, toBlock uint64, timepoint uint6
 			}
 			return maxBlock, nil
 		} else {
-			return fromBlock - 1, nil
+			return enforceFromBlock(fromBlock), nil
 		}
 	}
 }
@@ -925,7 +1013,7 @@ func (self *Fetcher) aggregateVolumeStats(trade common.TradeLog, volumeStats map
 
 	// country token volume
 	key = fmt.Sprintf("%s_%s", trade.Country, assetAddr)
-	log.Printf("aggegate volume: %s", key)
+	//log.Printf("aggegate volume: %s", key)
 	self.aggregateVolumeStat(trade, key, assetAmount, ethAmount, trade.FiatAmount, volumeStats)
 
 	return nil

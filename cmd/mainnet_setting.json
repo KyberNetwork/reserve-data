@@ -237,6 +237,26 @@
       "internal use": false,
       "listed": true
     },
+    "DGX": {
+      "name": "Digix Gold",
+      "decimals": 9,
+      "address": "0x4f3afec4e5a3f2a6a1a411def7d7dfe50ee057bf",
+      "minimalRecordResolution": "1000000000000000",
+      "maxPerBlockImbalance": "2711997842670896021504",
+      "maxTotalImbalance": "3833713935933528080384",
+      "internal use": true,
+      "listed": true
+    },
+    "ABT": {
+      "name": "ArcBlock",
+      "decimals": 18,
+      "address": "0xb98d4c97425d9908e66e53a6fdf673acca0be986",
+      "minimalRecordResolution": "100000000000000",
+      "maxPerBlockImbalance": "5461044951947117854720",
+      "maxTotalImbalance": "6043192343824681664512",
+      "internal use": true,
+      "listed": true
+    },
     "ETH": {
       "name": "Ethereum",
       "decimals": 18,
@@ -266,6 +286,14 @@
       "ZIL": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
       "AST": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
       "LINK": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90"
+    },
+    "huobi": {
+      "ETH": "0x0c8fd73eaf6089ef1b91231d0a07d0d2ca2b9d66",
+      "ABT": "0x0c8fd73eaf6089ef1b91231d0a07d0d2ca2b9d66"
+    },
+    "stable_exchange": {
+      "ETH": "0xFDF28Bf25779ED4cA74e958d54653260af604C20",
+      "DGX": "0xFDF28Bf25779ED4cA74e958d54653260af604C20"
     }
   },
   "permission": {

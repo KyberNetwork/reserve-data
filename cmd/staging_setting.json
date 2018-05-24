@@ -239,6 +239,13 @@
       "internal use": false,
       "listed": true
     },
+    "ABT": {
+      "name": "ArcBlock",
+      "decimals": 18,
+      "address": "0xb98d4c97425d9908e66e53a6fdf673acca0be986",
+      "internal use": true,
+      "listed": true
+    },
     "ETH": {
       "name": "Ethereum",
       "decimals": 18,
@@ -271,21 +278,7 @@
     },
     "huobi": {
       "ETH": "0xb48ee85467bf613a22244084c1a46c2deac18dd0",
-      "OMG": "0xb48ee85467bf613a22244084c1a46c2deac18dd0",
-      "KNC": "0xb48ee85467bf613a22244084c1a46c2deac18dd0",
-      "EOS": "0xb48ee85467bf613a22244084c1a46c2deac18dd0",
-      "ELF": "0xb48ee85467bf613a22244084c1a46c2deac18dd0",
-      "POWR": "0xb48ee85467bf613a22244084c1a46c2deac18dd0",
-      "MANA": "0xb48ee85467bf613a22244084c1a46c2deac18dd0",
-      "BAT": "0xb48ee85467bf613a22244084c1a46c2deac18dd0",
-      "REQ": "0xb48ee85467bf613a22244084c1a46c2deac18dd0",
-      "ENG": "0xb48ee85467bf613a22244084c1a46c2deac18dd0",
-      "SALT": "0xb48ee85467bf613a22244084c1a46c2deac18dd0",
-      "APPC": "0xb48ee85467bf613a22244084c1a46c2deac18dd0",
-      "RDN": "0xb48ee85467bf613a22244084c1a46c2deac18dd0",
-      "ZIL": "0xb48ee85467bf613a22244084c1a46c2deac18dd0",
-      "AST": "0xb48ee85467bf613a22244084c1a46c2deac18dd0",
-      "LINK": "0xb48ee85467bf613a22244084c1a46c2deac18dd0"
+      "ABT": "0xb48ee85467bf613a22244084c1a46c2deac18dd0"
     },
     "bittrex": {
       "ETH": "0xe0355aa3cc0a4e0e4b2a70acd90c2fa961f61b23",

@@ -11,21 +11,22 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-const WINDOW uint64 = 10000 // 10s
-
 type TimeWindow struct {
 	address     ethereum.Address
 	mu          sync.Mutex
 	manualNonce *big.Int
 	time        uint64 // last time nonce was requested
+	window      uint64 // window time in millisecond
 }
 
-func NewTimeWindow(address ethereum.Address) *TimeWindow {
+// be very very careful to set `window` param, if we set it to high value, it can lead to nonce lost making the whole pricing operation stuck
+func NewTimeWindow(address ethereum.Address, window uint64) *TimeWindow {
 	return &TimeWindow{
 		address,
 		sync.Mutex{},
 		big.NewInt(0),
 		0,
+		window,
 	}
 }
 
@@ -51,7 +52,7 @@ func (self *TimeWindow) GetNextNonce(ethclient *ethclient.Client) (*big.Int, err
 	self.mu.Lock()
 	defer self.mu.Unlock()
 	t := common.GetTimepoint()
-	if t-self.time < WINDOW {
+	if t-self.time < self.window {
 		self.time = t
 		self.manualNonce.Add(self.manualNonce, ethereum.Big1)
 		return self.manualNonce, nil

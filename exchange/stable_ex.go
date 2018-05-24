@@ -13,6 +13,7 @@ type StableEx struct {
 	pairs        []common.TokenPair
 	exchangeInfo *common.ExchangeInfo
 	fees         common.ExchangeFees
+	mindeposit   common.ExchangesMinDeposit
 }
 
 func (self *StableEx) TokenAddresses() map[string]ethereum.Address {
@@ -40,8 +41,8 @@ func (self *StableEx) UpdateDepositAddress(token common.Token, address string) {
 	panic("dgx doesn't support update deposit addresses")
 }
 
-func (self *StableEx) GetInfo() (common.ExchangeInfo, error) {
-	return *self.exchangeInfo, nil
+func (self *StableEx) GetInfo() (*common.ExchangeInfo, error) {
+	return self.exchangeInfo, nil
 }
 
 func (self *StableEx) GetExchangeInfo(pair common.TokenPairID) (common.ExchangePrecisionLimit, error) {
@@ -97,11 +98,12 @@ func (self *StableEx) FetchEBalanceData(timepoint uint64) (common.EBalanceEntry,
 	result := common.EBalanceEntry{}
 	result.Timestamp = common.Timestamp(fmt.Sprintf("%d", timepoint))
 	result.Valid = true
+	result.Status = true
 	// TODO: Get balance data from dgx connector
 	result.ReturnTime = common.GetTimestamp()
-	result.AvailableBalance = map[string]float64{"DGX": 0}
-	result.LockedBalance = map[string]float64{"DGX": 0}
-	result.DepositBalance = map[string]float64{"DGX": 0}
+	result.AvailableBalance = map[string]float64{"DGX": 0, "ETH": 0}
+	result.LockedBalance = map[string]float64{"DGX": 0, "ETH": 0}
+	result.DepositBalance = map[string]float64{"DGX": 0, "ETH": 0}
 	return result, nil
 }
 
@@ -127,14 +129,15 @@ func (self *StableEx) OrderStatus(id string, base, quote string) (string, error)
 }
 
 func (self *StableEx) GetMinDeposit() common.ExchangesMinDeposit {
-	return common.ExchangesMinDeposit{}
+	return self.mindeposit
 }
 
-func NewStableEx(addressConfig map[string]string, feeConfig common.ExchangeFees) *StableEx {
-	_, pairs, fees, _ := getExchangePairsAndFeesFromConfig(addressConfig, feeConfig, common.ExchangesMinDeposit{}, "stable_exchange")
+func NewStableEx(addressConfig map[string]string, feeConfig common.ExchangeFees, minDepositConfig common.ExchangesMinDeposit) *StableEx {
+	_, pairs, fees, mindeposit := getExchangePairsAndFeesFromConfig(addressConfig, feeConfig, minDepositConfig, "stable_exchange")
 	return &StableEx{
 		pairs,
 		common.NewExchangeInfo(),
 		fees,
+		mindeposit,
 	}
 }

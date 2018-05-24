@@ -119,8 +119,8 @@ func (self *Binance) UpdatePairsPrecision() {
 	}
 }
 
-func (self *Binance) GetInfo() (common.ExchangeInfo, error) {
-	return *self.exchangeInfo, nil
+func (self *Binance) GetInfo() (*common.ExchangeInfo, error) {
+	return self.exchangeInfo, nil
 }
 
 func (self *Binance) GetExchangeInfo(pair common.TokenPairID) (common.ExchangePrecisionLimit, error) {
@@ -220,10 +220,10 @@ func (self *Binance) FetchOnePairData(
 				rate, _ := strconv.ParseFloat(buy.Rate, 64)
 				result.Bids = append(
 					result.Bids,
-					common.PriceEntry{
+					common.NewPriceEntry(
 						quantity,
 						rate,
-					},
+					),
 				)
 			}
 			for _, sell := range resp_data.Asks {
@@ -231,10 +231,10 @@ func (self *Binance) FetchOnePairData(
 				rate, _ := strconv.ParseFloat(sell.Rate, 64)
 				result.Asks = append(
 					result.Asks,
-					common.PriceEntry{
+					common.NewPriceEntry(
 						quantity,
 						rate,
-					},
+					),
 				)
 			}
 		}
@@ -391,13 +391,13 @@ func (self *Binance) FetchOnePairTradeHistory(
 		if trade.IsBuyer {
 			historyType = "buy"
 		}
-		tradeHistory := common.TradeHistory{
+		tradeHistory := common.NewTradeHistory(
 			strconv.FormatUint(trade.ID, 10),
 			price,
 			quantity,
 			historyType,
 			trade.Time,
-		}
+		)
 		result = append(result, tradeHistory)
 	}
 	data.Store(pairString, result)

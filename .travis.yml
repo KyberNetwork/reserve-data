@@ -2,5 +2,13 @@ go_import_path: github.com/KyberNetwork/reserve-data
 
 language: go
 
+install:
+  - go get -u github.com/alecthomas/gometalinter
+  - gometalinter --install
+
+script:
+  - gometalinter --config=gometalinter.json ./...
+  - go test -v ./...
+
 go:
   - "1.10.x"
