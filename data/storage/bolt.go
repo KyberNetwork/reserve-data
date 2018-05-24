@@ -1507,10 +1507,12 @@ func convertTargetQtyV1toV2(target metric.TokenTargetQty) map[string]interface{}
 		rebalance, _ := strconv.ParseFloat(elements[3], 10)
 		withdraw, _ := strconv.ParseFloat(elements[4], 10)
 		result[token] = metric.TargetQtyStruct{
-			TotalTarget:        totalTarget,
-			ReserveTarget:      reserveTarget,
-			RebalanceThreshold: rebalance,
-			TransferThreshold:  withdraw,
+			SetTarget: metric.TargetQtySet{
+				TotalTarget:        totalTarget,
+				ReserveTarget:      reserveTarget,
+				RebalanceThreshold: rebalance,
+				TransferThreshold:  withdraw,
+			},
 		}
 	}
 	return result
