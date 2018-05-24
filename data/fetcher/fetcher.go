@@ -363,13 +363,13 @@ func (self *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord)
 			switch status {
 			case "":
 				if nonceValidator(activity) {
-					result[activity.ID] = common.NewActivityStatus(
+					result[activity.ID] = common.ActivityStatus{
 						activity.ExchangeStatus,
 						activity.Result["tx"].(string),
 						blockNum,
 						"failed",
 						err,
-					)
+					}
 				}
 			case "mined":
 				result[activity.ID] = common.ActivityStatus{
@@ -405,7 +405,7 @@ func (self *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord)
 				}
 
 				if txFailed {
-					result[activity.ID] = common.NewActivityStatus(
+					result[activity.ID] = common.ActivityStatus{
 						activity.ExchangeStatus,
 						activity.Result["tx"].(string),
 						blockNum,
