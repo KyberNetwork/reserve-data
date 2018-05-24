@@ -30,8 +30,8 @@ func (self *GasOracle) GasPricing() {
 			if err != nil {
 				log.Printf("Error pricing gas from Gasstation: %v", err)
 			}
+			<-ticker.C
 		}
-		<-ticker.C
 	}()
 }
 
