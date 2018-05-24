@@ -318,7 +318,13 @@ func (self ReserveCore) SetRates(
 							newPrice,
 						)
 					} else {
-						initPrice := common.GweiToWei(10)
+						recommendedPrice := self.blockchain.StandardGasPrice()
+						var initPrice *big.Int
+						if recommendedPrice == 0 || recommendedPrice > HIGH_BOUND_GAS_PRICE {
+							initPrice = common.GweiToWei(10)
+						} else {
+							initPrice = common.GweiToWei(recommendedPrice)
+						}
 						tx, err = self.blockchain.SetRates(
 							tokenAddrs, buys, sells, block,
 							big.NewInt(int64(minedNonce)),

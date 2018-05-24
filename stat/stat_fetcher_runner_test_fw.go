@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+const TOLERANCE int64 = 200 * int64(time.Millisecond)
+
 type FetcherRunnerTest struct {
 	fr FetcherRunner
 }
@@ -39,8 +41,8 @@ func (self *FetcherRunnerTest) TestFetcherConcurrency(nanosec int64) error {
 	}
 	wg.Wait()
 	timeTook := time.Since(startTime).Nanoseconds()
-	upperRange := nanosec + 5*time.Millisecond.Nanoseconds()
-	lowerRange := nanosec - 5*time.Millisecond.Nanoseconds()
+	upperRange := nanosec + TOLERANCE
+	lowerRange := nanosec - TOLERANCE
 	if timeTook < lowerRange || timeTook > upperRange {
 		return fmt.Errorf("expect ticker in between %d and %d nanosec, but it came in %d instead", lowerRange, upperRange, timeTook)
 	}
@@ -58,8 +60,8 @@ func (self *FetcherRunnerTest) TestIndividualTicker(ticker func() <-chan time.Ti
 
 	t := <-ticker()
 	timeTook := t.Sub(startTime).Nanoseconds()
-	upperRange := nanosec + 5*time.Millisecond.Nanoseconds()
-	lowerRange := nanosec - 5*time.Millisecond.Nanoseconds()
+	upperRange := nanosec + TOLERANCE
+	lowerRange := nanosec - TOLERANCE
 	if timeTook < lowerRange || timeTook > upperRange {
 		return fmt.Errorf("expect ticker in between %d and %d nanosec, but it came in %d instead", lowerRange, upperRange, timeTook)
 	}

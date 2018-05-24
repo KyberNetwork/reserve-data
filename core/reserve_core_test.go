@@ -86,6 +86,18 @@ func (self testBlockchain) SetRates(
 	return tx, nil
 }
 
+func (self testBlockchain) StandardGasPrice() float64 {
+	return 0
+}
+
+func (self testBlockchain) FastGasPrice() float64 {
+	return 0
+}
+
+func (self testBlockchain) SafeLowGasPrice() float64 {
+	return 0
+}
+
 func (self testBlockchain) SetRateMinedNonce() (uint64, error) {
 	return 0, nil
 }

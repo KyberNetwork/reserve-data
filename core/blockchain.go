@@ -9,6 +9,9 @@ import (
 )
 
 type Blockchain interface {
+	StandardGasPrice() float64
+	SafeLowGasPrice() float64
+	FastGasPrice() float64
 	Send(
 		token common.Token,
 		amount *big.Int,

@@ -60,6 +60,12 @@ func (self *BaseBlockchain) RegisterOperator(name string, op *Operator) {
 	self.operators[name] = op
 }
 
+func (self *BaseBlockchain) RecommendedGasPriceFromNode() (*big.Int, error) {
+	timeout, cancel := context.WithTimeout(context.Background(), 7*time.Second)
+	defer cancel()
+	return self.client.SuggestGasPrice(timeout)
+}
+
 func (self *BaseBlockchain) GetOperator(name string) *Operator {
 	op, found := self.operators[name]
 	if !found {
