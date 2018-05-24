@@ -97,7 +97,6 @@ func (self *Config) AddStatConfig(settingPath SettingPaths, addressConfig common
 	networkAddr := ethereum.HexToAddress(addressConfig.Network)
 	burnerAddr := ethereum.HexToAddress(addressConfig.FeeBurner)
 	whitelistAddr := ethereum.HexToAddress(addressConfig.Whitelist)
-	setRateAddr := ethereum.HexToAddress(addressConfig.SetRate)
 
 	thirdpartyReserves := []ethereum.Address{}
 	for _, address := range addressConfig.ThirdPartyReserves {
