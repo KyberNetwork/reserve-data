@@ -934,6 +934,7 @@ func GetStoreTx(tx SetRateTxInfo) (StoreSetRateTx, error) {
 }
 
 type FeeSetRate struct {
-	TimeStamp uint64     `json:"timeStamp"`
-	GasUsed   *big.Float `json:"gasUsed"`
+	TimeStamp     uint64     `json:"timeStamp"`
+	GasUsed       *big.Float `json:"gasUsed"`
+	TotalGasSpent *big.Float `json:"totalGasSpent"`
 }

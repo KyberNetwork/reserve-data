@@ -148,7 +148,7 @@ func (self *Config) AddStatConfig(settingPath SettingPaths, addressConfig common
 
 	}
 
-	apiKey := GetAPIKey(settingPath.secretPath)
+	// apiKey := GetAPIKey(settingPath.secretPath)
 
 	self.StatStorage = statStorage
 	self.AnalyticStorage = analyticStorage
@@ -162,7 +162,7 @@ func (self *Config) AddStatConfig(settingPath SettingPaths, addressConfig common
 	self.FeeBurnerAddress = burnerAddr
 	self.NetworkAddress = networkAddr
 	self.WhitelistAddress = whitelistAddr
-	self.ApiKey = apiKey
+	// self.ApiKey = apiKey
 }
 
 func (self *Config) AddCoreConfig(settingPath SettingPaths, addressConfig common.AddressConfig, kyberENV string) {

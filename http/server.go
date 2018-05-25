@@ -1591,51 +1591,12 @@ func (self *HTTPServer) GetFeeSetRateByDay(c *gin.Context) {
 	if !ok {
 		return
 	}
-
 	data, err := self.stat.GetFeeSetRateByDay(fromTime, toTime)
 	if err != nil {
-		c.JSON(
-			http.StatusOK,
-			gin.H{
-				"success": false,
-				"reason":  err.Error(),
-			},
-		)
+		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
 		return
 	}
-	c.JSON(
-		http.StatusOK,
-		gin.H{
-			"success": true,
-			"data":    data,
-		},
-	)
-}
-
-func (self *HTTPServer) GetFeeSetRateByDay(c *gin.Context) {
-	fromTime, toTime, ok := self.ValidateTimeInput(c)
-	if !ok {
-		return
-	}
-
-	data, err := self.stat.GetFeeSetRateByDay(fromTime, toTime)
-	if err != nil {
-		c.JSON(
-			http.StatusOK,
-			gin.H{
-				"success": false,
-				"reason":  err.Error(),
-			},
-		)
-		return
-	}
-	c.JSON(
-		http.StatusOK,
-		gin.H{
-			"success": true,
-			"data":    data,
-		},
-	)
+	httputil.ResponseSuccess(c, httputil.WithData(data))
 }
 
 func (self *HTTPServer) Run() {
