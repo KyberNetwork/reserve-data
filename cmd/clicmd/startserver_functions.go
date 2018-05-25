@@ -153,7 +153,7 @@ func CreateStat(config *configuration.Config, kyberENV string, bc *blockchain.Bl
 		deployBlock,
 		config.ReserveAddress,
 		config.PricingAddress,
-		config.BeginBlockSetRate,
+		deployBlock,
 		config.ApiKey,
 		config.ThirdPartyReserves,
 	)

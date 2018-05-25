@@ -84,8 +84,8 @@ type Config struct {
 	WhitelistAddress   ethereum.Address
 	ThirdPartyReserves []ethereum.Address
 
-	BeginBlockSetRate uint64
-	ApiKey            string
+	// etherscan api key (optional)
+	ApiKey string
 
 	ChainType string
 }
@@ -149,7 +149,6 @@ func (self *Config) AddStatConfig(settingPath SettingPaths, addressConfig common
 	}
 
 	apiKey := GetAPIKey(settingPath.secretPath)
-	beginBlockSetRate := GetBeginBlockSetRate(settingPath.settingPath)
 
 	self.StatStorage = statStorage
 	self.AnalyticStorage = analyticStorage
@@ -163,7 +162,6 @@ func (self *Config) AddStatConfig(settingPath SettingPaths, addressConfig common
 	self.FeeBurnerAddress = burnerAddr
 	self.NetworkAddress = networkAddr
 	self.WhitelistAddress = whitelistAddr
-	self.BeginBlockSetRate = beginBlockSetRate
 	self.ApiKey = apiKey
 }
 
