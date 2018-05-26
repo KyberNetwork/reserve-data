@@ -34,6 +34,16 @@ func WithReason(reason string) ResponseOption {
 	return WithField("reason", reason)
 }
 
+// WithError includes the error as a failure reason. It is
+// usually used along with ResponseFailure.
+// If err is nil, empty reason will be used.
+func WithError(err error) ResponseOption {
+	if err == nil {
+		return WithField("reason", "")
+	}
+	return WithField("reason", err.Error())
+}
+
 // ResponseSuccess responses the request with 200 status code and a
 // success message.
 func ResponseSuccess(c *gin.Context, options ...ResponseOption) {
