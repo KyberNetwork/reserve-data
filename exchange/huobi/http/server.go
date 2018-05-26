@@ -3,12 +3,12 @@ package http
 import (
 	"fmt"
 	"log"
-	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/KyberNetwork/reserve-data/common"
-	raven "github.com/getsentry/raven-go"
+	"github.com/KyberNetwork/reserve-data/http/httputil"
+	"github.com/getsentry/raven-go"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sentry"
 	"github.com/gin-gonic/gin"
@@ -39,18 +39,9 @@ func IsIntime(nonce string) bool {
 func (self *HTTPServer) PendingIntermediateTxs(c *gin.Context) {
 	data, err := self.app.PendingIntermediateTxs()
 	if err != nil {
-		c.JSON(
-			http.StatusOK,
-			gin.H{"success": false, "reason": err.Error()},
-		)
+		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
 	} else {
-		c.JSON(
-			http.StatusOK,
-			gin.H{
-				"success": true,
-				"data":    data,
-			},
-		)
+		httputil.ResponseSuccess(c, httputil.WithData(data))
 	}
 
 }

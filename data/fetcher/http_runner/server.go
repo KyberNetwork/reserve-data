@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/KyberNetwork/reserve-data/common"
+	"github.com/KyberNetwork/reserve-data/http/httputil"
 	"github.com/getsentry/raven-go"
 	"github.com/gin-contrib/sentry"
 	"github.com/gin-gonic/gin"
@@ -54,23 +55,13 @@ func newTickerHandler(ch chan time.Time) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		timepoint := getTimePoint(c)
 		ch <- common.TimepointToTime(timepoint)
-		c.JSON(
-			http.StatusOK,
-			gin.H{
-				"success": true,
-			},
-		)
+		httputil.ResponseSuccess(c)
 	}
 }
 
 // pingHandler always returns to client a success status.
 func pingHandler(c *gin.Context) {
-	c.JSON(
-		http.StatusOK,
-		gin.H{
-			"success": true,
-		},
-	)
+	httputil.ResponseSuccess(c)
 }
 
 // register setups the gin.Engine instance by registers HTTP handlers.
