@@ -46,3 +46,14 @@ type RebalanceControl struct {
 type SetrateControl struct {
 	Status bool `json:"status"`
 }
+
+type TargetQtySet struct {
+	TotalTarget        float64
+	ReserveTarget      float64
+	RebalanceThreshold float64
+	TransferThreshold  float64
+}
+
+type TargetQtyStruct struct {
+	SetTarget TargetQtySet
+}

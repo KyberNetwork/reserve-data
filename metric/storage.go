@@ -29,4 +29,10 @@ type MetricStorage interface {
 	RemovePendingStableTokenParams() error
 	GetPendingStableTokenParams() (map[string]interface{}, error)
 	GetStableTokenParams() (map[string]interface{}, error)
+
+	StorePendingTargetQtyV2(value []byte) error
+	ConfirmTargetQtyV2(value []byte) error
+	RemovePendingTargetQtyV2() error
+	GetPendingTargetQtyV2() (map[string]interface{}, error)
+	GetTargetQtyV2() (map[string]interface{}, error)
 }

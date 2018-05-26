@@ -138,7 +138,7 @@ func (self *HTTPServer) AllPricesVersion(c *gin.Context) {
 	log.Printf("Getting all prices version")
 	data, err := self.app.CurrentPriceVersion(getTimePoint(c, true))
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
 		httputil.ResponseSuccess(c, httputil.WithField("version", data))
 	}
@@ -148,7 +148,7 @@ func (self *HTTPServer) AllPrices(c *gin.Context) {
 	log.Printf("Getting all prices \n")
 	data, err := self.app.GetAllPrices(getTimePoint(c, true))
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
 		httputil.ResponseSuccess(c, httputil.WithMultipleFields(gin.H{
 			"version":   data.Version,
@@ -169,7 +169,7 @@ func (self *HTTPServer) Price(c *gin.Context) {
 	} else {
 		data, err := self.app.GetOnePrice(pair.PairID(), getTimePoint(c, true))
 		if err != nil {
-			httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+			httputil.ResponseFailure(c, httputil.WithError(err))
 		} else {
 			httputil.ResponseSuccess(c, httputil.WithMultipleFields(gin.H{
 				"version":   data.Version,
@@ -189,7 +189,7 @@ func (self *HTTPServer) AuthDataVersion(c *gin.Context) {
 
 	data, err := self.app.CurrentAuthDataVersion(getTimePoint(c, true))
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
 		httputil.ResponseSuccess(c, httputil.WithField("version", data))
 	}
@@ -204,7 +204,7 @@ func (self *HTTPServer) AuthData(c *gin.Context) {
 
 	data, err := self.app.GetAuthData(getTimePoint(c, true))
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
 		httputil.ResponseSuccess(c, httputil.WithMultipleFields(gin.H{
 			"version":   data.Version,
@@ -223,7 +223,7 @@ func (self *HTTPServer) GetRates(c *gin.Context) {
 	}
 	data, err := self.app.GetRates(fromTime, toTime)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
 		httputil.ResponseSuccess(c, httputil.WithData(data))
 	}
@@ -233,7 +233,7 @@ func (self *HTTPServer) GetRate(c *gin.Context) {
 	log.Printf("Getting all rates \n")
 	data, err := self.app.GetRate(getTimePoint(c, true))
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
 		httputil.ResponseSuccess(c, httputil.WithMultipleFields(gin.H{
 			"version":   data.Version,
@@ -258,7 +258,7 @@ func (self *HTTPServer) SetRate(c *gin.Context) {
 	for _, tok := range strings.Split(tokenAddrs, "-") {
 		token, err := common.GetInternalToken(tok)
 		if err != nil {
-			httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
 		} else {
 			tokens = append(tokens, token)
@@ -268,7 +268,7 @@ func (self *HTTPServer) SetRate(c *gin.Context) {
 	for _, rate := range strings.Split(buys, "-") {
 		r, err := hexutil.DecodeBig(rate)
 		if err != nil {
-			httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
 		} else {
 			bigBuys = append(bigBuys, r)
@@ -278,7 +278,7 @@ func (self *HTTPServer) SetRate(c *gin.Context) {
 	for _, rate := range strings.Split(sells, "-") {
 		r, err := hexutil.DecodeBig(rate)
 		if err != nil {
-			httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
 		} else {
 			bigSells = append(bigSells, r)
@@ -286,14 +286,14 @@ func (self *HTTPServer) SetRate(c *gin.Context) {
 	}
 	intBlock, err := strconv.ParseInt(block, 10, 64)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	bigAfpMid := []*big.Int{}
 	for _, rate := range strings.Split(afpMid, "-") {
 		r, err := hexutil.DecodeBig(rate)
 		if err != nil {
-			httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
 		} else {
 			bigAfpMid = append(bigAfpMid, r)
@@ -301,7 +301,7 @@ func (self *HTTPServer) SetRate(c *gin.Context) {
 	}
 	id, err := self.core.SetRates(tokens, bigBuys, bigSells, big.NewInt(intBlock), bigAfpMid, msgs)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	} else {
 		httputil.ResponseSuccess(c, httputil.WithField("id", id))
@@ -323,28 +323,28 @@ func (self *HTTPServer) Trade(c *gin.Context) {
 
 	exchange, err := common.GetExchange(exchangeParam)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	base, err := common.GetInternalToken(baseTokenParam)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	quote, err := common.GetInternalToken(quoteTokenParam)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	amount, err := strconv.ParseFloat(amountParam, 64)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	rate, err := strconv.ParseFloat(rateParam, 64)
 	log.Printf("http server: Trade: rate: %f, raw rate: %s", rate, rateParam)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	if typeParam != "sell" && typeParam != "buy" {
@@ -354,7 +354,7 @@ func (self *HTTPServer) Trade(c *gin.Context) {
 	id, done, remaining, finished, err := self.core.Trade(
 		exchange, typeParam, base, quote, rate, amount, getTimePoint(c, false))
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c, httputil.WithMultipleFields(gin.H{
@@ -376,18 +376,18 @@ func (self *HTTPServer) CancelOrder(c *gin.Context) {
 
 	exchange, err := common.GetExchange(exchangeParam)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	log.Printf("Cancel order id: %s from %s\n", id, exchange.ID())
 	activityID, err := common.StringToActivityID(id)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	err = self.core.CancelOrder(activityID, exchange)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c)
@@ -405,23 +405,23 @@ func (self *HTTPServer) Withdraw(c *gin.Context) {
 
 	exchange, err := common.GetExchange(exchangeParam)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	token, err := common.GetInternalToken(tokenParam)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	amount, err := hexutil.DecodeBig(amountParam)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	log.Printf("Withdraw %s %s from %s\n", amount.Text(10), token.ID, exchange.ID())
 	id, err := self.core.Withdraw(exchange, token, amount, getTimePoint(c, false))
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c, httputil.WithField("id", id))
@@ -439,23 +439,23 @@ func (self *HTTPServer) Deposit(c *gin.Context) {
 
 	exchange, err := common.GetExchange(exchangeParam)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	token, err := common.GetInternalToken(tokenParam)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	amount, err := hexutil.DecodeBig(amountParam)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	log.Printf("Depositing %s %s to %s\n", amount.Text(10), token.ID, exchange.ID())
 	id, err := self.core.Deposit(exchange, token, amount, getTimePoint(c, false))
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c, httputil.WithField("id", id))
@@ -475,7 +475,7 @@ func (self *HTTPServer) GetActivities(c *gin.Context) {
 
 	data, err := self.app.GetRecords(fromTime*1000000, toTime*1000000)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
 		httputil.ResponseSuccess(c, httputil.WithData(data))
 	}
@@ -494,7 +494,7 @@ func (self *HTTPServer) CatLogs(c *gin.Context) {
 
 	data, err := self.stat.GetCatLogs(fromTime, toTime)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
 		httputil.ResponseSuccess(c, httputil.WithData(data))
 	}
@@ -513,7 +513,7 @@ func (self *HTTPServer) TradeLogs(c *gin.Context) {
 
 	data, err := self.stat.GetTradeLogs(fromTime, toTime)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
 		httputil.ResponseSuccess(c, httputil.WithData(data))
 	}
@@ -522,7 +522,7 @@ func (self *HTTPServer) TradeLogs(c *gin.Context) {
 func (self *HTTPServer) StopFetcher(c *gin.Context) {
 	err := self.app.Stop()
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
 		httputil.ResponseSuccess(c)
 	}
@@ -537,7 +537,7 @@ func (self *HTTPServer) ImmediatePendingActivities(c *gin.Context) {
 
 	data, err := self.app.GetPendingActivities()
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
 		httputil.ResponseSuccess(c, httputil.WithData(data))
 	}
@@ -559,7 +559,7 @@ func (self *HTTPServer) Metrics(c *gin.Context) {
 	for _, tok := range strings.Split(tokenParam, "-") {
 		token, err := common.GetInternalToken(tok)
 		if err != nil {
-			httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
 		} else {
 			tokens = append(tokens, token)
@@ -567,15 +567,15 @@ func (self *HTTPServer) Metrics(c *gin.Context) {
 	}
 	from, err := strconv.ParseUint(fromParam, 10, 64)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 	}
 	to, err := strconv.ParseUint(toParam, 10, 64)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 	}
 	data, err := self.metric.GetMetric(tokens, from, to)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 	}
 	response.ReturnTime = common.GetTimepoint()
 	response.Data = data
@@ -597,7 +597,7 @@ func (self *HTTPServer) StoreMetrics(c *gin.Context) {
 
 	timestamp, err := strconv.ParseUint(timestampParam, 10, 64)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 	}
 	metricEntry := metric.MetricEntry{}
 	metricEntry.Timestamp = timestamp
@@ -631,7 +631,7 @@ func (self *HTTPServer) StoreMetrics(c *gin.Context) {
 
 	err = self.metric.StoreMetric(&metricEntry, common.GetTimepoint())
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
 		httputil.ResponseSuccess(c)
 	}
@@ -644,7 +644,7 @@ func (self *HTTPServer) GetExchangeInfo(c *gin.Context) {
 		for _, ex := range common.SupportedExchanges {
 			exchangeInfo, err := ex.GetInfo()
 			if err != nil {
-				httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+				httputil.ResponseFailure(c, httputil.WithError(err))
 				return
 			}
 			data[string(ex.ID())] = exchangeInfo.GetData()
@@ -653,12 +653,12 @@ func (self *HTTPServer) GetExchangeInfo(c *gin.Context) {
 	} else {
 		exchange, err := common.GetExchange(exchangeParam)
 		if err != nil {
-			httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
 		}
 		exchangeInfo, err := exchange.GetInfo()
 		if err != nil {
-			httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
 		}
 		httputil.ResponseSuccess(c, httputil.WithData(exchangeInfo.GetData()))
@@ -671,17 +671,17 @@ func (self *HTTPServer) GetPairInfo(c *gin.Context) {
 	quote := c.Param("quote")
 	exchange, err := common.GetExchange(exchangeParam)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	pair, err := common.NewTokenPair(base, quote)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	pairInfo, err := exchange.GetExchangeInfo(pair.PairID())
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c, httputil.WithData(pairInfo))
@@ -692,7 +692,7 @@ func (self *HTTPServer) GetExchangeFee(c *gin.Context) {
 	exchangeParam := c.Param("exchangeid")
 	exchange, err := common.GetExchange(exchangeParam)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	fee := exchange.GetFee()
@@ -728,7 +728,7 @@ func (self *HTTPServer) GetTargetQty(c *gin.Context) {
 	}
 	data, err := self.metric.GetTokenTargetQty()
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
 		httputil.ResponseSuccess(c, httputil.WithData(data))
 	}
@@ -742,7 +742,7 @@ func (self *HTTPServer) GetPendingTargetQty(c *gin.Context) {
 	}
 	data, err := self.metric.GetPendingTargetQty()
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c, httputil.WithData(data))
@@ -769,7 +769,7 @@ func (self *HTTPServer) ConfirmTargetQty(c *gin.Context) {
 	id := postForm.Get("id")
 	err := self.metric.StoreTokenTargetQty(id, data)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c)
@@ -784,7 +784,7 @@ func (self *HTTPServer) CancelTargetQty(c *gin.Context) {
 	}
 	err := self.metric.RemovePendingTargetQty()
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c)
@@ -792,7 +792,6 @@ func (self *HTTPServer) CancelTargetQty(c *gin.Context) {
 }
 
 func (self *HTTPServer) SetTargetQty(c *gin.Context) {
-	log.Println("Storing target quantity")
 	postForm, ok := self.Authenticated(c, []string{"data", "type"}, []Permission{ConfigurePermission})
 	if !ok {
 		return
@@ -814,19 +813,19 @@ func (self *HTTPServer) SetTargetQty(c *gin.Context) {
 		// transferThresold, _ := strconv.ParseFloat(dataParts[4], 64)
 		_, err = common.GetInternalToken(token)
 		if err != nil {
-			httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
 		}
 	}
 	err = self.metric.StorePendingTargetQty(data, dataType)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 
 	pendingData, err := self.metric.GetPendingTargetQty()
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c, httputil.WithData(pendingData))
@@ -854,7 +853,7 @@ func (self *HTTPServer) GetTradeHistory(c *gin.Context) {
 	for _, ex := range self.exchanges {
 		history, err := ex.GetTradeHistory(fromTime, toTime)
 		if err != nil {
-			httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
 		}
 		data.Data[ex.ID()] = history
@@ -867,7 +866,7 @@ func (self *HTTPServer) GetGoldData(c *gin.Context) {
 
 	data, err := self.app.GetGoldData(getTimePoint(c, true))
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
 		httputil.ResponseSuccess(c, httputil.WithData(data))
 	}
@@ -884,7 +883,7 @@ func (self *HTTPServer) GetRebalanceStatus(c *gin.Context) {
 	}
 	data, err := self.metric.GetRebalanceControl()
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c, httputil.WithData(data.Status))
@@ -950,7 +949,7 @@ func (self *HTTPServer) GetPWIEquation(c *gin.Context) {
 	}
 	data, err := self.metric.GetPWIEquation()
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c, httputil.WithData(data))
@@ -963,7 +962,7 @@ func (self *HTTPServer) GetAssetVolume(c *gin.Context) {
 	asset := c.Query("asset")
 	data, err := self.stat.GetAssetVolume(fromTime, toTime, freq, asset)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c, httputil.WithData(data))
@@ -976,7 +975,7 @@ func (self *HTTPServer) GetPendingPWIEquation(c *gin.Context) {
 	}
 	data, err := self.metric.GetPendingPWIEquation()
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c, httputil.WithData(data))
@@ -993,7 +992,7 @@ func (self *HTTPServer) GetBurnFee(c *gin.Context) {
 	}
 	data, err := self.stat.GetBurnFee(fromTime, toTime, freq, reserveAddr)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c, httputil.WithData(data))
@@ -1015,13 +1014,13 @@ func (self *HTTPServer) SetPWIEquation(c *gin.Context) {
 		token := dataParts[0]
 		_, err = common.GetInternalToken(token)
 		if err != nil {
-			httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
 		}
 	}
 	err = self.metric.StorePendingPWIEquation(data)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c)
@@ -1035,7 +1034,7 @@ func (self *HTTPServer) GetWalletFee(c *gin.Context) {
 	walletAddr := c.Query("walletAddr")
 	data, err := self.stat.GetWalletFee(fromTime, toTime, freq, reserveAddr, walletAddr)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c, httputil.WithData(data))
@@ -1049,7 +1048,7 @@ func (self *HTTPServer) ConfirmPWIEquation(c *gin.Context) {
 	postData := postForm.Get("data")
 	err := self.metric.StorePWIEquation(postData)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c)
@@ -1065,7 +1064,7 @@ func (self *HTTPServer) ExceedDailyLimit(c *gin.Context) {
 	}
 	exceeded, err := self.stat.ExceedDailyLimit(address)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
 		httputil.ResponseSuccess(c, httputil.WithData(exceeded))
 	}
@@ -1082,7 +1081,7 @@ func (self *HTTPServer) GetUserVolume(c *gin.Context) {
 	}
 	data, err := self.stat.GetUserVolume(fromTime, toTime, freq, userAddr)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c, httputil.WithData(data))
@@ -1100,7 +1099,7 @@ func (self *HTTPServer) GetUsersVolume(c *gin.Context) {
 	userAddrs := strings.Split(userAddr, ",")
 	data, err := self.stat.GetUsersVolume(fromTime, toTime, freq, userAddrs)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c, httputil.WithData(data))
@@ -1131,7 +1130,7 @@ func (self *HTTPServer) GetTradeSummary(c *gin.Context) {
 	}
 	data, err := self.stat.GetTradeSummary(fromTime, toTime, tzparam)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c, httputil.WithData(data))
@@ -1145,7 +1144,7 @@ func (self *HTTPServer) RejectPWIEquation(c *gin.Context) {
 	// postData := postForm.Get("data")
 	err := self.metric.RemovePendingPWIEquation()
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c)
@@ -1160,7 +1159,7 @@ func (self *HTTPServer) GetCapByAddress(c *gin.Context) {
 	}
 	data, err := self.stat.GetCapByAddress(address)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
 		httputil.ResponseSuccess(c, httputil.WithData(data))
 	}
@@ -1170,7 +1169,7 @@ func (self *HTTPServer) GetCapByUser(c *gin.Context) {
 	user := c.Param("user")
 	data, err := self.stat.GetCapByUser(user)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
 		httputil.ResponseSuccess(c, httputil.WithData(data))
 	}
@@ -1179,7 +1178,7 @@ func (self *HTTPServer) GetCapByUser(c *gin.Context) {
 func (self *HTTPServer) GetPendingAddresses(c *gin.Context) {
 	data, err := self.stat.GetPendingAddresses()
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
 		httputil.ResponseSuccess(c, httputil.WithData(data))
 	}
@@ -1216,7 +1215,7 @@ func (self *HTTPServer) UpdateUserAddresses(c *gin.Context) {
 	}
 	err = self.stat.UpdateUserAddresses(user, addrs, timestamps)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
 		httputil.ResponseSuccess(c)
 	}
@@ -1245,7 +1244,7 @@ func (self *HTTPServer) GetWalletStats(c *gin.Context) {
 
 	data, err := self.stat.GetWalletStats(fromTime, toTime, walletAddr.Hex(), tzparam)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c, httputil.WithData(data))
@@ -1254,7 +1253,7 @@ func (self *HTTPServer) GetWalletStats(c *gin.Context) {
 func (self *HTTPServer) GetWalletAddress(c *gin.Context) {
 	data, err := self.stat.GetWalletAddress()
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c, httputil.WithData(data))
@@ -1273,7 +1272,7 @@ func (self *HTTPServer) GetReserveRate(c *gin.Context) {
 	}
 	data, err := self.stat.GetReserveRates(fromTime, toTime, reserveAddr)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c, httputil.WithData(data))
@@ -1282,7 +1281,7 @@ func (self *HTTPServer) GetReserveRate(c *gin.Context) {
 func (self *HTTPServer) GetExchangesStatus(c *gin.Context) {
 	data, err := self.app.GetExchangeStatus()
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c, httputil.WithData(data))
@@ -1296,22 +1295,22 @@ func (self *HTTPServer) UpdateExchangeStatus(c *gin.Context) {
 	exchange := postForm.Get("exchange")
 	status, err := strconv.ParseBool(postForm.Get("status"))
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	timestamp, err := strconv.ParseUint(postForm.Get("timestamp"), 10, 64)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	_, err = common.GetExchange(strings.ToLower(exchange))
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	err = self.app.UpdateExchangeStatus(exchange, status, timestamp)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c)
@@ -1330,7 +1329,7 @@ func (self *HTTPServer) GetCountryStats(c *gin.Context) {
 	}
 	data, err := self.stat.GetGeoData(fromTime, toTime, country, tzparam)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c, httputil.WithData(data))
@@ -1349,7 +1348,7 @@ func (self *HTTPServer) GetHeatMap(c *gin.Context) {
 
 	data, err := self.stat.GetHeatMap(fromTime, toTime, tzparam)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c, httputil.WithData(data))
@@ -1367,7 +1366,7 @@ func (self *HTTPServer) UpdatePriceAnalyticData(c *gin.Context) {
 	}
 	timestamp, err := strconv.ParseUint(postForm.Get("timestamp"), 10, 64)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	value := []byte(postForm.Get("value"))
@@ -1377,7 +1376,7 @@ func (self *HTTPServer) UpdatePriceAnalyticData(c *gin.Context) {
 	}
 	err = self.stat.UpdatePriceAnalyticData(timestamp, value)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c)
@@ -1397,7 +1396,7 @@ func (self *HTTPServer) GetPriceAnalyticData(c *gin.Context) {
 
 	data, err := self.stat.GetPriceAnalyticData(fromTime, toTime)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c, httputil.WithData(data))
@@ -1420,7 +1419,7 @@ func (self *HTTPServer) ExchangeNotification(c *gin.Context) {
 
 	err := self.app.UpdateExchangeNotification(exchange, action, tokenPair, from, to, isWarning, msg)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c)
@@ -1433,7 +1432,7 @@ func (self *HTTPServer) GetNotifications(c *gin.Context) {
 	}
 	data, err := self.app.GetNotifications()
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c, httputil.WithData(data))
@@ -1455,7 +1454,7 @@ func (self *HTTPServer) GetUserList(c *gin.Context) {
 	}
 	data, err := self.stat.GetUserList(fromTime, toTime, timeZone)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c, httputil.WithData(data))
@@ -1477,12 +1476,12 @@ func (self *HTTPServer) GetReserveVolume(c *gin.Context) {
 	}
 	token, err := common.GetNetworkToken(tokenName)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	data, err := self.stat.GetReserveVolume(fromTime, toTime, freq, reserveAddr, token.Address)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c, httputil.WithData(data))
@@ -1500,7 +1499,7 @@ func (self *HTTPServer) SetStableTokenParams(c *gin.Context) {
 	}
 	err := self.metric.SetStableTokenParams(value)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c)
@@ -1518,7 +1517,7 @@ func (self *HTTPServer) ConfirmStableTokenParams(c *gin.Context) {
 	}
 	err := self.metric.ConfirmStableTokenParams(value)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c)
@@ -1531,11 +1530,10 @@ func (self *HTTPServer) RejectStableTokenParams(c *gin.Context) {
 	}
 	err := self.metric.RemovePendingStableTokenParams()
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c)
-
 }
 
 func (self *HTTPServer) GetPendingStableTokenParams(c *gin.Context) {
@@ -1546,7 +1544,7 @@ func (self *HTTPServer) GetPendingStableTokenParams(c *gin.Context) {
 
 	data, err := self.metric.GetPendingStableTokenParams()
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c, httputil.WithData(data))
@@ -1560,7 +1558,7 @@ func (self *HTTPServer) GetStableTokenParams(c *gin.Context) {
 
 	data, err := self.metric.GetStableTokenParams()
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c, httputil.WithData(data))
@@ -1580,7 +1578,83 @@ func (self *HTTPServer) GetTokenHeatmap(c *gin.Context) {
 
 	data, err := self.stat.GetTokenHeatmap(fromTime, toTime, token, freq)
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		httputil.ResponseFailure(c, httputil.WithError(err))
+		return
+	}
+	httputil.ResponseSuccess(c, httputil.WithData(data))
+}
+
+func (self *HTTPServer) SetTargetQtyV2(c *gin.Context) {
+	postForm, ok := self.Authenticated(c, []string{}, []Permission{ConfigurePermission})
+	if !ok {
+		return
+	}
+	value := []byte(postForm.Get("value"))
+	if len(value) > MAX_DATA_SIZE {
+		httputil.ResponseFailure(c, httputil.WithReason("the data size must be less than 1 MB"))
+		return
+	}
+	err := self.metric.StorePendingTargetQtyV2(value)
+	if err != nil {
+		httputil.ResponseFailure(c, httputil.WithError(err))
+		return
+	}
+	httputil.ResponseSuccess(c)
+}
+
+func (self *HTTPServer) GetPendingTargetQtyV2(c *gin.Context) {
+	_, ok := self.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, ConfigurePermission, ConfirmConfPermission, RebalancePermission})
+	if !ok {
+		return
+	}
+
+	data, err := self.metric.GetPendingTargetQtyV2()
+	if err != nil {
+		httputil.ResponseFailure(c, httputil.WithError(err))
+		return
+	}
+	httputil.ResponseSuccess(c, httputil.WithData(data))
+}
+
+func (self *HTTPServer) ConfirmTargetQtyV2(c *gin.Context) {
+	postForm, ok := self.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
+	if !ok {
+		return
+	}
+	value := []byte(postForm.Get("value"))
+	if len(value) > MAX_DATA_SIZE {
+		httputil.ResponseFailure(c, httputil.WithReason("the data size must be less than 1 MB"))
+		return
+	}
+	err := self.metric.ConfirmTargetQtyV2(value)
+	if err != nil {
+		httputil.ResponseFailure(c, httputil.WithError(err))
+	}
+	httputil.ResponseSuccess(c)
+}
+
+func (self *HTTPServer) CancelTargetQtyV2(c *gin.Context) {
+	_, ok := self.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
+	if !ok {
+		return
+	}
+	err := self.metric.RemovePendingTargetQtyV2()
+	if err != nil {
+		httputil.ResponseFailure(c, httputil.WithError(err))
+		return
+	}
+	httputil.ResponseSuccess(c)
+}
+
+func (self *HTTPServer) GetTargetQtyV2(c *gin.Context) {
+	_, ok := self.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, ConfigurePermission, ConfirmConfPermission, RebalancePermission})
+	if !ok {
+		return
+	}
+
+	data, err := self.metric.GetTargetQtyV2()
+	if err != nil {
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c, httputil.WithData(data))
@@ -1632,6 +1706,13 @@ func (self *HTTPServer) Run() {
 		self.r.POST("/settargetqty", self.SetTargetQty)
 		self.r.POST("/confirmtargetqty", self.ConfirmTargetQty)
 		self.r.POST("/canceltargetqty", self.CancelTargetQty)
+
+		v2 := self.r.Group("/v2")
+		v2.GET("/targetqty", self.GetTargetQtyV2)
+		v2.GET("/pendingtargetqty", self.GetPendingTargetQtyV2)
+		v2.POST("/settargetqty", self.SetTargetQtyV2)
+		v2.POST("/confirmtargetqty", self.ConfirmTargetQtyV2)
+		v2.POST("/canceltargetqty", self.CancelTargetQtyV2)
 
 		self.r.GET("/timeserver", self.GetTimeServer)
 

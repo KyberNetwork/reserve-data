@@ -1216,6 +1216,115 @@ response:
 {"data":{"Timestamp":1526923808631,"DGX":{"Valid":true,"Timestamp":0,"success":"","data":[{"symbol":"DGXETH","price":0.06676463,"time":1526923801},{"symbol":"ETHUSD","price":694.4,"time":1526923801},{"symbol":"ETHSGD","price":931.89,"time":1526923801},{"symbol":"DGXUSD","price":46.36,"time":1526923801},{"symbol":"EURUSD","price":1.17732,"time":1526923801},{"symbol":"USDSGD","price":1.34201,"time":1526923801},{"symbol":"XAUUSD","price":1291.468,"time":1526923801},{"symbol":"USDJPY","price":111.061,"time":1526923801}],"Error":""},"OneForgeETH":{"Value":1.85646,"Text":"1 XAU is worth 1.85646 ETH","Timestamp":1526923803,"Error":false,"Message":""},"OneForgeUSD":{"Value":1291.57,"Text":"1 XAU is worth 1291.57 USD","Timestamp":1526923803,"Error":false,"Message":""},"GDAX":{"Valid":true,"Error":"","trade_id":34527604,"price":"695.56000000","size":"0.00894700","bid":"695.55","ask":"695.56","volume":"50497.82498957","time":"2018-05-21T17:30:04.729000Z"},"Kraken":{"Valid":true,"network_error":"","error":[],"result":{"XETHZUSD":{"a":["696.66000","1","1.000"],"b":["696.33000","4","4.000"],"c":["696.33000","0.10776064"],"v":["13536.83019524","16999.30348103"],"p":["707.93621","710.18316"],"t":[5361,8276],"l":["693.97000","693.97000"],"h":["721.38000","724.80000"],"o":"715.65000"}}},"Gemini":{"Valid":true,"Error":"","bid":"694.50","ask":"695.55","volume":{"ETH":"11418.5646926","USD":"8064891.13775284649999999999999999999704534","timestamp":1526923800000},"last":"695.36"}},"success":true}
 ```
 
+
+### set target quantity v2 - (signing required)
+```
+<host>:8000/v2/settargetqty
+POST request
+URL Params:
+  - value (string) : the json enconded string, represent a map (string : interface)
+```
+
+
+response:
+```
+on success:
+{"success":true}
+on failure:
+{"success":false,
+ "reason":<error>}
+```
+### confirm target quantity v2- (signing required)
+```
+<host>:8000/v2/confirmtargetqty
+POST request
+URL Params:
+  - value (string) : the json enconded string, represent a map (string : interface), must be equal to current pending.
+```
+
+
+response:
+```
+on success:
+{"success":true}
+on failure:
+{"success":false,
+ "reason":<error>}
+```
+
+### cancel set target quantity v2- (signing required)
+```
+<host>:8000/v2/canceltargetqty
+POST request
+URL Params:
+  nil
+```
+
+
+response:
+```
+on success:
+{"success":true}
+on failure:
+{"success":false,
+ "reason":<error>}
+```
+### Get pending target quantity - (signing required) return the current pending target quantity 
+```
+<host>:8000/v2/pendingtargetqty
+GET request
+params:
+  - nonce (uint64) : the nonce to conform to signing requirement
+```
+example:
+```
+curl -x GET \
+  http://localhost:8000/v2/pendingtargetqty?nonce=111111
+```
+ 
+response:
+```
+{
+  "data": {
+     "OMG" : {
+        "TotalTarget": 1500,
+        "ReserveTarget": 1005,
+        "RebalanceThreshold": 0.33,
+        "TransferThreshold": 0.2
+    }
+  },
+  "success": true
+}
+```
+
+### Get target quantity - (signing required) return the current confirmed target quantity 
+```
+<host>:8000/v2/targetqty
+GET request
+params:
+  - nonce (uint64) : the nonce to conform to signing requirement
+```
+example:
+```
+curl -x GET \
+  http://localhost:8000/v2/targetqty?nonce=111111
+```
+ 
+response:
+```
+{
+  "data": {
+    "OMG" : {
+      "TotalTarget": 1500,
+      "ReserveTarget": 1005,
+      "RebalanceThreshold": 0.33,
+      "TransferThreshold": 0.2
+    }
+  },
+  "success": true
+}
+```
+
 ## Authentication
 All APIs that are marked with (signing required) must follow authentication mechanism below:
 
