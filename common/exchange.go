@@ -1,7 +1,6 @@
 package common
 
 import (
-	"errors"
 	"fmt"
 	"math/big"
 
@@ -21,6 +20,7 @@ type Exchange interface {
 	GetFee() ExchangeFees
 	GetMinDeposit() ExchangesMinDeposit
 	TokenAddresses() map[string]ethereum.Address
+	GetTradeHistory(fromTime, toTime uint64) (ExchangeTradeHistory, error)
 }
 
 var SupportedExchanges = map[ExchangeID]Exchange{}
@@ -28,7 +28,7 @@ var SupportedExchanges = map[ExchangeID]Exchange{}
 func GetExchange(id string) (Exchange, error) {
 	ex := SupportedExchanges[ExchangeID(id)]
 	if ex == nil {
-		return ex, errors.New(fmt.Sprintf("Exchange %s is not supported", id))
+		return ex, fmt.Errorf("Exchange %s is not supported", id)
 	} else {
 		return ex, nil
 	}

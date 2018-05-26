@@ -48,6 +48,10 @@ func (self testExchange) TokenAddresses() map[string]ethereum.Address {
 func (self testExchange) UpdateDepositAddress(token common.Token, address string) {
 }
 
+func (self testExchange) GetTradeHistory(fromTime, toTime uint64) (common.ExchangeTradeHistory, error) {
+	return common.ExchangeTradeHistory{}, nil
+}
+
 type testBlockchain struct {
 }
 
@@ -82,6 +86,18 @@ func (self testBlockchain) SetRates(
 	return tx, nil
 }
 
+func (self testBlockchain) StandardGasPrice() float64 {
+	return 0
+}
+
+func (self testBlockchain) FastGasPrice() float64 {
+	return 0
+}
+
+func (self testBlockchain) SafeLowGasPrice() float64 {
+	return 0
+}
+
 func (self testBlockchain) SetRateMinedNonce() (uint64, error) {
 	return 0, nil
 }
@@ -110,8 +126,8 @@ func (self testActivityStorage) GetActivity(id common.ActivityID) (common.Activi
 	return common.ActivityRecord{}, nil
 }
 
-func (self testActivityStorage) PendingSetrate(minedNonce uint64) (*common.ActivityRecord, error) {
-	return nil, nil
+func (self testActivityStorage) PendingSetrate(minedNonce uint64) (*common.ActivityRecord, uint64, error) {
+	return nil, 0, nil
 }
 
 func (self testActivityStorage) HasPendingDeposit(

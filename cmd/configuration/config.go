@@ -55,7 +55,6 @@ type Config struct {
 	FetcherGlobalStorage fetcher.GlobalStorage
 	MetricStorage        metric.MetricStorage
 	Archive              archive.Archive
-	//ExchangeStorage exchange.Storage
 
 	World                *world.TheWorld
 	FetcherRunner        fetcher.FetcherRunner
@@ -136,7 +135,9 @@ func (self *Config) AddStatConfig(settingPath SettingPaths, addressConfig common
 	var statFetcherRunner stat.FetcherRunner
 	var statControllerRunner statpruner.ControllerRunner
 	if os.Getenv("KYBER_ENV") == "simulation" {
-		statFetcherRunner = http_runner.NewHttpRunner(8002)
+		if statFetcherRunner, err = http_runner.NewHttpRunner(http_runner.WithHttpRunnerPort(8002)); err != nil {
+			panic(err)
+		}
 	} else {
 		statFetcherRunner = stat.NewTickerRunner(
 			5*time.Second,  // block fetching interval
@@ -189,7 +190,9 @@ func (self *Config) AddCoreConfig(settingPath SettingPaths, addressConfig common
 	var fetcherRunner fetcher.FetcherRunner
 	var dataControllerRunner datapruner.StorageControllerRunner
 	if os.Getenv("KYBER_ENV") == "simulation" {
-		fetcherRunner = http_runner.NewHttpRunner(8001)
+		if fetcherRunner, err = http_runner.NewHttpRunner(http_runner.WithHttpRunnerPort(8001)); err != nil {
+			log.Fatalf("failed to create HTTP runner: %s", err.Error())
+		}
 	} else {
 		fetcherRunner = fetcher.NewTickerRunner(
 			7*time.Second,  // orderbook fetching interval

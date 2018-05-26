@@ -1,7 +1,6 @@
 package stat
 
 import (
-	"errors"
 	"fmt"
 
 	ethereum "github.com/ethereum/go-ethereum/common"
@@ -37,16 +36,16 @@ func (self *UserStorageTest) TestUpdateAddressCategory() error {
 		return err
 	}
 	if gotCat != lowercaseCat {
-		return errors.New(fmt.Sprintf("Got unexpected category. Expected(%s) Got(%s)",
-			lowercaseCat, gotCat))
+		return fmt.Errorf("Got unexpected category. Expected(%s) Got(%s)",
+			lowercaseCat, gotCat)
 	}
 	gotCat, err = self.storage.GetCategory(ethereum.HexToAddress(lowercaseAddr))
 	if err != nil {
 		return err
 	}
 	if gotCat != lowercaseCat {
-		return errors.New(fmt.Sprintf("Got unexpected category. Expected(%s) Got(%s)",
-			lowercaseCat, gotCat))
+		return fmt.Errorf("Got unexpected category. Expected(%s) Got(%s)",
+			lowercaseCat, gotCat)
 	}
 	user, _, err := self.storage.GetUserOfAddress(ethereum.HexToAddress(lowercaseAddr))
 	// initialy user is identical to the address
@@ -54,16 +53,15 @@ func (self *UserStorageTest) TestUpdateAddressCategory() error {
 		return err
 	}
 	if user != lowercaseAddr {
-		return errors.New(fmt.Sprintf("Got unexpected user. Expected(%s) Got(%s)",
-			user, lowercaseAddr))
+		return fmt.Errorf("Got unexpected user. Expected(%s) Got(%s)", user, lowercaseAddr)
 	}
 	addresses, _, err := self.storage.GetAddressesOfUser(user)
 	if err != nil {
 		return err
 	}
 	if addresses[0].Hex() != ethereum.HexToAddress(lowercaseAddr).Hex() {
-		return errors.New(fmt.Sprintf("Got unexpected addresses. Expected(%v) Got(%v)",
-			addresses[0].Hex(), []string{lowercaseAddr}))
+		return fmt.Errorf("Got unexpected addresses. Expected(%v) Got(%v)",
+			addresses[0].Hex(), []string{lowercaseAddr})
 	}
 	return nil
 }
@@ -96,12 +94,11 @@ func (self *UserStorageTest) TestUpdateUserAddressesThenUpdateAddressCategory() 
 	}
 
 	if len(pendingAddrs) != len(expectedAddresses) {
-		return errors.New(
-			fmt.Sprintf("Expected to get %d addresses, got %d addresses", len(expectedAddresses), len(pendingAddrs)))
+		return fmt.Errorf("Expected to get %d addresses, got %d addresses", len(expectedAddresses), len(pendingAddrs))
 	}
 	for _, addr := range pendingAddrs {
 		if _, found := expectedAddresses[addr]; !found {
-			return errors.New(fmt.Sprintf("Expected to find %v, got not found", addr))
+			return fmt.Errorf("Expected to find %v, got not found", addr)
 		}
 	}
 	self.storage.UpdateUserAddresses(
@@ -117,12 +114,11 @@ func (self *UserStorageTest) TestUpdateUserAddressesThenUpdateAddressCategory() 
 		addr2: time2,
 	}
 	if len(pendingAddrs) != len(expectedAddresses) {
-		return errors.New(
-			fmt.Sprintf("Expected to get %d addresses, got %d addresses", len(expectedAddresses), len(pendingAddrs)))
+		return fmt.Errorf("Expected to get %d addresses, got %d addresses", len(expectedAddresses), len(pendingAddrs))
 	}
 	for _, addr := range pendingAddrs {
 		if _, found := expectedAddresses[addr]; !found {
-			return errors.New(fmt.Sprintf("Expected to find %s, got not found", addr))
+			return fmt.Errorf("Expected to find %s, got not found", addr)
 		}
 	}
 	// Start receiving cat logs
@@ -139,12 +135,11 @@ func (self *UserStorageTest) TestUpdateUserAddressesThenUpdateAddressCategory() 
 		addr2: time2,
 	}
 	if len(pendingAddrs) != len(expectedAddresses) {
-		return errors.New(
-			fmt.Sprintf("Expected to get %d addresses, got %d addresses", len(expectedAddresses), len(pendingAddrs)))
+		return fmt.Errorf("Expected to get %d addresses, got %d addresses", len(expectedAddresses), len(pendingAddrs))
 	}
 	for _, addr := range pendingAddrs {
 		if _, found := expectedAddresses[addr]; !found {
-			return errors.New(fmt.Sprintf("Expected to find %s, got not found", addr))
+			return fmt.Errorf("Expected to find %s, got not found", addr)
 		}
 	}
 	self.storage.UpdateAddressCategory(addr2, cat)
@@ -159,15 +154,14 @@ func (self *UserStorageTest) TestUpdateUserAddressesThenUpdateAddressCategory() 
 		addr2: time2,
 	}
 	if len(gotAddresses) != len(expectedAddresses) {
-		return errors.New(
-			fmt.Sprintf("Expected to get %d addresses, got %d addresses", len(expectedAddresses), len(gotAddresses)))
+		return fmt.Errorf("Expected to get %d addresses, got %d addresses", len(expectedAddresses), len(gotAddresses))
 	}
 	for i, addr := range gotAddresses {
 		if _, found := expectedAddresses[addr]; !found {
-			return errors.New(fmt.Sprintf("Expected to find %s, got not found", addr))
+			return fmt.Errorf("Expected to find %s, got not found", addr)
 		}
 		if expectedAddresses[addr] != gotTimes[i] {
-			return errors.New(fmt.Sprintf("Expected timestamp %d, got %d", expectedAddresses[addr], gotTimes[i]))
+			return fmt.Errorf("Expected timestamp %d, got %d", expectedAddresses[addr], gotTimes[i])
 		}
 	}
 	gotUser, gotTime, err := self.storage.GetUserOfAddress(addr1)
@@ -175,20 +169,20 @@ func (self *UserStorageTest) TestUpdateUserAddressesThenUpdateAddressCategory() 
 		return err
 	}
 	if gotUser != email {
-		return errors.New(fmt.Sprintf("Expected to get %s, got %s", email, gotUser))
+		return fmt.Errorf("Expected to get %s, got %s", email, gotUser)
 	}
 	if gotTime != time1 {
-		return errors.New(fmt.Sprintf("Expected to get %d, got %d", time1, gotTime))
+		return fmt.Errorf("Expected to get %d, got %d", time1, gotTime)
 	}
 	gotUser, gotTime, err = self.storage.GetUserOfAddress(addr2)
 	if err != nil {
 		return err
 	}
 	if gotUser != email {
-		return errors.New(fmt.Sprintf("Expected to get %s, got %s", email, gotUser))
+		return fmt.Errorf("Expected to get %s, got %s", email, gotUser)
 	}
 	if gotTime != time2 {
-		return errors.New(fmt.Sprintf("Expected to get %d, got %d", time2, gotTime))
+		return fmt.Errorf("Expected to get %d, got %d", time2, gotTime)
 	}
 	return nil
 }
@@ -220,15 +214,14 @@ func (self *UserStorageTest) TestUpdateAddressCategoryThenUpdateUserAddresses() 
 		addr2: time2,
 	}
 	if len(gotAddresses) != len(expectedAddresses) {
-		return errors.New(
-			fmt.Sprintf("Expected to get %d addresses, got %d addresses", len(expectedAddresses), len(gotAddresses)))
+		return fmt.Errorf("Expected to get %d addresses, got %d addresses", len(expectedAddresses), len(gotAddresses))
 	}
 	for i, addr := range gotAddresses {
 		if _, found := expectedAddresses[addr]; !found {
-			return errors.New(fmt.Sprintf("Expected to find %s, got not found", addr))
+			return fmt.Errorf("Expected to find %s, got not found", addr)
 		}
 		if gotTimes[i] != expectedAddresses[addr] {
-			return errors.New(fmt.Sprintf("Expected %d, found %d", expectedAddresses[addr], gotTimes[i]))
+			return fmt.Errorf("Expected %d, found %d", expectedAddresses[addr], gotTimes[i])
 		}
 	}
 	gotUser, gotTime, err := self.storage.GetUserOfAddress(addr1)
@@ -236,20 +229,20 @@ func (self *UserStorageTest) TestUpdateAddressCategoryThenUpdateUserAddresses() 
 		return err
 	}
 	if gotUser != lowercaseEmail {
-		return errors.New(fmt.Sprintf("Expected to get %s, got %s", lowercaseEmail, gotUser))
+		return fmt.Errorf("Expected to get %s, got %s", lowercaseEmail, gotUser)
 	}
 	if gotTime != time1 {
-		return errors.New(fmt.Sprintf("Expected to get %d, got %d", time1, gotTime))
+		return fmt.Errorf("Expected to get %d, got %d", time1, gotTime)
 	}
 	gotUser, gotTime, err = self.storage.GetUserOfAddress(addr2)
 	if err != nil {
 		return err
 	}
 	if gotUser != lowercaseEmail {
-		return errors.New(fmt.Sprintf("Expected to get %s, got %s", lowercaseEmail, gotUser))
+		return fmt.Errorf("Expected to get %s, got %s", lowercaseEmail, gotUser)
 	}
 	if gotTime != time2 {
-		return errors.New(fmt.Sprintf("Expected to get %d, got %d", time2, gotTime))
+		return fmt.Errorf("Expected to get %d, got %d", time2, gotTime)
 	}
 	return nil
 }

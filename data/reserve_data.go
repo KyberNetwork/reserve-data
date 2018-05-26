@@ -170,6 +170,8 @@ func (self ReserveData) GetRates(fromTime, toTime uint64) ([]common.AllRateRespo
 		if isDuplicated(one.Data, current.Data) {
 			if len(result) > 0 {
 				result[len(result)-1].ToBlockNumber = one.BlockNumber
+				result[len(result)-1].Timestamp = one.Timestamp
+				result[len(result)-1].ReturnTime = one.ReturnTime
 			} else {
 				one.ToBlockNumber = one.BlockNumber
 			}
@@ -242,11 +244,6 @@ func (self ReserveData) GetRecords(fromTime, toTime uint64) ([]common.ActivityRe
 
 func (self ReserveData) GetPendingActivities() ([]common.ActivityRecord, error) {
 	return self.storage.GetPendingActivities()
-}
-
-func (self ReserveData) GetTradeHistory(timepoint uint64) (common.AllTradeHistory, error) {
-	data, err := self.storage.GetTradeHistory(timepoint)
-	return data, err
 }
 
 func (self ReserveData) GetNotifications() (common.ExchangeNotifications, error) {

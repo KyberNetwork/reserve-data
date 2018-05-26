@@ -24,7 +24,7 @@ func (self *Bitfinex) Address(token common.Token) (ethereum.Address, bool) {
 }
 
 func (self *Bitfinex) UpdateAllDepositAddresses(address string) {
-	for k, _ := range self.addresses {
+	for k := range self.addresses {
 		self.addresses[k] = ethereum.HexToAddress(address)
 	}
 }

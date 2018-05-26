@@ -8,7 +8,6 @@ type Storage interface {
 	StorePrice(data common.AllPriceEntry, timepoint uint64) error
 	StoreRate(data common.AllRateEntry, timepoint uint64) error
 	StoreAuthSnapshot(data *common.AuthDataSnapshot, timepoint uint64) error
-	StoreTradeHistory(data common.AllTradeHistory, timepoint uint64) error
 
 	GetPendingActivities() ([]common.ActivityRecord, error)
 	UpdateActivity(id common.ActivityID, act common.ActivityRecord) error

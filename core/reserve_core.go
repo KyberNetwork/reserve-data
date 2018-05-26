@@ -13,6 +13,10 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 )
 
+// HIGH_BOUND_GAS_PRICE is the price we will try to use to get higher priority
+// than trade tx to avoid price front running from users.
+const HIGH_BOUND_GAS_PRICE float64 = 50.1
+
 type ReserveCore struct {
 	blockchain      Blockchain
 	activityStorage ActivityStorage
@@ -134,12 +138,12 @@ func (self ReserveCore) Deposit(
 	var status string
 
 	if !supported {
-		err = errors.New(fmt.Sprintf("Exchange %s doesn't support token %s", exchange.ID(), token.ID))
+		err = fmt.Errorf("Exchange %s doesn't support token %s", exchange.ID(), token.ID)
 	} else if ok, perr := self.activityStorage.HasPendingDeposit(token, exchange); ok {
 		if perr != nil {
 			err = perr
 		} else {
-			err = errors.New(fmt.Sprintf("There is a pending %s deposit to %s currently, please try again", token.ID, exchange.ID()))
+			err = fmt.Errorf("There is a pending %s deposit to %s currently, please try again", token.ID, exchange.ID())
 		}
 	} else {
 		err = sanityCheckAmount(exchange, token, amount)
@@ -191,7 +195,7 @@ func (self ReserveCore) Withdraw(
 	var err error
 	var id string
 	if !supported {
-		err = errors.New(fmt.Sprintf("Exchange %s doesn't support token %s", exchange.ID(), token.ID))
+		err = fmt.Errorf("Exchange %s doesn't support token %s", exchange.ID(), token.ID)
 	} else {
 		err = sanityCheckAmount(exchange, token, amount)
 		if err == nil {
@@ -232,18 +236,34 @@ func (self ReserveCore) Withdraw(
 	return uid, err
 }
 
-func (self ReserveCore) pendingSetrateInfo(minedNonce uint64) (*big.Int, *big.Int, error) {
-	act, err := self.activityStorage.PendingSetrate(minedNonce)
-	if err != nil {
-		return nil, nil, err
-	}
-	if act != nil {
-		nonce, _ := strconv.ParseUint(act.Result["nonce"].(string), 10, 64)
-		gasPrice, _ := strconv.ParseUint(act.Result["gasPrice"].(string), 10, 64)
-		return big.NewInt(int64(nonce)), big.NewInt(int64(gasPrice)), nil
+func calculateNewGasPrice(old *big.Int, count uint64) *big.Int {
+	// in this case after 5 tries the tx is still not mined.
+	// at this point, 50.1 gwei is not enough but it doesn't matter
+	// if the tx is mined or not because users' tx is not mined neither
+	// so we can just increase the gas price a tiny amount (1 gwei) to make
+	// the node accept tx with up to date price
+	if count > 4 {
+		return old.Add(old, common.GweiToWei(1))
 	} else {
-		return nil, nil, nil
+		// new = old + (50.1 - old) / (5 - count)
+		return old.Add(
+			old,
+			big.NewInt(0).Div(big.NewInt(0).Sub(common.GweiToWei(HIGH_BOUND_GAS_PRICE), old), big.NewInt(int64(5-count))),
+		)
 	}
+}
+
+func (self ReserveCore) pendingSetrateInfo(minedNonce uint64) (*big.Int, *big.Int, uint64, error) {
+	act, count, err := self.activityStorage.PendingSetrate(minedNonce)
+	if err != nil {
+		return nil, nil, 0, err
+	}
+	if act == nil {
+		return nil, nil, 0, nil
+	}
+	nonce, _ := strconv.ParseUint(act.Result["nonce"].(string), 10, 64)
+	gasPrice, _ := strconv.ParseUint(act.Result["gasPrice"].(string), 10, 64)
+	return big.NewInt(int64(nonce)), big.NewInt(int64(gasPrice)), count, nil
 }
 
 func (self ReserveCore) SetRates(
@@ -251,7 +271,8 @@ func (self ReserveCore) SetRates(
 	buys []*big.Int,
 	sells []*big.Int,
 	block *big.Int,
-	afpMids []*big.Int) (common.ActivityID, error) {
+	afpMids []*big.Int,
+	additionalMsgs []string) (common.ActivityID, error) {
 
 	lentokens := len(tokens)
 	lenbuys := len(buys)
@@ -278,16 +299,18 @@ func (self ReserveCore) SetRates(
 			var oldNonce *big.Int
 			var oldPrice *big.Int
 			var minedNonce uint64
+			var count uint64
 			minedNonce, err = self.blockchain.SetRateMinedNonce()
 			if err != nil {
 				err = errors.New("Couldn't get mined nonce of set rate operator")
 			} else {
-				oldNonce, oldPrice, err = self.pendingSetrateInfo(minedNonce)
+				oldNonce, oldPrice, count, err = self.pendingSetrateInfo(minedNonce)
+				log.Printf("old nonce: %v, old price: %v, count: %d, err: %v", oldNonce, oldPrice, count, err)
 				if err != nil {
 					err = errors.New("Couldn't check pending set rate tx pool. Please try later")
 				} else {
 					if oldNonce != nil {
-						newPrice := big.NewInt(0).Add(oldPrice, big.NewInt(10000000000))
+						newPrice := calculateNewGasPrice(oldPrice, count)
 						log.Printf("Trying to replace old tx with new price: %s", newPrice.Text(10))
 						tx, err = self.blockchain.SetRates(
 							tokenAddrs, buys, sells, block,
@@ -295,10 +318,17 @@ func (self ReserveCore) SetRates(
 							newPrice,
 						)
 					} else {
+						recommendedPrice := self.blockchain.StandardGasPrice()
+						var initPrice *big.Int
+						if recommendedPrice == 0 || recommendedPrice > HIGH_BOUND_GAS_PRICE {
+							initPrice = common.GweiToWei(10)
+						} else {
+							initPrice = common.GweiToWei(recommendedPrice)
+						}
 						tx, err = self.blockchain.SetRates(
 							tokenAddrs, buys, sells, block,
-							nil,
-							big.NewInt(50100000000),
+							big.NewInt(int64(minedNonce)),
+							initPrice,
 						)
 					}
 				}
@@ -324,6 +354,7 @@ func (self ReserveCore) SetRates(
 			"sells":  sells,
 			"block":  block,
 			"afpMid": afpMids,
+			"msgs":   additionalMsgs,
 		}, map[string]interface{}{
 			"tx":       txhex,
 			"nonce":    txnonce,
@@ -342,7 +373,7 @@ func (self ReserveCore) SetRates(
 }
 
 func sanityCheck(buys, afpMid, sells []*big.Int) error {
-	eth := big.NewFloat(0).SetInt(big.NewInt(1000000000000000000))
+	eth := big.NewFloat(0).SetInt(common.EthToWei(1))
 	for i, s := range sells {
 		check := checkZeroValue(buys[i], s)
 		switch check {

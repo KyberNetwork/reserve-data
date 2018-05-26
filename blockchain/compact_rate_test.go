@@ -115,19 +115,19 @@ func TestBuildCompactBulk(t *testing.T) {
 		ethereum.HexToAddress(addr3): 28,
 	}
 	indicesInput := map[string]tbindex{
-		addr1: tbindex{3, 9},
-		addr2: tbindex{9, 5},
-		addr3: tbindex{9, 6},
+		addr1: {3, 9},
+		addr2: {9, 5},
+		addr3: {9, 6},
 	}
 	buyBulk, sellBulk, indices := BuildCompactBulk(
 		buysInput, sellsInput, indicesInput)
 	expectedBuys := [][14]byte{
-		[14]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 23, 0, 0, 0, 0},
-		[14]byte{0, 0, 0, 0, 0, 24, 25, 0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, 23, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 24, 25, 0, 0, 0, 0, 0, 0, 0},
 	}
 	expectedSells := [][14]byte{
-		[14]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 26, 0, 0, 0, 0},
-		[14]byte{0, 0, 0, 0, 0, 27, 28, 0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, 26, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 27, 28, 0, 0, 0, 0, 0, 0, 0},
 	}
 	expectedIndices := []*big.Int{
 		big.NewInt(3),
@@ -135,12 +135,12 @@ func TestBuildCompactBulk(t *testing.T) {
 	}
 
 	expectedBuys1 := [][14]byte{
-		[14]byte{0, 0, 0, 0, 0, 24, 25, 0, 0, 0, 0, 0, 0, 0},
-		[14]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 23, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 24, 25, 0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, 23, 0, 0, 0, 0},
 	}
 	expectedSells1 := [][14]byte{
-		[14]byte{0, 0, 0, 0, 0, 27, 28, 0, 0, 0, 0, 0, 0, 0},
-		[14]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 26, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 27, 28, 0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, 26, 0, 0, 0, 0},
 	}
 	expectedIndices1 := []*big.Int{
 		big.NewInt(9),

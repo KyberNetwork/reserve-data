@@ -35,7 +35,7 @@ type Binainfo struct {
 	CanTrade         bool   `json:"canTrade"`
 	CanWithdraw      bool   `json:"canWithdraw"`
 	CanDeposit       bool   `json:"canDeposit"`
-	Balances []struct {
+	Balances         []struct {
 		Asset  string `json:"asset"`
 		Free   string `json:"free"`
 		Locked string `json:"locked"`

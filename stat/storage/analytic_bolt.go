@@ -118,7 +118,7 @@ func (self *BoltAnalyticStorage) GetPriceAnalyticData(fromTime uint64, toTime ui
 	max := uint64ToBytes(toTime)
 	var result []common.AnalyticPriceResponse
 	if toTime-fromTime > MAX_GET_ANALYTIC_PERIOD {
-		return result, errors.New(fmt.Sprintf("Time range is too broad, it must be smaller or equal to %d miliseconds", MAX_GET_RATES_PERIOD))
+		return result, fmt.Errorf("Time range is too broad, it must be smaller or equal to %d miliseconds", MAX_GET_RATES_PERIOD)
 	}
 
 	err = self.db.View(func(tx *bolt.Tx) error {

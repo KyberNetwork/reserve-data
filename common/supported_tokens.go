@@ -1,7 +1,6 @@
 package common
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -98,7 +97,7 @@ func (self *SupportedTokens) GetSupportedTokenByID(id string) (Token, error) {
 	defer self.mu.RUnlock()
 	t, found := self.aIDToToken[strings.ToUpper(id)]
 	if !found {
-		return t, errors.New(fmt.Sprintf("Token %s is not supported by core", id))
+		return t, fmt.Errorf("Token %s is not supported by core", id)
 	}
 	return t, nil
 }
@@ -108,7 +107,7 @@ func (self *SupportedTokens) GetSupportedTokenByAddress(addr string) (Token, err
 	defer self.mu.RUnlock()
 	t, found := self.aAddrToToken[strings.ToLower(addr)]
 	if !found {
-		return t, errors.New(fmt.Sprintf("Token %s is not supported by core", addr))
+		return t, fmt.Errorf("Token %s is not supported by core", addr)
 	}
 	return t, nil
 }
@@ -124,7 +123,7 @@ func (self *SupportedTokens) GetTokenByID(id string) (Token, error) {
 	defer self.mu.RUnlock()
 	t, found := self.idToToken[strings.ToUpper(id)]
 	if !found {
-		return t, errors.New(fmt.Sprintf("Token %s is not supported by core", id))
+		return t, fmt.Errorf("Token %s is not supported by core", id)
 	}
 	return t, nil
 }
@@ -134,7 +133,7 @@ func (self *SupportedTokens) GetTokenByAddress(addr string) (Token, error) {
 	defer self.mu.RUnlock()
 	t, found := self.addrToToken[strings.ToLower(addr)]
 	if !found {
-		return t, errors.New(fmt.Sprintf("Token %s is not supported by core", addr))
+		return t, fmt.Errorf("Token %s is not supported by core", addr)
 	}
 	return t, nil
 }
@@ -150,7 +149,7 @@ func (self *SupportedTokens) GetInternalTokenByID(id string) (Token, error) {
 	defer self.mu.RUnlock()
 	t, found := self.iIDToToken[strings.ToUpper(id)]
 	if !found {
-		return t, errors.New(fmt.Sprintf("Token %s is not supported by core", id))
+		return t, fmt.Errorf("Token %s is not supported by core", id)
 	}
 	return t, nil
 }
@@ -160,7 +159,7 @@ func (self *SupportedTokens) GetInternalTokenByAddress(addr string) (Token, erro
 	defer self.mu.RUnlock()
 	t, found := self.iAddrToToken[strings.ToLower(addr)]
 	if !found {
-		return t, errors.New(fmt.Sprintf("Token %s is not supported by core", addr))
+		return t, fmt.Errorf("Token %s is not supported by core", addr)
 	}
 	return t, nil
 }
@@ -176,7 +175,7 @@ func (self *SupportedTokens) GetExternalTokenByID(id string) (Token, error) {
 	defer self.mu.RUnlock()
 	t, found := self.eIDToToken[strings.ToUpper(id)]
 	if !found {
-		return t, errors.New(fmt.Sprintf("Token %s is not supported by core", id))
+		return t, fmt.Errorf("Token %s is not supported by core", id)
 	}
 	return t, nil
 }
@@ -186,7 +185,7 @@ func (self *SupportedTokens) GetExternalTokenByAddress(addr string) (Token, erro
 	defer self.mu.RUnlock()
 	t, found := self.eAddrToToken[strings.ToLower(addr)]
 	if !found {
-		return t, errors.New(fmt.Sprintf("Token %s is not supported by core", addr))
+		return t, fmt.Errorf("Token %s is not supported by core", addr)
 	}
 	return t, nil
 }
