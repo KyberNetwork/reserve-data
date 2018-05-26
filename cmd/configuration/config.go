@@ -86,7 +86,7 @@ type Config struct {
 	ThirdPartyReserves []ethereum.Address
 
 	// etherscan api key (optional)
-	ApiKey string
+	EtherscanApiKey string
 
 	ChainType string
 }
@@ -149,7 +149,7 @@ func (self *Config) AddStatConfig(settingPath SettingPaths, addressConfig common
 
 	}
 
-	apiKey := GetAPIKey(settingPath.secretPath)
+	apiKey := GetEtherscanAPIKey(settingPath.secretPath)
 
 	self.StatStorage = statStorage
 	self.AnalyticStorage = analyticStorage
@@ -163,7 +163,7 @@ func (self *Config) AddStatConfig(settingPath SettingPaths, addressConfig common
 	self.FeeBurnerAddress = burnerAddr
 	self.NetworkAddress = networkAddr
 	self.WhitelistAddress = whitelistAddr
-	self.ApiKey = apiKey
+	self.EtherscanApiKey = apiKey
 }
 
 func (self *Config) AddCoreConfig(settingPath SettingPaths, addressConfig common.AddressConfig, kyberENV string) {

@@ -1,20 +1,20 @@
 package configuration
 
 import (
-	"io/ioutil"
 	"encoding/json"
+	"io/ioutil"
 )
 
-type APIKey struct {
-	ApiKey string `json:"api_key"`
+type EtherscanAPIKey struct {
+	ApiKey string `json:"etherscan_api_key"`
 }
 
-func GetAPIKey(path string) string {
+func GetEtherscanAPIKey(path string) string {
 	raw, err := ioutil.ReadFile(path)
 	if err != nil {
 		panic(err)
 	}
-	result := APIKey{}
+	result := EtherscanAPIKey{}
 	err = json.Unmarshal(raw, &result)
 	if err != nil {
 		panic(err)

@@ -154,7 +154,7 @@ func CreateStat(config *configuration.Config, kyberENV string, bc *blockchain.Bl
 		config.ReserveAddress,
 		config.PricingAddress,
 		deployBlock,
-		config.ApiKey,
+		config.EtherscanApiKey,
 		config.ThirdPartyReserves,
 	)
 	statFetcher.SetBlockchain(bc)
