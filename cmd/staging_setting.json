@@ -253,6 +253,27 @@
       "internal use": true,
       "listed": true
     },
+    "AION": {
+      "name": "Aion",
+      "decimals": 8,
+      "address": "0x4CEdA7906a5Ed2179785Cd3A40A69ee8bc99C466",
+      "internal use": true,
+      "listed": true
+    },
+    "AE": {
+      "name": "Aeternity",
+      "decimals": 18,
+      "address": "0x5ca9a71b1d01849c0a95490cc00559717fcf0d1d",
+      "internal use": true,
+      "listed": true
+    },
+    "BLZ": {
+      "name": "Bluezelle",
+      "decimals": 18,
+      "address": "0x5732046a883704404f284ce41ffadd5b007fd668",
+      "internal use": true,
+      "listed": true
+    },
     "ETH": {
       "name": "Ethereum",
       "decimals": 18,
@@ -281,11 +302,14 @@
       "ZIL": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
       "AST": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
       "LINK": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
-      "ENJ":  "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547"
+      "ENJ":  "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
+      "AION":  "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
+      "AE":  "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
+      "BLZ":  "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547"
     },
     "huobi": {
       "ETH": "0xb48ee85467bf613a22244084c1a46c2deac18dd0",
-      "ABT": "0xb48ee85467bf613a22244084c1a46c2deac18dd0"
+      "ABT": "0xb48ee85467bf613a22244084c1a46c2deac18dd0",
     },
     "stable_exchange": {
       "ETH": "0xFDF28Bf25779ED4cA74e958d54653260af604C20",
