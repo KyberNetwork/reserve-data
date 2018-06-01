@@ -1,6 +1,7 @@
 package blockchain
 
 import (
+	"io"
 	"os"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -26,10 +27,18 @@ func (self EthereumSigner) Sign(tx *types.Transaction) (*types.Transaction, erro
 }
 
 func NewEthereumSigner(keyPath string, passphrase string) *EthereumSigner {
-	key, err := os.Open(keyPath)
-	if err != nil {
-		panic(err)
+	var (
+		err error
+		key io.Reader
+	)
+
+	if key, err = os.Open(keyPath); err != nil {
+		// try to auto generate the key for development
+		if key, err = GenerateDevelopmentKeystoreIfNotExists(err, keyPath, passphrase); err != nil {
+			panic(err)
+		}
 	}
+
 	auth, err := bind.NewTransactor(key, passphrase)
 	if err != nil {
 		panic(err)
