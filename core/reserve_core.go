@@ -423,7 +423,10 @@ func sanityCheckTrading(exchange common.Exchange, base, quote common.Token, rate
 }
 
 func sanityCheckAmount(exchange common.Exchange, token common.Token, amount *big.Int) error {
-	exchangeFee := exchange.GetFee()
+	exchangeFee, err := exchange.GetFee()
+	if err != nil {
+		return err
+	}
 	amountFloat := big.NewFloat(0).SetInt(amount)
 	feeWithdrawing := exchangeFee.Funding.GetTokenFee(string(token.ID))
 	expDecimal := big.NewInt(0).Exp(big.NewInt(10), big.NewInt(token.Decimal), nil)

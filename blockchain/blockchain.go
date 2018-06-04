@@ -95,7 +95,12 @@ func (self *Blockchain) AddOldBurners(addr ethereum.Address) {
 func (self *Blockchain) GetAddresses() (*common.Addresses, error) {
 	exs := map[common.ExchangeID]common.TokenAddresses{}
 	for _, ex := range common.SupportedExchanges {
-		exs[ex.ID()] = ex.TokenAddresses()
+		addrs, err := ex.TokenAddresses()
+		if err != nil {
+			return nil, fmt.Errorf("ERROR: Can't not get deposit addresss of exchange %s :(%s)", ex.ID(), err.Error())
+		}
+		exs[ex.ID()] = addrs
+
 	}
 	tokens := map[string]common.TokenInfo{}
 	tokenSettings, err := self.setting.GetInternalTokens()

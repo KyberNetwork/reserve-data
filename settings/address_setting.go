@@ -18,17 +18,19 @@ const (
 	Pricing
 	Whitelist
 	SetRate
+	Intermediator
 )
 
 var addressNameValues = map[string]AddressName{
-	"reserve":   Reserve,
-	"burner":    Burner,
-	"bank":      Bank,
-	"network":   Network,
-	"wrapper":   Wrapper,
-	"pricing":   Pricing,
-	"whitelist": Whitelist,
-	"setrate":   SetRate,
+	"reserve":       Reserve,
+	"burner":        Burner,
+	"bank":          Bank,
+	"network":       Network,
+	"wrapper":       Wrapper,
+	"pricing":       Pricing,
+	"whitelist":     Whitelist,
+	"setrate":       SetRate,
+	"intermediator": Intermediator,
 }
 
 // AddressTypeValues returns the mapping of the string presentation
@@ -71,6 +73,7 @@ type AddressConfig struct {
 	Whitelist          string   `json:"whitelist"`
 	ThirdPartyReserves []string `json:"third_party_reserves"`
 	SetRate            string   `json:"setrate"`
+	Intermediator      string   `json:"intermediator"`
 }
 
 // AddressSetting type defines component to handle all address setting in core.
@@ -114,6 +117,9 @@ func (setting *Settings) LoadAddressFromFile(path string) error {
 		return err
 	}
 	if err = setting.Address.Storage.UpdateOneAddress(SetRate, addrs.SetRate); err != nil {
+		return err
+	}
+	if err = setting.Address.Storage.UpdateOneAddress(Intermediator, addrs.Intermediator); err != nil {
 		return err
 	}
 	for _, addr := range addrs.ThirdPartyReserves {

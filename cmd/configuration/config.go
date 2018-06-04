@@ -167,19 +167,7 @@ func (self *Config) AddStatConfig(settingPath SettingPaths) {
 	self.EtherscanApiKey = apiKey
 }
 
-func (self *Config) AddCoreConfig(settingPath SettingPaths, addressConfig common.AddressConfig, kyberENV string) {
-
-	feeConfig, err := common.GetFeeFromFile(settingPath.feePath)
-	if err != nil {
-		log.Fatalf("Fees file %s cannot found at: %s", settingPath.feePath, err)
-	}
-
-	minDepositPath := filepath.Join(common.CmdDirLocation(), "min_deposit.json")
-	minDeposit, err := common.GetMinDepositFromFile(minDepositPath)
-	if err != nil {
-		log.Fatalf("Fees file %s cannot found at: %s", minDepositPath, err.Error())
-	}
-
+func (self *Config) AddCoreConfig(settingPath SettingPaths, kyberENV string) {
 	dataStorage, err := storage.NewBoltStorage(settingPath.dataStoragePath)
 	if err != nil {
 		panic(err)
@@ -226,15 +214,15 @@ func (self *Config) AddCoreConfig(settingPath SettingPaths, addressConfig common
 	// }
 
 	// create Exchange pool
-	exchangePool := NewExchangePool(
-		feeConfig,
-		addressConfig,
+	exchangePool, err := NewExchangePool(
 		settingPath,
 		self.Blockchain,
-		minDeposit,
 		kyberENV,
 		self.Setting,
 	)
+	if err != nil {
+		log.Panicf("Can not create exchangePool: %s", err.Error())
+	}
 	self.FetcherExchanges = exchangePool.FetcherExchanges()
 	self.Exchanges = exchangePool.CoreExchanges()
 }

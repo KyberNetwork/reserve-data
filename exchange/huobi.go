@@ -14,6 +14,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/common/blockchain"
 	huobiblockchain "github.com/KyberNetwork/reserve-data/exchange/huobi/blockchain"
 	huobihttp "github.com/KyberNetwork/reserve-data/exchange/huobi/http"
+	"github.com/KyberNetwork/reserve-data/settings"
 	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 )
@@ -24,15 +25,9 @@ const (
 
 type Huobi struct {
 	interf            HuobiInterface
-	pairs             []common.TokenPair
-	tokens            []common.Token
-	addresses         *common.ExchangeAddresses
-	exchangeInfo      *common.ExchangeInfo
-	fees              common.ExchangeFees
 	blockchain        HuobiBlockchain
 	intermediatorAddr ethereum.Address
 	storage           HuobiStorage
-	minDeposit        common.ExchangesMinDeposit
 	setting           Setting
 }
 
@@ -40,34 +35,77 @@ func (self *Huobi) MarshalText() (text []byte, err error) {
 	return []byte(self.ID()), nil
 }
 
-func (self *Huobi) TokenAddresses() map[string]ethereum.Address {
-	return self.addresses.GetData()
+func (self *Huobi) TokenAddresses() (map[string]ethereum.Address, error) {
+	addrs, err := self.setting.GetDepositAddress(settings.Huobi)
+	if err != nil {
+		return nil, err
+	}
+	return addrs.GetData(), nil
 }
 
+// RealDepositAddress return the actual Huobi deposit address of a token
+// It should only be used to send 2nd transaction.
+func (self *Huobi) RealDepositAddress(tokenID string) (ethereum.Address, error) {
+	liveAddress, err := self.interf.GetDepositAddress(tokenID)
+	if err != nil || liveAddress.Address == "" {
+		log.Printf("ERROR: Get Huobi live deposit address for token %s failed: (%v) or the replied address is empty. Check the currently available address instead", tokenID, err)
+		addrs, uErr := self.setting.GetDepositAddress(settings.Huobi)
+		if uErr != nil {
+			return ethereum.Address{}, uErr
+		}
+		result, supported := addrs.Get(tokenID)
+		if !supported {
+			return result, fmt.Errorf("Real deposit address of token %s is not available, this shouldn't happen unless Huobi delisted the token and the token was deleted from database", tokenID)
+		}
+		return result, nil
+	}
+	log.Printf("Got Huobi live deposit address for token %s", tokenID)
+	return ethereum.HexToAddress(liveAddress.Address), nil
+}
+
+// Address return the deposit address of a token in Huobi exchange.
+// Due to the logic of Huobi exchange, every token if supported will be
+// deposited to an Intermediator address instead.
 func (self *Huobi) Address(token common.Token) (ethereum.Address, bool) {
-
-	_, supported := self.addresses.Get(token.ID)
-	addr := self.intermediatorAddr
-	return addr, supported
-}
-
-func (self *Huobi) UpdateAllDepositAddresses(address string, timepoint uint64) {
-	data := self.addresses.GetData()
-	for k := range data {
-		self.addresses.Update(k, ethereum.HexToAddress(address))
+	result, err := self.setting.GetAddress(settings.Intermediator)
+	if err != nil {
+		log.Printf("ERROR: get intermediate address in huobi exchange failed:(%s)", err.Error())
+		return result, false
 	}
-}
-
-func (self *Huobi) UpdateDepositAddress(token common.Token, address string) {
-	liveAddress, _ := self.interf.GetDepositAddress(strings.ToLower(token.ID))
-	if liveAddress.Address != "" {
-		self.addresses.Update(token.ID, ethereum.HexToAddress(liveAddress.Address))
-	} else {
-		self.addresses.Update(token.ID, ethereum.HexToAddress(address))
+	liveAddress, err := self.interf.GetDepositAddress(token.ID)
+	if err != nil || liveAddress.Address == "" {
+		log.Printf("ERROR: Get Huobi live deposit address for token %s failed: (%v) or the replied address is empty. Check the currently available address instead", token.ID, err)
+		addrs, uErr := self.setting.GetDepositAddress(settings.Huobi)
+		if uErr != nil {
+			log.Printf("ERROR: get address of token %s in Huobi exchange failed:(%s), it will be considered as not supported", token.ID, err.Error())
+			return result, false
+		}
+		_, supported := addrs.Get(token.ID)
+		return result, supported
 	}
+	log.Printf("Got Huobi live deposit address for token %s, attempt to update it to current setting", token.ID)
+	token.Address = liveAddress.Address
+	if err = self.setting.UpdateDepositAddress(settings.Huobi, token); err != nil {
+		log.Printf("ERROR: can not update deposit address for token %s on Huobi: (%s)", token.ID, err.Error())
+	}
+	return result, true
 }
 
-func (self *Huobi) UpdatePrecisionLimit(pair common.TokenPair, symbols HuobiExchangeInfo) {
+// UpdateDepositAddress update the deposit address of a token in Huobi
+// It will prioritize the live address over the input address
+func (self *Huobi) UpdateDepositAddress(token common.Token, address string) error {
+	liveAddress, err := self.interf.GetDepositAddress(token.ID)
+	if err != nil || liveAddress.Address == "" {
+		log.Printf("ERROR: Get Huobi live deposit address for token %s failed: (%v) or the replied address is empty. Check the currently available address instead", token.ID, err)
+		token.Address = address
+		return self.setting.UpdateDepositAddress(settings.Huobi, token)
+	}
+	log.Printf("Got Huobi live deposit address for token %s, attempt to update it to current setting")
+	token.Address = liveAddress.Address
+	return self.setting.UpdateDepositAddress(settings.Huobi, token)
+}
+
+func (self *Huobi) UpdatePrecisionLimit(pair common.TokenPair, symbols HuobiExchangeInfo, exInfo *common.ExchangeInfo) {
 	pairName := strings.ToLower(pair.Base.ID) + strings.ToLower(pair.Quote.ID)
 	for _, symbol := range symbols.Data {
 		if symbol.Base+symbol.Quote == pairName {
@@ -75,46 +113,60 @@ func (self *Huobi) UpdatePrecisionLimit(pair common.TokenPair, symbols HuobiExch
 			exchangePrecisionLimit.Precision.Amount = symbol.AmountPrecision
 			exchangePrecisionLimit.Precision.Price = symbol.PricePrecision
 			exchangePrecisionLimit.MinNotional = 0.02
-			self.exchangeInfo.Update(pair.PairID(), exchangePrecisionLimit)
+			exInfo.Update(pair.PairID(), exchangePrecisionLimit)
 			break
 		}
 	}
 }
 
-func (self *Huobi) UpdatePairsPrecision() {
+func (self *Huobi) UpdatePairsPrecision() error {
 	exchangeInfo, err := self.interf.GetExchangeInfo()
 	if err != nil {
 		log.Printf("RunningMode exchange info failed: %s\n", err)
-	} else {
-		for _, pair := range self.pairs {
-			self.UpdatePrecisionLimit(pair, exchangeInfo)
-		}
+		return err
 	}
+	pairs, err := self.setting.GetTokenPairs(settings.Huobi)
+	if err != nil {
+		return err
+	}
+	exInfo, err := self.GetInfo()
+	if err != nil {
+		log.Printf("INFO: Can't get Exchange Info for Huobi from persistent storage, attempt to init it from Huobi Endpoint (%s)", err)
+		exInfo = common.NewExchangeInfo()
+	}
+	for _, pair := range pairs {
+		self.UpdatePrecisionLimit(pair, exchangeInfo, exInfo)
+	}
+	return self.setting.UpdateExchangeInfo(settings.Huobi, exInfo)
 }
 
 func (self *Huobi) GetInfo() (*common.ExchangeInfo, error) {
-	return self.exchangeInfo, nil
+	return self.setting.GetExchangeInfo(settings.Huobi)
 }
 
 func (self *Huobi) GetExchangeInfo(pair common.TokenPairID) (common.ExchangePrecisionLimit, error) {
-	data, err := self.exchangeInfo.Get(pair)
+	exInfo, err := self.setting.GetExchangeInfo(settings.Huobi)
+	if err != nil {
+		return common.ExchangePrecisionLimit{}, err
+	}
+	data, err := exInfo.Get(pair)
 	return data, err
 }
 
-func (self *Huobi) GetFee() common.ExchangeFees {
-	return self.fees
+func (self *Huobi) GetFee() (common.ExchangeFees, error) {
+	return self.setting.GetFee(settings.Huobi)
 }
 
-func (self *Huobi) GetMinDeposit() common.ExchangesMinDeposit {
-	return self.minDeposit
+func (self *Huobi) GetMinDeposit() (common.ExchangesMinDeposit, error) {
+	return self.setting.GetMinDeposit(settings.Huobi)
 }
 
 func (self *Huobi) ID() common.ExchangeID {
-	return common.ExchangeID("huobi")
+	return common.ExchangeID(settings.Huobi.String())
 }
 
-func (self *Huobi) TokenPairs() []common.TokenPair {
-	return self.pairs
+func (self *Huobi) TokenPairs() ([]common.TokenPair, error) {
+	return self.setting.GetTokenPairs(settings.Huobi)
 }
 
 func (self *Huobi) Name() string {
@@ -225,7 +277,10 @@ func (self *Huobi) FetchOnePairData(
 func (self *Huobi) FetchPriceData(timepoint uint64) (map[common.TokenPairID]common.ExchangePrice, error) {
 	wait := sync.WaitGroup{}
 	data := sync.Map{}
-	pairs := self.pairs
+	pairs, err := self.setting.GetTokenPairs(settings.Huobi)
+	if err != nil {
+		return nil, err
+	}
 	for _, pair := range pairs {
 		wait.Add(1)
 		go self.FetchOnePairData(&wait, pair, &data, timepoint)
@@ -260,7 +315,10 @@ func (self *Huobi) FetchOrderData(timepoint uint64) (common.OrderEntry, error) {
 
 	wait := sync.WaitGroup{}
 	data := sync.Map{}
-	pairs := self.pairs
+	pairs, err := self.setting.GetTokenPairs(settings.Huobi)
+	if err != nil {
+		return result, err
+	}
 	for _, pair := range pairs {
 		wait.Add(1)
 		go self.OpenOrdersForOnePair(&wait, pair, &data, timepoint)
@@ -354,7 +412,11 @@ func (self *Huobi) FetchTradeHistory() {
 		for {
 			result := map[common.TokenPairID][]common.TradeHistory{}
 			data := sync.Map{}
-			pairs := self.pairs
+			pairs, err := self.setting.GetTokenPairs(settings.Huobi)
+			if err != nil {
+				log.Printf("Huobi fetch trade history failed (%s). This might due to pairs setting hasn't been init yet", err.Error())
+				continue
+			}
 			wait := sync.WaitGroup{}
 			for _, pair := range pairs {
 				wait.Add(1)
@@ -458,9 +520,9 @@ func (self *Huobi) DepositStatus(id common.ActivityID, tx1Hash, currency string,
 			if err != nil {
 				return "", err
 			}
-			exchangeAddress, ok := self.addresses.Get(currency)
-			if !ok {
-				return "", errors.New("Wrong token address configuration")
+			exchangeAddress, err := self.RealDepositAddress(currency)
+			if err != nil {
+				return "", err
 			}
 			tx2, err := self.Send2ndTransaction(sentAmount, token, exchangeAddress)
 			if err != nil {
@@ -639,34 +701,27 @@ func (self *Huobi) OrderStatus(id string, base, quote string) (string, error) {
 }
 
 func NewHuobi(
-	addressConfig map[string]string,
-	feeConfig common.ExchangeFees,
-	interf HuobiInterface, blockchain *blockchain.BaseBlockchain,
-	signer blockchain.Signer, nonce blockchain.NonceCorpus, storage HuobiStorage,
-	minDepositConfig common.ExchangesMinDeposit, setting Setting) *Huobi {
+	interf HuobiInterface,
+	blockchain *blockchain.BaseBlockchain,
+	signer blockchain.Signer,
+	nonce blockchain.NonceCorpus,
+	storage HuobiStorage,
+	setting Setting) (*Huobi, error) {
 
-	tokens, pairs, fees, minDeposit := getExchangePairsAndFeesFromConfig(addressConfig, feeConfig, minDepositConfig, "huobi", setting)
 	bc, err := huobiblockchain.NewBlockchain(blockchain, signer, nonce)
 	if err != nil {
-		log.Printf("Cant create Huobi's blockchain: %v", err)
-		panic(err)
+		return nil, err
 	}
 
 	huobiObj := Huobi{
 		interf,
-		pairs,
-		tokens,
-		common.NewExchangeAddresses(),
-		common.NewExchangeInfo(),
-		fees,
 		bc,
 		signer.GetAddress(),
 		storage,
-		minDeposit,
 		setting,
 	}
 	huobiObj.FetchTradeHistory()
 	huobiServer := huobihttp.NewHuobiHTTPServer(&huobiObj)
 	go huobiServer.Run()
-	return &huobiObj
+	return &huobiObj, nil
 }
