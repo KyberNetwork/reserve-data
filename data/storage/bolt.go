@@ -1425,12 +1425,10 @@ func (self *BoltStorage) GetPendingTargetQtyV2() (map[string]interface{}, error)
 		b := tx.Bucket([]byte(PENDING_TARGET_QUANTITY_V2))
 		k := []byte("current_pending_target_qty")
 		record := b.Get(k)
-		if record != nil {
-			if vErr := json.Unmarshal(record, &result); vErr != nil {
-				return vErr
-			}
+		if record == nil {
+			return errors.New("There is no pending target qty")
 		}
-		return nil
+		return json.Unmarshal(record, &result)
 	})
 	return result, err
 }

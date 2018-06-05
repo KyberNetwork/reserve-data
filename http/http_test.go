@@ -371,3 +371,217 @@ func TestHTTPServerPWIEquationV2(t *testing.T) {
 		t.Run(tc.msg, func(t *testing.T) { testHTTPRequest(t, tc, s.r) })
 	}
 }
+
+func TestHTTPServerTargetQtyV2(t *testing.T) {
+	const (
+		storePendingTargetQtyV2 = "/v2/settargetqty"
+		getPendingTargetQtyV2   = "/v2/pendingtargetqty"
+		confirmTargetQtyV2      = "/v2/confirmtargetqty"
+		rejectTargetQtyV2       = "/v2/canceltargetqty"
+		getTargetQtyV2          = "/v2/targetqty"
+		testDataV1              = `EOS_750_500_0.25_0.324|ETH_750_500_0.25_0.342`
+		testData                = `{
+  "EOS": {
+      "TotalTarget": 750,
+      "ReserveTarget": 500,
+	  "RebalanceThreshold": 0.25,
+	  "TransferThreshold": 0.343
+    },
+  },
+  "ETH": {
+      "TotalTarget": 750,
+      "ReserveTarget": 500,
+	  "RebalanceThreshold": 0.25,
+	  "TransferThreshold": 0.343,
+	  "MinimumAmount" : {
+		"huobi" : 10,
+		"binance" : 20
+	  },
+	  "ExchangeRatio":  {
+		"huobi": 3,
+		"bianace": 4
+	}
+  }
+}
+`
+		testDataWrongConfirmation = `{
+  "EOS": {
+      "TotalTarget": 751,
+      "ReserveTarget": 500,
+	  "RebalanceThreshold": 0.25,
+	  "TransferThreshold": 0.343
+    },
+  "ETH": {
+      "TotalTarget": 750,
+      "ReserveTarget": 500,
+	  "RebalanceThreshold": 0.25,
+	  "TransferThreshold": 0.343,
+	  "MinimumAmount" : {
+		"huobi" : 10,
+		"binance" : 20
+	  },
+	  "ExchangeRatio":  {
+		"huobi": 3,
+		"bianace": 4
+	}
+  }
+}
+`
+		testDataUnsupported = `{
+  "OMG": {
+      "TotalTarget": 750,
+      "ReserveTarget": 500,
+	  "RebalanceThreshold": 0.25,
+	  "TransferThreshold": 0.343
+  }
+}
+`
+	)
+
+	common.RegisterInternalActiveToken(common.Token{ID: "EOS"})
+	common.RegisterInternalActiveToken(common.Token{ID: "ETH"})
+
+	tmpDir, err := ioutil.TempDir("", "test_target_qty_v2")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() {
+		if rErr := os.RemoveAll(tmpDir); rErr != nil {
+			t.Error(rErr)
+		}
+	}()
+
+	st, err := storage.NewBoltStorage(filepath.Join(tmpDir, "test.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	s := HTTPServer{
+		app:         data.NewReserveData(st, nil, nil, nil, nil, nil),
+		core:        core.NewReserveCore(nil, st, ethereum.Address{}),
+		metric:      st,
+		authEnabled: false,
+		r:           gin.Default()}
+	s.register()
+
+	var tests = []testCase{
+		{
+			msg:      "invalid post form",
+			endpoint: storePendingTargetQtyV2,
+			method:   http.MethodPost,
+			data:     `{"invalid_key": "invalid_value"}`,
+			assert:   httputil.ExpectFailure,
+		},
+		{
+			msg:      "getting non exists pending equation",
+			endpoint: getPendingTargetQtyV2,
+			method:   http.MethodGet,
+			assert:   httputil.ExpectFailure,
+		},
+		{
+			msg:      "getting non exists equation",
+			endpoint: getTargetQtyV2,
+			method:   http.MethodGet,
+			assert:   httputil.ExpectFailure,
+		},
+		// {
+		// 	msg:      "setting equation v1 pending",
+		// 	endpoint: "/settargetqty",
+		// 	method:   http.MethodPost,
+		// 	data:     testDataV1,
+		// 	assert:   httputil.ExpectSuccess,
+		// },
+		// {
+		// 	msg:      "confirm equation v1 pending",
+		// 	endpoint: "/confirmtargetqty",
+		// 	method:   http.MethodPost,
+		// 	data:     testDataV1,
+		// 	assert:   httputil.ExpectSuccess,
+		// },
+		// {
+		// 	msg:      "getting fallback v1 equation",
+		// 	endpoint: getTargetQtyV2,
+		// 	method:   http.MethodGet,
+		// 	assert:   newAssertGetEquation([]byte(testData)),
+		// },
+		{
+			msg:      "unsupported token",
+			endpoint: storePendingTargetQtyV2,
+			method:   http.MethodPost,
+			data:     testDataUnsupported,
+			assert:   httputil.ExpectFailure,
+		},
+		{
+			msg:      "confirm when no pending equation request exists",
+			endpoint: confirmTargetQtyV2,
+			method:   http.MethodPost,
+			data:     testData,
+			assert:   httputil.ExpectFailure,
+		},
+		{
+			msg:      "reject when no pending equation request exists",
+			endpoint: rejectTargetQtyV2,
+			method:   http.MethodPost,
+			assert:   httputil.ExpectFailure,
+		},
+		{
+			msg:      "valid post form",
+			endpoint: storePendingTargetQtyV2,
+			method:   http.MethodPost,
+			data:     testData,
+			assert:   httputil.ExpectSuccess,
+		},
+		{
+			msg:      "setting when pending exists",
+			endpoint: storePendingTargetQtyV2,
+			method:   http.MethodPost,
+			data:     testData,
+			assert:   httputil.ExpectFailure,
+		},
+		{
+			msg:      "getting existing pending equation",
+			endpoint: getPendingTargetQtyV2,
+			method:   http.MethodGet,
+			assert:   newAssertGetEquation([]byte(testData)),
+		},
+		{
+			msg:      "confirm with wrong data",
+			endpoint: confirmTargetQtyV2,
+			method:   http.MethodPost,
+			data:     testDataWrongConfirmation,
+			assert:   httputil.ExpectFailure,
+		},
+		{
+			msg:      "confirm with correct data",
+			endpoint: confirmTargetQtyV2,
+			method:   http.MethodPost,
+			data:     testData,
+			assert:   httputil.ExpectSuccess,
+		},
+		{
+			msg:      "getting exists equation",
+			endpoint: getTargetQtyV2,
+			method:   http.MethodGet,
+			assert:   newAssertGetEquation([]byte(testData)),
+		},
+		{
+			msg:      "valid post form",
+			endpoint: storePendingTargetQtyV2,
+			method:   http.MethodPost,
+			data:     testData,
+			assert:   httputil.ExpectSuccess,
+		},
+		{
+			msg:      "reject when there is pending equation",
+			endpoint: rejectTargetQtyV2,
+			method:   http.MethodPost,
+			data:     "some random post form or this request will be unauthenticated",
+			assert:   httputil.ExpectSuccess,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.msg, func(t *testing.T) { testHTTPRequest(t, tc, s.r) })
+	}
+}
