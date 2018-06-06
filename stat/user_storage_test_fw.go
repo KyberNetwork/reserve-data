@@ -102,8 +102,8 @@ func (self *UserStorageTest) TestUpdateUserAddressesThenUpdateAddressCategory() 
 			return fmt.Errorf("Expected to find %v, got not found", addr)
 		}
 	}
-	if err := self.storage.UpdateUserAddresses(email, []ethereum.Address{addr1, addr2}, []uint64{time1, time2}); err != nil {
-		return err
+	if vErr := self.storage.UpdateUserAddresses(email, []ethereum.Address{addr1, addr2}, []uint64{time1, time2}); vErr != nil {
+		return vErr
 	}
 	// test if pending addresses are correct
 	pendingAddrs, err = self.storage.GetPendingAddresses()
@@ -123,11 +123,11 @@ func (self *UserStorageTest) TestUpdateUserAddressesThenUpdateAddressCategory() 
 		}
 	}
 	// Start receiving cat logs
-	if err := self.storage.UpdateAddressCategory(addr1, cat); err != nil {
-		return err
+	if vErr := self.storage.UpdateAddressCategory(addr1, cat); vErr != nil {
+		return vErr
 	}
-	if err := self.storage.UpdateUserAddresses(email, []ethereum.Address{addr1, addr2}, []uint64{time1, time2}); err != nil {
-		return err
+	if vErr := self.storage.UpdateUserAddresses(email, []ethereum.Address{addr1, addr2}, []uint64{time1, time2}); vErr != nil {
+		return vErr
 	}
 	// test if pending addresses are correct
 	pendingAddrs, err = self.storage.GetPendingAddresses()
@@ -145,8 +145,8 @@ func (self *UserStorageTest) TestUpdateUserAddressesThenUpdateAddressCategory() 
 			return fmt.Errorf("Expected to find %s, got not found", addr)
 		}
 	}
-	if err := self.storage.UpdateAddressCategory(addr2, cat); err != nil {
-		return err
+	if vErr := self.storage.UpdateAddressCategory(addr2, cat); vErr != nil {
+		return vErr
 	}
 
 	gotAddresses, gotTimes, err := self.storage.GetAddressesOfUser(email)

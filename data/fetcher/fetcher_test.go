@@ -92,8 +92,8 @@ func TestExchangeDown(t *testing.T) {
 		log.Fatal(err.Error())
 	}
 	defer func() {
-		if err := os.RemoveAll(tmpDir); err != nil {
-			t.Error(err)
+		if vErr := os.RemoveAll(tmpDir); vErr != nil {
+			t.Error(vErr)
 		}
 	}()
 	runner, err := http_runner.NewHttpRunner(http_runner.WithHttpRunnerPort(9000))

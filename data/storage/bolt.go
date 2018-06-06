@@ -73,97 +73,78 @@ func NewBoltStorage(path string) (*BoltStorage, error) {
 	}
 	// init buckets
 	err = db.Update(func(tx *bolt.Tx) error {
-		_, err = tx.CreateBucketIfNotExists([]byte(GOLD_BUCKET))
-		if err != nil {
-			return err
+		if _, vErr := tx.CreateBucketIfNotExists([]byte(GOLD_BUCKET)); vErr != nil {
+			return vErr
 		}
 
-		_, err = tx.CreateBucketIfNotExists([]byte(PRICE_BUCKET))
-		if err != nil {
-			return err
+		if _, vErr := tx.CreateBucketIfNotExists([]byte(PRICE_BUCKET)); vErr != nil {
+			return vErr
 		}
-		_, err = tx.CreateBucketIfNotExists([]byte(RATE_BUCKET))
-		if err != nil {
-			return err
+		if _, vErr := tx.CreateBucketIfNotExists([]byte(RATE_BUCKET)); vErr != nil {
+			return vErr
 		}
-		_, err = tx.CreateBucketIfNotExists([]byte(ORDER_BUCKET))
-		if err != nil {
-			return err
+		if _, vErr := tx.CreateBucketIfNotExists([]byte(ORDER_BUCKET)); vErr != nil {
+			return vErr
 		}
-		_, err = tx.CreateBucketIfNotExists([]byte(ACTIVITY_BUCKET))
-		if err != nil {
-			return err
+		if _, vErr := tx.CreateBucketIfNotExists([]byte(ACTIVITY_BUCKET)); vErr != nil {
+			return vErr
 		}
-		_, err = tx.CreateBucketIfNotExists([]byte(PENDING_ACTIVITY_BUCKET))
-		if err != nil {
-			return err
+		if _, vErr := tx.CreateBucketIfNotExists([]byte(PENDING_ACTIVITY_BUCKET)); vErr != nil {
+			return vErr
 		}
-		_, err = tx.CreateBucketIfNotExists([]byte(AUTH_DATA_BUCKET))
-		if err != nil {
-			return err
+		if _, vErr := tx.CreateBucketIfNotExists([]byte(AUTH_DATA_BUCKET)); vErr != nil {
+			return vErr
 		}
-		_, err = tx.CreateBucketIfNotExists([]byte(METRIC_BUCKET))
-		if err != nil {
-			return err
+		if _, vErr := tx.CreateBucketIfNotExists([]byte(METRIC_BUCKET)); vErr != nil {
+			return vErr
 		}
-		_, err = tx.CreateBucketIfNotExists([]byte(METRIC_TARGET_QUANTITY))
-		if err != nil {
-			return err
+		if _, vErr := tx.CreateBucketIfNotExists([]byte(METRIC_TARGET_QUANTITY)); vErr != nil {
+			return vErr
 		}
-		_, err = tx.CreateBucketIfNotExists([]byte(PENDING_TARGET_QUANTITY))
-		if err != nil {
-			return err
+		if _, vErr := tx.CreateBucketIfNotExists([]byte(PENDING_TARGET_QUANTITY)); vErr != nil {
+			return vErr
 		}
-		_, err = tx.CreateBucketIfNotExists([]byte(ENABLE_REBALANCE))
-		if err != nil {
-			return err
+		if _, vErr := tx.CreateBucketIfNotExists([]byte(ENABLE_REBALANCE)); vErr != nil {
+			return vErr
 		}
-		_, err = tx.CreateBucketIfNotExists([]byte(SETRATE_CONTROL))
-		if err != nil {
-			return err
+		if _, vErr := tx.CreateBucketIfNotExists([]byte(SETRATE_CONTROL)); vErr != nil {
+			return vErr
 		}
-		_, err = tx.CreateBucketIfNotExists([]byte(PENDING_PWI_EQUATION))
-		if err != nil {
-			return err
+		if _, vErr := tx.CreateBucketIfNotExists([]byte(PENDING_PWI_EQUATION)); vErr != nil {
+			return vErr
 		}
-		_, err = tx.CreateBucketIfNotExists([]byte(PWI_EQUATION))
-		if err != nil {
-			return err
+		if _, vErr := tx.CreateBucketIfNotExists([]byte(PWI_EQUATION)); vErr != nil {
+			return vErr
 		}
-		_, err = tx.CreateBucketIfNotExists([]byte(INTERMEDIATE_TX))
-		if err != nil {
-			return err
+		if _, vErr := tx.CreateBucketIfNotExists([]byte(INTERMEDIATE_TX)); vErr != nil {
+			return vErr
 		}
-		_, err = tx.CreateBucketIfNotExists([]byte(EXCHANGE_STATUS))
-		if err != nil {
-			return err
+		if _, vErr := tx.CreateBucketIfNotExists([]byte(EXCHANGE_STATUS)); vErr != nil {
+			return vErr
 		}
-		_, err = tx.CreateBucketIfNotExists([]byte(EXCHANGE_NOTIFICATIONS))
-		if err != nil {
-			return err
+		if _, vErr := tx.CreateBucketIfNotExists([]byte(EXCHANGE_NOTIFICATIONS)); vErr != nil {
+			return vErr
 		}
-		_, err = tx.CreateBucketIfNotExists([]byte(PENDING_STABLE_TOKEN_PARAMS_BUCKET))
-		if err != nil {
-			return err
+		if _, vErr := tx.CreateBucketIfNotExists([]byte(PENDING_STABLE_TOKEN_PARAMS_BUCKET)); vErr != nil {
+			return vErr
 		}
-		_, err = tx.CreateBucketIfNotExists([]byte(STABLE_TOKEN_PARAMS_BUCKET))
-		if err != nil {
-			return err
+		if _, vErr := tx.CreateBucketIfNotExists([]byte(STABLE_TOKEN_PARAMS_BUCKET)); vErr != nil {
+			return vErr
 		}
 
-		if _, err := tx.CreateBucketIfNotExists([]byte(PENDING_TARGET_QUANTITY_V2)); err != nil {
-			return err
+		if _, vErr := tx.CreateBucketIfNotExists([]byte(PENDING_TARGET_QUANTITY_V2)); vErr != nil {
+			return vErr
 		}
 
-		if _, err := tx.CreateBucketIfNotExists([]byte(TARGET_QUANTITY_V2)); err != nil {
-			return err
+		if _, vErr := tx.CreateBucketIfNotExists([]byte(TARGET_QUANTITY_V2)); vErr != nil {
+			return vErr
 		}
 
-		if _, err := tx.CreateBucketIfNotExists([]byte(PENDING_PWI_EQUATION_V2)); err != nil {
-			return err
+		if _, vErr := tx.CreateBucketIfNotExists([]byte(PENDING_PWI_EQUATION_V2)); vErr != nil {
+			return vErr
 		}
-		if _, err := tx.CreateBucketIfNotExists([]byte(PWI_EQUATION_V2)); err != nil {
-			return err
+		if _, vErr := tx.CreateBucketIfNotExists([]byte(PWI_EQUATION_V2)); vErr != nil {
+			return vErr
 		}
 
 		return nil
@@ -253,8 +234,8 @@ func (self *BoltStorage) ExportExpiredAuthData(currentTime uint64, fileName stri
 		return 0, err
 	}
 	defer func() {
-		if err := outFile.Close(); err != nil {
-			log.Printf("Close file error: %s", err.Error())
+		if vErr := outFile.Close(); vErr != nil {
+			log.Printf("Close file error: %s", vErr.Error())
 		}
 	}()
 
@@ -403,9 +384,9 @@ func (self *BoltStorage) StorePrice(data common.AllPriceEntry, timepoint uint64)
 
 		// remove outdated data from bucket
 		log.Printf("Version number: %d\n", self.GetNumberOfVersion(tx, PRICE_BUCKET))
-		if err := self.PruneOutdatedData(tx, PRICE_BUCKET); err != nil {
-			log.Printf("Prune out data: %s", err.Error())
-			return err
+		if vErr := self.PruneOutdatedData(tx, PRICE_BUCKET); vErr != nil {
+			log.Printf("Prune out data: %s", vErr.Error())
+			return vErr
 		}
 
 		dataJSON, err = json.Marshal(data)
@@ -797,8 +778,8 @@ func (self *BoltStorage) HasPendingDeposit(token common.Token, exchange common.E
 		c := pb.Cursor()
 		for k, v := c.First(); k != nil; k, v = c.Next() {
 			record := common.ActivityRecord{}
-			if err := json.Unmarshal(v, &record); err != nil {
-				return err
+			if vErr := json.Unmarshal(v, &record); vErr != nil {
+				return vErr
 			}
 			if record.Action == "deposit" && record.Params["token"].(string) == token.ID && record.Destination == string(exchange.ID()) {
 				result = true
@@ -976,13 +957,13 @@ func (self *BoltStorage) StoreTokenTargetQty(id, data string) error {
 			return errors.New("there is no pending target activity to confirm")
 		}
 		// verify confirm data
-		if err := json.Unmarshal(pendingTargetQty, &tokenTargetQty); err != nil {
-			return err
+		if vErr := json.Unmarshal(pendingTargetQty, &tokenTargetQty); vErr != nil {
+			return vErr
 		}
 		pendingData := tokenTargetQty.Data
-		idInt, err := strconv.ParseUint(id, 10, 64)
-		if err != nil {
-			return err
+		idInt, vErr := strconv.ParseUint(id, 10, 64)
+		if vErr != nil {
+			return vErr
 		}
 		if tokenTargetQty.ID != idInt {
 			return errors.New("pending target quantity ID does not match")
@@ -1020,10 +1001,10 @@ func (self *BoltStorage) GetRebalanceControl() (metric.RebalanceControl, error) 
 			}
 			return self.StoreRebalanceControl(false)
 		}
-		if err := json.Unmarshal(data, &result); err != nil {
-			log.Printf("Unmarshal rebalance control: %s", err.Error())
+		if vErr := json.Unmarshal(data, &result); vErr != nil {
+			return vErr
 		}
-		return err
+		return nil
 	})
 	return result, err
 }
@@ -1069,8 +1050,8 @@ func (self *BoltStorage) GetSetrateControl() (metric.SetrateControl, error) {
 			}
 			return self.StoreSetrateControl(false)
 		}
-		if err := json.Unmarshal(data, &result); err != nil {
-			log.Printf("Unmarshal setrate control: %s", err.Error())
+		if vErr := json.Unmarshal(data, &result); vErr != nil {
+			return vErr
 		}
 		return nil
 	})
@@ -1139,8 +1120,8 @@ func (self *BoltStorage) GetPendingPWIEquation() (metric.PWIEquation, error) {
 		if v == nil {
 			return errors.New("There no pending equation")
 		}
-		if err := json.Unmarshal(v, &result); err != nil {
-			log.Printf("Unmarshal pwi equation error: %s", err.Error())
+		if vErr := json.Unmarshal(v, &result); vErr != nil {
+			return vErr
 		}
 		return nil
 	})
@@ -1294,8 +1275,8 @@ func (self *BoltStorage) GetExchangeNotifications() (common.ExchangeNotification
 					action := actionToken[0]
 					token := actionToken[1]
 					notiContent := common.ExchangeNotiContent{}
-					if err := json.Unmarshal(v, &notiContent); err != nil {
-						log.Printf("Unmarshal noti content error: %s", err.Error())
+					if vErr := json.Unmarshal(v, &notiContent); vErr != nil {
+						return vErr
 					}
 					tokenContent, exist := actionContent[action]
 					if !exist {
@@ -1307,7 +1288,7 @@ func (self *BoltStorage) GetExchangeNotifications() (common.ExchangeNotification
 				result[string(name)] = actionContent
 			}
 		}
-		return err
+		return nil
 	})
 	return result, err
 }
@@ -1442,11 +1423,10 @@ func (self *BoltStorage) GetPendingTargetQtyV2() (map[string]interface{}, error)
 }
 
 func (self *BoltStorage) ConfirmTargetQtyV2(value []byte) error {
-	var err error
 	temp := make(map[string]interface{})
-	vErr := json.Unmarshal(value, &temp)
-	if vErr != nil {
-		return fmt.Errorf("Rejected: Data could not be unmarshalled to defined format: %s", vErr)
+	err := json.Unmarshal(value, &temp)
+	if err != nil {
+		return fmt.Errorf("Rejected: Data could not be unmarshalled to defined format: %s", err)
 	}
 	pending, err := self.GetPendingTargetQtyV2()
 	if eq := reflect.DeepEqual(pending, temp); !eq {
@@ -1456,8 +1436,8 @@ func (self *BoltStorage) ConfirmTargetQtyV2(value []byte) error {
 	err = self.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(TARGET_QUANTITY_V2))
 		targetKey := []byte("current_target_qty")
-		if err := b.Put(targetKey, value); err != nil {
-			return err
+		if vErr := b.Put(targetKey, value); vErr != nil {
+			return vErr
 		}
 		pendingBk := tx.Bucket([]byte(PENDING_TARGET_QUANTITY_V2))
 		pendingKey := []byte("current_pending_target_qty")
@@ -1497,9 +1477,9 @@ func (self *BoltStorage) GetTargetQtyV2() (map[string]interface{}, error) {
 	// we need to get current target quantity from v1 bucket and return it as v2 form.
 	if len(result) == 0 {
 		// target qty v1
-		targetQty, err := self.GetTokenTargetQty()
-		if err != nil {
-			return result, err
+		targetQty, vErr := self.GetTokenTargetQty()
+		if vErr != nil {
+			return result, vErr
 		}
 		result = convertTargetQtyV1toV2(targetQty)
 	}

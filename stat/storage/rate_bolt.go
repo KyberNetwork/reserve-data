@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 
 	"github.com/KyberNetwork/reserve-data/boltutil"
 	"github.com/KyberNetwork/reserve-data/common"
@@ -46,24 +45,17 @@ func (self *BoltRateStorage) StoreReserveRates(ethReserveAddr ethereum.Address, 
 		var prevDataJSON common.ReserveRates
 		_, prevData := c.Last()
 		if prevData != nil {
-			if err := json.Unmarshal(prevData, &prevDataJSON); err != nil {
-				log.Printf("Unmarshal reserve rate error: %s", err.Error())
-				return err
+			if vErr := json.Unmarshal(prevData, &prevDataJSON); vErr != nil {
+				return vErr
 			}
-
 		}
 		if prevDataJSON.BlockNumber < rate.BlockNumber {
 			idByte := boltutil.Uint64ToBytes(timepoint)
-			dataJson, err := json.Marshal(rate)
-			if err != nil {
-				return err
+			dataJSON, vErr := json.Marshal(rate)
+			if vErr != nil {
+				return vErr
 			}
-			err = b.Put(idByte, dataJson)
-			if err != nil {
-				log.Printf("Saving rates to db failed: err(%+v)", err)
-				return err
-			}
-			log.Printf("Save rates to db %s successfully", reserveAddr)
+			return b.Put(idByte, dataJSON)
 		}
 		return nil
 	})
@@ -78,23 +70,22 @@ func (self *BoltRateStorage) GetReserveRates(fromTime, toTime uint64, ethReserve
 		return result, fmt.Errorf("Time range is too broad, it must be smaller or equal to %d miliseconds", MAX_GET_RATES_PERIOD)
 	}
 	err = self.db.Update(func(tx *bolt.Tx) error {
-		b, err := tx.CreateBucketIfNotExists([]byte(reserveAddr))
-		if err != nil {
-			log.Println("Cannot get bucket: ", err.Error())
-			return err
+		b, vErr := tx.CreateBucketIfNotExists([]byte(reserveAddr))
+		if vErr != nil {
+			return vErr
 		}
 		c := b.Cursor()
 		min := boltutil.Uint64ToBytes(fromTime)
 		max := boltutil.Uint64ToBytes(toTime)
 		for k, v := c.Seek(min); k != nil && bytes.Compare(k, max) <= 0; k, v = c.Next() {
 			rates := common.ReserveRates{}
-			err := json.Unmarshal(v, &rates)
-			if err != nil {
-				return err
+			uErr := json.Unmarshal(v, &rates)
+			if uErr != nil {
+				return uErr
 			}
 			result = append(result, rates)
 		}
-		return err
+		return nil
 	})
 	return result, err
 }

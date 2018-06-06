@@ -47,33 +47,26 @@ func NewBoltExchangeStorage(path string) (*BinanceStorage, error) {
 }
 
 func (self *BinanceStorage) StoreTradeHistory(data common.ExchangeTradeHistory) error {
-	var err error
-	err = self.db.Update(func(tx *bolt.Tx) error {
+	err := self.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(TRADE_HISTORY))
-		if err != nil {
-			log.Printf("Cannot create exchange history bucket: %s", err.Error())
-			return err
-		}
 		for pair, pairHistory := range data {
-			pairBk, err := b.CreateBucketIfNotExists([]byte(pair))
-			if err != nil {
-				log.Printf("Cannot create pair history bucket: %s", err.Error())
-				return err
+			pairBk, vErr := b.CreateBucketIfNotExists([]byte(pair))
+			if vErr != nil {
+				return vErr
 			}
 			for _, history := range pairHistory {
 				idBytes := []byte(fmt.Sprintf("%s%s", strconv.FormatUint(history.Timestamp, 10), history.ID))
-				dataJSON, err := json.Marshal(history)
-				if err != nil {
-					log.Printf("Cannot marshal history: %s", err.Error())
+				dataJSON, vErr := json.Marshal(history)
+				if vErr != nil {
+					return vErr
 				}
-				err = pairBk.Put(idBytes, dataJSON)
-				if err != nil {
-					log.Printf("Cannot put new data: %s", err.Error())
-					return err
+				vErr = pairBk.Put(idBytes, dataJSON)
+				if vErr != nil {
+					return vErr
 				}
 			}
 		}
-		return err
+		return nil
 	})
 	return err
 }

@@ -431,7 +431,7 @@ func (self *Fetcher) PersistSnapshot(
 		status, _ := estatuses.Load(activity.ID)
 		var activityStatus common.ActivityStatus
 		if status != nil {
-			activityStatus := status.(common.ActivityStatus)
+			activityStatus = status.(common.ActivityStatus)
 			log.Printf("In PersistSnapshot: exchange activity status for %+v: %+v", activity.ID, activityStatus)
 			if activity.IsExchangePending() {
 				activity.ExchangeStatus = activityStatus.ExchangeStatus

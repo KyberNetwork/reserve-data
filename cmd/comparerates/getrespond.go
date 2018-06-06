@@ -71,8 +71,8 @@ func GetResponse(method string, url string,
 		return resbody, err
 	}
 	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			log.Printf("Response body close error: %s", err.Error())
+		if vErr := resp.Body.Close(); vErr != nil {
+			log.Printf("Response body close error: %s", vErr.Error())
 		}
 	}()
 	if resp.StatusCode == http.StatusOK {

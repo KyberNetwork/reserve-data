@@ -103,8 +103,8 @@ func fetchRate(timepoint uint64) ([][]float64, error) {
 		return [][]float64{}, err
 	}
 	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			log.Printf("Response body close error: %s", err.Error())
+		if vErr := resp.Body.Close(); vErr != nil {
+			log.Printf("Response body close error: %s", vErr.Error())
 		}
 	}()
 	body, err := ioutil.ReadAll(resp.Body)
@@ -150,8 +150,8 @@ func (self *CMCEthUSDRate) FetchEthRate() (err error) {
 		return err
 	}
 	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			log.Printf("Response body close error: %s", err.Error())
+		if vErr := resp.Body.Close(); vErr != nil {
+			log.Printf("Response body close error: %s", vErr.Error())
 		}
 	}()
 	body, err := ioutil.ReadAll(resp.Body)

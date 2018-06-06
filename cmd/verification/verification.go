@@ -105,8 +105,8 @@ func (v *Verification) GetResponse(
 		return respBody, err
 	}
 	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			log.Printf("Response body close error: %s", err.Error())
+		if vErr := resp.Body.Close(); vErr != nil {
+			log.Printf("Response body close error: %s", vErr.Error())
 		}
 	}()
 	respBody, err = ioutil.ReadAll(resp.Body)
@@ -182,8 +182,8 @@ func (v *Verification) Deposit(
 	if err != nil {
 		return result.ID, err
 	}
-	if err := json.Unmarshal(respBody, &result); err != nil {
-		return result.ID, err
+	if vErr := json.Unmarshal(respBody, &result); vErr != nil {
+		return result.ID, vErr
 	}
 	if result.Success != true {
 		err = fmt.Errorf("Cannot deposit: %s", result.Reason)
@@ -286,9 +286,9 @@ func (v *Verification) VerifyDeposit() error {
 	amount := getTokenAmount(0.5, token)
 	Info.Println("Start deposit to exchanges")
 	for _, exchange := range v.exchanges {
-		activityID, err := v.Deposit(exchange, token.ID, amount, timepoint)
-		if err != nil {
-			return err
+		activityID, vErr := v.Deposit(exchange, token.ID, amount, timepoint)
+		if vErr != nil {
+			return vErr
 		}
 		Info.Printf("Deposit id: %s", activityID)
 		go v.CheckPendingActivities(activityID, timepoint)
@@ -305,10 +305,9 @@ func (v *Verification) VerifyWithdraw() error {
 	token, err := common.GetInternalToken("ETH")
 	amount := getTokenAmount(0.5, token)
 	for _, exchange := range v.exchanges {
-		activityID, err := v.Withdraw(exchange, token.ID, amount, timepoint)
-		if err != nil {
-			Error.Println(err.Error())
-			return err
+		activityID, vErr := v.Withdraw(exchange, token.ID, amount, timepoint)
+		if vErr != nil {
+			return vErr
 		}
 		Info.Printf("Withdraw ID: %s", activityID)
 		go v.CheckPendingActivities(activityID, timepoint)

@@ -34,8 +34,8 @@ func (self *TheWorld) getOneForgeGoldUSDInfo() common.OneForgeGoldData {
 		}
 	} else {
 		defer func() {
-			if err := resp.Body.Close(); err != nil {
-				log.Printf("Close http body error: %s", err.Error())
+			if vErr := resp.Body.Close(); vErr != nil {
+				log.Printf("Close http body error: %s", vErr.Error())
 			}
 		}()
 		if resp.StatusCode != 200 {
@@ -81,8 +81,8 @@ func (self *TheWorld) getOneForgeGoldETHInfo() common.OneForgeGoldData {
 		}
 	}
 	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			log.Printf("Response body close error: %s", err.Error())
+		if vErr := resp.Body.Close(); vErr != nil {
+			log.Printf("Response body close error: %s", vErr.Error())
 		}
 	}()
 	if resp.StatusCode != 200 {
@@ -127,8 +127,8 @@ func (self *TheWorld) getDGXGoldInfo() common.DGXGoldData {
 		}
 	}
 	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			log.Printf("Close reponse body error: %s", err.Error())
+		if vErr := resp.Body.Close(); vErr != nil {
+			log.Printf("Close reponse body error: %s", vErr.Error())
 		}
 	}()
 	if resp.StatusCode != 200 {
@@ -175,8 +175,8 @@ func (self *TheWorld) getGDAXGoldInfo() common.GDAXGoldData {
 		}
 	}
 	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			log.Printf("Response body close error: %s", err.Error())
+		if vErr := resp.Body.Close(); vErr != nil {
+			log.Printf("Response body close error: %s", vErr.Error())
 		}
 	}()
 	if resp.StatusCode != 200 {
@@ -223,8 +223,8 @@ func (self *TheWorld) getKrakenGoldInfo() common.KrakenGoldData {
 		}
 	}
 	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			log.Printf("Response body close error: %s", err.Error())
+		if vErr := resp.Body.Close(); vErr != nil {
+			log.Printf("Response body close error: %s", vErr.Error())
 		}
 	}()
 	if resp.StatusCode != 200 {
@@ -271,8 +271,8 @@ func (self *TheWorld) getGeminiGoldInfo() common.GeminiGoldData {
 		}
 	}
 	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			log.Printf("Response body close error: %s", err.Error())
+		if vErr := resp.Body.Close(); vErr != nil {
+			log.Printf("Response body close error: %s", vErr.Error())
 		}
 	}()
 	if resp.StatusCode != 200 {

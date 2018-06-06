@@ -174,9 +174,8 @@ func (self *BaseBlockchain) transactTx(context context.Context, opts TxOpts, con
 	var nonce uint64
 	if opts.Nonce == nil {
 		return nil, errors.New("nonce must be specified")
-	} else {
-		nonce = opts.Nonce.Uint64()
 	}
+	nonce = opts.Nonce.Uint64()
 	// Figure out the gas allowance and gas price values
 	if opts.GasPrice == nil {
 		return nil, errors.New("gas price must be specified")
@@ -185,8 +184,8 @@ func (self *BaseBlockchain) transactTx(context context.Context, opts TxOpts, con
 	if gasLimit == 0 {
 		// Gas estimation cannot succeed without code for method invocations
 		if contract.Big().Cmp(ethereum.Big0) == 0 {
-			if code, err := self.client.PendingCodeAt(ensureContext(context), contract); err != nil {
-				return nil, err
+			if code, vErr := self.client.PendingCodeAt(ensureContext(context), contract); vErr != nil {
+				return nil, vErr
 			} else if len(code) == 0 {
 				return nil, bind.ErrNoCode
 			}
@@ -337,49 +336,46 @@ func (self *BaseBlockchain) TxStatus(hash ethereum.Hash) (string, uint64, error)
 		// tx exist
 		if pending {
 			return "", 0, nil
-		} else {
-			receipt, err := self.client.TransactionReceipt(option, hash)
-			if err != nil {
-				// incompatibily between geth and parity
-				// so even err is not nil, receipt is still there
-				// and have valid fields
-				if receipt != nil {
-					// only byzantium has status field at the moment
-					// mainnet, ropsten are byzantium, other chains such as
-					// devchain, kovan are not
-					if self.chainType == "byzantium" {
-						if receipt.Status == 1 {
-							// successful tx
-							return "mined", tx.BlockNumber().Uint64(), nil
-						} else {
-							// failed tx
-							return "failed", tx.BlockNumber().Uint64(), nil
-						}
-					} else {
+		}
+		receipt, vErr := self.client.TransactionReceipt(option, hash)
+		if vErr != nil {
+			// incompatibily between geth and parity
+			// so even err is not nil, receipt is still there
+			// and have valid fields
+			if receipt != nil {
+				// only byzantium has status field at the moment
+				// mainnet, ropsten are byzantium, other chains such as
+				// devchain, kovan are not
+				if self.chainType == "byzantium" {
+					if receipt.Status == 1 {
+						// successful tx
 						return "mined", tx.BlockNumber().Uint64(), nil
+					} else {
+						// failed tx
+						return "failed", tx.BlockNumber().Uint64(), nil
 					}
 				} else {
-					// networking issue
-					return "", 0, err
+					return "mined", tx.BlockNumber().Uint64(), nil
 				}
 			} else {
-				if receipt.Status == 1 {
-					// successful tx
-					return "mined", tx.BlockNumber().Uint64(), nil
-				} else {
-					// failed tx
-					return "failed", tx.BlockNumber().Uint64(), nil
-				}
+				// networking issue
+				return "", 0, err
 			}
+		} else {
+			if receipt.Status == 1 {
+				// successful tx
+				return "mined", tx.BlockNumber().Uint64(), nil
+			}
+			// failed tx
+			return "failed", tx.BlockNumber().Uint64(), nil
 		}
 	} else {
 		if err == ether.NotFound {
 			// tx doesn't exist. it failed
 			return "lost", 0, nil
-		} else {
-			// networking issue
-			return "", 0, err
 		}
+		// networking issue
+		return "", 0, err
 	}
 }
 

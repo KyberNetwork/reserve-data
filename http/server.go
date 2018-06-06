@@ -265,9 +265,8 @@ func (self *HTTPServer) SetRate(c *gin.Context) {
 		if err != nil {
 			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
-		} else {
-			tokens = append(tokens, token)
 		}
+		tokens = append(tokens, token)
 	}
 	bigBuys := []*big.Int{}
 	for _, rate := range strings.Split(buys, "-") {
@@ -275,9 +274,8 @@ func (self *HTTPServer) SetRate(c *gin.Context) {
 		if err != nil {
 			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
-		} else {
-			bigBuys = append(bigBuys, r)
 		}
+		bigBuys = append(bigBuys, r)
 	}
 	bigSells := []*big.Int{}
 	for _, rate := range strings.Split(sells, "-") {
@@ -285,9 +283,8 @@ func (self *HTTPServer) SetRate(c *gin.Context) {
 		if err != nil {
 			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
-		} else {
-			bigSells = append(bigSells, r)
 		}
+		bigSells = append(bigSells, r)
 	}
 	intBlock, err := strconv.ParseInt(block, 10, 64)
 	if err != nil {
@@ -296,21 +293,19 @@ func (self *HTTPServer) SetRate(c *gin.Context) {
 	}
 	bigAfpMid := []*big.Int{}
 	for _, rate := range strings.Split(afpMid, "-") {
-		r, err := hexutil.DecodeBig(rate)
-		if err != nil {
-			httputil.ResponseFailure(c, httputil.WithError(err))
+		r, vErr := hexutil.DecodeBig(rate)
+		if vErr != nil {
+			httputil.ResponseFailure(c, httputil.WithError(vErr))
 			return
-		} else {
-			bigAfpMid = append(bigAfpMid, r)
 		}
+		bigAfpMid = append(bigAfpMid, r)
 	}
 	id, err := self.core.SetRates(tokens, bigBuys, bigSells, big.NewInt(intBlock), bigAfpMid, msgs)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
-	} else {
-		httputil.ResponseSuccess(c, httputil.WithField("id", id))
 	}
+	httputil.ResponseSuccess(c, httputil.WithField("id", id))
 }
 
 func (self *HTTPServer) Trade(c *gin.Context) {
@@ -566,9 +561,8 @@ func (self *HTTPServer) Metrics(c *gin.Context) {
 		if err != nil {
 			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
-		} else {
-			tokens = append(tokens, token)
 		}
+		tokens = append(tokens, token)
 	}
 	from, err := strconv.ParseUint(fromParam, 10, 64)
 	if err != nil {
@@ -618,13 +612,13 @@ func (self *HTTPServer) StoreMetrics(c *gin.Context) {
 		afpmidStr := parts[1]
 		spreadStr := parts[2]
 
-		afpmid, err := strconv.ParseFloat(afpmidStr, 64)
-		if err != nil {
+		afpmid, vErr := strconv.ParseFloat(afpmidStr, 64)
+		if vErr != nil {
 			httputil.ResponseFailure(c, httputil.WithReason("Afp mid "+afpmidStr+" is not float64"))
 			return
 		}
-		spread, err := strconv.ParseFloat(spreadStr, 64)
-		if err != nil {
+		spread, vErr := strconv.ParseFloat(spreadStr, 64)
+		if vErr != nil {
 			httputil.ResponseFailure(c, httputil.WithReason("Spread "+spreadStr+" is not float64"))
 			return
 		}
@@ -1209,8 +1203,8 @@ func (self *HTTPServer) UpdateUserAddresses(c *gin.Context) {
 	}
 	for i, addr := range addrsStr {
 		a := ethereum.HexToAddress(addr)
-		t, err := strconv.ParseUint(timesStr[i], 10, 64)
-		if a.Big().Cmp(ethereum.Big0) != 0 && err == nil {
+		t, vErr := strconv.ParseUint(timesStr[i], 10, 64)
+		if a.Big().Cmp(ethereum.Big0) != 0 && vErr == nil {
 			addrs = append(addrs, a)
 			timestamps = append(timestamps, t)
 		}

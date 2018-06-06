@@ -86,9 +86,9 @@ func (self *BoltStorage) StorePendingIntermediateTx(id common.ActivityID, data c
 		if err != nil {
 			return err
 		}
-		idJSON, err := json.Marshal(id)
-		if err != nil {
-			return err
+		idJSON, vErr := json.Marshal(id)
+		if vErr != nil {
+			return vErr
 		}
 		return b.Put(idJSON, dataJSON)
 	})
@@ -100,12 +100,11 @@ func (self *BoltStorage) RemovePendingIntermediateTx(id common.ActivityID) error
 	var err error
 	err = self.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(PENDING_INTERMEDIATE_TX))
-		idJSON, err := json.Marshal(id)
-		if err != nil {
-			return err
+		idJSON, vErr := json.Marshal(id)
+		if vErr != nil {
+			return vErr
 		}
-		err = b.Delete(idJSON)
-		return err
+		return b.Delete(idJSON)
 	})
 	return err
 }

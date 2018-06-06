@@ -117,8 +117,8 @@ func (self *BoltLogStorage) LoadLastTradeLogIndex() (block uint64, index uint, e
 			return nil
 		}
 		record := common.TradeLog{}
-		if err := json.Unmarshal(v, &record); err != nil {
-			return err
+		if vErr := json.Unmarshal(v, &record); vErr != nil {
+			return vErr
 		}
 		block = record.BlockNumber
 		index = record.Index
@@ -136,8 +136,8 @@ func (self *BoltLogStorage) LoadLastCatLogIndex() (block uint64, index uint, err
 			return nil
 		}
 		record := common.SetCatLog{}
-		if err := json.Unmarshal(v, &record); err != nil {
-			return err
+		if vErr := json.Unmarshal(v, &record); vErr != nil {
+			return vErr
 		}
 		block = record.BlockNumber
 		index = record.Index
