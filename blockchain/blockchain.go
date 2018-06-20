@@ -18,8 +18,23 @@ import (
 )
 
 const (
-	PRICING_OP string = "pricingOP"
-	DEPOSIT_OP string = "depositOP"
+	PRICING_OP = "pricingOP"
+	DEPOSIT_OP = "depositOP"
+
+	// feeToWalletEvent is the topic of event AssignFeeToWallet(address reserve, address wallet, uint walletFee).
+	feeToWalletEvent = "0x366bc34352215bf0bd3b527cfd6718605e1f5938777e42bcd8ed92f578368f52"
+	// burnFeeEvent is the topic of event AssignBurnFees(address reserve, uint burnFee).
+	burnFeeEvent = "0xf838f6ddc89706878e3c3e698e9b5cbfbf2c0e3d3dcd0bd2e00f1ccf313e0185"
+	// tradeEvent is the topic of event
+	// ExecuteTrade(address indexed sender, ERC20 src, ERC20 dest, uint actualSrcAmount, uint actualDestAmount)
+	tradeEvent = "0x1849bd6a030a1bca28b83437fd3de96f3d27a5d172fa7e9c78e7b61468928a39"
+	// userCatEvent is the topic of event UserCategorySet(address user, uint category).
+	userCatEvent = "0x0aeb0f7989a09b8cccf58cea1aefa196ccf738cb14781d6910448dd5649d0e6e"
+)
+
+var (
+	Big0   = big.NewInt(0)
+	BigMax = big.NewInt(10).Exp(big.NewInt(10), big.NewInt(33), nil)
 )
 
 // tbindex is where the token data stored in blockchain.
@@ -39,18 +54,6 @@ type tbindex struct {
 func newTBIndex(bulkIndex, indexInBulk uint64) tbindex {
 	return tbindex{BulkIndex: bulkIndex, IndexInBulk: indexInBulk}
 }
-
-const (
-	FeeToWalletEvent string = "0x366bc34352215bf0bd3b527cfd6718605e1f5938777e42bcd8ed92f578368f52"
-	BurnFeeEvent     string = "0xf838f6ddc89706878e3c3e698e9b5cbfbf2c0e3d3dcd0bd2e00f1ccf313e0185"
-	TradeEvent       string = "0x1849bd6a030a1bca28b83437fd3de96f3d27a5d172fa7e9c78e7b61468928a39"
-	UserCatEvent     string = "0x0aeb0f7989a09b8cccf58cea1aefa196ccf738cb14781d6910448dd5649d0e6e"
-)
-
-var (
-	Big0   *big.Int = big.NewInt(0)
-	BigMax          = big.NewInt(10).Exp(big.NewInt(10), big.NewInt(33), nil)
-)
 
 type Blockchain struct {
 	*blockchain.BaseBlockchain
@@ -468,10 +471,10 @@ func (self *Blockchain) GetRawLogs(fromBlock uint64, toBlock uint64) ([]types.Lo
 		addresses,
 		[][]ethereum.Hash{
 			{
-				ethereum.HexToHash(TradeEvent),
-				ethereum.HexToHash(BurnFeeEvent),
-				ethereum.HexToHash(FeeToWalletEvent),
-				ethereum.HexToHash(UserCatEvent),
+				ethereum.HexToHash(tradeEvent),
+				ethereum.HexToHash(burnFeeEvent),
+				ethereum.HexToHash(feeToWalletEvent),
+				ethereum.HexToHash(userCatEvent),
 			},
 		},
 	)
@@ -495,7 +498,7 @@ func (self *Blockchain) GetLogs(fromBlock uint64, toBlock uint64) ([]common.KNLo
 		if l.Removed {
 			log.Printf("LogFetcher - Log is ignored because it is removed due to chain reorg")
 		} else {
-			if prevLog == nil || (l.TxHash != prevLog.TxHash && l.Topics[0].Hex() != UserCatEvent) {
+			if prevLog == nil || (l.TxHash != prevLog.TxHash && l.Topics[0].Hex() != userCatEvent) {
 				if tradeLog != nil {
 					result = append(result, *tradeLog)
 					noTradeLog += 1
@@ -506,7 +509,7 @@ func (self *Blockchain) GetLogs(fromBlock uint64, toBlock uint64) ([]common.KNLo
 					// 	tradeLog.BlockNumber,
 					// )
 				}
-				if len(l.Topics) > 0 && l.Topics[0].Hex() != UserCatEvent {
+				if len(l.Topics) > 0 && l.Topics[0].Hex() != userCatEvent {
 					// start new TradeLog
 					tradeLog = &common.TradeLog{}
 					tradeLog.BlockNumber = l.BlockNumber
@@ -526,7 +529,7 @@ func (self *Blockchain) GetLogs(fromBlock uint64, toBlock uint64) ([]common.KNLo
 			} else {
 				topic := l.Topics[0]
 				switch topic.Hex() {
-				case UserCatEvent:
+				case userCatEvent:
 					addr, cat := LogDataToCatLog(l.Data)
 					t, err := self.InterpretTimestamp(
 						l.BlockNumber,
@@ -548,16 +551,16 @@ func (self *Blockchain) GetLogs(fromBlock uint64, toBlock uint64) ([]common.KNLo
 						Category:        cat,
 					})
 					noCatLog += 1
-				case FeeToWalletEvent:
+				case feeToWalletEvent:
 					reserveAddr, walletAddr, walletFee := LogDataToFeeWalletParams(l.Data)
 					tradeLog.ReserveAddress = reserveAddr
 					tradeLog.WalletAddress = walletAddr
 					tradeLog.WalletFee = walletFee.Big()
-				case BurnFeeEvent:
+				case burnFeeEvent:
 					reserveAddr, burnFees := LogDataToBurnFeeParams(l.Data)
 					tradeLog.ReserveAddress = reserveAddr
 					tradeLog.BurnFee = burnFees.Big()
-				case TradeEvent:
+				case tradeEvent:
 					srcAddr, destAddr, srcAmount, destAmount := LogDataToTradeParams(l.Data)
 					tradeLog.SrcAddress = srcAddr
 					tradeLog.DestAddress = destAddr
@@ -581,7 +584,7 @@ func (self *Blockchain) GetLogs(fromBlock uint64, toBlock uint64) ([]common.KNLo
 					}
 				}
 			}
-			if len(l.Topics) > 0 && l.Topics[0].Hex() != UserCatEvent {
+			if len(l.Topics) > 0 && l.Topics[0].Hex() != userCatEvent {
 				prevLog = &logs[i]
 			}
 		}
