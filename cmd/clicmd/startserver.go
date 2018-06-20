@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const remoteLogPath string = "core-log/"
+const remoteLogPath string = "core-log"
 
 // logDir is located at base of this repository.
 var logDir = filepath.Join(filepath.Dir(filepath.Dir(common.CurrentDir())), "log")

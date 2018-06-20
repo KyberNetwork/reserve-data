@@ -24,6 +24,7 @@ import (
 
 const (
 	STARTING_BLOCK uint64 = 5069586
+	LOG_FILE_NAME  string = "core.log"
 )
 
 func backupLog(arch archive.Archive) {
@@ -31,29 +32,28 @@ func backupLog(arch archive.Archive) {
 	err := c.AddFunc("@daily", func() {
 		files, rErr := ioutil.ReadDir(logDir)
 		if rErr != nil {
-			log.Printf("ERROR: Log backup: Can not view log folder - %s", rErr.Error())
+			log.Printf("BACKUPLOG ERROR: Can not view log folder - %s", rErr.Error())
 		}
 		for _, file := range files {
 			matched, err := regexp.MatchString("core.*\\.log", file.Name())
 			if (!file.IsDir()) && (matched) && (err == nil) {
-				log.Printf("File name is %s", file.Name())
-				err := arch.UploadFile(arch.GetLogBucketName(), remoteLogPath, logDir+file.Name())
+				err := arch.UploadFile(arch.GetLogBucketName(), remoteLogPath, filepath.Join(logDir, file.Name()))
 				if err != nil {
-					log.Printf("ERROR: Log backup: Can not upload Log file %s", err)
+					log.Printf("BACKUPLOG ERROR: Can not upload Log file %s", err)
 				} else {
 					var err error
 					var ok bool
-					if file.Name() != "core.log" {
-						ok, err = arch.CheckFileIntergrity(arch.GetLogBucketName(), remoteLogPath, logDir+file.Name())
+					if file.Name() != LOG_FILE_NAME {
+						ok, err = arch.CheckFileIntergrity(arch.GetLogBucketName(), remoteLogPath, filepath.Join(logDir, file.Name()))
 						if !ok || (err != nil) {
-							log.Printf("ERROR: Log backup: File intergrity is corrupted")
+							log.Printf("BACKUPLOG ERROR: File intergrity is corrupted")
 						}
-						err = os.Remove(logDir + file.Name())
+						err = os.Remove(filepath.Join(logDir, file.Name()))
 					}
 					if err != nil {
-						log.Printf("ERROR: Log backup: Cannot remove local log file %s", err)
+						log.Printf("BACKUPLOG ERROR: Cannot remove local log file %s", err)
 					} else {
-						log.Printf("Log backup: backup file %s succesfully", file.Name())
+						log.Printf("BACKUPLOG Log backup: backup file %s succesfully", file.Name())
 					}
 				}
 			}
@@ -61,7 +61,7 @@ func backupLog(arch archive.Archive) {
 		return
 	})
 	if err != nil {
-		log.Printf("Cannot rotate log: %s", err.Error())
+		log.Printf("BACKUPLOG Cannot rotate log: %s", err.Error())
 	}
 	c.Start()
 }
@@ -70,7 +70,7 @@ func backupLog(arch archive.Archive) {
 //if stdoutLog is set, the log is also printed on stdout.
 func configLog(stdoutLog bool) {
 	logger := &lumberjack.Logger{
-		Filename: filepath.Join(logDir, "core.log"),
+		Filename: filepath.Join(logDir, LOG_FILE_NAME),
 		// MaxSize:  1, // megabytes
 		MaxBackups: 0,
 		MaxAge:     0, //days

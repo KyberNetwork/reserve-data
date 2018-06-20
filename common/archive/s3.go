@@ -3,6 +3,7 @@ package archive
 import (
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -19,15 +20,6 @@ type s3Archive struct {
 	awsConf  AWSConfig
 }
 
-func enforceFolderPath(fp string) string {
-	if len(fp) < 1 {
-		return fp
-	}
-	if string(fp[len(fp)-1]) != "/" {
-		fp = fp + "/"
-	}
-	return fp
-}
 func (archive *s3Archive) UploadFile(bucketName string, awsfolderPath string, filePath string) error {
 	file, err := os.Open(filePath)
 	defer func() {
@@ -40,7 +32,7 @@ func (archive *s3Archive) UploadFile(bucketName string, awsfolderPath string, fi
 	}
 	_, err = archive.uploader.Upload(&s3manager.UploadInput{
 		Bucket: aws.String(bucketName),
-		Key:    aws.String(enforceFolderPath(awsfolderPath) + getFileNameFromFilePath(filePath)),
+		Key:    aws.String(filepath.Join(awsfolderPath, getFileNameFromFilePath(filePath))),
 		Body:   file,
 	})
 	return err
@@ -49,7 +41,7 @@ func (archive *s3Archive) UploadFile(bucketName string, awsfolderPath string, fi
 func (archive *s3Archive) RemoveFile(bucketName string, awsfolderPath string, filePath string) error {
 	input := &s3.DeleteObjectInput{
 		Bucket: aws.String(bucketName),
-		Key:    aws.String(enforceFolderPath(awsfolderPath) + getFileNameFromFilePath(filePath)),
+		Key:    aws.String(filepath.Join(awsfolderPath, getFileNameFromFilePath(filePath))),
 	}
 	_, err := archive.svc.DeleteObject(input)
 	return err
@@ -83,7 +75,7 @@ func (archive *s3Archive) CheckFileIntergrity(bucketName string, awsfolderPath s
 
 	x := s3.ListObjectsInput{
 		Bucket: aws.String(bucketName),
-		Prefix: aws.String(enforceFolderPath(awsfolderPath) + getFileNameFromFilePath(filePath)),
+		Prefix: aws.String(filepath.Join(awsfolderPath, getFileNameFromFilePath(filePath))),
 	}
 	resp, err := archive.svc.ListObjects(&x)
 	if err != nil {
@@ -108,10 +100,6 @@ func (archive *s3Archive) GetReserveDataBucketName() string {
 //This should be passed in from JSON configure file
 func (archive *s3Archive) GetStatDataBucketName() string {
 	return archive.awsConf.ExpiredStatDataBucketName
-}
-
-func (archive *s3Archive) GetLogFolderPath() string {
-	return archive.awsConf.LogFolderPath
 }
 
 func (archive *s3Archive) GetLogBucketName() string {
