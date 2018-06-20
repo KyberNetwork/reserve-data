@@ -30,6 +30,12 @@ sample:
   "passphrase": "passphrase to unlock the JSON keystore"
   "keystore_deposit_path": "path to the JSON keystore file that will be used to deposit",
   "passphrase_deposit": "passphrase to unlock the JSON keytore"
+  "aws_access_key_id": "your aws key ID",
+  "aws_secret_access_key": "your aws scret key",
+  "aws_expired_stat_data_bucket_name" : "AWS bucket for expired stat data (already created)",
+  "aws_expired_reserve_data_bucket_name" : "AWS bucket for expired reserve data (already created)",
+  "aws_log_bucket_name" :"AWS bucket for log backup(already created)",
+  "aws_region":"AWS region"
 }
 ```
 
