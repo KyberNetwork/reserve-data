@@ -100,7 +100,16 @@ func (self *BinanceEndpoint) GetResponse(
 		respBody, err = ioutil.ReadAll(resp.Body)
 		break
 	default:
-		err = fmt.Errorf("Binance return with code: %d", resp.StatusCode)
+		respBody, err = ioutil.ReadAll(resp.Body)
+		if err != nil {
+			break
+		}
+		var response exchange.Binaresp
+		err = json.Unmarshal(respBody, &response)
+		if err != nil {
+			break
+		}
+		err = fmt.Errorf("Binance return with code: %d - %s", resp.StatusCode, response.Msg)
 	}
 	if err != nil || len(respBody) == 0 || rand.Int()%10 == 0 {
 		log.Printf("request to %s, got response from binance (error or throttled to 10%%): %s, err: %v", req.URL, common.TruncStr(respBody), err)
