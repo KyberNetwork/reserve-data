@@ -101,7 +101,7 @@ func (self *BinanceEndpoint) GetResponse(
 		break
 	default:
 		var response exchange.Binaresp
-		err := json.NewDecoder(resp.Body).Decode(&response)
+		err = json.NewDecoder(resp.Body).Decode(&response)
 		if err != nil {
 			break
 		}
