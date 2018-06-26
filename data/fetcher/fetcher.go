@@ -415,13 +415,15 @@ func (self *Fetcher) PersistSnapshot(
 				} else {
 					// update old auth to current
 					newEbalance := oldAuth.ExchangeBalances[key.(common.ExchangeID)]
+					newEbalance.Valid = false
 					newEbalance.Error = v.Error
 					newEbalance.Status = false
 					allEBalances[key.(common.ExchangeID)] = newEbalance
 				}
 			}
-			snapshot.Valid = false
-			snapshot.Error = v.Error
+			// Temporarily snapshot is false only when cannot get balance from blockchain
+			// snapshot.Valid = false
+			snapshot.Error += v.Error + ";"
 		}
 		return true
 	})
