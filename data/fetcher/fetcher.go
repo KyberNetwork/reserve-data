@@ -423,7 +423,7 @@ func (self *Fetcher) PersistSnapshot(
 			}
 			// Temporarily snapshot is false only when cannot get balance from blockchain
 			// snapshot.Valid = false
-			snapshot.Error += v.Error
+			snapshot.Error += v.Error + ";"
 		}
 		return true
 	})
