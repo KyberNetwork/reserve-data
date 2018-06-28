@@ -80,6 +80,14 @@
       "maxPerBlockImbalance": "1925452883",
       "maxTotalImbalance": "1925452883"
     },
+    "COFI": {
+      "name": "ConFi",
+      "decimals": 18,
+      "address": "	0xb91786188f8d4e35d6d67799e9f162587bf4da03",
+      "minimalRecordResolution": "10",
+      "maxPerBlockImbalance": "1925452883",
+      "maxTotalImbalance": "1925452883"
+    },
     "ETH": {
       "name": "Ethereum",
       "decimals": 18,
