@@ -117,6 +117,7 @@ type Config struct {
 	ReserveAddress     ethereum.Address
 	FeeBurnerAddress   ethereum.Address
 	NetworkAddress     ethereum.Address
+	InternalNetwork    ethereum.Address
 	WhitelistAddress   ethereum.Address
 	SetRateAddress     ethereum.Address
 	ThirdPartyReserves []ethereum.Address
@@ -130,6 +131,7 @@ type Config struct {
 // GetStatConfig: load config to run stat server only
 func (self *Config) AddStatConfig(settingPath SettingPaths, addressConfig common.AddressConfig) {
 	networkAddr := ethereum.HexToAddress(addressConfig.Network)
+	internalNetwork := ethereum.HexToAddress(addressConfig.InternalNetwork)
 	burnerAddr := ethereum.HexToAddress(addressConfig.FeeBurner)
 	whitelistAddr := ethereum.HexToAddress(addressConfig.Whitelist)
 
@@ -198,12 +200,14 @@ func (self *Config) AddStatConfig(settingPath SettingPaths, addressConfig common
 	self.ThirdPartyReserves = thirdpartyReserves
 	self.FeeBurnerAddress = burnerAddr
 	self.NetworkAddress = networkAddr
+	self.InternalNetwork = internalNetwork
 	self.WhitelistAddress = whitelistAddr
 	self.EtherscanApiKey = apiKey
 }
 
 func (self *Config) AddCoreConfig(settingPath SettingPaths, addressConfig common.AddressConfig, kyberENV string) {
 	networkAddr := ethereum.HexToAddress(addressConfig.Network)
+	internalNetwork := ethereum.HexToAddress(addressConfig.InternalNetwork)
 	burnerAddr := ethereum.HexToAddress(addressConfig.FeeBurner)
 	whitelistAddr := ethereum.HexToAddress(addressConfig.Whitelist)
 
@@ -256,6 +260,7 @@ func (self *Config) AddCoreConfig(settingPath SettingPaths, addressConfig common
 	self.DepositSigner = depositSigner
 	self.FeeBurnerAddress = burnerAddr
 	self.NetworkAddress = networkAddr
+	self.InternalNetwork = internalNetwork
 	self.WhitelistAddress = whitelistAddr
 	//self.ExchangeStorage = exsStorage
 	// var huobiConfig common.HuobiConfig

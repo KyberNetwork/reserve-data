@@ -16,7 +16,6 @@
       "address": "0xdd974D5C2e2928deA5F71b9825b8b646686BD200",
       "minimalRecordResolution": "1000000000000000",
       "maxPerBlockImbalance": "5087805538780989882368",
-
       "maxTotalImbalance": "7501969266932570914816",
       "internal use": true,
       "listed": true
@@ -142,7 +141,7 @@
       "listed": true
     },
     "BQX": {
-      "name" : "Ethos",
+      "name": "Ethos",
       "decimals": 8,
       "address": "0x5af2be193a6abca9c8817001f45744777db30756",
       "maxPerBlockImbalance": "114446593497",
@@ -155,9 +154,9 @@
       "name": "AdEx",
       "decimals": 4,
       "address": "0x4470BB87d77b963A013DB939BE332f927f2b992e",
-      "minimalRecordResolution" : "10",
-      "maxPerBlockImbalance" : "1925452883",
-      "maxTotalImbalance" : "1925452883",
+      "minimalRecordResolution": "10",
+      "maxPerBlockImbalance": "1925452883",
+      "maxTotalImbalance": "1925452883",
       "internal use": false,
       "listed": true
     },
@@ -165,9 +164,9 @@
       "name": "AirSwap",
       "decimals": 4,
       "address": "0x27054b13b1b798b345b591a4d22e6562d47ea75a",
-      "minimalRecordResolution" : "10",
-      "maxPerBlockImbalance" : "129253239",
-      "maxTotalImbalance" : "129253239",
+      "minimalRecordResolution": "10",
+      "maxPerBlockImbalance": "129253239",
+      "maxTotalImbalance": "129253239",
       "internal use": true,
       "listed": true
     },
@@ -175,9 +174,9 @@
       "name": "Ripio Credit Network",
       "decimals": 18,
       "address": "0xf970b8e36e23f7fc3fd752eea86f8be8d83375a6",
-      "minimalRecordResolution" : "10",
-      "maxPerBlockImbalance" : "1925452883",
-      "maxTotalImbalance" : "1925452883",
+      "minimalRecordResolution": "10",
+      "maxPerBlockImbalance": "1925452883",
+      "maxTotalImbalance": "1925452883",
       "internal use": false,
       "listed": true
     },
@@ -185,9 +184,9 @@
       "name": "Zilliqa",
       "decimals": 12,
       "address": "0x05f4a42e251f2d52b8ed15e9fedaacfcef1fad27",
-      "minimalRecordResolution" : "10000000000",
-      "maxPerBlockImbalance" : "75922938217709024",
-      "maxTotalImbalance" : "75922938217709024",
+      "minimalRecordResolution": "10000000000",
+      "maxPerBlockImbalance": "75922938217709024",
+      "maxTotalImbalance": "75922938217709024",
       "internal use": true,
       "listed": true
     },
@@ -195,14 +194,14 @@
       "name": "Chain Link",
       "decimals": 18,
       "address": "0x514910771af9ca656af840dff83e8264ecf986ca",
-      "minimalRecordResolution" : "1000000000000000",
-      "maxPerBlockImbalance" : "10499583297787869003776",
-      "maxTotalImbalance" : "10499583297787869003776",
+      "minimalRecordResolution": "1000000000000000",
+      "maxPerBlockImbalance": "10499583297787869003776",
+      "maxTotalImbalance": "10499583297787869003776",
       "internal use": true,
       "listed": true
     },
     "DAI": {
-      "name" : "DAI",
+      "name": "DAI",
       "decimals": 18,
       "address": "0x89d24a6b4ccb1b6faa2625fe562bdd9a23260359",
       "minimalRecordResolution": "1000000000000000",
@@ -351,10 +350,10 @@
       "ZIL": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
       "AST": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
       "LINK": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
-      "ENJ":  "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
-      "AION":  "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
-      "AE":  "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
-      "BLZ":  "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547"
+      "ENJ": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
+      "AION": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
+      "AE": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
+      "BLZ": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547"
     },
     "huobi": {
       "ETH": "0xb48ee85467bf613a22244084c1a46c2deac18dd0",
@@ -507,9 +506,10 @@
   "reserve": "0x2C5a182d280EeB5824377B98CD74871f78d6b8BC",
   "pricing": "0xe3E415a7a6c287a95DC68a01ff036828073fD2e6",
   "network": "0x3257073D3b80bAe378db8DEA32519938910D05cC",
+  "internal_network": "0x44f854ea73eec7a10c9ff0e003d1ec076ac18197",
   "wrapper": "0x6172AFC8c00c46E0D07ce3AF203828198194620a",
   "feeburner": "0x2d25de5790EaDb57BcC141A43e21A5Cf8c3C3fd3",
-  "whitelist" : "0x1b8a28d2185a7ab86ae40303b39f33278cc42130",
+  "whitelist": "0x1b8a28d2185a7ab86ae40303b39f33278cc42130",
   "third_party_reserves": [
     "0xe1213e46efcb8785b47ae0620a51f490f747f1da",
     "0x6f50e41885fdc44dbdf7797df0393779a9c0a3a6",

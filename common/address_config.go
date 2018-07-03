@@ -28,6 +28,7 @@ type AddressConfig struct {
 	Bank               string              `json:"bank"`
 	Reserve            string              `json:"reserve"`
 	Network            string              `json:"network"`
+	InternalNetwork    string              `json:"internal_network"`
 	Wrapper            string              `json:"wrapper"`
 	Pricing            string              `json:"pricing"`
 	FeeBurner          string              `json:"feeburner"`

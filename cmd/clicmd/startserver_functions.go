@@ -123,6 +123,7 @@ func CreateBlockchain(config *configuration.Config, kyberENV string) (bc *blockc
 		config.PricingAddress,
 		config.FeeBurnerAddress,
 		config.NetworkAddress,
+		config.InternalNetwork,
 		config.ReserveAddress,
 		config.WhitelistAddress,
 	)
