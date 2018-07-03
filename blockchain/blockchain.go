@@ -3,10 +3,8 @@ package blockchain
 import (
 	"fmt"
 	"log"
-	"math"
 	"math/big"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/KyberNetwork/reserve-data/common"
@@ -18,8 +16,25 @@ import (
 )
 
 const (
-	PRICING_OP string = "pricingOP"
-	DEPOSIT_OP string = "depositOP"
+	PRICING_OP = "pricingOP"
+	DEPOSIT_OP = "depositOP"
+
+	// feeToWalletEvent is the topic of event AssignFeeToWallet(address reserve, address wallet, uint walletFee).
+	feeToWalletEvent = "0x366bc34352215bf0bd3b527cfd6718605e1f5938777e42bcd8ed92f578368f52"
+	// burnFeeEvent is the topic of event AssignBurnFees(address reserve, uint burnFee).
+	burnFeeEvent = "0xf838f6ddc89706878e3c3e698e9b5cbfbf2c0e3d3dcd0bd2e00f1ccf313e0185"
+	// tradeEvent is the topic of event
+	// ExecuteTrade(address indexed sender, ERC20 src, ERC20 dest, uint actualSrcAmount, uint actualDestAmount).
+	tradeEvent = "0x1849bd6a030a1bca28b83437fd3de96f3d27a5d172fa7e9c78e7b61468928a39"
+	// etherReceivalEvent is the topic of event EtherReceival(address indexed sender, uint amount).
+	etherReceivalEvent = "0x75f33ed68675112c77094e7c5b073890598be1d23e27cd7f6907b4a7d98ac619"
+	// userCatEvent is the topic of event UserCategorySet(address user, uint category).
+	userCatEvent = "0x0aeb0f7989a09b8cccf58cea1aefa196ccf738cb14781d6910448dd5649d0e6e"
+)
+
+var (
+	Big0   = big.NewInt(0)
+	BigMax = big.NewInt(10).Exp(big.NewInt(10), big.NewInt(33), nil)
 )
 
 // tbindex is where the token data stored in blockchain.
@@ -39,18 +54,6 @@ type tbindex struct {
 func newTBIndex(bulkIndex, indexInBulk uint64) tbindex {
 	return tbindex{BulkIndex: bulkIndex, IndexInBulk: indexInBulk}
 }
-
-const (
-	FeeToWalletEvent string = "0x366bc34352215bf0bd3b527cfd6718605e1f5938777e42bcd8ed92f578368f52"
-	BurnFeeEvent     string = "0xf838f6ddc89706878e3c3e698e9b5cbfbf2c0e3d3dcd0bd2e00f1ccf313e0185"
-	TradeEvent       string = "0x1849bd6a030a1bca28b83437fd3de96f3d27a5d172fa7e9c78e7b61468928a39"
-	UserCatEvent     string = "0x0aeb0f7989a09b8cccf58cea1aefa196ccf738cb14781d6910448dd5649d0e6e"
-)
-
-var (
-	Big0   *big.Int = big.NewInt(0)
-	BigMax          = big.NewInt(10).Exp(big.NewInt(10), big.NewInt(33), nil)
-)
 
 type Blockchain struct {
 	*blockchain.BaseBlockchain
@@ -452,145 +455,103 @@ func (self *Blockchain) GetPrice(token ethereum.Address, block *big.Int, priceTy
 }
 
 func (self *Blockchain) GetRawLogs(fromBlock uint64, toBlock uint64) ([]types.Log, error) {
-	var to *big.Int
-	if toBlock != 0 {
-		to = big.NewInt(int64(toBlock))
-	}
-	// we have to track events from network and fee burner contracts
-	// including their old contracts
-	addresses := []ethereum.Address{}
+	var (
+		from      = big.NewInt(int64(fromBlock))
+		to        = big.NewInt(int64(toBlock))
+		addresses []ethereum.Address
+	)
+
 	addresses = append(addresses, self.networkAddr, self.burnerAddr, self.whitelistAddr)
 	addresses = append(addresses, self.oldNetworks...)
 	addresses = append(addresses, self.oldBurners...)
+
 	param := common.NewFilterQuery(
-		big.NewInt(int64(fromBlock)),
+		from,
 		to,
 		addresses,
 		[][]ethereum.Hash{
 			{
-				ethereum.HexToHash(TradeEvent),
-				ethereum.HexToHash(BurnFeeEvent),
-				ethereum.HexToHash(FeeToWalletEvent),
-				ethereum.HexToHash(UserCatEvent),
+				ethereum.HexToHash(tradeEvent),
+				ethereum.HexToHash(burnFeeEvent),
+				ethereum.HexToHash(feeToWalletEvent),
+				ethereum.HexToHash(userCatEvent),
+				ethereum.HexToHash(etherReceivalEvent),
 			},
 		},
 	)
+
 	log.Printf("LogFetcher - fetching logs data from block %d, to block %d", fromBlock, to.Uint64())
 	return self.BaseBlockchain.GetLogs(param)
 }
 
-// return timestamp increasing array of trade log
+// GetLogs gets raw logs from blockchain and process it before returning.
 func (self *Blockchain) GetLogs(fromBlock uint64, toBlock uint64) ([]common.KNLog, error) {
-	result := []common.KNLog{}
-	noCatLog := 0
-	noTradeLog := 0
+	var (
+		err      error
+		result   []common.KNLog
+		noCatLog = 0
+	)
+
 	// get all logs from fromBlock to best block
 	logs, err := self.GetRawLogs(fromBlock, toBlock)
 	if err != nil {
 		return result, err
 	}
-	var prevLog *types.Log
-	var tradeLog *common.TradeLog
-	for i, l := range logs {
-		if l.Removed {
+
+	for _, logItem := range logs {
+		if logItem.Removed {
 			log.Printf("LogFetcher - Log is ignored because it is removed due to chain reorg")
-		} else {
-			if prevLog == nil || (l.TxHash != prevLog.TxHash && l.Topics[0].Hex() != UserCatEvent) {
-				if tradeLog != nil {
-					result = append(result, *tradeLog)
-					noTradeLog += 1
-					// log.Printf(
-					// 	"LogFetcher - Fetched logs: TxHash(%s), TxIndex(%d), blockno(%d)",
-					// 	tradeLog.TransactionHash.Hex(),
-					// 	tradeLog.TransactionIndex,
-					// 	tradeLog.BlockNumber,
-					// )
-				}
-				if len(l.Topics) > 0 && l.Topics[0].Hex() != UserCatEvent {
-					// start new TradeLog
-					tradeLog = &common.TradeLog{}
-					tradeLog.BlockNumber = l.BlockNumber
-					tradeLog.TransactionHash = l.TxHash
-					tradeLog.Index = l.Index
-					tradeLog.Timestamp, err = self.InterpretTimestamp(
-						tradeLog.BlockNumber,
-						tradeLog.Index,
-					)
-					if err != nil {
-						return result, err
-					}
-				}
-			}
-			if len(l.Topics) == 0 {
-				log.Printf("Getting empty zero topic list. This shouldn't happen and is Ethereum responsibility.")
-			} else {
-				topic := l.Topics[0]
-				switch topic.Hex() {
-				case UserCatEvent:
-					addr, cat := LogDataToCatLog(l.Data)
-					t, err := self.InterpretTimestamp(
-						l.BlockNumber,
-						l.Index,
-					)
-					if err != nil {
-						return result, err
-					}
-					// log.Printf(
-					// 	"LogFetcher - raw log entry: removed(%s), txhash(%s), timestamp(%d)",
-					// 	l.Removed, l.TxHash.Hex(), t,
-					// )
-					result = append(result, common.SetCatLog{
-						Timestamp:       t,
-						BlockNumber:     l.BlockNumber,
-						TransactionHash: l.TxHash,
-						Index:           l.Index,
-						Address:         addr,
-						Category:        cat,
-					})
-					noCatLog += 1
-				case FeeToWalletEvent:
-					reserveAddr, walletAddr, walletFee := LogDataToFeeWalletParams(l.Data)
-					tradeLog.ReserveAddress = reserveAddr
-					tradeLog.WalletAddress = walletAddr
-					tradeLog.WalletFee = walletFee.Big()
-				case BurnFeeEvent:
-					reserveAddr, burnFees := LogDataToBurnFeeParams(l.Data)
-					tradeLog.ReserveAddress = reserveAddr
-					tradeLog.BurnFee = burnFees.Big()
-				case TradeEvent:
-					srcAddr, destAddr, srcAmount, destAmount := LogDataToTradeParams(l.Data)
-					tradeLog.SrcAddress = srcAddr
-					tradeLog.DestAddress = destAddr
-					tradeLog.SrcAmount = srcAmount.Big()
-					tradeLog.DestAmount = destAmount.Big()
-					tradeLog.UserAddress = ethereum.BytesToAddress(l.Topics[1].Bytes())
+			continue
+		}
 
-					if ethRate := self.GetEthRate(tradeLog.Timestamp / 1000000); ethRate != 0 {
-						// fiatAmount = amount * ethRate
-						eth := common.ETHToken()
-						f := new(big.Float)
-						if strings.ToLower(eth.Address) == strings.ToLower(srcAddr.String()) {
-							f.SetInt(tradeLog.SrcAmount)
-						} else {
-							f.SetInt(tradeLog.DestAmount)
-						}
+		if len(logItem.Topics) == 0 {
+			log.Printf("Getting empty zero topic list. This shouldn't happen and is Ethereum responsibility.")
+			continue
+		}
 
-						f = f.Mul(f, new(big.Float).SetFloat64(ethRate))
-						f.Quo(f, new(big.Float).SetFloat64(math.Pow10(18)))
-						tradeLog.FiatAmount, _ = f.Float64()
-					}
-				}
+		ts, err := self.InterpretTimestamp(
+			logItem.BlockNumber,
+			logItem.Index,
+		)
+		if err != nil {
+			return result, err
+		}
+
+		topic := logItem.Topics[0]
+		switch topic.Hex() {
+		case userCatEvent:
+			addr, cat := logDataToCatLog(logItem.Data)
+			result = append(result, common.SetCatLog{
+				Timestamp:       ts,
+				BlockNumber:     logItem.BlockNumber,
+				TransactionHash: logItem.TxHash,
+				Index:           logItem.Index,
+				Address:         addr,
+				Category:        cat,
+			})
+			noCatLog++
+		case feeToWalletEvent, burnFeeEvent, etherReceivalEvent, tradeEvent:
+			if result, err = updateTradeLogs(result, logItem, ts); err != nil {
+				return result, err
 			}
-			if len(l.Topics) > 0 && l.Topics[0].Hex() != UserCatEvent {
-				prevLog = &logs[i]
-			}
+		default:
+			log.Printf("Unknown topic: %s", topic.Hex())
 		}
 	}
-	if tradeLog != nil && (len(result) == 0 || tradeLog.TransactionHash != result[len(result)-1].TxHash()) {
-		result = append(result, *tradeLog)
-		noTradeLog += 1
+
+	for i, logItem := range result {
+		tradeLog, ok := logItem.(common.TradeLog)
+		if !ok {
+			continue
+		}
+
+		ethRate := self.GetEthRate(tradeLog.Timestamp / 1000000)
+		if ethRate != 0 {
+			result[i] = calculateFiatAmount(tradeLog, ethRate)
+		}
 	}
-	log.Printf("LogFetcher - Fetched %d trade logs, %d cat logs", noTradeLog, noCatLog)
+
+	log.Printf("LogFetcher - Fetched %d trade logs, %d cat logs", len(result)-noCatLog, noCatLog)
 	return result, nil
 }
 

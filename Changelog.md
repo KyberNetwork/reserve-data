@@ -1,7 +1,16 @@
 # Reserve-data Changelog
 
-### Unreleased
+## Unreleased
 
+### Features:
+
+### Bug fixes:
+
+### Improvements:
+
+### Compatibility
+
+## 0.10.0 (2018-07-03)
 
 ### Features:
 
@@ -15,10 +24,19 @@
 
 - Remove many unused methods (#309)
 - Refactor GasOracle (#318)
+- Improve input validation for many APIs (#330, #334, #336, #340)
+- Fix many hardcoded API endpoints (#331)
 
 ### Compatibility
 
-### 0.9.1 (2018-06-26)
+- KyberNetwork smart contracts (>= 2.0.0)
+- KyberNetwork analytic (0.9.0)
+
+## 0.9.1 (2018-06-26)
+
+### Compatibility:
+- KyberNetwork smart contracts (>= 0.3.0)
+- KyberNetwork analytic (0.8.0)
 
 ### Features:
 
@@ -35,6 +53,10 @@
 ### Compatibility
 
 ## 0.9.0 (2018-06-19)
+
+### Compatibility:
+- KyberNetwork smart contracts (>= 0.3.0)
+- KyberNetwork analytic (0.8.0)
 
 ### Features:
 

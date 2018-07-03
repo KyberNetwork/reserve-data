@@ -931,25 +931,30 @@ func getTimestampFromTimeZone(t uint64, freq string) uint64 {
 }
 
 func (self *Fetcher) getTradeInfo(trade common.TradeLog) (float64, float64, float64, float64) {
-
-	srcAddr := common.AddrToString(trade.SrcAddress)
-	dstAddr := common.AddrToString(trade.DestAddress)
-
 	var srcAmount, destAmount, ethAmount, burnFee float64
 
+	eth := common.ETHToken()
+
+	srcAddr := common.AddrToString(trade.SrcAddress)
 	srcToken := common.MustGetSupportedTokenByAddress(srcAddr)
 	srcAmount = common.BigToFloat(trade.SrcAmount, srcToken.Decimal)
-	if srcToken.IsETH() {
-		ethAmount = srcAmount
-	}
 
+	dstAddr := common.AddrToString(trade.DestAddress)
 	destToken := common.MustGetSupportedTokenByAddress(dstAddr)
 	destAmount = common.BigToFloat(trade.DestAmount, destToken.Decimal)
-	if destToken.IsETH() {
+
+	if srcToken.IsETH() {
+		// ETH-Token
+		ethAmount = srcAmount
+	} else if destToken.IsETH() {
+		// Token-ETH
 		ethAmount = destAmount
+	} else if trade.EtherReceivalAmount != nil {
+		// Token-Token
+		receivalAmount := common.BigToFloat(trade.EtherReceivalAmount, eth.Decimal)
+		ethAmount = receivalAmount
 	}
 
-	eth := common.ETHToken()
 	if trade.BurnFee != nil {
 		burnFee = common.BigToFloat(trade.BurnFee, eth.Decimal)
 	}

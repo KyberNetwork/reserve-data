@@ -129,9 +129,16 @@ func CreateBlockchain(config *configuration.Config, kyberENV string) (bc *blockc
 	if err != nil {
 		panic(err)
 	}
-	// we need to implicitly add old contract addresses to production
-	if kyberENV == common.PRODUCTION_MODE || kyberENV == common.MAINNET_MODE {
+
+	// old contract addresses are used for events fetcher
+	switch kyberENV {
+	case common.PRODUCTION_MODE, common.MAINNET_MODE:
 		bc.AddOldBurners(ethereum.HexToAddress("0x4E89bc8484B2c454f2F7B25b612b648c45e14A8e"))
+		// TODO: add old contract v1 addresses
+	case common.STAGING_MODE:
+		// contract v1
+		bc.AddOldNetwork(ethereum.HexToAddress("0xD2D21FdeF0D054D2864ce328cc56D1238d6b239e"))
+		bc.AddOldBurners(ethereum.HexToAddress("0xB2cB365D803Ad914e63EA49c95eC663715c2F673"))
 	}
 
 	for _, token := range config.SupportedTokens {

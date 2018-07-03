@@ -637,6 +637,9 @@ type TradeLog struct {
 	TransactionHash ethereum.Hash
 	Index           uint
 
+	EtherReceivalSender ethereum.Address
+	EtherReceivalAmount *big.Int
+
 	UserAddress ethereum.Address
 	SrcAddress  ethereum.Address
 	DestAddress ethereum.Address
