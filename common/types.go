@@ -617,6 +617,21 @@ type KNLog interface {
 	Type() string
 }
 
+// ByBLock type is used to sort KNlog in increasing order of block number
+type ByBlock []KNLog
+
+func (b ByBlock) Len() int {
+	return len(b)
+}
+
+func (b ByBlock) Swap(i, j int) {
+	b[i], b[j] = b[j], b[i]
+}
+
+func (b ByBlock) Less(i, j int) bool {
+	return b[i].BlockNo() < b[j].BlockNo()
+}
+
 type SetCatLog struct {
 	Timestamp       uint64
 	BlockNumber     uint64

@@ -8,6 +8,7 @@ import (
 	"log"
 	"math/big"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -861,6 +862,7 @@ func (self *Fetcher) FetchLogs(fromBlock uint64, toBlock uint64, timepoint uint6
 		return enforceFromBlock(fromBlock), err
 	}
 	if len(logs) > 0 {
+		sort.Sort(common.ByBlock(logs))
 		var maxBlock = enforceFromBlock(fromBlock)
 		for _, il := range logs {
 			// If there is log conversion error, print error and continue to the next log
