@@ -221,8 +221,8 @@ func (setting *Settings) NewExchangeInfo(exName ExchangeName) (common.ExchangeIn
 	}
 	for tokenID := range addrs {
 		if tokenID != "ETH" {
-			pair := setting.MustCreateTokenPair(tokenID, "ETH")
-			result[pair.PairID()] = common.ExchangePrecisionLimit{}
+			pairID := common.NewTokenPairID(tokenID, "ETH")
+			result[pairID] = common.ExchangePrecisionLimit{}
 		}
 	}
 	return result, nil
