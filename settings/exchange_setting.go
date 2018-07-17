@@ -220,10 +220,6 @@ func (setting *Settings) NewExchangeInfo(exName ExchangeName) (common.ExchangeIn
 		return result, err
 	}
 	for tokenID := range addrs {
-		_, err := setting.GetInternalTokenByID(tokenID)
-		if err != nil {
-			return result, fmt.Errorf("Internal Token failed :%s", err)
-		}
 		if tokenID != "ETH" {
 			pair := setting.MustCreateTokenPair(tokenID, "ETH")
 			result[pair.PairID()] = common.ExchangePrecisionLimit{}
