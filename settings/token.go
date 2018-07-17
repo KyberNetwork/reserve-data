@@ -9,6 +9,10 @@ import (
 	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
+// ErrTokenNotFound is the error returned for get operation where the
+// token is not found in database.
+var ErrTokenNotFound = errors.New("token not found")
+
 func (setting *Settings) GetAllTokens() ([]common.Token, error) {
 	return setting.Tokens.Storage.GetAllTokens()
 }

@@ -124,10 +124,9 @@ func (boltSettingStorage *BoltSettingStorage) getTokenByIDWithFiltering(id strin
 		if b == nil {
 			return fmt.Errorf("Bucket doesn't exist yet")
 		}
-		c := b.Cursor()
-		k, v := c.Seek([]byte(id))
-		if bytes.Compare(k, []byte(id)) != 0 {
-			return fmt.Errorf("Token %s is not found in current setting", id)
+		v := b.Get([]byte(id))
+		if v == nil {
+			return settings.ErrTokenNotFound
 		}
 		uErr := json.Unmarshal(v, &t)
 		if uErr != nil {
