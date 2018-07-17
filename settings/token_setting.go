@@ -8,14 +8,11 @@ import (
 )
 
 type token struct {
-	Address                 string `json:"address"`
-	Name                    string `json:"name"`
-	Decimals                int64  `json:"decimals"`
-	Active                  bool   `json:"internal use"`
-	Internal                bool   `json:"listed"`
-	MinimalRecordResolution string `json:"minimalRecordResolution"`
-	MaxTotalImbalance       string `json:"maxPerBlockImbalance"`
-	MaxPerBlockImbalance    string `json:"maxTotalImbalance"`
+	Address  string `json:"address"`
+	Name     string `json:"name"`
+	Decimals int64  `json:"decimals"`
+	Active   bool   `json:"internal use"`
+	Internal bool   `json:"listed"`
 }
 
 type TokenConfig struct {
@@ -41,7 +38,7 @@ func (setting *Settings) loadTokenFromFile(filePath string) error {
 		return err
 	}
 	for id, t := range tokens.Tokens {
-		token := common.NewToken(id, t.Name, t.Address, t.Decimals, t.Active, t.Internal)
+		token := common.NewToken(id, t.Name, t.Address, t.Decimals, t.Active, t.Internal, common.GetTimepoint())
 		if err = setting.UpdateToken(token); err != nil {
 			return err
 		}

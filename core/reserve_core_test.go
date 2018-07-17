@@ -178,7 +178,7 @@ func TestNotAllowDeposit(t *testing.T) {
 	core := getTestCore(true)
 	_, err := core.Deposit(
 		testExchange{},
-		common.NewToken("OMG", "omise-go", "0x1111111111111111111111111111111111111111", 18, true, true),
+		common.NewToken("OMG", "omise-go", "0x1111111111111111111111111111111111111111", 18, true, true, 0),
 		big.NewInt(10),
 		common.GetTimepoint(),
 	)
@@ -187,7 +187,7 @@ func TestNotAllowDeposit(t *testing.T) {
 	}
 	_, err = core.Deposit(
 		testExchange{},
-		common.NewToken("KNC", "Kyber-coin", "0x1111111111111111111111111111111111111111", 18, true, true),
+		common.NewToken("KNC", "Kyber-coin", "0x1111111111111111111111111111111111111111", 18, true, true, 0),
 		big.NewInt(10),
 		common.GetTimepoint(),
 	)

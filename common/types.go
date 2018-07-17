@@ -29,6 +29,11 @@ func GetTimestamp() Timestamp {
 	return Timestamp(strconv.Itoa(int(timestamp)))
 }
 
+func GetTimepointInMicrosecond() uint64 {
+	timestamp := time.Now().UnixNano() / int64(time.Microsecond)
+	return uint64(timestamp)
+}
+
 func GetTimepoint() uint64 {
 	timestamp := time.Now().UnixNano() / int64(time.Millisecond)
 	return uint64(timestamp)

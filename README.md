@@ -1578,20 +1578,22 @@ Post form: {"data" : "JSON enconding of token Object"}
 ```
 <host>:8000/setting/update-token
 ```
-**Note**: all the fields has to be provide, since this API will overwrite the old token with new token. Any missing field will
+**Note**:
+- all the fields has to be provide, since this API will overwrite the old token with new token. Any missing field will
 be replaced by default value. 
+- If the token update change active status of the token, the field last_activation_change will be update with the current time point.
 eg
 
 ```
-curl -X "POST" "http://localhost:8000/update-token" \
+curl -X "POST" "http://localhost:8000/setting/update-token" \
      -H 'Content-Type: application/x-www-form-urlencoded'\
-     --data-urlencode "data={ 
-      \"id\" :\"LXXX\",
-      \"name\": \"Chain Link\",
-      \"decimals\": 18,
-      \"address\": \"0x514910771xf9ca656af840dff83e8264ecf986ca\",
-      \"internal\": True,
-      \"listed\": True 
+     --data-urlencode "data={
+          \"id\": \"NEO\",
+          \"name\": \"Request\",
+          \"decimals\": 18,
+          \"address\": \"0x8f8221afbb33998d8584a2b05749ba73c37a938a\",
+          \"internal\": false,
+          \"active\": true
       }"
 ```
 
@@ -1689,9 +1691,6 @@ curl -X "POST" "http://localhost:8000/setting/set-token-listing" \
           \"name\": \"Request\",
           \"decimals\": 18,
           \"address\": \"0x8f8221afbb33998d8584a2b05749ba73c37a938a\",
-          \"minimal_record_resolution\": \"1000000000000000\",
-          \"max_per_block_imbalance\": \"439794468212403470336\",
-          \"max_total_imbalance\": \"722362414038872621056\",
           \"internal\": false,
           \"active\": true
         }

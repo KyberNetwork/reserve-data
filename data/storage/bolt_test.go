@@ -21,7 +21,7 @@ func TestHasPendingDepositBoltStorage(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Couldn't init bolt storage %v", err)
 	}
-	token := common.NewToken("OMG", "Omise-go", "0x1111111111111111111111111111111111111111", 18, true, true)
+	token := common.NewToken("OMG", "Omise-go", "0x1111111111111111111111111111111111111111", 18, true, true, 0)
 	exchange := common.TestExchange{}
 	timepoint := common.GetTimepoint()
 	out, err := storage.HasPendingDeposit(token, exchange)
