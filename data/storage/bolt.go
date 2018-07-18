@@ -1715,7 +1715,7 @@ func (self *BoltStorage) storeJSONByteArray(tx *bolt.Tx, bucketName string, key,
 	return b.Put(key, value)
 }
 
-func (self *BoltStorage) StorePendingTokenListingInfo(tarQty common.TokenTargetQtyV2, pwi common.PWIEquationRequestV2, quadEq common.RebalanceQuadraticRequest) error {
+func (self *BoltStorage) StorePendingTokenUpdateInfo(tarQty common.TokenTargetQtyV2, pwi common.PWIEquationRequestV2, quadEq common.RebalanceQuadraticRequest) error {
 	timeStampKey := boltutil.Uint64ToBytes(common.GetTimepoint())
 	err := self.db.Update(func(tx *bolt.Tx) error {
 		dataJSON, uErr := json.Marshal(tarQty)
@@ -1752,7 +1752,7 @@ func (self *BoltStorage) deleteTheOnlyObjectFromBucket(tx *bolt.Tx, bucketName s
 	return b.Delete(k)
 }
 
-func (self *BoltStorage) RemovePendingTokenListingInfo() error {
+func (self *BoltStorage) RemovePendingTokenUpdateInfo() error {
 	err := self.db.Update(func(tx *bolt.Tx) error {
 		if uErr := self.deleteTheOnlyObjectFromBucket(tx, PENDING_TARGET_QUANTITY_V2); uErr != nil {
 			return uErr
@@ -1768,7 +1768,7 @@ func (self *BoltStorage) RemovePendingTokenListingInfo() error {
 	return err
 }
 
-func (self *BoltStorage) ConfirmTokenListingInfo(tarQty common.TokenTargetQtyV2, pwi common.PWIEquationRequestV2, quadEq common.RebalanceQuadraticRequest) error {
+func (self *BoltStorage) ConfirmTokenUpdateInfo(tarQty common.TokenTargetQtyV2, pwi common.PWIEquationRequestV2, quadEq common.RebalanceQuadraticRequest) error {
 	timeStampKey := boltutil.Uint64ToBytes(common.GetTimepoint())
 	err := self.db.Update(func(tx *bolt.Tx) error {
 		dataJSON, uErr := json.Marshal(tarQty)
@@ -1787,16 +1787,7 @@ func (self *BoltStorage) ConfirmTokenListingInfo(tarQty common.TokenTargetQtyV2,
 		if dataJSON, uErr = json.Marshal(quadEq); uErr != nil {
 			return uErr
 		}
-		if uErr = self.storeJSONByteArray(tx, REBALANCE_QUADRATIC, timeStampKey, dataJSON); uErr != nil {
-			return uErr
-		}
-		if uErr = self.deleteTheOnlyObjectFromBucket(tx, PENDING_TARGET_QUANTITY_V2); uErr != nil {
-			return uErr
-		}
-		if uErr = self.deleteTheOnlyObjectFromBucket(tx, PENDING_PWI_EQUATION_V2); uErr != nil {
-			return uErr
-		}
-		return self.deleteTheOnlyObjectFromBucket(tx, PENDING_REBALANCE_QUADRATIC)
+		return self.storeJSONByteArray(tx, REBALANCE_QUADRATIC, timeStampKey, dataJSON)
 	})
 	return err
 }

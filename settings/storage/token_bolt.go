@@ -225,7 +225,7 @@ func (boltSettingStorage *BoltSettingStorage) UpdateTokenWithExchangeSetting(tok
 			}
 		}
 		//delete pending token listings
-		if uErr := deletePendingTokenListings(tx); uErr != nil {
+		if uErr := deletePendingTokenUpdates(tx); uErr != nil {
 			return uErr
 		}
 		return nil
@@ -233,7 +233,7 @@ func (boltSettingStorage *BoltSettingStorage) UpdateTokenWithExchangeSetting(tok
 	return err
 }
 
-func (boltSettingStorage *BoltSettingStorage) StorePendingTokenListings(trs map[string]common.TokenListing) error {
+func (boltSettingStorage *BoltSettingStorage) StorePendingTokenUpdates(trs map[string]common.TokenUpdate) error {
 	err := boltSettingStorage.db.Update(func(tx *bolt.Tx) error {
 		b, uErr := tx.CreateBucketIfNotExists([]byte(PENDING_TOKEN_REQUEST))
 		if uErr != nil {
@@ -253,8 +253,8 @@ func (boltSettingStorage *BoltSettingStorage) StorePendingTokenListings(trs map[
 	return err
 }
 
-func (boltSettingStorage *BoltSettingStorage) GetPendingTokenListings() (map[string]common.TokenListing, error) {
-	result := make(map[string]common.TokenListing)
+func (boltSettingStorage *BoltSettingStorage) GetPendingTokenUpdates() (map[string]common.TokenUpdate, error) {
+	result := make(map[string]common.TokenUpdate)
 	err := boltSettingStorage.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(PENDING_TOKEN_REQUEST))
 		if b == nil {
@@ -262,18 +262,18 @@ func (boltSettingStorage *BoltSettingStorage) GetPendingTokenListings() (map[str
 		}
 		c := b.Cursor()
 		for k, v := c.First(); k != nil; k, v = c.Next() {
-			var tokenListing common.TokenListing
-			if vErr := json.Unmarshal(v, &tokenListing); vErr != nil {
+			var tokenUpdate common.TokenUpdate
+			if vErr := json.Unmarshal(v, &tokenUpdate); vErr != nil {
 				return vErr
 			}
-			result[string(k)] = tokenListing
+			result[string(k)] = tokenUpdate
 		}
 		return nil
 	})
 	return result, err
 }
 
-func deletePendingTokenListings(tx *bolt.Tx) error {
+func deletePendingTokenUpdates(tx *bolt.Tx) error {
 	b := tx.Bucket([]byte(PENDING_TOKEN_REQUEST))
 	if b == nil {
 		return fmt.Errorf("Bucket %s does not exist yet", PENDING_TOKEN_REQUEST)
@@ -287,9 +287,9 @@ func deletePendingTokenListings(tx *bolt.Tx) error {
 	return nil
 }
 
-func (boltSettingStorage *BoltSettingStorage) RemovePendingTokenListings() error {
+func (boltSettingStorage *BoltSettingStorage) RemovePendingTokenUpdates() error {
 	err := boltSettingStorage.db.Update(func(tx *bolt.Tx) error {
-		return deletePendingTokenListings(tx)
+		return deletePendingTokenUpdates(tx)
 	})
 	return err
 }

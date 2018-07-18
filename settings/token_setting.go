@@ -11,8 +11,8 @@ type token struct {
 	Address  string `json:"address"`
 	Name     string `json:"name"`
 	Decimals int64  `json:"decimals"`
-	Active   bool   `json:"internal use"`
-	Internal bool   `json:"listed"`
+	Internal bool   `json:"internal use"`
+	Active   bool   `json:"listed"`
 }
 
 type TokenConfig struct {

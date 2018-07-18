@@ -95,14 +95,14 @@ func (setting *Settings) ApplyTokenWithExchangeSetting(tokens []common.Token, ex
 	return setting.Tokens.Storage.UpdateTokenWithExchangeSetting(tokens, exSetting)
 }
 
-func (setting *Settings) UpdatePendingTokenListings(tokenListings map[string]common.TokenListing) error {
-	return setting.Tokens.Storage.StorePendingTokenListings(tokenListings)
+func (setting *Settings) UpdatePendingTokenUpdates(tokenUpdates map[string]common.TokenUpdate) error {
+	return setting.Tokens.Storage.StorePendingTokenUpdates(tokenUpdates)
 }
 
-func (setting *Settings) GetPendingTokenListings() (map[string]common.TokenListing, error) {
-	return setting.Tokens.Storage.GetPendingTokenListings()
+func (setting *Settings) GetPendingTokenUpdates() (map[string]common.TokenUpdate, error) {
+	return setting.Tokens.Storage.GetPendingTokenUpdates()
 }
 
-func (setting *Settings) RemovePendingTokenListings() error {
-	return setting.Tokens.Storage.RemovePendingTokenListings()
+func (setting *Settings) RemovePendingTokenUpdates() error {
+	return setting.Tokens.Storage.RemovePendingTokenUpdates()
 }

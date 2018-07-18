@@ -1572,66 +1572,35 @@ response
 ```
 ### Setting APIs
 #### Token related APIs
-##### Update token - (signing required)
-POST request
-Post form: {"data" : "JSON enconding of token Object"}
-```
-<host>:8000/setting/update-token
-```
-**Note**:
-- all the fields has to be provide, since this API will overwrite the old token with new token. Any missing field will
-be replaced by default value. 
-- If the token update change active status of the token, the field last_activation_change will be update with the current time point.
-eg
 
-```
-curl -X "POST" "http://localhost:8000/setting/update-token" \
-     -H 'Content-Type: application/x-www-form-urlencoded'\
-     --data-urlencode "data={
-          \"id\": \"NEO\",
-          \"name\": \"Request\",
-          \"decimals\": 18,
-          \"address\": \"0x8f8221afbb33998d8584a2b05749ba73c37a938a\",
-          \"internal\": false,
-          \"active\": true
-      }"
-```
 
-response
-
-```
-on success:
-{"success":true}
-on failure:
-{"success":false,
- "reason":<error>}
-```
-
-##### Set token listing - (signing required) Prepare token listing and store the request as pending
+##### Set token update - (signing required) Prepare token update and store the request as pending
 POST request 
-Post form: {"data" : "JSON enconding of token listing Object"}
+Post form: {"data" : "JSON enconding of token update Object"}
 ```
-<host>:8000/setting/set-token-listing
+<host>:8000/setting/set-token-update
 ```
 **Note**: 
-- This data is in the form of a map tokenID:TokenListing which allows mutiple token listings at once
-- It also allows mutiple requests, for example, one request listing OMG, the other listing KNC. Both these 
+- The API allow user to update token settings and its status. Hence can be used both for **list** and **delist** a token, as well as 
+to do minor modification for the token setting. 
+To list a token, it active status is set to true. To delist a token, both its internal and active status is set to false.
+- This data is in the form of a map tokenID:tokenUpdate which allows mutiple token updates at once
+- It also allows mutiple requests, for example, one request update OMG, the other update KNC. Both these 
 requests will be aggregate in to a list of token to be listed. These can be overwritten as well : if there 
-are two requests listing KNC, the later will overwite the ealier.  
+are two requests update KNC, the later will overwite the ealier.  
 - If a token is marked as internal, it will be required to come with exchange setting( fee, min deposit, 
 exchange precision limit, deposit address) , and metric settings (pwis, targetQty). Since rebalance quadratic
 data can be zero value, it is optional. 
-- If exchange precision limit (TokenListing.Exchange.Info) is null, It can be queried from exchange and 
+- If exchange precision limit (tokenUpdate.Exchange.Info) is null, It can be queried from exchange and 
 set automatically for the pair (token-ETH). If this data is available in the request,
 it will be prioritize over the exchange queried data.
-- In addition, if the listing contain any Internal token, that token must be available in Smart contract
+- In addition, if the update contain any Internal token, that token must be available in Smart contract
 in order to update its indices. 
-- For token listing, its active status will be automatically set to true.
 
 Example: This request will list token OMG and NEO. OMG is internal, NEO is external. 
 
 ``` 
-curl -X "POST" "http://localhost:8000/setting/set-token-listing" \
+curl -X "POST" "http://localhost:8000/setting/set-token-update" \
      -H 'Content-Type: application/x-www-form-urlencoded'\
      --data-urlencode "data={  
       \"OMG\": {
@@ -1708,76 +1677,136 @@ on failure:
  "reason":<error>}
 ```
 
-##### Get pending token listing - (singing required) Return the current pending token listings information
+##### Get pending token update - (singing required) Return the current pending token updates information
 GET request
 
 ``` 
-<host>:8000/setting/pending-token-listing
+<host>:8000/setting/pending-token-update
 ```
 
 Example
 ``` 
-curl -X "GET" "http://localhost:8000/setting/pending-token-listing"
+curl -X "GET" "http://localhost:8000/setting/pending-token-update"
 ```
 
 response 
 ```
-{data : {
-  "AST": {
-        "token": {
-          "id": "AST",
-          "name": "AirSwap",
-          "address": "0x27054b13b1b798b345b591a4d22e6562d47ea75a",
-          "decimals": 18,
-          "active": True,
-          "internal": False
-        },
-        "exchanges": {
-          "binance": {
-            "deposit_address": "0x111111111111111111111111",
-            "PrecisionLimit": {
-              "AST-ETH": {
-                "Precision": {
-                  "Amount": 0,
-                  "Price": 7
-                },
-                "AmountLimit": {
-                  "Min": 1,
-                  "Max": 90000000
-                },
-                "PriceLimit": {
-                  "Min": 1e-7,
-                  "Max": 100000
-                },
-                "MinNotional": 0.01
-              }
-            },
-            "Fee": {
-              "WithDraw": 3,
-              "Deposit": 4
-            },
-            "MinDeposit": 15.04
-          }
+{
+  "data": {
+    "NEO": {
+      "token": {
+        "id": "NEO",
+        "name": "Request",
+        "address": "0x8f8221afbb33998d8584a2b05749ba73c37a938a",
+        "decimals": 18,
+        "active": true,
+        "internal": false,
+        "last_activation_change": 0
+      },
+      "exchanges": null,
+      "pwis_equation": null,
+      "target_qty": {
+        "set_target": {
+          "total_target": 0,
+          "reserve_target": 0,
+          "rebalance_threshold": 0,
+          "transfer_threshold": 0
         }
+      },
+      "rebalance_quadratic": {
+        "rebalance_quadratic": {
+          "a": 0,
+          "b": 0,
+          "c": 0
+        }
+      }
+    },
+    "OMG": {
+      "token": {
+        "id": "OMG",
+        "name": "OmisexGO",
+        "address": "0xd26114cd6EE289AccF82350c8d8487fedB8A0C07",
+        "decimals": 18,
+        "active": true,
+        "internal": true,
+        "last_activation_change": 0
+      },
+      "exchanges": {
+        "binance": {
+          "deposit_address": "",
+          "exchange_info": {
+            "OMG-ETH": {
+              "precision": {
+                "amount": 2,
+                "price": 6
+              },
+              "amount_limit": {
+                "min": 0.01,
+                "max": 90000000
+              },
+              "price_limit": {
+                "min": 0.001611,
+                "max": 0.16103
+              },
+              "min_notional": 0.01
+            }
+          },
+          "fee": {
+            "withdraw": 0.2,
+            "deposit": 0.3
+          },
+          "min_deposit": 0
+        }
+      },
+      "pwis_equation": {
+        "ask": {
+          "a": 800,
+          "b": 600,
+          "c": 0,
+          "min_min_spread": 0,
+          "price_multiply_factor": 0
+        },
+        "bid": {
+          "a": 750,
+          "b": 500,
+          "c": 0,
+          "min_min_spread": 0,
+          "price_multiply_factor": 0
+        }
+      },
+      "target_qty": {
+        "set_target": {
+          "total_target": 1,
+          "reserve_target": 2,
+          "rebalance_threshold": 0,
+          "transfer_threshold": 0
+        }
+      },
+      "rebalance_quadratic": {
+        "rebalance_quadratic": {
+          "a": 1,
+          "b": 2,
+          "c": 3
+        }
+      }
     }
-  }
-  "success" : {
-    true
-  }
+  },
+  "success": true
+}
 ```
 
-##### Confirm token listing - (signing required) Confirm token listing and apply all the change to core.
+##### Confirm token update - (signing required) Confirm token update and apply all the change to core.
 POST request 
-Post form: {"data" : "JSON enconding of token listing Object"}
-Note: This data is similar to token Listing, but all field must be the same as the current pending. 
+Post form: {"data" : "JSON enconding of token update Object"}
+Note: This data is similar to token update, but all field must be the same as the current pending. 
 ```
-<host>:8000/setting/confirm-token-listing
+<host>:8000/setting/confirm-token-update
 ```
 
 Example 
 
 ``` 
-curl -X "POST" "http://localhost:8000/setting/confirm-token-listing" \
+curl -X "POST" "http://localhost:8000/setting/confirm-token-update" \
      -H 'Content-Type: application/x-www-form-urlencoded'\
      --data-urlencode "data={    
         \"NEO\": {
@@ -1888,17 +1917,17 @@ on failure:
  "reason":<error>}
 ```
 
-##### Reject pending token listing - (signing required) reject the listing and remove the current pending listing
+##### Reject pending token update - (signing required) reject the update and remove the current pending update
 POST request
 
 ```
-<host>:8000/setting/reject-token-listing
+<host>:8000/setting/reject-token-update
 ```
 
 Example
 
 ```
-curl -X "POST" "http://localhost:8000/setting/reject-token-listing" \
+curl -X "POST" "http://localhost:8000/setting/reject-token-update" \
      -H 'Content-Type: application/x-www-form-urlencoded'
 ```
 

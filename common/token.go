@@ -10,7 +10,7 @@ type TokenExchangeSetting struct {
 	MinDeposit     float64      `json:"min_deposit"`
 }
 
-type TokenListing struct {
+type TokenUpdate struct {
 	Token       Token                           `json:"token"`
 	Exchanges   map[string]TokenExchangeSetting `json:"exchanges"`
 	PWIEq       PWIEquationTokenV2              `json:"pwis_equation"`

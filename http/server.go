@@ -1740,11 +1740,10 @@ func (self *HTTPServer) GetFeeSetRateByDay(c *gin.Context) {
 
 func (self *HTTPServer) register() {
 	stt := self.r.Group("/setting")
-	stt.POST("/update-token", self.UpdateToken)
-	stt.POST("/set-token-listing", self.ListToken)
-	stt.GET("/pending-token-listing", self.GetPendingTokenListings)
-	stt.POST("/confirm-token-listing", self.ConfirmTokenListing)
-	stt.POST("/reject-token-listing", self.RejectTokenListing)
+	stt.POST("/set-token-update", self.SetTokenUpdate)
+	stt.GET("/pending-token-update", self.GetPendingTokenUpdates)
+	stt.POST("/confirm-token-update", self.ConfirmTokenUpdate)
+	stt.POST("/reject-token-update", self.RejectTokenUpdate)
 	stt.GET("/token-settings", self.TokenSettings)
 	stt.POST("/update-address", self.UpdateAddress)
 	stt.POST("/add-address-to-set", self.AddAddressToSet)

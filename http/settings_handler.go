@@ -45,13 +45,13 @@ func (self *HTTPServer) reloadTokenIndices(newToken common.Token, active bool) e
 	return nil
 }
 
-func (self *HTTPServer) updateInternalTokensIndices(tokenListings map[string]common.TokenListing) error {
+func (self *HTTPServer) updateInternalTokensIndices(tokenUpdates map[string]common.TokenUpdate) error {
 	tokens, err := self.setting.GetInternalTokens()
 	if err != nil {
 		return err
 	}
-	for _, tokenListing := range tokenListings {
-		token := tokenListing.Token
+	for _, tokenUpdate := range tokenUpdates {
+		token := tokenUpdate.Token
 		if token.Internal {
 			tokens = append(tokens, token)
 		}
@@ -127,17 +127,17 @@ func (self *HTTPServer) prepareExchangeSetting(token common.Token, tokExSetts ma
 	return nil
 }
 
-// ListToken will pre-process the token request and put into pending token request
+// SetTokenUpdate will pre-process the token request and put into pending token request
 // It will not apply any change to DB if the request is not as dictated in documentation.
 // Newer request will append if the tokenID is not avail in pending, and overwrite otherwise
-func (self *HTTPServer) ListToken(c *gin.Context) {
+func (self *HTTPServer) SetTokenUpdate(c *gin.Context) {
 	postForm, ok := self.Authenticated(c, []string{"data"}, []Permission{ConfigurePermission})
 	if !ok {
 		return
 	}
 	data := []byte(postForm.Get("data"))
-	tokenListings := make(map[string]common.TokenListing)
-	if err := json.Unmarshal(data, &tokenListings); err != nil {
+	tokenUpdates := make(map[string]common.TokenUpdate)
+	if err := json.Unmarshal(data, &tokenUpdates); err != nil {
 		httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("cant not unmarshall token request (%s)", err.Error())))
 		return
 	}
@@ -146,32 +146,30 @@ func (self *HTTPServer) ListToken(c *gin.Context) {
 		exInfos map[string]common.ExchangeInfo
 		err     error
 	)
-	hasInternal := thereIsInternal(tokenListings)
+	hasInternal := thereIsInternal(tokenUpdates)
 	if hasInternal {
 		if self.hasMetricPending() {
 			httputil.ResponseFailure(c, httputil.WithReason("There is currently pending action on metrics. Clean it first"))
 			return
 		}
 		// verify exchange status and exchange precision limit for each exchange
-		exInfos, err = self.getInfosFromExchangeEndPoint(tokenListings)
+		exInfos, err = self.getInfosFromExchangeEndPoint(tokenUpdates)
 		if err != nil {
 			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
 		}
 	}
-	// prepare each TokenListing instance for individual token
-	for tokenID, tokenlisting := range tokenListings {
-		token := tokenlisting.Token
-		// To list token, its active status must be true
-		token.Active = true
+	// prepare each tokenUpdate instance for individual token
+	for tokenID, tokenUpdate := range tokenUpdates {
+		token := tokenUpdate.Token
 		// if the token is internal, it must come with PWIEq, targetQty and QuadraticEquation and exchange setting
 		if token.Internal {
-			if uErr := self.ensureInternalSetting(tokenlisting); uErr != nil {
+			if uErr := self.ensureInternalSetting(tokenUpdate); uErr != nil {
 				httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("Token %s is internal, required more setting (%s)", token.ID, uErr.Error())))
 				return
 			}
 
-			for ex, tokExSett := range tokenlisting.Exchanges {
+			for ex, tokExSett := range tokenUpdate.Exchanges {
 				//query exchangeprecisionlimit from exchange for the pair token-ETH
 				pairID := common.NewTokenPairID(token.ID, "ETH")
 				// If the pair is not in current token listing request, get its result from exchange
@@ -187,25 +185,25 @@ func (self *HTTPServer) ListToken(c *gin.Context) {
 					}
 					tokExSett.Info[pairID] = exchangePrecisionLimit
 				}
-				tokenlisting.Exchanges[ex] = tokExSett
+				tokenUpdate.Exchanges[ex] = tokExSett
 			}
 		}
-		tokenListings[tokenID] = tokenlisting
+		tokenUpdates[tokenID] = tokenUpdate
 	}
 
-	if err = self.setting.UpdatePendingTokenListings(tokenListings); err != nil {
+	if err = self.setting.UpdatePendingTokenUpdates(tokenUpdates); err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c)
 }
 
-func (self *HTTPServer) GetPendingTokenListings(c *gin.Context) {
+func (self *HTTPServer) GetPendingTokenUpdates(c *gin.Context) {
 	_, ok := self.Authenticated(c, []string{}, []Permission{RebalancePermission, ConfigurePermission, ReadOnlyPermission, ConfirmConfPermission})
 	if !ok {
 		return
 	}
-	data, err := self.setting.GetPendingTokenListings()
+	data, err := self.setting.GetPendingTokenUpdates()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -214,14 +212,14 @@ func (self *HTTPServer) GetPendingTokenListings(c *gin.Context) {
 	return
 }
 
-func (self *HTTPServer) ConfirmTokenListing(c *gin.Context) {
+func (self *HTTPServer) ConfirmTokenUpdate(c *gin.Context) {
 	postForm, ok := self.Authenticated(c, []string{"data"}, []Permission{ConfigurePermission})
 	if !ok {
 		return
 	}
 	data := []byte(postForm.Get("data"))
-	var tokenListings map[string]common.TokenListing
-	if err := json.Unmarshal(data, &tokenListings); err != nil {
+	var tokenUpdates map[string]common.TokenUpdate
+	if err := json.Unmarshal(data, &tokenUpdates); err != nil {
 		httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("cant not unmarshall token request %s", err.Error())))
 		return
 	}
@@ -231,7 +229,7 @@ func (self *HTTPServer) ConfirmTokenListing(c *gin.Context) {
 		quadEq common.RebalanceQuadraticRequest
 		err    error
 	)
-	hasInternal := thereIsInternal(tokenListings)
+	hasInternal := thereIsInternal(tokenUpdates)
 	//If there is internal token in the listing, query for related information.
 	if hasInternal {
 		pws, err = self.metric.GetPWIEquationV2()
@@ -254,7 +252,7 @@ func (self *HTTPServer) ConfirmTokenListing(c *gin.Context) {
 			return
 		}
 	}
-	pendingTLs, err := self.setting.GetPendingTokenListings()
+	pendingTLs, err := self.setting.GetPendingTokenUpdates()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("Can not get pending token listing (%s)", err.Error())))
 		return
@@ -263,16 +261,16 @@ func (self *HTTPServer) ConfirmTokenListing(c *gin.Context) {
 	//Prepare all the object to update core setting to newly listed token
 	preparedExchangeSetting := make(map[settings.ExchangeName]*common.ExchangeSetting)
 	preparedToken := []common.Token{}
-	for tokenID, tokenListing := range tokenListings {
-		token := tokenListing.Token
+	for tokenID, tokenUpdate := range tokenUpdates {
+		token := tokenUpdate.Token
 		token.LastActivationChange = common.GetTimepoint()
 		preparedToken = append(preparedToken, token)
 		if token.Internal {
 			//set metrics data for the token
 
-			pws[tokenID] = tokenListing.PWIEq
-			tarQty[tokenID] = tokenListing.TargetQty
-			quadEq[tokenID] = tokenListing.QuadraticEq
+			pws[tokenID] = tokenUpdate.PWIEq
+			tarQty[tokenID] = tokenUpdate.TargetQty
+			quadEq[tokenID] = tokenUpdate.QuadraticEq
 		}
 		//check if the token is available in pending token listing and is deep equal to it.
 		pendingTL, avail := pendingTLs[tokenID]
@@ -280,22 +278,22 @@ func (self *HTTPServer) ConfirmTokenListing(c *gin.Context) {
 			httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("Token %s is not available in pending token listing", tokenID)))
 			return
 		}
-		if eq := reflect.DeepEqual(pendingTL, tokenListing); !eq {
+		if eq := reflect.DeepEqual(pendingTL, tokenUpdate); !eq {
 			httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("Confirm and pending token listing request for token %s are not equal", tokenID)))
 			return
 		}
-		if uErr := self.prepareExchangeSetting(token, tokenListing.Exchanges, preparedExchangeSetting); uErr != nil {
+		if uErr := self.prepareExchangeSetting(token, tokenUpdate.Exchanges, preparedExchangeSetting); uErr != nil {
 			httputil.ResponseFailure(c, httputil.WithError(uErr))
 			return
 		}
 	}
 	//reload token indices and apply metric changes if the token is Internal
 	if hasInternal {
-		if err = self.updateInternalTokensIndices(tokenListings); err != nil {
+		if err = self.updateInternalTokensIndices(tokenUpdates); err != nil {
 			httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("Can not update internal token indices (%s)", err.Error())))
 			return
 		}
-		if err = self.metric.ConfirmTokenListingInfo(tarQty, pws, quadEq); err != nil {
+		if err = self.metric.ConfirmTokenUpdateInfo(tarQty, pws, quadEq); err != nil {
 			httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("Can not update metric data (%s)", err.Error())))
 			return
 		}
@@ -309,38 +307,32 @@ func (self *HTTPServer) ConfirmTokenListing(c *gin.Context) {
 	httputil.ResponseSuccess(c)
 }
 
-func (self *HTTPServer) RejectTokenListing(c *gin.Context) {
+func (self *HTTPServer) RejectTokenUpdate(c *gin.Context) {
 	_, ok := self.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
 	if !ok {
 		return
 	}
-	listings, err := self.setting.GetPendingTokenListings()
-	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("there is no pending token listing (%s)", err.Error())))
+	listings, err := self.setting.GetPendingTokenUpdates()
+	if (err != nil) || len(listings) == 0 {
+		httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("there is no pending token listing (%v)", err)))
 		return
 	}
 	// TODO: Handling odd case when setting bucket DB op successful but metric bucket DB op failed.
-	if err := self.setting.RemovePendingTokenListings(); err != nil {
+	if err := self.setting.RemovePendingTokenUpdates(); err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
-	}
-	if thereIsInternal(listings) {
-		if err := self.metric.RemovePendingTokenListingInfo(); err != nil {
-			httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("Token listing Removal has been finished but can not remove pending metrics data associated with the token listing (%s).This removal should be handle manually before calling token listing again. ", err.Error())))
-			return
-		}
 	}
 	httputil.ResponseSuccess(c)
 }
 
 // getInfosFromExchangeEndPoint assembles a map of exchange to lists of PairIDs and
 // query their exchange Info in one go
-func (self *HTTPServer) getInfosFromExchangeEndPoint(tokenListings map[string]common.TokenListing) (map[string]common.ExchangeInfo, error) {
+func (self *HTTPServer) getInfosFromExchangeEndPoint(tokenUpdates map[string]common.TokenUpdate) (map[string]common.ExchangeInfo, error) {
 	const ETHID = "ETH"
 	exTokenPairIDs := make(map[string]([]common.TokenPairID))
 	result := make(map[string]common.ExchangeInfo)
-	for tokenID, TokenListing := range tokenListings {
-		for ex, exSetting := range TokenListing.Exchanges {
+	for tokenID, tokenUpdate := range tokenUpdates {
+		for ex, exSetting := range tokenUpdate.Exchanges {
 			_, err := self.ensureRunningExchange(ex)
 			if err != nil {
 				return result, err
@@ -388,75 +380,31 @@ func (self *HTTPServer) hasMetricPending() bool {
 	return false
 }
 
-func thereIsInternal(tokenListings map[string]common.TokenListing) bool {
-	for _, tokenListing := range tokenListings {
-		if tokenListing.Token.Internal {
+func thereIsInternal(tokenUpdates map[string]common.TokenUpdate) bool {
+	for _, tokenUpdate := range tokenUpdates {
+		if tokenUpdate.Token.Internal {
 			return true
 		}
 	}
 	return false
 }
 
-func (self *HTTPServer) ensureInternalSetting(tokenlisting common.TokenListing) error {
-	token := tokenlisting.Token
+func (self *HTTPServer) ensureInternalSetting(tokenUpdate common.TokenUpdate) error {
+	token := tokenUpdate.Token
 	if uErr := self.blockchain.CheckTokenIndices(ethereum.HexToAddress(token.Address)); uErr != nil {
 		return fmt.Errorf("cannot get token indice from smart contract (%s) ", uErr.Error())
 	}
-	if tokenlisting.Exchanges == nil {
+	if tokenUpdate.Exchanges == nil {
 		return errors.New("there is no exchange setting")
 	}
-	if tokenlisting.PWIEq == nil {
+	if tokenUpdate.PWIEq == nil {
 		return errors.New("there is no PWIS setting")
 	}
 	emptyTarget := common.TargetQtyV2{}
-	if reflect.DeepEqual(emptyTarget, tokenlisting.TargetQty) {
+	if reflect.DeepEqual(emptyTarget, tokenUpdate.TargetQty) {
 		return errors.New("there is no target quantity setting or its values are all 0")
 	}
 	return nil
-}
-
-// UpdateToken update minor independent details about a token
-// It provides the most simple way to modify  token's information without affecting other component
-// To list/delist token, use ListToken/ DelistToken API instead.
-func (self *HTTPServer) UpdateToken(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{"data"}, []Permission{RebalancePermission, ConfigurePermission})
-	if !ok {
-		return
-	}
-	data := []byte(postForm.Get("data"))
-	var token common.Token
-	if err := json.Unmarshal(data, &token); err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	if _, err := self.setting.GetTokenByID(token.ID); err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	//reload token indices if the token is Internal
-	if token.Internal {
-		if err := self.reloadTokenIndices(token, token.Internal); err != nil {
-			httputil.ResponseFailure(c, httputil.WithError(err))
-			return
-		}
-	}
-	currTok, err := self.setting.GetTokenByID(token.ID)
-	if err != nil && err != settings.ErrTokenNotFound {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-
-	if err == settings.ErrTokenNotFound || currTok.Active != token.Active {
-		token.LastActivationChange = common.GetTimepoint()
-	} else {
-		token.LastActivationChange = currTok.LastActivationChange
-	}
-
-	if err := self.setting.UpdateToken(token); err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	httputil.ResponseSuccess(c)
 }
 
 func (self *HTTPServer) TokenSettings(c *gin.Context) {
@@ -606,6 +554,31 @@ func (self *HTTPServer) UpdateExchangeInfo(c *gin.Context) {
 	if err := json.Unmarshal(data, &exInfo); err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
+	}
+
+	// go through the input data and find if there is any empty Exchange precision limit
+	tokenPairIDlist := []common.TokenPairID{}
+	emptyEPL := common.ExchangePrecisionLimit{}
+	for pairID, ei := range exInfo {
+		if reflect.DeepEqual(ei, emptyEPL) {
+			tokenPairIDlist = append(tokenPairIDlist, pairID)
+		}
+	}
+
+	// If there is tokenPairID with empty exchange info, query and set it into the exchange info to be update
+	if len(tokenPairIDlist) > 0 {
+		exchange, err := common.GetExchange(name)
+		if err != nil {
+			httputil.ResponseFailure(c, httputil.WithError(err))
+			return
+		}
+		liveInfo, err := exchange.GetLiveExchangeInfos(tokenPairIDlist)
+		if err != nil {
+			httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("There is empty exchange info but can not get live exchange info fom exchange (%s) ", err.Error())))
+		}
+		for tokenPairID, epl := range liveInfo {
+			exInfo[tokenPairID] = epl
+		}
 	}
 	if err := self.setting.UpdateExchangeInfo(exName, exInfo); err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
