@@ -24,9 +24,9 @@ type ExchangePool struct {
 
 func AsyncUpdateDepositAddress(ex common.Exchange, tokenID, addr string, wait *sync.WaitGroup, setting *settings.Settings) {
 	defer wait.Done()
-	token, err := setting.GetInternalTokenByID(tokenID)
+	token, err := setting.GetTokenByID(tokenID)
 	if err != nil {
-		log.Panicf("ERROR: Can't get internal token %s. Error: %s", tokenID, err.Error())
+		log.Panicf("ERROR: Can't get token %s. Error: %s", tokenID, err.Error())
 	}
 	if err := ex.UpdateDepositAddress(token, addr); err != nil {
 		log.Printf("WARNING: Cant not update deposit address for token %s on exchange %s (%s), this will need to be manually update", tokenID, ex.ID(), err.Error())

@@ -221,6 +221,15 @@ func (setting *Settings) NewExchangeInfo(exName ExchangeName) (common.ExchangeIn
 	}
 	for tokenID := range addrs {
 		if tokenID != "ETH" {
+			token, err := setting.GetTokenByID(tokenID)
+			if err != nil {
+				log.Printf("WARNING: can not find token %s (%s). This will skip preparing its exchange info", tokenID, err)
+				continue
+			}
+			if token.Internal == false {
+				log.Printf("INFO: Token %s is external. This will skip preparing its exchange info", tokenID)
+				continue
+			}
 			pairID := common.NewTokenPairID(tokenID, "ETH")
 			result[pairID] = common.ExchangePrecisionLimit{}
 		}
