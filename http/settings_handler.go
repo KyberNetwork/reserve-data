@@ -131,6 +131,7 @@ func (self *HTTPServer) SetTokenUpdate(c *gin.Context) {
 	// prepare each tokenUpdate instance for individual token
 	for tokenID, tokenUpdate := range tokenUpdates {
 		token := tokenUpdate.Token
+		token.ID = tokenID
 		// if the token is internal, it must come with PWIEq, targetQty and QuadraticEquation and exchange setting
 		if token.Internal {
 			if uErr := self.ensureInternalSetting(tokenUpdate); uErr != nil {
@@ -157,6 +158,7 @@ func (self *HTTPServer) SetTokenUpdate(c *gin.Context) {
 				tokenUpdate.Exchanges[ex] = tokExSett
 			}
 		}
+		tokenUpdate.Token = token
 		tokenUpdates[tokenID] = tokenUpdate
 	}
 

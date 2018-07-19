@@ -1596,6 +1596,7 @@ set automatically for the pair (token-ETH). If this data is available in the req
 it will be prioritize over the exchange queried data.
 - In addition, if the update contain any Internal token, that token must be available in Smart contract
 in order to update its indices. 
+- The tokenID from the map object will overwrite the token object's ID. Hence this token object ID inside the request is optional.
 
 Example: This request will list token OMG and NEO. OMG is internal, NEO is external. 
 
