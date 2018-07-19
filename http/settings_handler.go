@@ -14,37 +14,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func removeTokenFromList(tokens []common.Token, t common.Token) ([]common.Token, error) {
-	if len(tokens) == 0 {
-		return tokens, errors.New("Internal Token list is empty")
-	}
-	for i, token := range tokens {
-		if token.ID == t.ID {
-			tokens[len(tokens)-1], tokens[i] = tokens[i], tokens[len(tokens)-1]
-			return tokens[:len(tokens)-1], nil
-		}
-	}
-	return tokens, fmt.Errorf("The deactivating token %s is not in current internal token list", t.ID)
-}
-
-func (self *HTTPServer) reloadTokenIndices(newToken common.Token, active bool) error {
-	tokens, err := self.setting.GetInternalTokens()
-	if err != nil {
-		return err
-	}
-	if active {
-		tokens = append(tokens, newToken)
-	} else {
-		if tokens, err = removeTokenFromList(tokens, newToken); err != nil {
-			return err
-		}
-	}
-	if err = self.blockchain.LoadAndSetTokenIndices(common.GetTokenAddressesList(tokens)); err != nil {
-		return err
-	}
-	return nil
-}
-
 func (self *HTTPServer) updateInternalTokensIndices(tokenUpdates map[string]common.TokenUpdate) error {
 	tokens, err := self.setting.GetInternalTokens()
 	if err != nil {
