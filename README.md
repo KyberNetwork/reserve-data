@@ -78,7 +78,7 @@ Where *<base>* is symbol of the base token and *<quote>* is symbol of the quote 
 
 eg:
 ```
-curl -X GET "http://13.229.54.28:8000/prices/omg/eth"
+curl -X GET "http://127.0.0.1:8000/prices/omg/eth"
 ```
 
 ### Get prices for all base-quote pairs
@@ -105,7 +105,7 @@ Where *<exchangeid>* is the id of the exchange, *<base>* is symbol of the base t
 
 eg:
 ```
-curl -X GET "http://13.229.54.28:8000/exchangeinfo/binance/omg/eth"
+curl -X GET "http://127.0.0.1:8000/exchangeinfo/binance/omg/eth"
 ```
 response:
 ```
@@ -123,7 +123,7 @@ url params:
 
 eg:
 ```
-curl -X GET "http://13.229.54.28:8000/exchangeinfo?exchangeid=binance"
+curl -X GET "http://127.0.0.1:8000/exchangeinfo?exchangeid=binance"
 ```
 response:
 ```
@@ -138,7 +138,7 @@ response:
 
 eg:
 ```
-curl -X GET "http://13.229.54.28:8000/exchangefees"
+curl -X GET "http://127.0.0.1:8000/exchangefees"
 ```
 response:
 ```
@@ -155,7 +155,7 @@ Where *<exchangeid>* is the id of the exchange
 
 eg:
 ```
-curl -X GET "http://13.229.54.28:8000/exchangefees/binance"
+curl -X GET "http://127.0.0.1:8000/exchangefees/binance"
 ```
 response:
 ```
@@ -170,7 +170,7 @@ response:
 
 eg:
 ```
-curl -X GET "http://13.229.54.28:8000/getrates"
+curl -X GET "http://127.0.0.1:8000/getrates"
 ```
 response:
 ```
@@ -188,7 +188,7 @@ url params:
 
 eg:
 ```
-curl -X GET "http://13.229.54.28:8000/get-all-rates"
+curl -X GET "http://127.0.0.1:8000/get-all-rates"
 ```
  response
 ```
@@ -1570,9 +1570,181 @@ response
     "success": true,
   }
 ```
+
+### Get rebalance quadratic - (signing required)
+
+```
+<host>:8000/rebalance-quadratic
+GET request
+
+```
+
+eg:
+```
+curl -X "GET" "http://localhost:8000/rebalance-quadratic" \
+     -H 'Content-Type: application/x-www-form-urlencoded' \
+```
+
+response:
+```
+{
+  "data": {
+    "EOS": {
+      "rebalance_quadratic": {
+        "a": 800,
+        "b": 600,
+        "c": 0
+      }
+    },
+    "ETH": {
+      "rebalance_quadratic": {
+        "a": 750,
+        "b": 500,
+        "c": 0
+      }
+    }
+  },
+  "success": true
+}
+```
+
+### Set rebalance quadratic equation - (signing required)
+
+```
+<host>:8000/set-rebalance-quadratic
+POST request
+Post form: json encoding data of rebalance quadratic equation
+```
+
+eg:
+
+```
+curl -X "POST" "http://localhost:8000/set-rebalance-quadratic" \
+     -H 'Content-Type: application/x-www-form-urlencoded' \
+     --data-urlencode "data={
+  "EOS":{
+    "rebalance_quadratic": {
+      "a": 750,
+      "b": 500,
+      "c": 0,
+    }
+  },
+  "ETH": {
+    "rebalance_quadratic": {
+      "a": 750,
+      "b": 500,
+      "c": 0,
+    }
+  }
+}"
+```
+
+response
+
+```
+
+### Get pending rebalance quadratic - (signing required)
+
+```
+<host>:8000/pending-rebalance-quadratic
+GET request
+
+```
+
+eg:
+```
+curl -X "GET" "http://localhost:8000/pending-rebalance-quadratic" \
+     -H 'Content-Type: application/x-www-form-urlencoded' \
+```
+
+response:
+```
+{
+  "data": {
+    "EOS": {
+      "rebalance_quadratic": {
+        "a": 800,
+        "b": 600,
+        "c": 0
+      }
+    },
+    "ETH": {
+      "rebalance_quadratic": {
+        "a": 750,
+        "b": 500,
+        "c": 0
+      }
+    }
+  },
+  "success": true
+}
+```
+
+
+### Confirm rebalance quadratic equation - (signing required)
+
+```
+<host>:8000/confirm-rebalance-quadratic
+POST request
+Post form: json encoding data of pwis equation
+```
+
+eg
+
+```
+curl -X "POST" "http://localhost:8000/confirm-rebalance-quadratic" \
+     -H 'Content-Type: application/x-www-form-urlencoded' \
+     --data-urlencode "data={
+  "EOS":{
+    "rebalance_quadratic": {
+      "a": 750,
+      "b": 500,
+      "c": 0,
+    }
+  },
+  "ETH": {
+    "rebalance_quadratic": {
+      "a": 750,
+      "b": 500,
+      "c": 0,
+    }
+  }
+}"
+```
+
+response
+
+```
+  {
+    "success": true,
+  }
+```
+
+### Reject rebalance quadrtic equation - (signing required)
+
+```
+<host>:8000/reject-rebalance-quadratic
+POST request
+```
+
+eg
+
+```
+curl -X "POST" "http://localhost:8000/reject-rebalance-quadratic" \
+     -H 'Content-Type: application/x-www-form-urlencoded'
+```
+
+response
+
+```
+  {
+    "success": true,
+  }
+```
+
+
 ### Setting APIs
 #### Token related APIs
-
 
 ##### Set token update - (signing required) Prepare token update and store the request as pending
 POST request 
@@ -1789,12 +1961,6 @@ response
           "b": 2,
           "c": 3
         }
-      }
-    }
-  },
-  "success": true
-}
-```
 
 ##### Confirm token update - (signing required) Confirm token update and apply all the change to core.
 POST request 
@@ -1930,11 +2096,8 @@ Example
 ```
 curl -X "POST" "http://localhost:8000/setting/reject-token-update" \
      -H 'Content-Type: application/x-www-form-urlencoded'
-```
 
-response
 
-```
 on success:
 {"success":true}
 on failure:
@@ -2319,6 +2482,11 @@ Response
   "success": true
 }
 ```
+  {
+    "success": true,
+  }
+```
+
 ## Authentication
 All APIs that are marked with (signing required) must follow authentication mechanism below:
 

@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	TweiAdjust float64 = 1000000000000000000
-	DifferRate float64 = 0.001
+	tweiAdjust float64 = 1000000000000000000
+	differRate float64 = 0.001
 )
 
 //AllRateHTTPReply To hold all rate response and its request status
@@ -115,13 +115,13 @@ func CompareRate(oneAct common.ActivityRecord, oneRate common.AllRateResponse, b
 			tokenid, _ := tokenID.(string)
 			val, ok := oneRate.Data[tokenid]
 			if ok {
-				differ := RateDifference(val.BaseBuy*(1+float64(val.CompactBuy)/1000.0)*TweiAdjust, buys[idx].(float64))
-				if math.Abs(differ) > DifferRate {
+				differ := RateDifference(val.BaseBuy*(1+float64(val.CompactBuy)/1000.0)*tweiAdjust, buys[idx].(float64))
+				if math.Abs(differ) > differRate {
 					defer log.Printf("block %d set a buys rate differ %.5f%% than get rate at token %s \n", blockID, differ*100, tokenid)
 					warning = true
 				}
-				differ = RateDifference(val.BaseSell*(1+float64(val.CompactSell)/1000.0)*TweiAdjust, sells[idx].(float64))
-				if math.Abs(differ) > DifferRate {
+				differ = RateDifference(val.BaseSell*(1+float64(val.CompactSell)/1000.0)*tweiAdjust, sells[idx].(float64))
+				if math.Abs(differ) > differRate {
 					defer log.Printf("block %d set a sell rate differ %.5f%% than get rate at token %s \n", blockID, differ*100, tokenid)
 					warning = true
 				}

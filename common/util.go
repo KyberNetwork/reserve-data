@@ -8,17 +8,14 @@ import (
 	"runtime"
 )
 
-const TRUNC_LENGTH int = 256
-
-// const TRUNC_LENGTH int = 10000000
+const truncLength int = 256
 
 func TruncStr(src []byte) []byte {
-	if len(src) > TRUNC_LENGTH {
-		result := string(src[0:TRUNC_LENGTH]) + "..."
+	if len(src) > truncLength {
+		result := string(src[0:truncLength]) + "..."
 		return []byte(result)
-	} else {
-		return src
 	}
+	return src
 }
 
 // CurrentDir returns current directory of the caller.
@@ -50,10 +47,9 @@ func FloatToBigInt(amount float64, decimal int64) *big.Int {
 	// 6 is our smallest precision
 	if decimal < 6 {
 		return big.NewInt(int64(amount * math.Pow10(int(decimal))))
-	} else {
-		result := big.NewInt(int64(amount * math.Pow10(6)))
-		return result.Mul(result, big.NewInt(0).Exp(big.NewInt(10), big.NewInt(decimal-6), nil))
 	}
+	result := big.NewInt(int64(amount * math.Pow10(6)))
+	return result.Mul(result, big.NewInt(0).Exp(big.NewInt(10), big.NewInt(decimal-6), nil))
 }
 
 // BigToFloat converts a big int to float according to its number of decimal digits

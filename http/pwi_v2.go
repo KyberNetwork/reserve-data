@@ -33,7 +33,7 @@ func (self *HTTPServer) SetPWIEquationV2(c *gin.Context) {
 	}
 
 	data := []byte(postForm.Get(dataPostFormKey))
-	if len(data) > MAX_DATA_SIZE {
+	if len(data) > maxDataSize {
 		httputil.ResponseFailure(c, httputil.WithError(errDataSizeExceed))
 		return
 	}

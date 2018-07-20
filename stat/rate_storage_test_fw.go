@@ -24,7 +24,7 @@ func (self *RateStorageTest) TestReserveRates() error {
 		BlockNumber:   333,
 		ToBlockNumber: 444,
 	}
-	testAsset := ethereum.HexToAddress(TESTASSETADDR)
+	testAsset := ethereum.HexToAddress(testAssetAddr)
 	err = self.storage.StoreReserveRates(testAsset, rate, 111)
 	if err != nil {
 		return err

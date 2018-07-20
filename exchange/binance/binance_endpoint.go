@@ -107,7 +107,7 @@ func (self *BinanceEndpoint) GetResponse(
 		err = fmt.Errorf("Binance return with code: %d - %s", resp.StatusCode, response.Msg)
 	}
 	if err != nil || len(respBody) == 0 || rand.Int()%10 == 0 {
-		log.Printf("request to %s, got response from binance (error or throttled to 10%%): %s, err: %v", req.URL, common.TruncStr(respBody), err)
+		log.Printf("request to %s, got response from binance (error or throttled to 10%%): %s, err: %s", req.URL, common.TruncStr(respBody), common.ErrorToString(err))
 	}
 	return respBody, err
 }
@@ -337,7 +337,7 @@ func (self *BinanceEndpoint) Withdraw(token common.Token, amount *big.Int, addre
 		}
 		return result.ID, nil
 	}
-	return "", fmt.Errorf("withdraw rejected by Binnace: %v", err)
+	return "", fmt.Errorf("withdraw rejected by Binnace: %s", common.ErrorToString(err))
 }
 
 func (self *BinanceEndpoint) GetInfo() (exchange.Binainfo, error) {

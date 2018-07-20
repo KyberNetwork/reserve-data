@@ -5,48 +5,48 @@ import (
 )
 
 const (
-	// mode_env is the name environment variable that set the running mode of core.
+	// modeEnv is the name environment variable that set the running mode of core.
 	// See below constants for list of available modes.
-	mode_env = "KYBER_ENV"
+	modeEnv = "KYBER_ENV"
 
-	// DEV_MODE is default running mode. It is used for development.
-	DEV_MODE = "dev"
-	// PRODUCTION_MODE is the running mode in staging environment.
-	STAGING_MODE = "staging"
-	// PRODUCTION_MODE is the running mode in production environment.
-	PRODUCTION_MODE = "production"
-	// MAINNET_MODE is the same as production mode, just for backward compatibility.
-	MAINNET_MODE = "mainnet"
-	// KOVAN_MODE is the running mode for testing kovan network.
-	KOVAN_MODE = "kovan"
-	// KOVAN_MODE is the running mode for testing ropsten network.
-	ROPSTEN_MODE = "ropsten"
-	// SIMULATION_MODE is running mode in simulation.
-	SIMULATION_MODE = "simulation"
-	// SIMULATION_MODE is running mode for analytic development.
-	ANALYTIC_DEV_MODE = "analytic_dev"
+	// DevMode is default running mode. It is used for development.
+	DevMode = "dev"
+	// StagingMode is the running mode in staging environment.
+	StagingMode = "staging"
+	// ProductionMode is the running mode in production environment.
+	ProductionMode = "production"
+	// MainnetMode is the same as production mode, just for backward compatibility.
+	MainnetMode = "mainnet"
+	// KovanMode is the running mode for testing kovan network.
+	KovanMode = "kovan"
+	// RopstenMode is the running mode for testing ropsten network.
+	RopstenMode = "ropsten"
+	// SimulationMode is running mode in simulation.
+	SimulationMode = "simulation"
+	// AnalyticDevMode is running mode for analytic development.
+	AnalyticDevMode = "analytic_dev"
 )
 
 var validModes = map[string]struct{}{
-	DEV_MODE:          {},
-	STAGING_MODE:      {},
-	PRODUCTION_MODE:   {},
-	MAINNET_MODE:      {},
-	KOVAN_MODE:        {},
-	ROPSTEN_MODE:      {},
-	SIMULATION_MODE:   {},
-	ANALYTIC_DEV_MODE: {},
+	DevMode:         {},
+	StagingMode:     {},
+	ProductionMode:  {},
+	MainnetMode:     {},
+	KovanMode:       {},
+	RopstenMode:     {},
+	SimulationMode:  {},
+	AnalyticDevMode: {},
 }
 
 // RunningMode returns the current running mode of application.
 func RunningMode() string {
-	mode, ok := os.LookupEnv(mode_env)
+	mode, ok := os.LookupEnv(modeEnv)
 	if !ok {
-		return DEV_MODE
+		return DevMode
 	}
 	_, valid := validModes[mode]
 	if !valid {
-		return DEV_MODE
+		return DevMode
 	}
 	return mode
 }

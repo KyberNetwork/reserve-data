@@ -94,7 +94,17 @@ func (self *HuobiEndpoint) GetResponse(
 			log.Printf("Response body close error: %s", cErr.Error())
 		}
 	}()
-	respBody, err = ioutil.ReadAll(resp.Body)
+	switch resp.StatusCode {
+	case 429:
+		err = errors.New("breaking Huobi request rate limit")
+		break
+	case 500:
+		err = errors.New("500 from Huobi, its fault")
+		break
+	case 200:
+		respBody, err = ioutil.ReadAll(resp.Body)
+		break
+	}
 	return respBody, err
 }
 

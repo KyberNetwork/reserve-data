@@ -13,15 +13,18 @@ import (
 )
 
 const (
-	TRADE_HISTORY         string = "trade_history"
-	MAX_GET_TRADE_HISTORY uint64 = 3 * 86400000
+	tradeHistory       string = "trade_history"
+	maxGetTradeHistory uint64 = 3 * 86400000
 )
 
+//BinanceStorage storage binance information
+//including trade history
 type BinanceStorage struct {
 	mu sync.RWMutex
 	db *bolt.DB
 }
 
+//NewBoltStorage create database and related bucket for binance storage
 func NewBoltStorage(path string) (*BinanceStorage, error) {
 	// init instance
 	var err error
@@ -32,7 +35,7 @@ func NewBoltStorage(path string) (*BinanceStorage, error) {
 	}
 	// init buckets
 	err = db.Update(func(tx *bolt.Tx) error {
-		_, err = tx.CreateBucketIfNotExists([]byte(TRADE_HISTORY))
+		_, err = tx.CreateBucketIfNotExists([]byte(tradeHistory))
 		if err != nil {
 			return err
 		}
@@ -45,9 +48,10 @@ func NewBoltStorage(path string) (*BinanceStorage, error) {
 	return storage, nil
 }
 
-func (self *BinanceStorage) StoreTradeHistory(data common.ExchangeTradeHistory) error {
-	err := self.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(TRADE_HISTORY))
+//StoreTradeHistory store binance trade history
+func (bs *BinanceStorage) StoreTradeHistory(data common.ExchangeTradeHistory) error {
+	err := bs.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(tradeHistory))
 		for pair, pairHistory := range data {
 			pairBk, uErr := b.CreateBucketIfNotExists([]byte(pair))
 			if uErr != nil {
@@ -70,16 +74,17 @@ func (self *BinanceStorage) StoreTradeHistory(data common.ExchangeTradeHistory) 
 	return err
 }
 
-func (self *BinanceStorage) GetTradeHistory(fromTime, toTime uint64) (common.ExchangeTradeHistory, error) {
+//GetTradeHistory return trade history from binance from time to time
+func (bs *BinanceStorage) GetTradeHistory(fromTime, toTime uint64) (common.ExchangeTradeHistory, error) {
 	result := common.ExchangeTradeHistory{}
 	var err error
-	if toTime-fromTime > MAX_GET_TRADE_HISTORY {
+	if toTime-fromTime > maxGetTradeHistory {
 		return result, fmt.Errorf("Time range is too broad, it must be smaller or equal to 3 days (miliseconds)")
 	}
 	min := []byte(strconv.FormatUint(fromTime, 10))
 	max := []byte(strconv.FormatUint(toTime, 10))
-	err = self.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(TRADE_HISTORY))
+	err = bs.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(tradeHistory))
 		c := b.Cursor()
 		exchangeHistory := common.ExchangeTradeHistory{}
 		for key, value := c.First(); key != nil && value == nil; key, value = c.Next() {
@@ -103,10 +108,12 @@ func (self *BinanceStorage) GetTradeHistory(fromTime, toTime uint64) (common.Exc
 	return result, err
 }
 
-func (self *BinanceStorage) GetLastIDTradeHistory(pair string) (string, error) {
+//GetLastIDTradeHistory return last id of trade history of a token
+//using for query trade history from binance
+func (bs *BinanceStorage) GetLastIDTradeHistory(pair string) (string, error) {
 	history := common.TradeHistory{}
-	err := self.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(TRADE_HISTORY))
+	err := bs.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(tradeHistory))
 		pairBk, err := b.CreateBucketIfNotExists([]byte(pair))
 		if err != nil {
 			log.Printf("Cannot get pair bucket: %s", err.Error())

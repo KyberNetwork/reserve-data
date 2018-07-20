@@ -58,7 +58,7 @@ func serverStart(_ *cobra.Command, _ []string) {
 	if !noCore {
 		rData, rCore = CreateDataCore(config, kyberENV, bc)
 		if !dryrun {
-			if kyberENV != common.SIMULATION_MODE {
+			if kyberENV != common.SimulationMode {
 				if err := rData.RunStorageController(); err != nil {
 					log.Panic(err)
 				}
@@ -78,7 +78,7 @@ func serverStart(_ *cobra.Command, _ []string) {
 	if enableStat {
 		rStat = CreateStat(config, kyberENV, bc)
 		if !dryrun {
-			if kyberENV != common.SIMULATION_MODE {
+			if kyberENV != common.SimulationMode {
 				if err := rStat.RunStorageController(); err != nil {
 					log.Panic(err)
 				}

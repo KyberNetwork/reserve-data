@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	MAX_GET_RATES_PERIOD uint64 = 86400000 //1 days in milisec
+	maxGetRatesPeriod uint64 = 86400000 //1 days in milisec
 )
 
 type ReserveStats struct {
@@ -180,8 +180,8 @@ func (self ReserveStats) GetTradeSummary(fromTime, toTime uint64, timezone int64
 func (self ReserveStats) GetTradeLogs(fromTime uint64, toTime uint64) ([]common.TradeLog, error) {
 	result := []common.TradeLog{}
 
-	if toTime-fromTime > MAX_GET_RATES_PERIOD {
-		return result, fmt.Errorf("Time range is too broad, it must be smaller or equal to %d miliseconds", MAX_GET_RATES_PERIOD)
+	if toTime-fromTime > maxGetRatesPeriod {
+		return result, fmt.Errorf("Time range is too broad, it must be smaller or equal to %d miliseconds", maxGetRatesPeriod)
 	}
 
 	result, err := self.logStorage.GetTradeLogs(fromTime*1000000, toTime*1000000)
@@ -437,8 +437,8 @@ func (self ReserveStats) GetWalletStats(fromTime uint64, toTime uint64, walletAd
 	return self.statStorage.GetWalletStats(fromTime, toTime, ethereum.HexToAddress(walletAddr), timezone)
 }
 
-func (self ReserveStats) GetWalletAddress() ([]string, error) {
-	return self.statStorage.GetWalletAddress()
+func (self ReserveStats) GetWalletAddresses() ([]string, error) {
+	return self.statStorage.GetWalletAddresses()
 }
 
 func (self ReserveStats) GetReserveRates(fromTime, toTime uint64, reserveAddr ethereum.Address) ([]common.ReserveRates, error) {

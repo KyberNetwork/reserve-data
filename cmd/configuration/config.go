@@ -152,7 +152,7 @@ func (self *Config) AddStatConfig(settingPath SettingPaths) {
 
 	var statFetcherRunner stat.FetcherRunner
 	var statControllerRunner statpruner.ControllerRunner
-	if common.RunningMode() == common.SIMULATION_MODE {
+	if common.RunningMode() == common.SimulationMode {
 		if statFetcherRunner, err = http_runner.NewHttpRunner(http_runner.WithHttpRunnerPort(8002)); err != nil {
 			panic(err)
 		}
@@ -188,7 +188,7 @@ func (self *Config) AddCoreConfig(settingPath SettingPaths, kyberENV string) {
 
 	var fetcherRunner fetcher.FetcherRunner
 	var dataControllerRunner datapruner.StorageControllerRunner
-	if common.RunningMode() == common.SIMULATION_MODE {
+	if common.RunningMode() == common.SimulationMode {
 		if fetcherRunner, err = http_runner.NewHttpRunner(http_runner.WithHttpRunnerPort(8001)); err != nil {
 			log.Fatalf("failed to create HTTP runner: %s", err.Error())
 		}
@@ -217,7 +217,6 @@ func (self *Config) AddCoreConfig(settingPath SettingPaths, kyberENV string) {
 	self.BlockchainSigner = pricingSigner
 	//self.IntermediatorSigner = huoBiintermediatorSigner
 	self.DepositSigner = depositSigner
-
 	//self.ExchangeStorage = exsStorage
 	// var huobiConfig common.HuobiConfig
 	// exchangesIDs := os.Getenv("KYBER_EXCHANGES")
@@ -248,7 +247,7 @@ func (self *Config) AddCoreConfig(settingPath SettingPaths, kyberENV string) {
 }
 
 var ConfigPaths = map[string]SettingPaths{
-	common.DEV_MODE: NewSettingPaths(
+	common.DevMode: NewSettingPaths(
 		"dev_setting.json",
 		"fee.json",
 		"dev.db",
@@ -264,7 +263,7 @@ var ConfigPaths = map[string]SettingPaths{
 			myEtherAPIMainnetEndpoint,
 		},
 	),
-	common.KOVAN_MODE: NewSettingPaths(
+	common.KovanMode: NewSettingPaths(
 		"kovan_setting.json",
 		"fee.json",
 		"kovan.db",
@@ -278,7 +277,7 @@ var ConfigPaths = map[string]SettingPaths{
 		infuraKovanEndpoint,
 		[]string{},
 	),
-	common.PRODUCTION_MODE: NewSettingPaths(
+	common.ProductionMode: NewSettingPaths(
 		"mainnet_setting.json",
 		"fee.json",
 		"mainnet.db",
@@ -297,7 +296,7 @@ var ConfigPaths = map[string]SettingPaths{
 			mewGivethAPIEndpoint,
 		},
 	),
-	common.MAINNET_MODE: NewSettingPaths(
+	common.MainnetMode: NewSettingPaths(
 		"mainnet_setting.json",
 		"fee.json",
 		"mainnet.db",
@@ -317,7 +316,7 @@ var ConfigPaths = map[string]SettingPaths{
 			mewGivethAPIEndpoint,
 		},
 	),
-	common.STAGING_MODE: NewSettingPaths(
+	common.StagingMode: NewSettingPaths(
 		"staging_setting.json",
 		"fee.json",
 		"staging.db",
@@ -337,7 +336,7 @@ var ConfigPaths = map[string]SettingPaths{
 			mewGivethAPIEndpoint,
 		},
 	),
-	common.SIMULATION_MODE: NewSettingPaths(
+	common.SimulationMode: NewSettingPaths(
 		"shared/deployment_dev.json",
 		"fee.json",
 		"core.db",
@@ -353,7 +352,7 @@ var ConfigPaths = map[string]SettingPaths{
 			localDevChainEndpoint,
 		},
 	),
-	common.ROPSTEN_MODE: NewSettingPaths(
+	common.RopstenMode: NewSettingPaths(
 		"ropsten_setting.json",
 		"fee.json",
 		"ropsten.db",
@@ -369,7 +368,7 @@ var ConfigPaths = map[string]SettingPaths{
 			myEtherAPIRopstenEndpoint,
 		},
 	),
-	common.ANALYTIC_DEV_MODE: NewSettingPaths(
+	common.AnalyticDevMode: NewSettingPaths(
 		"shared/deployment_dev.json",
 		"fee.json",
 		"core.db",
@@ -392,27 +391,27 @@ var HuobiInterfaces = make(map[string]huobi.Interface)
 var BittrexInterfaces = make(map[string]bittrex.Interface)
 
 func SetInterface(base_url string) {
-	BittrexInterfaces[common.DEV_MODE] = bittrex.NewDevInterface()
-	BittrexInterfaces[common.KOVAN_MODE] = bittrex.NewKovanInterface(base_url)
-	BittrexInterfaces[common.MAINNET_MODE] = bittrex.NewRealInterface()
-	BittrexInterfaces[common.STAGING_MODE] = bittrex.NewRealInterface()
-	BittrexInterfaces[common.SIMULATION_MODE] = bittrex.NewSimulatedInterface(base_url)
-	BittrexInterfaces[common.ROPSTEN_MODE] = bittrex.NewRopstenInterface(base_url)
-	BittrexInterfaces[common.ANALYTIC_DEV_MODE] = bittrex.NewRopstenInterface(base_url)
+	BittrexInterfaces[common.DevMode] = bittrex.NewDevInterface()
+	BittrexInterfaces[common.KovanMode] = bittrex.NewKovanInterface(base_url)
+	BittrexInterfaces[common.MainnetMode] = bittrex.NewRealInterface()
+	BittrexInterfaces[common.StagingMode] = bittrex.NewRealInterface()
+	BittrexInterfaces[common.SimulationMode] = bittrex.NewSimulatedInterface(base_url)
+	BittrexInterfaces[common.RopstenMode] = bittrex.NewRopstenInterface(base_url)
+	BittrexInterfaces[common.AnalyticDevMode] = bittrex.NewRopstenInterface(base_url)
 
-	HuobiInterfaces[common.DEV_MODE] = huobi.NewDevInterface()
-	HuobiInterfaces[common.KOVAN_MODE] = huobi.NewKovanInterface(base_url)
-	HuobiInterfaces[common.MAINNET_MODE] = huobi.NewRealInterface()
-	HuobiInterfaces[common.STAGING_MODE] = huobi.NewRealInterface()
-	HuobiInterfaces[common.SIMULATION_MODE] = huobi.NewSimulatedInterface(base_url)
-	HuobiInterfaces[common.ROPSTEN_MODE] = huobi.NewRopstenInterface(base_url)
-	HuobiInterfaces[common.ANALYTIC_DEV_MODE] = huobi.NewRopstenInterface(base_url)
+	HuobiInterfaces[common.DevMode] = huobi.NewDevInterface()
+	HuobiInterfaces[common.KovanMode] = huobi.NewKovanInterface(base_url)
+	HuobiInterfaces[common.MainnetMode] = huobi.NewRealInterface()
+	HuobiInterfaces[common.StagingMode] = huobi.NewRealInterface()
+	HuobiInterfaces[common.SimulationMode] = huobi.NewSimulatedInterface(base_url)
+	HuobiInterfaces[common.RopstenMode] = huobi.NewRopstenInterface(base_url)
+	HuobiInterfaces[common.AnalyticDevMode] = huobi.NewRopstenInterface(base_url)
 
-	BinanceInterfaces[common.DEV_MODE] = binance.NewDevInterface()
-	BinanceInterfaces[common.KOVAN_MODE] = binance.NewKovanInterface(base_url)
-	BinanceInterfaces[common.MAINNET_MODE] = binance.NewRealInterface()
-	BinanceInterfaces[common.STAGING_MODE] = binance.NewRealInterface()
-	BinanceInterfaces[common.SIMULATION_MODE] = binance.NewSimulatedInterface(base_url)
-	BinanceInterfaces[common.ROPSTEN_MODE] = binance.NewRopstenInterface(base_url)
-	BinanceInterfaces[common.ANALYTIC_DEV_MODE] = binance.NewRopstenInterface(base_url)
+	BinanceInterfaces[common.DevMode] = binance.NewDevInterface()
+	BinanceInterfaces[common.KovanMode] = binance.NewKovanInterface(base_url)
+	BinanceInterfaces[common.MainnetMode] = binance.NewRealInterface()
+	BinanceInterfaces[common.StagingMode] = binance.NewRealInterface()
+	BinanceInterfaces[common.SimulationMode] = binance.NewSimulatedInterface(base_url)
+	BinanceInterfaces[common.RopstenMode] = binance.NewRopstenInterface(base_url)
+	BinanceInterfaces[common.AnalyticDevMode] = binance.NewRopstenInterface(base_url)
 }

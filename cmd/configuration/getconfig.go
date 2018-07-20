@@ -17,17 +17,17 @@ import (
 
 func GetSettingDBName(kyberENV string) string {
 	switch kyberENV {
-	case common.MAINNET_MODE, common.PRODUCTION_MODE:
+	case common.MainnetMode, common.ProductionMode:
 		return "mainnet_setting.db"
-	case common.DEV_MODE:
+	case common.DevMode:
 		return "dev_setting.db"
-	case common.KOVAN_MODE:
+	case common.KovanMode:
 		return "kovan_setting.db"
-	case common.STAGING_MODE:
+	case common.StagingMode:
 		return "staging_setting.db"
-	case common.SIMULATION_MODE, common.ANALYTIC_DEV_MODE:
+	case common.SimulationMode, common.AnalyticDevMode:
 		return "sim_setting.db"
-	case common.ROPSTEN_MODE:
+	case common.RopstenMode:
 		return "ropsten_setting.db"
 	default:
 		return "dev_setting.db"
@@ -36,17 +36,17 @@ func GetSettingDBName(kyberENV string) string {
 
 func GetChainType(kyberENV string) string {
 	switch kyberENV {
-	case common.MAINNET_MODE, common.PRODUCTION_MODE:
+	case common.MainnetMode, common.ProductionMode:
 		return "byzantium"
-	case common.DEV_MODE:
+	case common.DevMode:
 		return "homestead"
-	case common.KOVAN_MODE:
+	case common.KovanMode:
 		return "homestead"
-	case common.STAGING_MODE:
+	case common.StagingMode:
 		return "byzantium"
-	case common.SIMULATION_MODE, common.ANALYTIC_DEV_MODE:
+	case common.SimulationMode, common.AnalyticDevMode:
 		return "homestead"
-	case common.ROPSTEN_MODE:
+	case common.RopstenMode:
 		return "byzantium"
 	default:
 		return "homestead"
@@ -54,16 +54,16 @@ func GetChainType(kyberENV string) string {
 }
 
 func GetConfigPaths(kyberENV string) SettingPaths {
-	// common.PRODUCTION_MODE and common.MAINNET_MODE are same thing.
-	if kyberENV == common.PRODUCTION_MODE {
-		kyberENV = common.MAINNET_MODE
+	// common.ProductionMode and common.MainnetMode are same thing.
+	if kyberENV == common.ProductionMode {
+		kyberENV = common.MainnetMode
 	}
 
 	if sp, ok := ConfigPaths[kyberENV]; ok {
 		return sp
 	}
 	log.Println("Environment setting paths is not found, using dev...")
-	return ConfigPaths[common.DEV_MODE]
+	return ConfigPaths[common.DevMode]
 }
 
 func GetSetting(setPath SettingPaths, kyberENV string) (*settings.Settings, error) {

@@ -14,9 +14,9 @@ import (
 )
 
 const (
-	BITTREX_DEPOSIT_HISTORY string = "bittrex_deposit_history"
-	TRADE_HISTORY           string = "trade_history"
-	MAX_GET_TRADE_HISTORY   uint64 = 3 * 86400000
+	bittrexDepositHistory string = "bittrex_deposit_history"
+	tradeHistory          string = "trade_history"
+	maxGetTradeHistory    uint64 = 3 * 86400000
 )
 
 //BoltStorage storage object for bittrex
@@ -35,10 +35,10 @@ func NewBoltStorage(path string) (*BoltStorage, error) {
 	}
 	// init buckets
 	err = db.Update(func(tx *bolt.Tx) error {
-		if _, uErr := tx.CreateBucketIfNotExists([]byte(BITTREX_DEPOSIT_HISTORY)); uErr != nil {
+		if _, uErr := tx.CreateBucketIfNotExists([]byte(bittrexDepositHistory)); uErr != nil {
 			return uErr
 		}
-		if _, uErr := tx.CreateBucketIfNotExists([]byte(TRADE_HISTORY)); uErr != nil {
+		if _, uErr := tx.CreateBucketIfNotExists([]byte(tradeHistory)); uErr != nil {
 			return uErr
 		}
 		return nil
@@ -50,7 +50,7 @@ func NewBoltStorage(path string) (*BoltStorage, error) {
 func (self *BoltStorage) IsNewBittrexDeposit(id uint64, actID common.ActivityID) bool {
 	res := true
 	err := self.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(BITTREX_DEPOSIT_HISTORY))
+		b := tx.Bucket([]byte(bittrexDepositHistory))
 		v := b.Get(boltutil.Uint64ToBytes(id))
 		if v != nil && string(v) != actID.String() {
 			log.Printf("bolt: stored act id - current act id: %s - %s", string(v), actID.String())
@@ -67,7 +67,7 @@ func (self *BoltStorage) IsNewBittrexDeposit(id uint64, actID common.ActivityID)
 func (self *BoltStorage) RegisterBittrexDeposit(id uint64, actID common.ActivityID) error {
 	var err error
 	err = self.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(BITTREX_DEPOSIT_HISTORY))
+		b := tx.Bucket([]byte(bittrexDepositHistory))
 		// actIDBytes, _ := actID.MarshalText()
 		actIDBytes, _ := actID.MarshalText()
 		return b.Put(boltutil.Uint64ToBytes(id), actIDBytes)
@@ -78,7 +78,7 @@ func (self *BoltStorage) RegisterBittrexDeposit(id uint64, actID common.Activity
 func (self *BoltStorage) StoreTradeHistory(data common.ExchangeTradeHistory) error {
 	var err error
 	err = self.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(TRADE_HISTORY))
+		b := tx.Bucket([]byte(tradeHistory))
 		for pair, pairHistory := range data {
 			pairBk, vErr := b.CreateBucketIfNotExists([]byte(pair))
 			if vErr != nil {
@@ -104,13 +104,13 @@ func (self *BoltStorage) StoreTradeHistory(data common.ExchangeTradeHistory) err
 func (self *BoltStorage) GetTradeHistory(fromTime, toTime uint64) (common.ExchangeTradeHistory, error) {
 	result := common.ExchangeTradeHistory{}
 	var err error
-	if toTime-fromTime > MAX_GET_TRADE_HISTORY {
+	if toTime-fromTime > maxGetTradeHistory {
 		return result, errors.New("Time range is too broad, it must be smaller or equal to 3 days (miliseconds)")
 	}
 	min := []byte(strconv.FormatUint(fromTime, 10))
 	max := []byte(strconv.FormatUint(toTime, 10))
 	err = self.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(TRADE_HISTORY))
+		b := tx.Bucket([]byte(tradeHistory))
 		c := b.Cursor()
 		exchangeHistory := common.ExchangeTradeHistory{}
 		for key, value := c.First(); key != nil && value == nil; key, value = c.Next() {

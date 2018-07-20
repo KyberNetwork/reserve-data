@@ -3,10 +3,8 @@ package blockchain
 import (
 	"fmt"
 	"log"
-	"math"
 	"math/big"
 	"path/filepath"
-	"strings"
 	"sync"
 	"time"
 
@@ -21,8 +19,25 @@ import (
 )
 
 const (
-	PRICING_OP string = "pricingOP"
-	DEPOSIT_OP string = "depositOP"
+	pricingOP = "pricingOP"
+	depositOP = "depositOP"
+
+	// feeToWalletEvent is the topic of event AssignFeeToWallet(address reserve, address wallet, uint walletFee).
+	feeToWalletEvent = "0x366bc34352215bf0bd3b527cfd6718605e1f5938777e42bcd8ed92f578368f52"
+	// burnFeeEvent is the topic of event AssignBurnFees(address reserve, uint burnFee).
+	burnFeeEvent = "0xf838f6ddc89706878e3c3e698e9b5cbfbf2c0e3d3dcd0bd2e00f1ccf313e0185"
+	// tradeEvent is the topic of event
+	// ExecuteTrade(address indexed sender, ERC20 src, ERC20 dest, uint actualSrcAmount, uint actualDestAmount).
+	tradeEvent = "0x1849bd6a030a1bca28b83437fd3de96f3d27a5d172fa7e9c78e7b61468928a39"
+	// etherReceivalEvent is the topic of event EtherReceival(address indexed sender, uint amount).
+	etherReceivalEvent = "0x75f33ed68675112c77094e7c5b073890598be1d23e27cd7f6907b4a7d98ac619"
+	// userCatEvent is the topic of event UserCategorySet(address user, uint category).
+	userCatEvent = "0x0aeb0f7989a09b8cccf58cea1aefa196ccf738cb14781d6910448dd5649d0e6e"
+)
+
+var (
+	Big0   = big.NewInt(0)
+	BigMax = big.NewInt(10).Exp(big.NewInt(10), big.NewInt(33), nil)
 )
 
 // tbindex is where the token data stored in blockchain.
@@ -42,18 +57,6 @@ type tbindex struct {
 func newTBIndex(bulkIndex, indexInBulk uint64) tbindex {
 	return tbindex{BulkIndex: bulkIndex, IndexInBulk: indexInBulk}
 }
-
-const (
-	FeeToWalletEvent string = "0x366bc34352215bf0bd3b527cfd6718605e1f5938777e42bcd8ed92f578368f52"
-	BurnFeeEvent     string = "0xf838f6ddc89706878e3c3e698e9b5cbfbf2c0e3d3dcd0bd2e00f1ccf313e0185"
-	TradeEvent       string = "0x1849bd6a030a1bca28b83437fd3de96f3d27a5d172fa7e9c78e7b61468928a39"
-	UserCatEvent     string = "0x0aeb0f7989a09b8cccf58cea1aefa196ccf738cb14781d6910448dd5649d0e6e"
-)
-
-var (
-	Big0   *big.Int = big.NewInt(0)
-	BigMax          = big.NewInt(10).Exp(big.NewInt(10), big.NewInt(33), nil)
-)
 
 type Blockchain struct {
 	*blockchain.BaseBlockchain
@@ -136,9 +139,9 @@ func (self *Blockchain) GetAddresses() (*common.Addresses, error) {
 		reserveAddr,
 		burnerAddr,
 		networkAddr,
-		opAddrs[PRICING_OP],
-		opAddrs[DEPOSIT_OP],
-		opAddrs[hbblockchain.HUOBI_OP],
+		opAddrs[pricingOP],
+		opAddrs[depositOP],
+		opAddrs[hbblockchain.HuobiOP],
 	), nil
 }
 
@@ -192,12 +195,12 @@ func (self *Blockchain) LoadAndSetTokenIndices(tokenAddrs []ethereum.Address) er
 
 func (self *Blockchain) RegisterPricingOperator(signer blockchain.Signer, nonceCorpus blockchain.NonceCorpus) {
 	log.Printf("reserve pricing address: %s", signer.GetAddress().Hex())
-	self.RegisterOperator(PRICING_OP, blockchain.NewOperator(signer, nonceCorpus))
+	self.RegisterOperator(pricingOP, blockchain.NewOperator(signer, nonceCorpus))
 }
 
 func (self *Blockchain) RegisterDepositOperator(signer blockchain.Signer, nonceCorpus blockchain.NonceCorpus) {
 	log.Printf("reserve depositor address: %s", signer.GetAddress().Hex())
-	self.RegisterOperator(DEPOSIT_OP, blockchain.NewOperator(signer, nonceCorpus))
+	self.RegisterOperator(depositOP, blockchain.NewOperator(signer, nonceCorpus))
 }
 
 func readablePrint(data map[ethereum.Address]byte) string {
@@ -266,7 +269,7 @@ func (self *Blockchain) SetRates(
 		newCSells,
 		self.tokenIndices,
 	)
-	opts, err := self.GetTxOpts(PRICING_OP, nonce, gasPrice, nil)
+	opts, err := self.GetTxOpts(pricingOP, nonce, gasPrice, nil)
 	if err != nil {
 		log.Printf("Getting transaction opts failed, err: %s", err)
 		return nil, err
@@ -308,9 +311,8 @@ func (self *Blockchain) SetRates(
 		}
 		if err != nil {
 			return nil, err
-		} else {
-			return self.SignAndBroadcast(tx, PRICING_OP)
 		}
+		return self.SignAndBroadcast(tx, pricingOP)
 	}
 }
 
@@ -319,48 +321,44 @@ func (self *Blockchain) Send(
 	amount *big.Int,
 	dest ethereum.Address) (*types.Transaction, error) {
 
-	opts, err := self.GetTxOpts(DEPOSIT_OP, nil, nil, nil)
+	opts, err := self.GetTxOpts(depositOP, nil, nil, nil)
 	if err != nil {
 		return nil, err
-	} else {
-		tx, err := self.GeneratedWithdraw(
-			opts,
-			ethereum.HexToAddress(token.Address),
-			amount, dest)
-		if err != nil {
-			return nil, err
-		} else {
-			return self.SignAndBroadcast(tx, DEPOSIT_OP)
-		}
 	}
+	tx, err := self.GeneratedWithdraw(
+		opts,
+		ethereum.HexToAddress(token.Address),
+		amount, dest)
+	if err != nil {
+		return nil, err
+	}
+	return self.SignAndBroadcast(tx, depositOP)
 }
 
 func (self *Blockchain) SetImbalanceStepFunction(token ethereum.Address, xBuy []*big.Int, yBuy []*big.Int, xSell []*big.Int, ySell []*big.Int) (*types.Transaction, error) {
-	opts, err := self.GetTxOpts(PRICING_OP, nil, nil, nil)
+	opts, err := self.GetTxOpts(pricingOP, nil, nil, nil)
 	if err != nil {
 		log.Printf("Getting transaction opts failed, err: %s", err)
 		return nil, err
-	} else {
-		tx, err := self.GeneratedSetImbalanceStepFunction(opts, token, xBuy, yBuy, xSell, ySell)
-		if err != nil {
-			return nil, err
-		}
-		return self.SignAndBroadcast(tx, PRICING_OP)
 	}
+	tx, err := self.GeneratedSetImbalanceStepFunction(opts, token, xBuy, yBuy, xSell, ySell)
+	if err != nil {
+		return nil, err
+	}
+	return self.SignAndBroadcast(tx, pricingOP)
 }
 
 func (self *Blockchain) SetQtyStepFunction(token ethereum.Address, xBuy []*big.Int, yBuy []*big.Int, xSell []*big.Int, ySell []*big.Int) (*types.Transaction, error) {
-	opts, err := self.GetTxOpts(PRICING_OP, nil, nil, nil)
+	opts, err := self.GetTxOpts(pricingOP, nil, nil, nil)
 	if err != nil {
 		log.Printf("Getting transaction opts failed, err: %s", err)
 		return nil, err
-	} else {
-		tx, err := self.GeneratedSetQtyStepFunction(opts, token, xBuy, yBuy, xSell, ySell)
-		if err != nil {
-			return nil, err
-		}
-		return self.SignAndBroadcast(tx, PRICING_OP)
 	}
+	tx, err := self.GeneratedSetQtyStepFunction(opts, token, xBuy, yBuy, xSell, ySell)
+	if err != nil {
+		return nil, err
+	}
+	return self.SignAndBroadcast(tx, pricingOP)
 }
 
 //====================== Readonly calls ============================
@@ -378,7 +376,7 @@ func (self *Blockchain) FetchBalanceData(reserve ethereum.Address, atBlock uint6
 	opts := self.GetCallOpts(atBlock)
 	balances, err := self.GeneratedGetBalances(opts, reserve, tokens)
 	returnTime := common.GetTimestamp()
-	log.Printf("Fetcher ------> balances: %v, err: %s", balances, err)
+	log.Printf("Fetcher ------> balances: %v, err: %s", balances, common.ErrorToString(err))
 	if err != nil {
 		for _, token := range tokensSetting {
 			result[token.ID] = common.BalanceEntry{
@@ -497,19 +495,18 @@ func (self *Blockchain) GetPrice(token ethereum.Address, block *big.Int, priceTy
 	opts := self.GetCallOpts(atBlock)
 	if priceType == "buy" {
 		return self.GeneratedGetRate(opts, token, block, true, qty)
-	} else {
-		return self.GeneratedGetRate(opts, token, block, false, qty)
 	}
+	return self.GeneratedGetRate(opts, token, block, false, qty)
 }
 
 func (self *Blockchain) GetRawLogs(fromBlock uint64, toBlock uint64) ([]types.Log, error) {
-	var to *big.Int
-	if toBlock != 0 {
-		to = big.NewInt(int64(toBlock))
-	}
+	var (
+		from      = big.NewInt(int64(fromBlock))
+		to        = big.NewInt(int64(toBlock))
+		addresses []ethereum.Address
+	)
 	// we have to track events from network and fee burner contracts
 	// including their old contracts
-	addresses := []ethereum.Address{}
 	networkAddr, err := self.setting.GetAddress(settings.Network)
 	if err != nil {
 		return nil, err
@@ -522,6 +519,7 @@ func (self *Blockchain) GetRawLogs(fromBlock uint64, toBlock uint64) ([]types.Lo
 	if err != nil {
 		return nil, err
 	}
+
 	addresses = append(addresses, networkAddr, burnerAddr, whitelistAddr)
 	oldNetworks, err := self.setting.GetAddresses(settings.OldNetWorks)
 	if err != nil {
@@ -534,134 +532,93 @@ func (self *Blockchain) GetRawLogs(fromBlock uint64, toBlock uint64) ([]types.Lo
 	addresses = append(addresses, oldNetworks...)
 	addresses = append(addresses, oldBurners...)
 	param := common.NewFilterQuery(
-		big.NewInt(int64(fromBlock)),
+		from,
 		to,
 		addresses,
 		[][]ethereum.Hash{
 			{
-				ethereum.HexToHash(TradeEvent),
-				ethereum.HexToHash(BurnFeeEvent),
-				ethereum.HexToHash(FeeToWalletEvent),
-				ethereum.HexToHash(UserCatEvent),
+				ethereum.HexToHash(tradeEvent),
+				ethereum.HexToHash(burnFeeEvent),
+				ethereum.HexToHash(feeToWalletEvent),
+				ethereum.HexToHash(userCatEvent),
+				ethereum.HexToHash(etherReceivalEvent),
 			},
 		},
 	)
+
 	log.Printf("LogFetcher - fetching logs data from block %d, to block %d", fromBlock, to.Uint64())
 	return self.BaseBlockchain.GetLogs(param)
 }
 
-// return timestamp increasing array of trade log
+// GetLogs gets raw logs from blockchain and process it before returning.
 func (self *Blockchain) GetLogs(fromBlock uint64, toBlock uint64) ([]common.KNLog, error) {
-	result := []common.KNLog{}
-	noCatLog := 0
-	noTradeLog := 0
+	var (
+		err      error
+		result   []common.KNLog
+		noCatLog = 0
+		eth      = self.setting.ETHToken()
+	)
+
 	// get all logs from fromBlock to best block
 	logs, err := self.GetRawLogs(fromBlock, toBlock)
 	if err != nil {
 		return result, err
 	}
-	var prevLog *types.Log
-	var tradeLog *common.TradeLog
-	for i, l := range logs {
-		if l.Removed {
+
+	for _, logItem := range logs {
+		if logItem.Removed {
 			log.Printf("LogFetcher - Log is ignored because it is removed due to chain reorg")
-		} else {
-			if prevLog == nil || (l.TxHash != prevLog.TxHash && l.Topics[0].Hex() != UserCatEvent) {
-				if tradeLog != nil {
-					result = append(result, *tradeLog)
-					noTradeLog += 1
-					// log.Printf(
-					// 	"LogFetcher - Fetched logs: TxHash(%s), TxIndex(%d), blockno(%d)",
-					// 	tradeLog.TransactionHash.Hex(),
-					// 	tradeLog.TransactionIndex,
-					// 	tradeLog.BlockNumber,
-					// )
-				}
-				if len(l.Topics) > 0 && l.Topics[0].Hex() != UserCatEvent {
-					// start new TradeLog
-					tradeLog = &common.TradeLog{}
-					tradeLog.BlockNumber = l.BlockNumber
-					tradeLog.TransactionHash = l.TxHash
-					tradeLog.Index = l.Index
-					tradeLog.Timestamp, err = self.InterpretTimestamp(
-						tradeLog.BlockNumber,
-						tradeLog.Index,
-					)
-					if err != nil {
-						return result, err
-					}
-				}
-			}
-			if len(l.Topics) == 0 {
-				log.Printf("Getting empty zero topic list. This shouldn't happen and is Ethereum responsibility.")
-			} else {
-				topic := l.Topics[0]
-				switch topic.Hex() {
-				case UserCatEvent:
-					addr, cat := LogDataToCatLog(l.Data)
-					t, err := self.InterpretTimestamp(
-						l.BlockNumber,
-						l.Index,
-					)
-					if err != nil {
-						return result, err
-					}
-					// log.Printf(
-					// 	"LogFetcher - raw log entry: removed(%s), txhash(%s), timestamp(%d)",
-					// 	l.Removed, l.TxHash.Hex(), t,
-					// )
-					result = append(result, common.SetCatLog{
-						Timestamp:       t,
-						BlockNumber:     l.BlockNumber,
-						TransactionHash: l.TxHash,
-						Index:           l.Index,
-						Address:         addr,
-						Category:        cat,
-					})
-					noCatLog += 1
-				case FeeToWalletEvent:
-					reserveAddr, walletAddr, walletFee := LogDataToFeeWalletParams(l.Data)
-					tradeLog.ReserveAddress = reserveAddr
-					tradeLog.WalletAddress = walletAddr
-					tradeLog.WalletFee = walletFee.Big()
-				case BurnFeeEvent:
-					reserveAddr, burnFees := LogDataToBurnFeeParams(l.Data)
-					tradeLog.ReserveAddress = reserveAddr
-					tradeLog.BurnFee = burnFees.Big()
-				case TradeEvent:
-					srcAddr, destAddr, srcAmount, destAmount := LogDataToTradeParams(l.Data)
-					tradeLog.SrcAddress = srcAddr
-					tradeLog.DestAddress = destAddr
-					tradeLog.SrcAmount = srcAmount.Big()
-					tradeLog.DestAmount = destAmount.Big()
-					tradeLog.UserAddress = ethereum.BytesToAddress(l.Topics[1].Bytes())
+			continue
+		}
 
-					if ethRate := self.GetEthRate(tradeLog.Timestamp / 1000000); ethRate != 0 {
-						// fiatAmount = amount * ethRate
-						eth := self.setting.ETHToken()
-						f := new(big.Float)
-						if strings.ToLower(eth.Address) == strings.ToLower(srcAddr.String()) {
-							f.SetInt(tradeLog.SrcAmount)
-						} else {
-							f.SetInt(tradeLog.DestAmount)
-						}
+		if len(logItem.Topics) == 0 {
+			log.Printf("Getting empty zero topic list. This shouldn't happen and is Ethereum responsibility.")
+			continue
+		}
 
-						f = f.Mul(f, new(big.Float).SetFloat64(ethRate))
-						f.Quo(f, new(big.Float).SetFloat64(math.Pow10(18)))
-						tradeLog.FiatAmount, _ = f.Float64()
-					}
-				}
+		ts, err := self.InterpretTimestamp(
+			logItem.BlockNumber,
+			logItem.Index,
+		)
+		if err != nil {
+			return result, err
+		}
+
+		topic := logItem.Topics[0]
+		switch topic.Hex() {
+		case userCatEvent:
+			addr, cat := logDataToCatLog(logItem.Data)
+			result = append(result, common.SetCatLog{
+				Timestamp:       ts,
+				BlockNumber:     logItem.BlockNumber,
+				TransactionHash: logItem.TxHash,
+				Index:           logItem.Index,
+				Address:         addr,
+				Category:        cat,
+			})
+			noCatLog++
+		case feeToWalletEvent, burnFeeEvent, etherReceivalEvent, tradeEvent:
+			if result, err = updateTradeLogs(result, logItem, ts); err != nil {
+				return result, err
 			}
-			if len(l.Topics) > 0 && l.Topics[0].Hex() != UserCatEvent {
-				prevLog = &logs[i]
-			}
+		default:
+			log.Printf("Unknown topic: %s", topic.Hex())
 		}
 	}
-	if tradeLog != nil && (len(result) == 0 || tradeLog.TransactionHash != result[len(result)-1].TxHash()) {
-		result = append(result, *tradeLog)
-		noTradeLog += 1
+
+	for i, logItem := range result {
+		tradeLog, ok := logItem.(common.TradeLog)
+		if !ok {
+			continue
+		}
+
+		ethRate := self.GetEthRate(tradeLog.Timestamp / 1000000)
+		if ethRate != 0 {
+			result[i] = calculateFiatAmount(tradeLog, ethRate, eth)
+		}
 	}
-	log.Printf("LogFetcher - Fetched %d trade logs, %d cat logs", noTradeLog, noCatLog)
+
+	log.Printf("LogFetcher - Fetched %d trade logs, %d cat logs", len(result)-noCatLog, noCatLog)
 	return result, nil
 }
 
@@ -678,7 +635,7 @@ func (self *Blockchain) GetLogs(fromBlock uint64, toBlock uint64) ([]common.KNLo
 // because the chain might be reorganized so we will invalidate it
 // and assign it to the nonce from node.
 func (self *Blockchain) SetRateMinedNonce() (uint64, error) {
-	nonceFromNode, err := self.GetMinedNonce(PRICING_OP)
+	nonceFromNode, err := self.GetMinedNonce(pricingOP)
 	if err != nil {
 		return nonceFromNode, err
 	}

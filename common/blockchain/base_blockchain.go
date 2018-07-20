@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	ZeroAddress string = "0x0000000000000000000000000000000000000000"
+	zeroAddress string = "0x0000000000000000000000000000000000000000"
 )
 
 // BaseBlockchain interact with the blockchain in a way that eases
@@ -127,7 +127,7 @@ func (self *BaseBlockchain) Call(timeOut time.Duration, opts CallOpts, contract 
 		return err
 	}
 	var (
-		msg    = ether.CallMsg{From: ethereum.HexToAddress(ZeroAddress), To: &contract.Address, Data: input}
+		msg    = ether.CallMsg{From: ethereum.HexToAddress(zeroAddress), To: &contract.Address, Data: input}
 		code   []byte
 		output []byte
 	)
@@ -242,8 +242,7 @@ func (self *BaseBlockchain) GetTxOpts(op string, nonce *big.Int, gasPrice *big.I
 }
 
 func (self *BaseBlockchain) GetLogs(param ether.FilterQuery) ([]types.Log, error) {
-	result := []types.Log{}
-	// log.Printf("LogFetcher - fetching logs data from block %d, to block %d", opts.Block, to.Uint64())
+	var result []types.Log
 	err := self.rpcClient.Call(&result, "eth_getLogs", toFilterArg(param))
 	return result, err
 }

@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	HUOBI_EPSILON float64 = 0.0000000001 // 10e-10
+	huobiEpsilon float64 = 0.0000000001 // 10e-10
 )
 
 type Huobi struct {
@@ -223,7 +223,7 @@ func (self *Huobi) QueryOrder(symbol string, id uint64) (done float64, remaining
 			return 0, 0, false, err
 		}
 	}
-	return done, total - done, total-done < HUOBI_EPSILON, nil
+	return done, total - done, total-done < huobiEpsilon, nil
 }
 
 func (self *Huobi) Trade(tradeType string, base common.Token, quote common.Token, rate float64, amount float64, timepoint uint64) (id string, done float64, remaining float64, finished bool, err error) {
@@ -470,6 +470,7 @@ func (self *Huobi) FetchOnePairTradeHistory(
 	data.Store(pairString, result)
 }
 
+//FetchTradeHistory get all trade history for all pairs from huobi exchange
 func (self *Huobi) FetchTradeHistory() {
 	t := time.NewTicker(10 * time.Minute)
 	go func() {

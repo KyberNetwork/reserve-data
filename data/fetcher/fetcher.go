@@ -11,6 +11,11 @@ import (
 	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
+// maxActivityLifeTime is the longest time of an activity. If the
+// activity is pending for more than MAX_ACVITY_LIFE_TIME, it will be
+// considered as failed.
+const maxActivityLifeTime uint64 = 6 // activity max life time in hour
+
 type Fetcher struct {
 	storage                Storage
 	globalStorage          GlobalStorage
@@ -429,6 +434,11 @@ func updateActivitywithBlockchainStatus(activity *common.ActivityRecord, bstatus
 	if activity.IsBlockchainPending() {
 		activity.MiningStatus = activityStatus.MiningStatus
 	}
+
+	if activityStatus.ExchangeStatus == "failed" {
+		activity.ExchangeStatus = activityStatus.ExchangeStatus
+	}
+
 	if activityStatus.Error != nil {
 		snapshot.Valid = false
 		snapshot.Error = activityStatus.Error.Error()
@@ -453,6 +463,10 @@ func updateActivitywithExchangeStatus(activity *common.ActivityRecord, estatuses
 	log.Printf("In PersistSnapshot: exchange activity status for %+v: %+v", activity.ID, activityStatus)
 	if activity.IsExchangePending() {
 		activity.ExchangeStatus = activityStatus.ExchangeStatus
+	} else {
+		if activityStatus.ExchangeStatus == "failed" {
+			activity.ExchangeStatus = activityStatus.ExchangeStatus
+		}
 	}
 	resultTx, ok := activity.Result["tx"].(string)
 	if !ok {
@@ -533,6 +547,22 @@ func (self *Fetcher) PersistSnapshot(
 	}
 	// note: only update status when it's pending status
 	snapshot.ExchangeBalances = allEBalances
+
+	// persist blockchain balance
+	// if blockchain balance is not valid then auth snapshot will also not valid
+	for _, balance := range bbalances {
+		if !balance.Valid {
+			snapshot.Valid = false
+			if balance.Error != "" {
+				if snapshot.Error != "" {
+					snapshot.Error += "; " + balance.Error
+				} else {
+					snapshot.Error = balance.Error
+				}
+			}
+		}
+	}
+	// persist blockchain balances
 	snapshot.ReserveBalances = bbalances
 	snapshot.PendingActivities = pendingActivities
 	return self.storage.StoreAuthSnapshot(snapshot, timepoint)
@@ -620,7 +650,7 @@ func (self *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []commo
 					continue
 				}
 				status, err = exchange.DepositStatus(id, txHash, currency, amount, timepoint)
-				log.Printf("Got deposit status for %v: (%s), error(%v)", activity, status, err)
+				log.Printf("Got deposit status for %v: (%s), error(%s)", activity, status, common.ErrorToString(err))
 			} else if activity.Action == "withdraw" {
 				amountStr, ok := activity.Params["amount"].(string)
 				if !ok {
@@ -643,11 +673,35 @@ func (self *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []commo
 					continue
 				}
 				status, tx, err = exchange.WithdrawStatus(id.EID, currency, amount, timepoint)
-				log.Printf("Got withdraw status for %v: (%s), error(%v)", activity, status, err)
+				log.Printf("Got withdraw status for %v: (%s), error(%s)", activity, status, common.ErrorToString(err))
 			} else {
 				continue
 			}
-			result[id] = common.NewActivityStatus(status, tx, blockNum, activity.MiningStatus, err)
+			// in case there is something wrong with the cex and the activity is stuck for a very
+			// long time. We will just consider it as a failed activity.
+			timepoint, err1 := strconv.ParseUint(string(activity.Timestamp), 10, 64)
+			if err1 != nil {
+				log.Printf("Activity %v has invalid timestamp. Just ignore it.", activity)
+			} else {
+				if common.GetTimepoint()-timepoint > uint64(maxActivityLifeTime*uint64(time.Hour))/uint64(time.Millisecond) {
+					result[id] = common.NewActivityStatus("failed", tx, blockNum, activity.MiningStatus, err)
+				} else {
+					result[id] = common.NewActivityStatus(status, tx, blockNum, activity.MiningStatus, err)
+				}
+			}
+		} else {
+			timepoint, err1 := strconv.ParseUint(string(activity.Timestamp), 10, 64)
+			if err1 != nil {
+				log.Printf("Activity %v has invalid timestamp. Just ignore it.", activity)
+			} else {
+				if activity.Destination == string(exchange.ID()) &&
+					activity.ExchangeStatus == "done" &&
+					common.GetTimepoint()-timepoint > uint64(maxActivityLifeTime*uint64(time.Hour))/uint64(time.Millisecond) {
+					// the activity is still pending but its exchange status is done and it is stuck there for more than
+					// maxActivityLifeTime. This activity is considered failed.
+					result[activity.ID] = common.NewActivityStatus("failed", "", 0, activity.MiningStatus, nil)
+				}
+			}
 		}
 	}
 	return result

@@ -170,7 +170,11 @@
             "ZIL": 100,
             "AST": 5,
             "LINK": 1,
-            "ABT": 2
+            "ABT": 2,
+            "POLY": 1,
+            "LBA": 10,
+            "EDU": 500,
+            "CVC": 2
         },
         "stable_exchange": {
           "ETH": 0,

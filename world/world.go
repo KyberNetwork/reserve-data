@@ -315,13 +315,13 @@ func (self *TheWorld) GetGoldInfo() (common.GoldData, error) {
 //NewTheWorld return new world instance
 func NewTheWorld(env string, keyfile string) (*TheWorld, error) {
 	switch env {
-	case common.DEV_MODE, common.KOVAN_MODE, common.MAINNET_MODE, common.PRODUCTION_MODE, common.STAGING_MODE, common.ROPSTEN_MODE, common.ANALYTIC_DEV_MODE:
+	case common.DevMode, common.KovanMode, common.MainnetMode, common.ProductionMode, common.StagingMode, common.RopstenMode, common.AnalyticDevMode:
 		endpoint, err := NewRealEndpointFromFile(keyfile)
 		if err != nil {
 			return nil, err
 		}
 		return &TheWorld{endpoint}, nil
-	case common.SIMULATION_MODE:
+	case common.SimulationMode:
 		return &TheWorld{SimulatedEndpoint{}}, nil
 	}
 	panic("unsupported environment")

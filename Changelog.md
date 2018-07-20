@@ -4,19 +4,83 @@
 
 ### Features:
 
+### Bug fixes:
+
+### Improvements:
+- refactor bolt storage implementation for stat (#357)
+
+- build binary only docker image (#339)
+
+### Compatibility
+
+## 0.10.0 (2018-07-03)
+
+### Features:
+
 - Add rebalance quadratic API set (#327)
 
 ### Bug fixes:
 
-- Enable errcheck checker and fix all unhandled errors (#307)
-- Fix GetAccounts error is ignored for houbi exchange (#308)
-- Fix missing required fields in PWIs v2 APIs (#314)
 - Fix type/interface conversion error swallow. Now these errors will be reported (#325)
 
 ### Improvements:
 
 - Remove many unused methods (#309)
 - Refactor GasOracle (#318)
+- Improve input validation for many APIs (#330, #334, #336, #340)
+- Fix many hardcoded API endpoints (#331)
+
+### Compatibility
+
+- KyberNetwork smart contracts (>= 2.0.0)
+- KyberNetwork analytic (0.9.0)
+
+## 0.9.1 (2018-06-26)
+
+### Compatibility:
+- KyberNetwork smart contracts (>= 0.3.0)
+- KyberNetwork analytic (0.8.0)
+
+### Features:
+
+- Listed new tokens
+  - POLY
+  - LBA
+  - EDU
+  - CVC
+
+### Bug fixes:
+
+### Improvements:
+
+### Compatibility
+
+## 0.9.0 (2018-06-19)
+
+### Compatibility:
+- KyberNetwork smart contracts (>= 0.3.0)
+- KyberNetwork analytic (0.8.0)
+
+### Features:
+
+### Bug fixes:
+
+- Enable errcheck checker and fix all unhandled errors (#307)
+- Fix GetAccounts error is ignored for houbi exchange (#308)
+- Fix missing required fields in PWIs v2 APIs (#314)
+
+- Handle trade error in huobi (#317)
+- Fix Binance is using wrong storage implementation (#310)
+- Fix failed to store rate on a blank database (#287)
+- Fix resource leaks in CallContract (#291)
+- Fix inconsistent exchange status (#285)
+### Improvements:
+
+- Enable vet shadow (#296)
+- Remove unused verification package (#312)
+- Refactor activity record saving (#295)
+- Add tests for Qty V2 APIs (#289)
+- Add document for tbindex (#284)
 
 ### Compatibility:
 

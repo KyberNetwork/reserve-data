@@ -14,7 +14,7 @@ type ReserveStats interface {
 	GetAssetVolume(fromTime, toTime uint64, freq, asset string) (common.StatTicks, error)
 	GetBurnFee(fromTime, toTime uint64, freq, reserveAddr string) (common.StatTicks, error)
 	GetWalletFee(fromTime, toTime uint64, freq, reserveAddr, walletAddr string) (common.StatTicks, error)
-	GetWalletAddress() ([]string, error)
+	GetWalletAddresses() ([]string, error)
 	GetUserVolume(fromTime, toTime uint64, freq, userAddr string) (common.StatTicks, error)
 	GetUsersVolume(fromTime, toTime uint64, freq string, userAddrs []string) (common.UsersVolume, error)
 	GetReserveVolume(fromTime, toTime uint64, freq, reserveAddr, token string) (common.StatTicks, error)

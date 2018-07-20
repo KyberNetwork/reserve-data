@@ -7,8 +7,6 @@ import (
 	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
-const TESTHASH string = "0x5f29695f9978ca672a330e8e722cc3df70c3ee15adb5fc6b380818d40ad9cf44"
-
 type LogStorageTest struct {
 	storage LogStorage
 }
@@ -24,7 +22,7 @@ func (self *LogStorageTest) TestCatLog() error {
 		BlockNumber:     222,
 		TransactionHash: ethereum.HexToHash("TESTHASH"),
 		Index:           1,
-		Address:         ethereum.HexToAddress(TESTUSERADDR),
+		Address:         ethereum.HexToAddress(testUserAddr),
 		Category:        "test",
 	}
 	err = self.storage.StoreCatLog(catLog)
@@ -36,7 +34,7 @@ func (self *LogStorageTest) TestCatLog() error {
 		BlockNumber:     444,
 		TransactionHash: ethereum.HexToHash("TESTHASH"),
 		Index:           2,
-		Address:         ethereum.HexToAddress(TESTUSERADDR),
+		Address:         ethereum.HexToAddress(testUserAddr),
 		Category:        "test",
 	}
 	err = self.storage.StoreCatLog(catLog)

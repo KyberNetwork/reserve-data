@@ -36,7 +36,7 @@ func AsyncUpdateDepositAddress(ex common.Exchange, tokenID, addr string, wait *s
 func getBittrexInterface(kyberENV string) bittrex.Interface {
 	envInterface, ok := BittrexInterfaces[kyberENV]
 	if !ok {
-		envInterface = BittrexInterfaces[common.DEV_MODE]
+		envInterface = BittrexInterfaces[common.DevMode]
 	}
 	return envInterface
 }
@@ -44,7 +44,7 @@ func getBittrexInterface(kyberENV string) bittrex.Interface {
 func getBinanceInterface(kyberENV string) binance.Interface {
 	envInterface, ok := BinanceInterfaces[kyberENV]
 	if !ok {
-		envInterface = BinanceInterfaces[common.DEV_MODE]
+		envInterface = BinanceInterfaces[common.DevMode]
 	}
 	return envInterface
 }
@@ -52,7 +52,7 @@ func getBinanceInterface(kyberENV string) binance.Interface {
 func getHuobiInterface(kyberENV string) huobi.Interface {
 	envInterface, ok := HuobiInterfaces[kyberENV]
 	if !ok {
-		envInterface = HuobiInterfaces[common.DEV_MODE]
+		envInterface = HuobiInterfaces[common.DevMode]
 	}
 	return envInterface
 }

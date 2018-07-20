@@ -28,7 +28,7 @@ func (h *HTTPServer) SetRebalanceQuadratic(c *gin.Context) {
 		return
 	}
 	value := []byte(postForm.Get("value"))
-	if len(value) > MAX_DATA_SIZE {
+	if len(value) > maxDataSize {
 		httputil.ResponseFailure(c, httputil.WithReason(errDataSizeExceed.Error()))
 		return
 	}
@@ -71,7 +71,7 @@ func (h *HTTPServer) ConfirmRebalanceQuadratic(c *gin.Context) {
 		return
 	}
 	value := []byte(postForm.Get("value"))
-	if len(value) > MAX_DATA_SIZE {
+	if len(value) > maxDataSize {
 		httputil.ResponseFailure(c, httputil.WithReason(errDataSizeExceed.Error()))
 		return
 	}

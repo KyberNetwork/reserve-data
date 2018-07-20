@@ -15,9 +15,9 @@ import (
 )
 
 const (
-	// HIGH_BOUND_GAS_PRICE is the price we will try to use to get higher priority
+	// highBoundGasPrice is the price we will try to use to get higher priority
 	// than trade tx to avoid price front running from users.
-	HIGH_BOUND_GAS_PRICE float64 = 50.1
+	highBoundGasPrice float64 = 50.1
 
 	statusFailed    = "failed"
 	statusSubmitted = "submitted"
@@ -89,7 +89,7 @@ func (self ReserveCore) Trade(
 			uid,
 			strconv.FormatFloat(done, 'f', -1, 64),
 			strconv.FormatFloat(remaining, 'f', -1, 64),
-			finished, err,
+			finished, common.ErrorToString(err),
 		)
 
 		return self.activityStorage.Record(
@@ -164,7 +164,7 @@ func (self ReserveCore) Deposit(
 		uid := uidGenerator(txhex)
 		log.Printf(
 			"Core ----------> Deposit to %s: token: %s, amount: %s, timestamp: %d ==> Result: tx: %s, error: %s",
-			exchange.ID(), token.ID, amount.Text(10), timepoint, txhex, err,
+			exchange.ID(), token.ID, amount.Text(10), timepoint, txhex, common.ErrorToString(err),
 		)
 
 		return self.activityStorage.Record(
@@ -307,7 +307,7 @@ func calculateNewGasPrice(old *big.Int, count uint64) *big.Int {
 		// new = old + (50.1 - old) / (5 - count)
 		return old.Add(
 			old,
-			big.NewInt(0).Div(big.NewInt(0).Sub(common.GweiToWei(HIGH_BOUND_GAS_PRICE), old), big.NewInt(int64(5-count))),
+			big.NewInt(0).Div(big.NewInt(0).Sub(common.GweiToWei(highBoundGasPrice), old), big.NewInt(int64(5-count))),
 		)
 	}
 }
@@ -380,7 +380,7 @@ func (self ReserveCore) SetRates(
 				err = errors.New("Couldn't get mined nonce of set rate operator")
 			} else {
 				oldNonce, oldPrice, count, err = self.pendingSetrateInfo(minedNonce)
-				log.Printf("old nonce: %v, old price: %v, count: %d, err: %v", oldNonce, oldPrice, count, err)
+				log.Printf("old nonce: %v, old price: %v, count: %d, err: %s", oldNonce, oldPrice, count, common.ErrorToString(err))
 				if err != nil {
 					err = errors.New("Couldn't check pending set rate tx pool. Please try later")
 				} else {
@@ -395,7 +395,7 @@ func (self ReserveCore) SetRates(
 					} else {
 						recommendedPrice := self.blockchain.StandardGasPrice()
 						var initPrice *big.Int
-						if recommendedPrice == 0 || recommendedPrice > HIGH_BOUND_GAS_PRICE {
+						if recommendedPrice == 0 || recommendedPrice > highBoundGasPrice {
 							initPrice = common.GweiToWei(10)
 						} else {
 							initPrice = common.GweiToWei(recommendedPrice)
@@ -442,7 +442,7 @@ func (self ReserveCore) SetRates(
 	)
 	log.Printf(
 		"Core ----------> Set rates: ==> Result: tx: %s, nonce: %s, price: %s, error: %s",
-		txhex, txnonce, txprice, err,
+		txhex, txnonce, txprice, common.ErrorToString(err),
 	)
 	return uid, err
 }

@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	EXPIRED_AUTHDATA_PATH = "expired-auth-data/"
+	expiredAuthDataPath = "expired-auth-data/"
 )
 
 type StorageController struct {
@@ -16,7 +16,7 @@ type StorageController struct {
 
 func NewStorageController(storageControllerRunner StorageControllerRunner, arch archive.Archive) (StorageController, error) {
 	storageController := StorageController{
-		storageControllerRunner, arch, EXPIRED_AUTHDATA_PATH,
+		storageControllerRunner, arch, expiredAuthDataPath,
 	}
 	return storageController, nil
 }

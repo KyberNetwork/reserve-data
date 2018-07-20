@@ -15,9 +15,9 @@ import (
 )
 
 const (
-	PRICE_ANALYTIC_BUCKET   string = "price_analytic"
-	MAX_GET_ANALYTIC_PERIOD uint64 = 86400000      //1 day in milisecond
-	PRICE_ANALYTIC_EXPIRED  uint64 = 30 * 86400000 //30 days in milisecond
+	priceAnalyticBucket  string = "price_analytic"
+	maxGetAnalyticPeriod uint64 = 86400000      //1 day in milisecond
+	priceAnalyticExpired uint64 = 30 * 86400000 //30 days in milisecond
 )
 
 type BoltAnalyticStorage struct {
@@ -33,7 +33,7 @@ func NewBoltAnalyticStorage(dbPath string) (*BoltAnalyticStorage, error) {
 		panic(err)
 	}
 	err = db.Update(func(tx *bolt.Tx) error {
-		_, err = tx.CreateBucketIfNotExists([]byte(PRICE_ANALYTIC_BUCKET))
+		_, err = tx.CreateBucketIfNotExists([]byte(priceAnalyticBucket))
 		if err != nil {
 			return err
 		}
@@ -50,7 +50,7 @@ func (self *BoltAnalyticStorage) UpdatePriceAnalyticData(timestamp uint64, value
 	var err error
 	k := boltutil.Uint64ToBytes(timestamp)
 	err = self.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(PRICE_ANALYTIC_BUCKET))
+		b := tx.Bucket([]byte(priceAnalyticBucket))
 		c := b.Cursor()
 		existedKey, _ := c.Seek(k)
 		if existedKey != nil {
@@ -62,7 +62,7 @@ func (self *BoltAnalyticStorage) UpdatePriceAnalyticData(timestamp uint64, value
 }
 
 func (self *BoltAnalyticStorage) ExportExpiredPriceAnalyticData(currentTime uint64, fileName string) (nRecord uint64, err error) {
-	expiredTimestampByte := boltutil.Uint64ToBytes(currentTime - PRICE_ANALYTIC_EXPIRED)
+	expiredTimestampByte := boltutil.Uint64ToBytes(currentTime - priceAnalyticExpired)
 	outFile, err := os.Create(fileName)
 	defer func() {
 		if cErr := outFile.Close(); cErr != nil {
@@ -73,7 +73,7 @@ func (self *BoltAnalyticStorage) ExportExpiredPriceAnalyticData(currentTime uint
 		return 0, err
 	}
 	err = self.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(PRICE_ANALYTIC_BUCKET))
+		b := tx.Bucket([]byte(priceAnalyticBucket))
 		c := b.Cursor()
 		for k, v := c.First(); k != nil && bytes.Compare(k, expiredTimestampByte) <= 0; k, v = c.Next() {
 			timestamp := boltutil.BytesToUint64(k)
@@ -102,9 +102,9 @@ func (self *BoltAnalyticStorage) ExportExpiredPriceAnalyticData(currentTime uint
 }
 
 func (self *BoltAnalyticStorage) PruneExpiredPriceAnalyticData(currentTime uint64) (nRecord uint64, err error) {
-	expiredTimestampByte := boltutil.Uint64ToBytes(currentTime - PRICE_ANALYTIC_EXPIRED)
+	expiredTimestampByte := boltutil.Uint64ToBytes(currentTime - priceAnalyticExpired)
 	err = self.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(PRICE_ANALYTIC_BUCKET))
+		b := tx.Bucket([]byte(priceAnalyticBucket))
 		c := b.Cursor()
 		for k, _ := c.First(); k != nil && bytes.Compare(k, expiredTimestampByte) <= 0; k, _ = c.Next() {
 			if err = b.Delete(k); err != nil {
@@ -122,12 +122,12 @@ func (self *BoltAnalyticStorage) GetPriceAnalyticData(fromTime uint64, toTime ui
 	min := boltutil.Uint64ToBytes(fromTime)
 	max := boltutil.Uint64ToBytes(toTime)
 	var result []common.AnalyticPriceResponse
-	if toTime-fromTime > MAX_GET_ANALYTIC_PERIOD {
-		return result, fmt.Errorf("Time range is too broad, it must be smaller or equal to %d miliseconds", MAX_GET_RATES_PERIOD)
+	if toTime-fromTime > maxGetAnalyticPeriod {
+		return result, fmt.Errorf("Time range is too broad, it must be smaller or equal to %d miliseconds", maxGetRatesPeriod)
 	}
 
 	err = self.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(PRICE_ANALYTIC_BUCKET))
+		b := tx.Bucket([]byte(priceAnalyticBucket))
 		c := b.Cursor()
 		for k, v := c.Seek(min); k != nil && bytes.Compare(k, max) <= 0; k, v = c.Next() {
 			timestamp := boltutil.BytesToUint64(k)

@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	MAX_GET_RATES_PERIOD uint64 = 86400000 //1 days in milisec
+	maxGetRatesPeriod uint64 = 86400000 //1 days in milisec
 )
 
 type BoltRateStorage struct {
@@ -29,7 +29,7 @@ func NewBoltRateStorage(path string) (*BoltRateStorage, error) {
 	}
 	// init buckets
 	err = db.Update(func(tx *bolt.Tx) error {
-		_, err = tx.CreateBucketIfNotExists([]byte(RESERVE_RATES))
+		_, err = tx.CreateBucketIfNotExists([]byte(reserveRates))
 		return err
 	})
 	storage := &BoltRateStorage{db}
@@ -66,8 +66,8 @@ func (self *BoltRateStorage) GetReserveRates(fromTime, toTime uint64, ethReserve
 	var err error
 	reserveAddr := common.AddrToString(ethReserveAddr)
 	var result []common.ReserveRates
-	if toTime-fromTime > MAX_GET_RATES_PERIOD {
-		return result, fmt.Errorf("Time range is too broad, it must be smaller or equal to %d miliseconds", MAX_GET_RATES_PERIOD)
+	if toTime-fromTime > maxGetRatesPeriod {
+		return result, fmt.Errorf("Time range is too broad, it must be smaller or equal to %d miliseconds", maxGetRatesPeriod)
 	}
 	err = self.db.Update(func(tx *bolt.Tx) error {
 		b, uErr := tx.CreateBucketIfNotExists([]byte(reserveAddr))

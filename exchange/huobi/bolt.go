@@ -13,11 +13,10 @@ import (
 )
 
 const (
-	INTERMEDIATE_TX         string = "intermediate_tx"
-	PENDING_INTERMEDIATE_TX string = "pending_intermediate_tx"
-	TRADE_HISTORY           string = "trade_history"
-	//MAX_GET_TRADE_HISTORY is 3 days
-	MAX_GET_TRADE_HISTORY uint64 = 3 * 86400000
+	intermediateTx        string = "intermediate_tx"
+	pendingIntermediateTx string = "pending_intermediate_tx"
+	tradeHistory          string = "trade_history"
+	maxGetTradeHistory    uint64 = 3 * 86400000
 )
 
 //BoltStorage strage object for using huobi
@@ -38,13 +37,13 @@ func NewBoltStorage(path string) (*BoltStorage, error) {
 	}
 	// init buckets
 	err = db.Update(func(tx *bolt.Tx) error {
-		if _, err := tx.CreateBucketIfNotExists([]byte(INTERMEDIATE_TX)); err != nil {
+		if _, err := tx.CreateBucketIfNotExists([]byte(intermediateTx)); err != nil {
 			return err
 		}
-		if _, err := tx.CreateBucketIfNotExists([]byte(PENDING_INTERMEDIATE_TX)); err != nil {
+		if _, err := tx.CreateBucketIfNotExists([]byte(pendingIntermediateTx)); err != nil {
 			return err
 		}
-		if _, err := tx.CreateBucketIfNotExists([]byte(TRADE_HISTORY)); err != nil {
+		if _, err := tx.CreateBucketIfNotExists([]byte(tradeHistory)); err != nil {
 			return err
 		}
 		return nil
@@ -58,7 +57,7 @@ func (self *BoltStorage) GetPendingIntermediateTXs() (map[common.ActivityID]comm
 	result := make(map[common.ActivityID]common.TXEntry)
 	var err error
 	err = self.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(PENDING_INTERMEDIATE_TX))
+		b := tx.Bucket([]byte(pendingIntermediateTx))
 		c := b.Cursor()
 		for k, v := c.First(); k != nil; k, v = c.Next() {
 			actID := common.ActivityID{}
@@ -81,7 +80,7 @@ func (self *BoltStorage) StorePendingIntermediateTx(id common.ActivityID, data c
 	var err error
 	err = self.db.Update(func(tx *bolt.Tx) error {
 		var dataJSON []byte
-		b := tx.Bucket([]byte(PENDING_INTERMEDIATE_TX))
+		b := tx.Bucket([]byte(pendingIntermediateTx))
 		dataJSON, uErr := json.Marshal(data)
 		if uErr != nil {
 			return err
@@ -99,7 +98,7 @@ func (self *BoltStorage) StorePendingIntermediateTx(id common.ActivityID, data c
 func (self *BoltStorage) StoreIntermediateTx(id common.ActivityID, data common.TXEntry) error {
 	var err error
 	err = self.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(INTERMEDIATE_TX))
+		b := tx.Bucket([]byte(intermediateTx))
 		dataJSON, uErr := json.Marshal(data)
 		if uErr != nil {
 			return uErr
@@ -110,7 +109,7 @@ func (self *BoltStorage) StoreIntermediateTx(id common.ActivityID, data common.T
 		}
 
 		// remove pending intermediate tx
-		pendingBucket := tx.Bucket([]byte(PENDING_INTERMEDIATE_TX))
+		pendingBucket := tx.Bucket([]byte(pendingIntermediateTx))
 		idJSON, uErr := json.Marshal(id)
 		if uErr != nil {
 			return uErr
@@ -137,7 +136,7 @@ func (self *BoltStorage) GetIntermedatorTx(id common.ActivityID) (common.TXEntry
 	var tx2 common.TXEntry
 	var err error
 	err = self.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(INTERMEDIATE_TX))
+		b := tx.Bucket([]byte(intermediateTx))
 		c := b.Cursor()
 		idBytes := id.ToBytes()
 		k, v := c.Seek(idBytes[:])
@@ -153,7 +152,7 @@ func (self *BoltStorage) GetIntermedatorTx(id common.ActivityID) (common.TXEntry
 func (self *BoltStorage) StoreTradeHistory(data common.ExchangeTradeHistory) error {
 	var err error
 	err = self.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(TRADE_HISTORY))
+		b := tx.Bucket([]byte(tradeHistory))
 		for pair, pairHistory := range data {
 			pairBk, uErr := b.CreateBucketIfNotExists([]byte(pair))
 			if uErr != nil {
@@ -180,13 +179,13 @@ func (self *BoltStorage) StoreTradeHistory(data common.ExchangeTradeHistory) err
 func (self *BoltStorage) GetTradeHistory(fromTime, toTime uint64) (common.ExchangeTradeHistory, error) {
 	result := common.ExchangeTradeHistory{}
 	var err error
-	if toTime-fromTime > MAX_GET_TRADE_HISTORY {
+	if toTime-fromTime > maxGetTradeHistory {
 		return result, errors.New("Time range is too broad, it must be smaller or equal to 3 days (miliseconds)")
 	}
 	min := []byte(strconv.FormatUint(fromTime, 10))
 	max := []byte(strconv.FormatUint(toTime, 10))
 	err = self.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(TRADE_HISTORY))
+		b := tx.Bucket([]byte(tradeHistory))
 		c := b.Cursor()
 		exchangeHistory := common.ExchangeTradeHistory{}
 		for key, value := c.First(); key != nil && value == nil; key, value = c.Next() {

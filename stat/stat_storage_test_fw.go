@@ -15,10 +15,10 @@ type StatStorageTest struct {
 }
 
 const (
-	TESTWALLETADDR string = "0xdd61803d4a56c597e0fC864f7a20Ec7158c6Cba5"
-	TESTCOUNTRY    string = "unKnown"
-	TESTASSETADDR  string = "0x2aab2b157a03915c8A73aDae735d0cf51c872f31"
-	TESTUSERADDR   string = "0x778599Dd7893C8166D313F0F9B5F6cbF7536c293"
+	testWalletAddr string = "0xdd61803d4a56c597e0fC864f7a20Ec7158c6Cba5"
+	testCountry    string = "unKnown"
+	testAssetAddr  string = "0x2aab2b157a03915c8A73aDae735d0cf51c872f31"
+	testUserAddr   string = "0x778599Dd7893C8166D313F0F9B5F6cbF7536c293"
 )
 
 func NewStatStorageTest(storage StatStorage) *StatStorageTest {
@@ -79,10 +79,10 @@ func (self *StatStorageTest) TestWalletStats() error {
 		0,
 		0,
 	)
-	testWallet := ethereum.HexToAddress(TESTASSETADDR)
+	testWallet := ethereum.HexToAddress(testAssetAddr)
 
 	tzmtStat := common.MetricStatsTimeZone{0: {0: mtStat}}
-	updates := map[string]common.MetricStatsTimeZone{TESTASSETADDR: tzmtStat}
+	updates := map[string]common.MetricStatsTimeZone{testAssetAddr: tzmtStat}
 	err = self.storage.SetWalletStat(updates, 0)
 	if err != nil {
 		return err
@@ -119,13 +119,13 @@ func (self *StatStorageTest) TestCountryStats() error {
 		0,
 	)
 	tzmtStat := common.MetricStatsTimeZone{0: {0: mtStat}}
-	updates := map[string]common.MetricStatsTimeZone{TESTCOUNTRY: tzmtStat}
+	updates := map[string]common.MetricStatsTimeZone{testCountry: tzmtStat}
 	err = self.storage.SetCountryStat(updates, 0)
 	if err != nil {
 		return err
 	}
 
-	countryStat, err := self.storage.GetCountryStats(0, 86400000, TESTCOUNTRY, 0)
+	countryStat, err := self.storage.GetCountryStats(0, 86400000, testCountry, 0)
 	if countryStat == nil || len(countryStat) == 0 {
 		return errors.New("Can't find such record, addressess might not be in the correct case")
 	}
@@ -141,7 +141,7 @@ func (self *StatStorageTest) TestCountryStats() error {
 		return fmt.Errorf("Wrong usd volume value returned: %v expected 4567.8 (LOWER CASE COUNTRY)", usdVol)
 
 	}
-	countryStat, err = self.storage.GetCountryStats(0, 86400000, strings.ToUpper(TESTCOUNTRY), 0)
+	countryStat, err = self.storage.GetCountryStats(0, 86400000, strings.ToUpper(testCountry), 0)
 	if countryStat == nil || len(countryStat) == 0 {
 		return errors.New("Can't find such record, addressess might not be in the correct case")
 	}
@@ -166,10 +166,10 @@ func (self *StatStorageTest) TestVolumeStats() error {
 		4567.8,
 		11.1,
 	)
-	testAsset := ethereum.HexToAddress(TESTASSETADDR)
+	testAsset := ethereum.HexToAddress(testAssetAddr)
 
 	tzvlStat := common.VolumeStatsTimeZone{"D": {0: vlStat}}
-	updates := map[string]common.VolumeStatsTimeZone{TESTASSETADDR: tzvlStat}
+	updates := map[string]common.VolumeStatsTimeZone{testAssetAddr: tzvlStat}
 	err = self.storage.SetVolumeStat(updates, 0)
 	if err != nil {
 		return err
@@ -207,8 +207,8 @@ func (self *StatStorageTest) TestVolumeStats() error {
 	}
 
 	//test user volume
-	testUser := ethereum.HexToAddress(TESTUSERADDR)
-	updates = map[string]common.VolumeStatsTimeZone{TESTUSERADDR: tzvlStat}
+	testUser := ethereum.HexToAddress(testUserAddr)
+	updates = map[string]common.VolumeStatsTimeZone{testUserAddr: tzvlStat}
 	err = self.storage.SetVolumeStat(updates, 0)
 	if err != nil {
 		return err
@@ -229,7 +229,7 @@ func (self *StatStorageTest) TestVolumeStats() error {
 		return fmt.Errorf("Wrong usd volume value returned: %v expected 4567.8", usdVol)
 	}
 
-	updates = map[string]common.VolumeStatsTimeZone{fmt.Sprintf("%s_%s", TESTASSETADDR, TESTUSERADDR): tzvlStat}
+	updates = map[string]common.VolumeStatsTimeZone{fmt.Sprintf("%s_%s", testAssetAddr, testUserAddr): tzvlStat}
 	err = self.storage.SetVolumeStat(updates, 0)
 	if err != nil {
 		return err
@@ -258,9 +258,9 @@ func (self *StatStorageTest) TestBurnFee() error {
 	bfStat := common.NewBurnFeeStats(4567.8)
 
 	tzbfStat := common.BurnFeeStatsTimeZone{"D": {0: bfStat}}
-	updates := map[string]common.BurnFeeStatsTimeZone{TESTASSETADDR: tzbfStat}
+	updates := map[string]common.BurnFeeStatsTimeZone{testAssetAddr: tzbfStat}
 	err = self.storage.SetBurnFeeStat(updates, 0)
-	testAsset := ethereum.HexToAddress(TESTASSETADDR)
+	testAsset := ethereum.HexToAddress(testAssetAddr)
 	if err != nil {
 		return err
 	}
@@ -284,8 +284,8 @@ func (self *StatStorageTest) TestBurnFee() error {
 		return fmt.Errorf("Wrong burn fee value returned: %v expected 4567.8 ", burnVol)
 	}
 
-	testWallet := ethereum.HexToAddress(TESTWALLETADDR)
-	updates = map[string]common.BurnFeeStatsTimeZone{fmt.Sprintf("%s_%s", TESTASSETADDR, TESTWALLETADDR): tzbfStat}
+	testWallet := ethereum.HexToAddress(testWalletAddr)
+	updates = map[string]common.BurnFeeStatsTimeZone{fmt.Sprintf("%s_%s", testAssetAddr, testWalletAddr): tzbfStat}
 	err = self.storage.SetBurnFeeStat(updates, 0)
 	if err != nil {
 		return err
@@ -316,7 +316,7 @@ func (self *StatStorageTest) TestWalletAddress() error {
 	if err != nil {
 		return err
 	}
-	walletaddresses, err := self.storage.GetWalletAddress()
+	walletaddresses, err := self.storage.GetWalletAddresses()
 	if err != nil {
 		return err
 	}
@@ -331,11 +331,11 @@ func (self *StatStorageTest) TestWalletAddress() error {
 
 func (self *StatStorageTest) TestLastProcessedTradeLogTimePoint() error {
 	var err error
-	err = self.storage.SetLastProcessedTradeLogTimepoint(TRADE_SUMMARY_AGGREGATION, 45678)
+	err = self.storage.SetLastProcessedTradeLogTimepoint(TradeSummaryAggregation, 45678)
 	if err != nil {
 		return err
 	}
-	lastTimePoint, err := self.storage.GetLastProcessedTradeLogTimepoint(TRADE_SUMMARY_AGGREGATION)
+	lastTimePoint, err := self.storage.GetLastProcessedTradeLogTimepoint(TradeSummaryAggregation)
 	if err != nil {
 		return err
 	}
@@ -369,38 +369,17 @@ func (self *StatStorageTest) TestFirstTradeEver() error {
 	var err error
 	tradelog := common.TradeLog{
 		Timestamp:   45678,
-		UserAddress: ethereum.HexToAddress(TESTUSERADDR),
+		UserAddress: ethereum.HexToAddress(testUserAddr),
 	}
 	userAddrs := []common.TradeLog{tradelog}
 	err = self.storage.SetFirstTradeEver(&userAddrs)
 	if err != nil {
 		return err
 	}
-	testUserAddr := ethereum.HexToAddress(TESTUSERADDR)
-	timepoint, err := self.storage.GetFirstTradeEver(testUserAddr)
-	if err != nil {
-		return err
-	}
-	if timepoint != 45678 {
-		return fmt.Errorf("first trade ever error, expect timepoint 45678, got %d", timepoint)
-	}
-	timepoint, err = self.storage.GetFirstTradeEver(testUserAddr)
-	if err != nil {
-		return err
-	}
-	if timepoint != 45678 {
-		return (fmt.Errorf("first trade ever error with lower case addr, expect timepoint 45678, got %d", timepoint))
-	}
-	timepoint, err = self.storage.GetFirstTradeEver(testUserAddr)
-	if err != nil {
-		return err
-	}
-	if timepoint != 45678 {
-		return (fmt.Errorf("first trade ever error with upper case addr, expect timepoint 45678, got %d", timepoint))
-	}
+
 	tradelog = common.TradeLog{
 		Timestamp:   45678,
-		UserAddress: ethereum.HexToAddress(TESTWALLETADDR),
+		UserAddress: ethereum.HexToAddress(testWalletAddr),
 	}
 	userAddrs = []common.TradeLog{tradelog}
 	err = self.storage.SetFirstTradeEver(&userAddrs)
@@ -419,14 +398,14 @@ func (self *StatStorageTest) TestFirstTradeInDay() error {
 	var err error
 	tradelog := common.TradeLog{
 		Timestamp:   45678,
-		UserAddress: ethereum.HexToAddress(TESTUSERADDR),
+		UserAddress: ethereum.HexToAddress(testUserAddr),
 	}
 	userAddrs := []common.TradeLog{tradelog}
 	err = self.storage.SetFirstTradeInDay(&userAddrs)
 	if err != nil {
 		return err
 	}
-	testUserAddr := ethereum.HexToAddress(TESTUSERADDR)
+	testUserAddr := ethereum.HexToAddress(testUserAddr)
 	timepoint, err := self.storage.GetFirstTradeInDay(testUserAddr, 0, 0)
 	if err != nil {
 		return err

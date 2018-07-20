@@ -15,13 +15,13 @@ import (
 )
 
 const (
-	TRANSACTION_INFO_BUCKET  string = "transaction"
-	INDEXED_TIMESTAMP_BUCKET string = "indexed_timestamp"
-	TOTAL_GAS_SPENT_BUCKET   string = "total_gas_spent"
+	transactionInfoBucket  string = "transaction"
+	indexedTimestampBucket string = "indexed_timestamp"
+	totalGasSpentBucket    string = "total_gas_spent"
 
-	ETH_TO_WEI                 float64 = 1000000000000000000
-	DAY                        uint64  = 86400   // a day in seconds
-	MAX_FEE_SETRATE_TIME_RANGE uint64  = 7776000 // 3 months in seconds
+	ethToWei               float64 = 1000000000000000000
+	day                    uint64  = 86400   // a day in seconds
+	maxFeeSetrateTimeRange uint64  = 7776000 // 3 months in seconds
 )
 
 type BoltFeeSetRateStorage struct {
@@ -37,15 +37,15 @@ func NewBoltFeeSetRateStorage(path string) (*BoltFeeSetRateStorage, error) {
 	}
 
 	err = db.Update(func(tx *bolt.Tx) error {
-		_, err = tx.CreateBucketIfNotExists([]byte(TRANSACTION_INFO_BUCKET))
+		_, err = tx.CreateBucketIfNotExists([]byte(transactionInfoBucket))
 		if err != nil {
 			return err
 		}
-		_, err = tx.CreateBucketIfNotExists([]byte(INDEXED_TIMESTAMP_BUCKET))
+		_, err = tx.CreateBucketIfNotExists([]byte(indexedTimestampBucket))
 		if err != nil {
 			return err
 		}
-		_, err = tx.CreateBucketIfNotExists([]byte(TOTAL_GAS_SPENT_BUCKET))
+		_, err = tx.CreateBucketIfNotExists([]byte(totalGasSpentBucket))
 		if err != nil {
 			return err
 		}
@@ -59,7 +59,7 @@ func (self *BoltFeeSetRateStorage) GetLastBlockChecked() (uint64, error) {
 	var latestBlockChecked uint64
 	var err error
 	err = self.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(TRANSACTION_INFO_BUCKET))
+		b := tx.Bucket([]byte(transactionInfoBucket))
 		c := b.Cursor()
 		k, _ := c.Last()
 
@@ -79,9 +79,9 @@ func (self *BoltFeeSetRateStorage) StoreTransaction(txs []common.SetRateTxInfo) 
 	var err error
 	err = self.db.Update(func(tx *bolt.Tx) error {
 		var dataJSON []byte
-		b := tx.Bucket([]byte(TRANSACTION_INFO_BUCKET))
-		bIndex := tx.Bucket([]byte(INDEXED_TIMESTAMP_BUCKET))
-		bTotal := tx.Bucket([]byte(TOTAL_GAS_SPENT_BUCKET))
+		b := tx.Bucket([]byte(transactionInfoBucket))
+		bIndex := tx.Bucket([]byte(indexedTimestampBucket))
+		bTotal := tx.Bucket([]byte(totalGasSpentBucket))
 
 		for _, transaction := range txs {
 			blockNumUint, uErr := strconv.ParseUint(transaction.BlockNumber, 10, 64)
@@ -150,21 +150,21 @@ func (self *BoltFeeSetRateStorage) GetFeeSetRateByDay(fromTime, toTime uint64) (
 	var seqFeeSetRate []common.FeeSetRate
 	fromTimeSecond := fromTime / 1000
 	toTimeSecond := toTime / 1000
-	if toTimeSecond > (MAX_FEE_SETRATE_TIME_RANGE + fromTimeSecond) {
-		return seqFeeSetRate, fmt.Errorf("Time range is too broad, it must be smaller or equal to three months (%d seconds)", MAX_FEE_SETRATE_TIME_RANGE)
+	if toTimeSecond > (maxFeeSetrateTimeRange + fromTimeSecond) {
+		return seqFeeSetRate, fmt.Errorf("Time range is too broad, it must be smaller or equal to three months (%d seconds)", maxFeeSetrateTimeRange)
 	}
 
 	var err error
 	err = self.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(TRANSACTION_INFO_BUCKET))
-		bIndex := tx.Bucket([]byte(INDEXED_TIMESTAMP_BUCKET))
+		b := tx.Bucket([]byte(transactionInfoBucket))
+		bIndex := tx.Bucket([]byte(indexedTimestampBucket))
 		c := b.Cursor()
 		cIndex := bIndex.Cursor()
-		bTotal := tx.Bucket([]byte(TOTAL_GAS_SPENT_BUCKET))
+		bTotal := tx.Bucket([]byte(totalGasSpentBucket))
 		minUint := uint64(now.New(time.Unix(int64(fromTimeSecond), 0).UTC()).BeginningOfDay().Unix())
 		maxUint := uint64(now.New(time.Unix(int64(toTimeSecond), 0).UTC()).BeginningOfDay().Unix())
-		var tickTime []byte = boltutil.Uint64ToBytes(minUint)
-		var nextTick []byte = boltutil.Uint64ToBytes(minUint + DAY)
+		var tickTime = boltutil.Uint64ToBytes(minUint)
+		var nextTick = boltutil.Uint64ToBytes(minUint + day)
 		max := boltutil.Uint64ToBytes(maxUint)
 
 		for {
@@ -187,7 +187,7 @@ func (self *BoltFeeSetRateStorage) GetFeeSetRateByDay(fromTime, toTime uint64) (
 				break
 			}
 			tickTime = nextTick
-			nextTick = boltutil.Uint64ToBytes(boltutil.BytesToUint64(nextTick) + DAY)
+			nextTick = boltutil.Uint64ToBytes(boltutil.BytesToUint64(nextTick) + day)
 		}
 		return nil
 	})
@@ -203,7 +203,7 @@ func getFeeSetRate(c *bolt.Cursor, tickBlock, nextTickBlock, tickTime, totalGasS
 	totalGasSpent := big.NewFloat(0)
 	totalGasSpentInt.SetBytes(totalGasSpentByte)
 	totalGasSpent.SetInt(totalGasSpentInt)
-	totalGasSpent.Quo(totalGasSpent, big.NewFloat(ETH_TO_WEI))
+	totalGasSpent.Quo(totalGasSpent, big.NewFloat(ethToWei))
 	sumFee := big.NewFloat(0)
 	gasInEther := big.NewFloat(0)
 
@@ -213,7 +213,7 @@ func getFeeSetRate(c *bolt.Cursor, tickBlock, nextTickBlock, tickTime, totalGasS
 			return feeSetRate, err
 		}
 		gasInWei := big.NewFloat(float64(record.GasPrice * record.GasUsed))
-		gasInEther.Quo(gasInWei, big.NewFloat(ETH_TO_WEI))
+		gasInEther.Quo(gasInWei, big.NewFloat(ethToWei))
 		sumFee.Add(sumFee, gasInEther)
 	}
 
