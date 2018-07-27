@@ -133,7 +133,7 @@ func (boltSettingStorage *BoltSettingStorage) getTokenByIDWithFiltering(id strin
 			return uErr
 		}
 		if !filter(t) {
-			return fmt.Errorf("Token %s status is not as querried", id)
+			return settings.ErrTokenNotFound
 		}
 		return nil
 	})
@@ -166,14 +166,14 @@ func (boltSettingStorage *BoltSettingStorage) getTokenByAddressWithFiltering(add
 		c := b.Cursor()
 		k, v := c.Seek([]byte(addr))
 		if bytes.Compare(k, []byte(addr)) != 0 {
-			return fmt.Errorf("Token %s is not found in current setting", addr)
+			return settings.ErrTokenNotFound
 		}
 		uErr := json.Unmarshal(v, &t)
 		if uErr != nil {
 			return uErr
 		}
 		if !filter(t) {
-			return fmt.Errorf("Token %s status is not as querried", t.ID)
+			return settings.ErrTokenNotFound
 		}
 		return nil
 	})
