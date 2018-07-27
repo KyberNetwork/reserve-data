@@ -35,53 +35,53 @@ func NewKNAuthenticationFromFile(path string) KNAuthentication {
 	return result
 }
 
-func (self KNAuthentication) KNSign(msg string) string {
-	mac := hmac.New(sha512.New, []byte(self.KNSecret))
+func (ka KNAuthentication) KNSign(msg string) string {
+	mac := hmac.New(sha512.New, []byte(ka.KNSecret))
 	if _, err := mac.Write([]byte(msg)); err != nil {
 		log.Printf("Encode message error: %s", err.Error())
 	}
 	return ethereum.Bytes2Hex(mac.Sum(nil))
 }
 
-func (self KNAuthentication) knReadonlySign(msg string) string {
-	mac := hmac.New(sha512.New, []byte(self.KNReadOnly))
+func (ka KNAuthentication) knReadonlySign(msg string) string {
+	mac := hmac.New(sha512.New, []byte(ka.KNReadOnly))
 	if _, err := mac.Write([]byte(msg)); err != nil {
 		log.Printf("Encode message error: %s", err.Error())
 	}
 	return ethereum.Bytes2Hex(mac.Sum(nil))
 }
 
-func (self KNAuthentication) knConfigurationSign(msg string) string {
-	mac := hmac.New(sha512.New, []byte(self.KNConfiguration))
+func (ka KNAuthentication) knConfigurationSign(msg string) string {
+	mac := hmac.New(sha512.New, []byte(ka.KNConfiguration))
 	if _, err := mac.Write([]byte(msg)); err != nil {
 		log.Printf("Encode message error: %s", err.Error())
 	}
 	return ethereum.Bytes2Hex(mac.Sum(nil))
 }
 
-func (self KNAuthentication) knConfirmConfSign(msg string) string {
-	mac := hmac.New(sha512.New, []byte(self.KNConfirmConf))
+func (ka KNAuthentication) knConfirmConfSign(msg string) string {
+	mac := hmac.New(sha512.New, []byte(ka.KNConfirmConf))
 	if _, err := mac.Write([]byte(msg)); err != nil {
 		log.Printf("Encode message error: %s", err.Error())
 	}
 	return ethereum.Bytes2Hex(mac.Sum(nil))
 }
 
-func (self KNAuthentication) GetPermission(signed string, message string) []Permission {
+func (ka KNAuthentication) GetPermission(signed string, message string) []Permission {
 	result := []Permission{}
-	rebalanceSigned := self.KNSign(message)
+	rebalanceSigned := ka.KNSign(message)
 	if signed == rebalanceSigned {
 		result = append(result, RebalancePermission)
 	}
-	readonlySigned := self.knReadonlySign(message)
+	readonlySigned := ka.knReadonlySign(message)
 	if signed == readonlySigned {
 		result = append(result, ReadOnlyPermission)
 	}
-	configureSigned := self.knConfigurationSign(message)
+	configureSigned := ka.knConfigurationSign(message)
 	if signed == configureSigned {
 		result = append(result, ConfigurePermission)
 	}
-	confirmConfSigned := self.knConfirmConfSign(message)
+	confirmConfSigned := ka.knConfirmConfSign(message)
 	if signed == confirmConfSigned {
 		result = append(result, ConfirmConfPermission)
 	}
