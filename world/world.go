@@ -16,11 +16,11 @@ type TheWorld struct {
 	endpoint Endpoint
 }
 
-func (self *TheWorld) getOneForgeGoldUSDInfo() common.OneForgeGoldData {
+func (tw *TheWorld) getOneForgeGoldUSDInfo() common.OneForgeGoldData {
 	client := &http.Client{
 		Timeout: time.Duration(30 * time.Second),
 	}
-	url := self.endpoint.OneForgeGoldUSDDataEndpoint()
+	url := tw.endpoint.OneForgeGoldUSDDataEndpoint()
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Add("Accept", "application/json")
 	var err error
@@ -63,11 +63,11 @@ func (self *TheWorld) getOneForgeGoldUSDInfo() common.OneForgeGoldData {
 	}
 }
 
-func (self *TheWorld) getOneForgeGoldETHInfo() common.OneForgeGoldData {
+func (tw *TheWorld) getOneForgeGoldETHInfo() common.OneForgeGoldData {
 	client := &http.Client{
 		Timeout: time.Duration(30 * time.Second),
 	}
-	url := self.endpoint.OneForgeGoldETHDataEndpoint()
+	url := tw.endpoint.OneForgeGoldETHDataEndpoint()
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Add("Accept", "application/json")
 	var err error
@@ -109,11 +109,11 @@ func (self *TheWorld) getOneForgeGoldETHInfo() common.OneForgeGoldData {
 	return result
 }
 
-func (self *TheWorld) getDGXGoldInfo() common.DGXGoldData {
+func (tw *TheWorld) getDGXGoldInfo() common.DGXGoldData {
 	client := &http.Client{
 		Timeout: time.Duration(30 * time.Second),
 	}
-	url := self.endpoint.GoldDataEndpoint()
+	url := tw.endpoint.GoldDataEndpoint()
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Add("Accept", "application/json")
 	var err error
@@ -157,11 +157,11 @@ func (self *TheWorld) getDGXGoldInfo() common.DGXGoldData {
 	return result
 }
 
-func (self *TheWorld) getGDAXGoldInfo() common.GDAXGoldData {
+func (tw *TheWorld) getGDAXGoldInfo() common.GDAXGoldData {
 	client := &http.Client{
 		Timeout: time.Duration(30 * time.Second),
 	}
-	url := self.endpoint.GDAXDataEndpoint()
+	url := tw.endpoint.GDAXDataEndpoint()
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Add("Accept", "application/json")
 	var err error
@@ -205,11 +205,11 @@ func (self *TheWorld) getGDAXGoldInfo() common.GDAXGoldData {
 	return result
 }
 
-func (self *TheWorld) getKrakenGoldInfo() common.KrakenGoldData {
+func (tw *TheWorld) getKrakenGoldInfo() common.KrakenGoldData {
 	client := &http.Client{
 		Timeout: time.Duration(30 * time.Second),
 	}
-	url := self.endpoint.KrakenDataEndpoint()
+	url := tw.endpoint.KrakenDataEndpoint()
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Add("Accept", "application/json")
 	var err error
@@ -253,11 +253,11 @@ func (self *TheWorld) getKrakenGoldInfo() common.KrakenGoldData {
 	return result
 }
 
-func (self *TheWorld) getGeminiGoldInfo() common.GeminiGoldData {
+func (tw *TheWorld) getGeminiGoldInfo() common.GeminiGoldData {
 	client := &http.Client{
 		Timeout: time.Duration(30 * time.Second),
 	}
-	url := self.endpoint.GeminiDataEndpoint()
+	url := tw.endpoint.GeminiDataEndpoint()
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Add("Accept", "application/json")
 	var err error
@@ -301,14 +301,14 @@ func (self *TheWorld) getGeminiGoldInfo() common.GeminiGoldData {
 	return result
 }
 
-func (self *TheWorld) GetGoldInfo() (common.GoldData, error) {
+func (tw *TheWorld) GetGoldInfo() (common.GoldData, error) {
 	return common.GoldData{
-		DGX:         self.getDGXGoldInfo(),
-		OneForgeETH: self.getOneForgeGoldETHInfo(),
-		OneForgeUSD: self.getOneForgeGoldUSDInfo(),
-		GDAX:        self.getGDAXGoldInfo(),
-		Kraken:      self.getKrakenGoldInfo(),
-		Gemini:      self.getGeminiGoldInfo(),
+		DGX:         tw.getDGXGoldInfo(),
+		OneForgeETH: tw.getOneForgeGoldETHInfo(),
+		OneForgeUSD: tw.getOneForgeGoldUSDInfo(),
+		GDAX:        tw.getGDAXGoldInfo(),
+		Kraken:      tw.getKrakenGoldInfo(),
+		Gemini:      tw.getGeminiGoldInfo(),
 	}, nil
 }
 
