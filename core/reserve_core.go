@@ -24,12 +24,15 @@ const (
 	statusDone      = "done"
 )
 
+//ReserveCore represent core object
+//which include blockchain, activity and setting
 type ReserveCore struct {
 	blockchain      Blockchain
 	activityStorage ActivityStorage
 	setting         Setting
 }
 
+//NewReserveCore return a new ReserveCore instance
 func NewReserveCore(
 	blockchain Blockchain,
 	storage ActivityStorage,
@@ -45,8 +48,9 @@ func timebasedID(id string) common.ActivityID {
 	return common.NewActivityID(uint64(time.Now().UnixNano()), id)
 }
 
-func (self ReserveCore) CancelOrder(id common.ActivityID, exchange common.Exchange) error {
-	activity, err := self.activityStorage.GetActivity(id)
+//CancelOrder cancel an trade order on an exchange
+func (rc ReserveCore) CancelOrder(id common.ActivityID, exchange common.Exchange) error {
+	activity, err := rc.activityStorage.GetActivity(id)
 	if err != nil {
 		return err
 	}
@@ -61,11 +65,12 @@ func (self ReserveCore) CancelOrder(id common.ActivityID, exchange common.Exchan
 	if !ok {
 		return fmt.Errorf("cannot convert params quote (value: %v) to tokenID (type string)", activity.Params["quote"])
 	}
-	orderId := id.EID
-	return exchange.CancelOrder(orderId, base, quote)
+	orderID := id.EID
+	return exchange.CancelOrder(orderID, base, quote)
 }
 
-func (self ReserveCore) Trade(
+//Trade perform a trade activity (sell/buy) on an exchange
+func (rc ReserveCore) Trade(
 	exchange common.Exchange,
 	tradeType string,
 	base common.Token,
@@ -88,7 +93,7 @@ func (self ReserveCore) Trade(
 			finished, common.ErrorToString(err),
 		)
 
-		return self.activityStorage.Record(
+		return rc.activityStorage.Record(
 			common.ActionTrade,
 			uid,
 			string(exchange.ID()),
@@ -140,7 +145,8 @@ func (self ReserveCore) Trade(
 	return uid, done, remaining, finished, err
 }
 
-func (self ReserveCore) Deposit(
+//Deposit deposit coin/token to an exchange
+func (rc ReserveCore) Deposit(
 	exchange common.Exchange,
 	token common.Token,
 	amount *big.Int,
@@ -163,7 +169,7 @@ func (self ReserveCore) Deposit(
 			exchange.ID(), token.ID, amount.Text(10), timepoint, txhex, common.ErrorToString(err),
 		)
 
-		return self.activityStorage.Record(
+		return rc.activityStorage.Record(
 			common.ActionDeposit,
 			uid,
 			string(exchange.ID()),
@@ -192,7 +198,7 @@ func (self ReserveCore) Deposit(
 		return common.ActivityID{}, err
 	}
 
-	if ok, err = self.activityStorage.HasPendingDeposit(token, exchange); err != nil {
+	if ok, err = rc.activityStorage.HasPendingDeposit(token, exchange); err != nil {
 		if sErr := recordActivity(statusFailed, "", "", "", err); sErr != nil {
 			log.Printf("failed to save activity record: %s", sErr)
 		}
@@ -212,7 +218,7 @@ func (self ReserveCore) Deposit(
 		}
 		return common.ActivityID{}, err
 	}
-	if tx, err = self.blockchain.Send(token, amount, address); err != nil {
+	if tx, err = rc.blockchain.Send(token, amount, address); err != nil {
 		if sErr := recordActivity(statusFailed, "", "", "", err); sErr != nil {
 			log.Printf("failed to save activity record: %s", sErr)
 		}
@@ -229,7 +235,8 @@ func (self ReserveCore) Deposit(
 	return uidGenerator(tx.Hash().Hex()), err
 }
 
-func (self ReserveCore) Withdraw(
+//Withdraw coin/token from an exchange
+func (rc ReserveCore) Withdraw(
 	exchange common.Exchange, token common.Token,
 	amount *big.Int, timepoint uint64) (common.ActivityID, error) {
 	var err error
@@ -240,7 +247,7 @@ func (self ReserveCore) Withdraw(
 			"Core ----------> Withdraw from %s: token: %s, amount: %s, timestamp: %d ==> Result: id: %s, error: %s",
 			exchange.ID(), token.ID, amount.Text(10), timepoint, id, err,
 		)
-		return self.activityStorage.Record(
+		return rc.activityStorage.Record(
 			common.ActionWithdraw,
 			uid,
 			string(exchange.ID()),
@@ -278,7 +285,7 @@ func (self ReserveCore) Withdraw(
 		}
 		return common.ActivityID{}, err
 	}
-	reserveAddr, err := self.setting.GetAddress(settings.Reserve)
+	reserveAddr, err := rc.setting.GetAddress(settings.Reserve)
 	id, err := exchange.Withdraw(token, amount, reserveAddr, timepoint)
 	if err != nil {
 		if sErr := activityRecord("", statusFailed, err); sErr != nil {
@@ -299,17 +306,16 @@ func calculateNewGasPrice(old *big.Int, count uint64) *big.Int {
 	// the node accept tx with up to date price
 	if count > 4 {
 		return old.Add(old, common.GweiToWei(1))
-	} else {
-		// new = old + (50.1 - old) / (5 - count)
-		return old.Add(
-			old,
-			big.NewInt(0).Div(big.NewInt(0).Sub(common.GweiToWei(highBoundGasPrice), old), big.NewInt(int64(5-count))),
-		)
 	}
+	// new = old + (50.1 - old) / (5 - count)
+	return old.Add(
+		old,
+		big.NewInt(0).Div(big.NewInt(0).Sub(common.GweiToWei(highBoundGasPrice), old), big.NewInt(int64(5-count))),
+	)
 }
 
-func (self ReserveCore) pendingSetrateInfo(minedNonce uint64) (*big.Int, *big.Int, uint64, error) {
-	act, count, err := self.activityStorage.PendingSetrate(minedNonce)
+func (rc ReserveCore) pendingSetrateInfo(minedNonce uint64) (*big.Int, *big.Int, uint64, error) {
+	act, count, err := rc.activityStorage.PendingSetrate(minedNonce)
 	if err != nil {
 		return nil, nil, 0, err
 	}
@@ -337,7 +343,8 @@ func (self ReserveCore) pendingSetrateInfo(minedNonce uint64) (*big.Int, *big.In
 	return big.NewInt(int64(nonce)), big.NewInt(int64(gasPrice)), count, nil
 }
 
-func (self ReserveCore) GetSetRateResult(tokens []common.Token,
+//GetSetRateResult return result of a setrate activity
+func (rc ReserveCore) GetSetRateResult(tokens []common.Token,
 	buys, sells, afpMids []*big.Int,
 	block *big.Int) (*types.Transaction, error) {
 	var (
@@ -368,11 +375,11 @@ func (self ReserveCore) GetSetRateResult(tokens []common.Token,
 		minedNonce uint64
 		count      uint64
 	)
-	minedNonce, err = self.blockchain.SetRateMinedNonce()
+	minedNonce, err = rc.blockchain.SetRateMinedNonce()
 	if err != nil {
 		return tx, fmt.Errorf("Couldn't get mined nonce of set rate operator (%s)", err.Error())
 	}
-	oldNonce, oldPrice, count, err = self.pendingSetrateInfo(minedNonce)
+	oldNonce, oldPrice, count, err = rc.pendingSetrateInfo(minedNonce)
 	log.Printf("old nonce: %v, old price: %v, count: %d, err: %s", oldNonce, oldPrice, count, common.ErrorToString(err))
 	if err != nil {
 		return tx, fmt.Errorf("Couldn't check pending set rate tx pool (%s). Please try later", err.Error())
@@ -380,20 +387,20 @@ func (self ReserveCore) GetSetRateResult(tokens []common.Token,
 	if oldNonce != nil {
 		newPrice := calculateNewGasPrice(oldPrice, count)
 		log.Printf("Trying to replace old tx with new price: %s", newPrice.Text(10))
-		tx, err = self.blockchain.SetRates(
+		tx, err = rc.blockchain.SetRates(
 			tokenAddrs, buys, sells, block,
 			oldNonce,
 			newPrice,
 		)
 	} else {
-		recommendedPrice := self.blockchain.StandardGasPrice()
+		recommendedPrice := rc.blockchain.StandardGasPrice()
 		var initPrice *big.Int
 		if recommendedPrice == 0 || recommendedPrice > highBoundGasPrice {
 			initPrice = common.GweiToWei(10)
 		} else {
 			initPrice = common.GweiToWei(recommendedPrice)
 		}
-		tx, err = self.blockchain.SetRates(
+		tx, err = rc.blockchain.SetRates(
 			tokenAddrs, buys, sells, block,
 			big.NewInt(int64(minedNonce)),
 			initPrice,
@@ -402,7 +409,8 @@ func (self ReserveCore) GetSetRateResult(tokens []common.Token,
 	return tx, err
 }
 
-func (self ReserveCore) SetRates(
+//SetRates perform an set rate activity to blockchain
+func (rc ReserveCore) SetRates(
 	tokens []common.Token,
 	buys []*big.Int,
 	sells []*big.Int,
@@ -419,7 +427,7 @@ func (self ReserveCore) SetRates(
 		miningStatus string
 	)
 
-	tx, err = self.GetSetRateResult(tokens, buys, sells, afpMids, block)
+	tx, err = rc.GetSetRateResult(tokens, buys, sells, afpMids, block)
 	if err != nil {
 		miningStatus = common.MiningStatusFailed
 	} else {
@@ -429,7 +437,7 @@ func (self ReserveCore) SetRates(
 		txprice = tx.GasPrice().Text(10)
 	}
 	uid := timebasedID(txhex)
-	err = self.activityStorage.Record(
+	err = rc.activityStorage.Record(
 		common.ActionSetrate,
 		uid,
 		"blockchain",
@@ -509,7 +517,7 @@ func sanityCheckAmount(exchange common.Exchange, token common.Token, amount *big
 
 	minAmountWithdraw.Mul(big.NewFloat(feeWithdrawing), big.NewFloat(0).SetInt(expDecimal))
 	if amountFloat.Cmp(minAmountWithdraw) < 0 {
-		return errors.New("Amount is too small!!!")
+		return errors.New("amount is too small")
 	}
 	return nil
 }
