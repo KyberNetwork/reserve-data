@@ -120,7 +120,7 @@ type Config struct {
 }
 
 // GetStatConfig: load config to run stat server only
-func (self *Config) AddStatConfig(settingPath SettingPaths) {
+func (config *Config) AddStatConfig(settingPath SettingPaths) {
 
 	analyticStorage, err := statstorage.NewBoltAnalyticStorage(settingPath.analyticStoragePath)
 	if err != nil {
@@ -175,19 +175,19 @@ func (self *Config) AddStatConfig(settingPath SettingPaths) {
 
 	apiKey := GetEtherscanAPIKey(settingPath.secretPath)
 
-	self.StatStorage = statStorage
-	self.AnalyticStorage = analyticStorage
-	self.UserStorage = userStorage
-	self.LogStorage = logStorage
-	self.RateStorage = rateStorage
-	self.StatControllerRunner = statControllerRunner
-	self.FeeSetRateStorage = feeSetRateStorage
-	self.StatFetcherRunner = statFetcherRunner
-	self.EtherscanApiKey = apiKey
-	self.IPlocator = ipLocator
+	config.StatStorage = statStorage
+	config.AnalyticStorage = analyticStorage
+	config.UserStorage = userStorage
+	config.LogStorage = logStorage
+	config.RateStorage = rateStorage
+	config.StatControllerRunner = statControllerRunner
+	config.FeeSetRateStorage = feeSetRateStorage
+	config.StatFetcherRunner = statFetcherRunner
+	config.EtherscanApiKey = apiKey
+	config.IPlocator = ipLocator
 }
 
-func (self *Config) AddCoreConfig(settingPath SettingPaths, kyberENV string) {
+func (config *Config) AddCoreConfig(settingPath SettingPaths, kyberENV string) {
 	dataStorage, err := storage.NewBoltStorage(settingPath.dataStoragePath)
 	if err != nil {
 		panic(err)
@@ -213,30 +213,30 @@ func (self *Config) AddCoreConfig(settingPath SettingPaths, kyberENV string) {
 	pricingSigner := PricingSignerFromConfigFile(settingPath.secretPath)
 	depositSigner := DepositSignerFromConfigFile(settingPath.secretPath)
 
-	self.ActivityStorage = dataStorage
-	self.DataStorage = dataStorage
-	self.DataGlobalStorage = dataStorage
-	self.FetcherStorage = dataStorage
-	self.FetcherGlobalStorage = dataStorage
-	self.MetricStorage = dataStorage
-	self.FetcherRunner = fetcherRunner
-	self.DataControllerRunner = dataControllerRunner
-	self.BlockchainSigner = pricingSigner
-	//self.IntermediatorSigner = huoBiintermediatorSigner
-	self.DepositSigner = depositSigner
-	//self.ExchangeStorage = exsStorage
+	config.ActivityStorage = dataStorage
+	config.DataStorage = dataStorage
+	config.DataGlobalStorage = dataStorage
+	config.FetcherStorage = dataStorage
+	config.FetcherGlobalStorage = dataStorage
+	config.MetricStorage = dataStorage
+	config.FetcherRunner = fetcherRunner
+	config.DataControllerRunner = dataControllerRunner
+	config.BlockchainSigner = pricingSigner
+	//config.IntermediatorSigner = huoBiintermediatorSigner
+	config.DepositSigner = depositSigner
+	//config.ExchangeStorage = exsStorage
 	// var huobiConfig common.HuobiConfig
 	// exchangesIDs := os.Getenv("KYBER_EXCHANGES")
 	// if strings.Contains(exchangesIDs, "huobi") {
-	// 	huobiConfig = *self.GetHuobiConfig(kyberENV, addressConfig.Intermediator, huobiIntermediatorSigner)
+	// 	huobiConfig = *config.GetHuobiConfig(kyberENV, addressConfig.Intermediator, huobiIntermediatorSigner)
 	// }
 
 	// create Exchange pool
 	exchangePool, err := NewExchangePool(
 		settingPath,
-		self.Blockchain,
+		config.Blockchain,
 		kyberENV,
-		self.Setting,
+		config.Setting,
 	)
 	if err != nil {
 		log.Panicf("Can not create exchangePool: %s", err.Error())
@@ -245,12 +245,12 @@ func (self *Config) AddCoreConfig(settingPath SettingPaths, kyberENV string) {
 	if err != nil {
 		log.Panicf("cannot Create fetcher exchanges : (%s)", err.Error())
 	}
-	self.FetcherExchanges = fetcherExchanges
+	config.FetcherExchanges = fetcherExchanges
 	coreExchanges, err := exchangePool.CoreExchanges()
 	if err != nil {
 		log.Panicf("cannot Create core exchanges : (%s)", err.Error())
 	}
-	self.Exchanges = coreExchanges
+	config.Exchanges = coreExchanges
 }
 
 var ConfigPaths = map[string]SettingPaths{

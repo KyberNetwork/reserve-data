@@ -171,9 +171,9 @@ func NewExchangePool(
 	return &ExchangePool{exchanges}, nil
 }
 
-func (self *ExchangePool) FetcherExchanges() ([]fetcher.Exchange, error) {
+func (ep *ExchangePool) FetcherExchanges() ([]fetcher.Exchange, error) {
 	result := []fetcher.Exchange{}
-	for _, ex := range self.Exchanges {
+	for _, ex := range ep.Exchanges {
 		fcEx, ok := ex.(fetcher.Exchange)
 		if !ok {
 			return result, errors.New("ExchangePool cannot be asserted  to fetcher exchange")
@@ -183,9 +183,9 @@ func (self *ExchangePool) FetcherExchanges() ([]fetcher.Exchange, error) {
 	return result, nil
 }
 
-func (self *ExchangePool) CoreExchanges() ([]common.Exchange, error) {
+func (ep *ExchangePool) CoreExchanges() ([]common.Exchange, error) {
 	result := []common.Exchange{}
-	for _, ex := range self.Exchanges {
+	for _, ex := range ep.Exchanges {
 		cmEx, ok := ex.(common.Exchange)
 		if !ok {
 			return result, errors.New("ExchangePool cannot be asserted to core Exchange")
