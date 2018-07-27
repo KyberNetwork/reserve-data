@@ -23,9 +23,9 @@ func NewContractCaller(clients []*ethclient.Client, urls []string) *ContractCall
 	}
 }
 
-func (self ContractCaller) CallContract(msg ether.CallMsg, blockNo *big.Int, timeOut time.Duration) ([]byte, error) {
-	for i, client := range self.clients {
-		url := self.urls[i]
+func (cc ContractCaller) CallContract(msg ether.CallMsg, blockNo *big.Int, timeOut time.Duration) ([]byte, error) {
+	for i, client := range cc.clients {
+		url := cc.urls[i]
 
 		output, err := func() ([]byte, error) {
 			ctx, cancel := context.WithTimeout(context.Background(), timeOut)

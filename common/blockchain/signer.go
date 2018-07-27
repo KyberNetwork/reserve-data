@@ -18,12 +18,12 @@ type EthereumSigner struct {
 	opts *bind.TransactOpts
 }
 
-func (self EthereumSigner) GetAddress() ethereum.Address {
-	return self.opts.From
+func (es EthereumSigner) GetAddress() ethereum.Address {
+	return es.opts.From
 }
 
-func (self EthereumSigner) Sign(tx *types.Transaction) (*types.Transaction, error) {
-	return self.opts.Signer(types.HomesteadSigner{}, self.GetAddress(), tx)
+func (es EthereumSigner) Sign(tx *types.Transaction) (*types.Transaction, error) {
+	return es.opts.Signer(types.HomesteadSigner{}, es.GetAddress(), tx)
 }
 
 func NewEthereumSigner(keyPath string, passphrase string) *EthereumSigner {

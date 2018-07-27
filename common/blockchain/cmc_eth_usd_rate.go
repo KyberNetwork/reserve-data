@@ -60,40 +60,37 @@ func GetNextMonth(month, year int) (int, int) {
 	return toMonth, toYear
 }
 
-func (self *CMCEthUSDRate) GetUSDRate(timepoint uint64) float64 {
-	if timepoint >= self.realtimeTimepoint {
-		return self.realtimeRate
+func (ethUSDRate *CMCEthUSDRate) GetUSDRate(timepoint uint64) float64 {
+	if timepoint >= ethUSDRate.realtimeTimepoint {
+		return ethUSDRate.realtimeRate
 	}
-	return self.rateFromCache(timepoint)
+	return ethUSDRate.rateFromCache(timepoint)
 }
 
-func (self *CMCEthUSDRate) rateFromCache(timepoint uint64) float64 {
-	self.mu.Lock()
-	defer self.mu.Unlock()
+func (ethUSDRate *CMCEthUSDRate) rateFromCache(timepoint uint64) float64 {
+	ethUSDRate.mu.Lock()
+	defer ethUSDRate.mu.Unlock()
 	monthTimeStamp := GetMonthTimeStamp(timepoint)
-	if monthTimeStamp != self.currentCacheMonth {
+	if monthTimeStamp != ethUSDRate.currentCacheMonth {
 		ethRates, err := fetchRate(timepoint)
 		if err != nil {
 			log.Println("Cannot get rate from coinmarketcap")
-			return self.realtimeRate
-		} else {
-			rate, err := findEthRate(ethRates, timepoint)
-			if err != nil {
-				log.Println(err)
-				return self.realtimeRate
-			}
-			self.currentCacheMonth = monthTimeStamp
-			self.cachedRates = ethRates
-			return rate
+			return ethUSDRate.realtimeRate
 		}
-	} else {
-		rate, err := findEthRate(self.cachedRates, timepoint)
+		rate, err := findEthRate(ethRates, timepoint)
 		if err != nil {
-			return self.realtimeRate
-		} else {
-			return rate
+			log.Println(err)
+			return ethUSDRate.realtimeRate
 		}
+		ethUSDRate.currentCacheMonth = monthTimeStamp
+		ethUSDRate.cachedRates = ethRates
+		return rate
 	}
+	rate, err := findEthRate(ethUSDRate.cachedRates, timepoint)
+	if err != nil {
+		return ethUSDRate.realtimeRate
+	}
+	return rate
 }
 
 func fetchRate(timepoint uint64) ([][]float64, error) {
@@ -136,11 +133,11 @@ func findEthRate(ethRateLog [][]float64, timepoint uint64) (float64, error) {
 	return 0, errors.New("Cannot find ether rate corresponding with the timepoint")
 }
 
-func (self *CMCEthUSDRate) RunGetEthRate() {
+func (ethUSDRate *CMCEthUSDRate) RunGetEthRate() {
 	tick := time.NewTicker(10 * time.Minute)
 	go func() {
 		for {
-			err := self.FetchEthRate()
+			err := ethUSDRate.FetchEthRate()
 			if err != nil {
 				log.Println(err)
 			}
@@ -149,7 +146,7 @@ func (self *CMCEthUSDRate) RunGetEthRate() {
 	}()
 }
 
-func (self *CMCEthUSDRate) FetchEthRate() (err error) {
+func (ethUSDRate *CMCEthUSDRate) FetchEthRate() (err error) {
 	resp, err := http.Get(cmcTopUSDPricingAPIEndpoint)
 	if err != nil {
 		return err
@@ -172,12 +169,12 @@ func (self *CMCEthUSDRate) FetchEthRate() (err error) {
 					log.Printf("Cannot get usd rate: %s", err.Error())
 					return err
 				} else {
-					if self.realtimeRate == 0 {
+					if ethUSDRate.realtimeRate == 0 {
 						// set realtimeTimepoint to the timepoint that realtime rate is updated for the
 						// first time
-						self.realtimeTimepoint = common.GetTimepoint()
+						ethUSDRate.realtimeTimepoint = common.GetTimepoint()
 					}
-					self.realtimeRate = newrate
+					ethUSDRate.realtimeRate = newrate
 					return nil
 				}
 			}
@@ -186,11 +183,13 @@ func (self *CMCEthUSDRate) FetchEthRate() (err error) {
 	return nil
 }
 
-func (self *CMCEthUSDRate) Run() {
+//Run run get ETH-USD rate from CoinMarketCap
+func (ethUSDRate *CMCEthUSDRate) Run() {
 	// run real time fetcher
-	self.RunGetEthRate()
+	ethUSDRate.RunGetEthRate()
 }
 
+//NewCMCEthUSDRate return a new CMCEthUSDRate instance
 func NewCMCEthUSDRate() *CMCEthUSDRate {
 	result := &CMCEthUSDRate{
 		mu: &sync.RWMutex{},

@@ -11,7 +11,7 @@ import (
 var CachedBlockno uint64
 var CachedBlockHeader *types.Header
 
-func (self *BaseBlockchain) InterpretTimestamp(blockno uint64, txindex uint) (uint64, error) {
+func (bb *BaseBlockchain) InterpretTimestamp(blockno uint64, txindex uint) (uint64, error) {
 	timeout, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	var block *types.Header
@@ -19,7 +19,7 @@ func (self *BaseBlockchain) InterpretTimestamp(blockno uint64, txindex uint) (ui
 	if CachedBlockno == blockno {
 		block = CachedBlockHeader
 	} else {
-		block, err = self.client.HeaderByNumber(timeout, big.NewInt(int64(blockno)))
+		block, err = bb.client.HeaderByNumber(timeout, big.NewInt(int64(blockno)))
 	}
 	if err != nil {
 		if block == nil {
