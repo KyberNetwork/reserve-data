@@ -10,8 +10,8 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 )
 
-func (b *Blockchain) GeneratedWithdraw(opts blockchain.TxOpts, token ethereum.Address, amount *big.Int, destination ethereum.Address) (*types.Transaction, error) {
+func (bc *Blockchain) GeneratedWithdraw(opts blockchain.TxOpts, token ethereum.Address, amount *big.Int, destination ethereum.Address) (*types.Transaction, error) {
 	timeout, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	return b.BuildTx(timeout, opts, b.reserve, "withdraw", token, amount, destination)
+	return bc.BuildTx(timeout, opts, bc.reserve, "withdraw", token, amount, destination)
 }

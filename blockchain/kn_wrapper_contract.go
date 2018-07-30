@@ -9,14 +9,14 @@ import (
 	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
-func (b *Blockchain) GeneratedGetBalances(opts blockchain.CallOpts, reserve ethereum.Address, tokens []ethereum.Address) ([]*big.Int, error) {
+func (bc *Blockchain) GeneratedGetBalances(opts blockchain.CallOpts, reserve ethereum.Address, tokens []ethereum.Address) ([]*big.Int, error) {
 	out := new([]*big.Int)
 	timeOut := 2 * time.Second
-	err := b.Call(timeOut, opts, b.wrapper, out, "getBalances", reserve, tokens)
+	err := bc.Call(timeOut, opts, bc.wrapper, out, "getBalances", reserve, tokens)
 	return *out, err
 }
 
-func (b *Blockchain) GeneratedGetTokenIndicies(opts blockchain.CallOpts, ratesContract ethereum.Address, tokenList []ethereum.Address) ([]*big.Int, []*big.Int, error) {
+func (bc *Blockchain) GeneratedGetTokenIndicies(opts blockchain.CallOpts, ratesContract ethereum.Address, tokenList []ethereum.Address) ([]*big.Int, []*big.Int, error) {
 	var (
 		ret0 = new([]*big.Int)
 		ret1 = new([]*big.Int)
@@ -26,11 +26,11 @@ func (b *Blockchain) GeneratedGetTokenIndicies(opts blockchain.CallOpts, ratesCo
 		ret1,
 	}
 	timeOut := 2 * time.Second
-	err := b.Call(timeOut, opts, b.wrapper, out, "getTokenIndicies", ratesContract, tokenList)
+	err := bc.Call(timeOut, opts, bc.wrapper, out, "getTokenIndicies", ratesContract, tokenList)
 	return *ret0, *ret1, err
 }
 
-func (b *Blockchain) GeneratedGetTokenRates(
+func (bc *Blockchain) GeneratedGetTokenRates(
 	opts blockchain.CallOpts,
 	ratesContract ethereum.Address,
 	tokenList []ethereum.Address) ([]*big.Int, []*big.Int, []int8, []int8, []*big.Int, error) {
@@ -49,11 +49,11 @@ func (b *Blockchain) GeneratedGetTokenRates(
 		ret4,
 	}
 	timeOut := 2 * time.Second
-	err := b.Call(timeOut, opts, b.wrapper, out, "getTokenRates", ratesContract, tokenList)
+	err := bc.Call(timeOut, opts, bc.wrapper, out, "getTokenRates", ratesContract, tokenList)
 	return *ret0, *ret1, *ret2, *ret3, *ret4, err
 }
 
-func (b *Blockchain) GeneratedGetReserveRates(
+func (bc *Blockchain) GeneratedGetReserveRates(
 	opts blockchain.CallOpts,
 	reserveAddress ethereum.Address,
 	srcAddresses []ethereum.Address,
@@ -67,7 +67,7 @@ func (b *Blockchain) GeneratedGetReserveRates(
 		ret1,
 	}
 	timeOut := 2 * time.Second
-	err := b.Call(timeOut, opts, b.wrapper, out, "getReserveRate", reserveAddress, srcAddresses, destAddresses)
+	err := bc.Call(timeOut, opts, bc.wrapper, out, "getReserveRate", reserveAddress, srcAddresses, destAddresses)
 	if err != nil {
 		log.Println("cannot get reserve rates: ", err.Error())
 	}
