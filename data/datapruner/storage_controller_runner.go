@@ -17,21 +17,21 @@ type ControllerTickerRunner struct {
 	signal       chan bool
 }
 
-func (self *ControllerTickerRunner) GetAuthBucketTicker() <-chan time.Time {
-	if self.authClock == nil {
-		<-self.signal
+func (ctr *ControllerTickerRunner) GetAuthBucketTicker() <-chan time.Time {
+	if ctr.authClock == nil {
+		<-ctr.signal
 	}
-	return self.authClock.C
+	return ctr.authClock.C
 }
 
-func (self *ControllerTickerRunner) Start() error {
-	self.authClock = time.NewTicker(self.authDuration)
-	self.signal <- true
+func (ctr *ControllerTickerRunner) Start() error {
+	ctr.authClock = time.NewTicker(ctr.authDuration)
+	ctr.signal <- true
 	return nil
 }
 
-func (self *ControllerTickerRunner) Stop() error {
-	self.authClock.Stop()
+func (ctr *ControllerTickerRunner) Stop() error {
+	ctr.authClock.Stop()
 	return nil
 }
 

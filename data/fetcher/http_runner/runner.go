@@ -29,59 +29,59 @@ type HttpRunner struct {
 }
 
 // GetGlobalDataTicker returns the global data ticker.
-func (self *HttpRunner) GetGlobalDataTicker() <-chan time.Time {
-	return self.globalDataTicker
+func (hr *HttpRunner) GetGlobalDataTicker() <-chan time.Time {
+	return hr.globalDataTicker
 }
 
 // GetTradeLogProcessorTicker returns the trade log processor ticker.
-func (self *HttpRunner) GetTradeLogProcessorTicker() <-chan time.Time {
-	return self.tradeLogProcessorTicker
+func (hr *HttpRunner) GetTradeLogProcessorTicker() <-chan time.Time {
+	return hr.tradeLogProcessorTicker
 }
 
 // GetCatLogProcessorTicker returns the cat log processor ticker.
-func (self *HttpRunner) GetCatLogProcessorTicker() <-chan time.Time {
-	return self.catLogProcessorTicker
+func (hr *HttpRunner) GetCatLogProcessorTicker() <-chan time.Time {
+	return hr.catLogProcessorTicker
 }
 
 // GetLogTicker returns the log ticker.
-func (self *HttpRunner) GetLogTicker() <-chan time.Time {
-	return self.lticker
+func (hr *HttpRunner) GetLogTicker() <-chan time.Time {
+	return hr.lticker
 }
 
 // GetBlockTicker returns the block ticker.
-func (self *HttpRunner) GetBlockTicker() <-chan time.Time {
-	return self.bticker
+func (hr *HttpRunner) GetBlockTicker() <-chan time.Time {
+	return hr.bticker
 }
 
 // GetOrderbookTicker returns the order book ticker.
-func (self *HttpRunner) GetOrderbookTicker() <-chan time.Time {
-	return self.oticker
+func (hr *HttpRunner) GetOrderbookTicker() <-chan time.Time {
+	return hr.oticker
 }
 
 // GetAuthDataTicker returns the auth data ticker.
-func (self *HttpRunner) GetAuthDataTicker() <-chan time.Time {
-	return self.aticker
+func (hr *HttpRunner) GetAuthDataTicker() <-chan time.Time {
+	return hr.aticker
 }
 
 // GetRateTicker returns the rate ticker.
-func (self *HttpRunner) GetRateTicker() <-chan time.Time {
-	return self.rticker
+func (hr *HttpRunner) GetRateTicker() <-chan time.Time {
+	return hr.rticker
 }
 
 // GetReserveRatesTicker returns the reserve rates ticker.
-func (self *HttpRunner) GetReserveRatesTicker() <-chan time.Time {
-	return self.rsticker
+func (hr *HttpRunner) GetReserveRatesTicker() <-chan time.Time {
+	return hr.rsticker
 }
 
 // waitPingResponse waits until HTTP ticker server responses to request.
-func (self *HttpRunner) waitPingResponse() error {
+func (hr *HttpRunner) waitPingResponse() error {
 	var (
 		tickCh   = time.NewTicker(time.Second / 2).C
 		expireCh = time.NewTicker(time.Second * 5).C
 		client   = http.Client{Timeout: time.Second}
 	)
 
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://127.0.0.1:%d/%s", self.port, "ping"), nil)
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://127.0.0.1:%d/%s", hr.port, "ping"), nil)
 	if err != nil {
 		return err
 	}
@@ -109,32 +109,32 @@ func (self *HttpRunner) waitPingResponse() error {
 // It is guaranteed that the HTTP server is ready to serve request after
 // this method is returned.
 // The HTTP server is listened on all network interfaces.
-func (self *HttpRunner) Start() error {
-	if self.server != nil {
+func (hr *HttpRunner) Start() error {
+	if hr.server != nil {
 		return errors.New("runner start already")
 	} else {
 		var addr string
-		if self.port != 0 {
-			addr = fmt.Sprintf(":%d", self.port)
+		if hr.port != 0 {
+			addr = fmt.Sprintf(":%d", hr.port)
 		}
-		self.server = NewHttpRunnerServer(self, addr)
+		hr.server = NewHttpRunnerServer(hr, addr)
 		go func() {
-			if err := self.server.Start(); err != nil {
+			if err := hr.server.Start(); err != nil {
 				log.Printf("Http server for runner couldn't start or get stopped. Error: %s", err)
 			}
 		}()
 
 		// wait until the HTTP server is ready
-		<-self.server.notifyCh
-		return self.waitPingResponse()
+		<-hr.server.notifyCh
+		return hr.waitPingResponse()
 	}
 }
 
 // Stop stops the HTTP server. It returns an error if the server is already stopped.
-func (self *HttpRunner) Stop() error {
-	if self.server != nil {
-		err := self.server.Stop()
-		self.server = nil
+func (hr *HttpRunner) Stop() error {
+	if hr.server != nil {
+		err := hr.server.Stop()
+		hr.server = nil
 		return err
 	} else {
 		return errors.New("runner stop already")

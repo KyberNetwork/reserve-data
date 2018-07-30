@@ -35,38 +35,38 @@ type TickerRunner struct {
 	globalDataClock *time.Ticker
 }
 
-func (self *TickerRunner) GetGlobalDataTicker() <-chan time.Time {
-	return self.globalDataClock.C
+func (tr *TickerRunner) GetGlobalDataTicker() <-chan time.Time {
+	return tr.globalDataClock.C
 }
 
-func (self *TickerRunner) GetBlockTicker() <-chan time.Time {
-	return self.bclock.C
+func (tr *TickerRunner) GetBlockTicker() <-chan time.Time {
+	return tr.bclock.C
 }
-func (self *TickerRunner) GetOrderbookTicker() <-chan time.Time {
-	return self.oclock.C
+func (tr *TickerRunner) GetOrderbookTicker() <-chan time.Time {
+	return tr.oclock.C
 }
-func (self *TickerRunner) GetAuthDataTicker() <-chan time.Time {
-	return self.aclock.C
+func (tr *TickerRunner) GetAuthDataTicker() <-chan time.Time {
+	return tr.aclock.C
 }
-func (self *TickerRunner) GetRateTicker() <-chan time.Time {
-	return self.rclock.C
+func (tr *TickerRunner) GetRateTicker() <-chan time.Time {
+	return tr.rclock.C
 }
 
-func (self *TickerRunner) Start() error {
-	self.oclock = time.NewTicker(self.oduration)
-	self.aclock = time.NewTicker(self.aduration)
-	self.rclock = time.NewTicker(self.rduration)
-	self.bclock = time.NewTicker(self.bduration)
-	self.globalDataClock = time.NewTicker(self.globalDataDuration)
+func (tr *TickerRunner) Start() error {
+	tr.oclock = time.NewTicker(tr.oduration)
+	tr.aclock = time.NewTicker(tr.aduration)
+	tr.rclock = time.NewTicker(tr.rduration)
+	tr.bclock = time.NewTicker(tr.bduration)
+	tr.globalDataClock = time.NewTicker(tr.globalDataDuration)
 	return nil
 }
 
-func (self *TickerRunner) Stop() error {
-	self.oclock.Stop()
-	self.aclock.Stop()
-	self.rclock.Stop()
-	self.bclock.Stop()
-	self.globalDataClock.Stop()
+func (tr *TickerRunner) Stop() error {
+	tr.oclock.Stop()
+	tr.aclock.Stop()
+	tr.rclock.Stop()
+	tr.bclock.Stop()
+	tr.globalDataClock.Stop()
 	return nil
 }
 

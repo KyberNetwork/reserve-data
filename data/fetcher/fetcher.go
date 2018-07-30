@@ -47,15 +47,15 @@ func NewFetcher(
 	}
 }
 
-func (self *Fetcher) SetBlockchain(blockchain Blockchain) {
-	self.blockchain = blockchain
-	self.FetchCurrentBlock(common.GetTimepoint())
+func (f *Fetcher) SetBlockchain(blockchain Blockchain) {
+	f.blockchain = blockchain
+	f.FetchCurrentBlock(common.GetTimepoint())
 }
 
-func (self *Fetcher) AddExchange(exchange Exchange) {
-	self.exchanges = append(self.exchanges, exchange)
+func (f *Fetcher) AddExchange(exchange Exchange) {
+	f.exchanges = append(f.exchanges, exchange)
 	// initiate exchange status as up
-	exchangeStatus, _ := self.setting.GetExchangeStatus()
+	exchangeStatus, _ := f.setting.GetExchangeStatus()
 	if exchangeStatus == nil {
 		exchangeStatus = map[string]common.ExStatus{}
 	}
@@ -67,109 +67,109 @@ func (self *Fetcher) AddExchange(exchange Exchange) {
 			Status:    true,
 		}
 	}
-	if err := self.setting.UpdateExchangeStatus(exchangeStatus); err != nil {
+	if err := f.setting.UpdateExchangeStatus(exchangeStatus); err != nil {
 		log.Printf("Update exchange status error: %s", err.Error())
 	}
 }
 
-func (self *Fetcher) Stop() error {
-	return self.runner.Stop()
+func (f *Fetcher) Stop() error {
+	return f.runner.Stop()
 }
 
-func (self *Fetcher) Run() error {
+func (f *Fetcher) Run() error {
 	log.Printf("Fetcher runner is starting...")
-	if err := self.runner.Start(); err != nil {
+	if err := f.runner.Start(); err != nil {
 		return err
 	}
-	go self.RunOrderbookFetcher()
-	go self.RunAuthDataFetcher()
-	go self.RunRateFetcher()
-	go self.RunBlockFetcher()
-	go self.RunGlobalDataFetcher()
+	go f.RunOrderbookFetcher()
+	go f.RunAuthDataFetcher()
+	go f.RunRateFetcher()
+	go f.RunBlockFetcher()
+	go f.RunGlobalDataFetcher()
 	log.Printf("Fetcher runner is running...")
 	return nil
 }
 
-func (self *Fetcher) RunGlobalDataFetcher() {
+func (f *Fetcher) RunGlobalDataFetcher() {
 	for {
 		log.Printf("waiting for signal from global data channel")
-		t := <-self.runner.GetGlobalDataTicker()
+		t := <-f.runner.GetGlobalDataTicker()
 		log.Printf("got signal in global data channel with timestamp %d", common.TimeToTimepoint(t))
 		timepoint := common.TimeToTimepoint(t)
-		self.FetchGlobalData(timepoint)
+		f.FetchGlobalData(timepoint)
 		log.Printf("fetched block from blockchain")
 	}
 }
 
-func (self *Fetcher) FetchGlobalData(timepoint uint64) {
-	data, _ := self.theworld.GetGoldInfo()
+func (f *Fetcher) FetchGlobalData(timepoint uint64) {
+	data, _ := f.theworld.GetGoldInfo()
 	data.Timestamp = common.GetTimepoint()
-	err := self.globalStorage.StoreGoldInfo(data)
+	err := f.globalStorage.StoreGoldInfo(data)
 	if err != nil {
 		log.Printf("Storing gold info failed: %s", err.Error())
 	}
 }
 
-func (self *Fetcher) RunBlockFetcher() {
+func (f *Fetcher) RunBlockFetcher() {
 	for {
 		log.Printf("waiting for signal from block channel")
-		t := <-self.runner.GetBlockTicker()
+		t := <-f.runner.GetBlockTicker()
 		log.Printf("got signal in block channel with timestamp %d", common.TimeToTimepoint(t))
 		timepoint := common.TimeToTimepoint(t)
-		self.FetchCurrentBlock(timepoint)
+		f.FetchCurrentBlock(timepoint)
 		log.Printf("fetched block from blockchain")
 	}
 }
 
-func (self *Fetcher) RunRateFetcher() {
+func (f *Fetcher) RunRateFetcher() {
 	for {
 		log.Printf("waiting for signal from runner rate channel")
-		t := <-self.runner.GetRateTicker()
+		t := <-f.runner.GetRateTicker()
 		log.Printf("got signal in rate channel with timestamp %d", common.TimeToTimepoint(t))
-		self.FetchRate(common.TimeToTimepoint(t))
+		f.FetchRate(common.TimeToTimepoint(t))
 		log.Printf("fetched rates from blockchain")
 	}
 }
 
-func (self *Fetcher) FetchRate(timepoint uint64) {
+func (f *Fetcher) FetchRate(timepoint uint64) {
 	var (
 		err  error
 		data common.AllRateEntry
 	)
 	// only fetch rates 5s after the block number is updated
-	if !self.simulationMode && self.currentBlockUpdateTime-timepoint <= 5000 {
+	if !f.simulationMode && f.currentBlockUpdateTime-timepoint <= 5000 {
 		return
 	}
 
-	var atBlock = self.currentBlock - 1
+	var atBlock = f.currentBlock - 1
 	// in simulation mode, just fetches from latest known block
-	if self.simulationMode {
+	if f.simulationMode {
 		atBlock = 0
 	}
 
-	data, err = self.blockchain.FetchRates(atBlock, self.currentBlock)
+	data, err = f.blockchain.FetchRates(atBlock, f.currentBlock)
 	if err != nil {
 		log.Printf("Fetching rates from blockchain failed: %s. Will not store it to storage.", err.Error())
 		return
 	}
 
 	log.Printf("Got rates from blockchain: %+v", data)
-	if err = self.storage.StoreRate(data, timepoint); err != nil {
+	if err = f.storage.StoreRate(data, timepoint); err != nil {
 		log.Printf("Storing rates failed: %s", err.Error())
 	}
 }
 
-func (self *Fetcher) RunAuthDataFetcher() {
+func (f *Fetcher) RunAuthDataFetcher() {
 	for {
 		log.Printf("waiting for signal from runner auth data channel")
-		t := <-self.runner.GetAuthDataTicker()
+		t := <-f.runner.GetAuthDataTicker()
 		log.Printf("got signal in auth data channel with timestamp %d", common.TimeToTimepoint(t))
-		self.FetchAllAuthData(common.TimeToTimepoint(t))
+		f.FetchAllAuthData(common.TimeToTimepoint(t))
 		log.Printf("fetched data from exchanges")
 	}
 }
 
-func (self *Fetcher) FetchAllAuthData(timepoint uint64) {
+func (f *Fetcher) FetchAllAuthData(timepoint uint64) {
 	snapshot := common.AuthDataSnapshot{
 		Valid:             true,
 		Timestamp:         common.GetTimestamp(),
@@ -182,15 +182,15 @@ func (self *Fetcher) FetchAllAuthData(timepoint uint64) {
 	ebalances := sync.Map{}
 	estatuses := sync.Map{}
 	bstatuses := sync.Map{}
-	pendings, err := self.storage.GetPendingActivities()
+	pendings, err := f.storage.GetPendingActivities()
 	if err != nil {
 		log.Printf("Getting pending activites failed: %s\n", err)
 		return
 	}
 	wait := sync.WaitGroup{}
-	for _, exchange := range self.exchanges {
+	for _, exchange := range f.exchanges {
 		wait.Add(1)
-		go self.FetchAuthDataFromExchange(
+		go f.FetchAuthDataFromExchange(
 			&wait, exchange, &ebalances, &estatuses,
 			pendings, timepoint)
 	}
@@ -222,11 +222,11 @@ func (self *Fetcher) FetchAllAuthData(timepoint uint64) {
 		}
 	}
 
-	self.FetchAuthDataFromBlockchain(
+	f.FetchAuthDataFromBlockchain(
 		bbalances, &bstatuses, pendings)
-	snapshot.Block = self.currentBlock
+	snapshot.Block = f.currentBlock
 	snapshot.ReturnTime = common.GetTimestamp()
-	err = self.PersistSnapshot(
+	err = f.PersistSnapshot(
 		&ebalances, bbalances, &estatuses, &bstatuses,
 		pendings, &snapshot, timepoint)
 	if err != nil {
@@ -235,7 +235,7 @@ func (self *Fetcher) FetchAllAuthData(timepoint uint64) {
 	}
 }
 
-func (self *Fetcher) FetchAuthDataFromBlockchain(
+func (f *Fetcher) FetchAuthDataFromBlockchain(
 	allBalances map[string]common.BalanceEntry,
 	allStatuses *sync.Map,
 	pendings []common.ActivityRecord) {
@@ -248,13 +248,13 @@ func (self *Fetcher) FetchAuthDataFromBlockchain(
 	var statuses map[common.ActivityID]common.ActivityStatus
 	var err error
 	for {
-		preStatuses := self.FetchStatusFromBlockchain(pendings)
-		balances, err = self.FetchBalanceFromBlockchain()
+		preStatuses := f.FetchStatusFromBlockchain(pendings)
+		balances, err = f.FetchBalanceFromBlockchain()
 		if err != nil {
 			log.Printf("Fetching blockchain balances failed: %v", err)
 			break
 		}
-		statuses = self.FetchStatusFromBlockchain(pendings)
+		statuses = f.FetchStatusFromBlockchain(pendings)
 		if unchanged(preStatuses, statuses) {
 			break
 		}
@@ -269,29 +269,29 @@ func (self *Fetcher) FetchAuthDataFromBlockchain(
 	}
 }
 
-func (self *Fetcher) FetchCurrentBlock(timepoint uint64) {
-	block, err := self.blockchain.CurrentBlock()
+func (f *Fetcher) FetchCurrentBlock(timepoint uint64) {
+	block, err := f.blockchain.CurrentBlock()
 	if err != nil {
 		log.Printf("Fetching current block failed: %v. Ignored.", err)
 	} else {
 		// update currentBlockUpdateTime first to avoid race condition
 		// where fetcher is trying to fetch new rate
-		self.currentBlockUpdateTime = common.GetTimepoint()
-		self.currentBlock = block
+		f.currentBlockUpdateTime = common.GetTimepoint()
+		f.currentBlock = block
 	}
 }
 
-func (self *Fetcher) FetchBalanceFromBlockchain() (map[string]common.BalanceEntry, error) {
-	reserveAddr, err := self.setting.GetAddress(settings.Reserve)
+func (f *Fetcher) FetchBalanceFromBlockchain() (map[string]common.BalanceEntry, error) {
+	reserveAddr, err := f.setting.GetAddress(settings.Reserve)
 	if err != nil {
 		return nil, err
 	}
-	return self.blockchain.FetchBalanceData(reserveAddr, 0)
+	return f.blockchain.FetchBalanceData(reserveAddr, 0)
 }
 
-func (self *Fetcher) newNonceValidator() func(common.ActivityRecord) bool {
+func (f *Fetcher) newNonceValidator() func(common.ActivityRecord) bool {
 	// SetRateMinedNonce might be slow, use closure to not invoke it every time
-	minedNonce, err := self.blockchain.SetRateMinedNonce()
+	minedNonce, err := f.blockchain.SetRateMinedNonce()
 	if err != nil {
 		log.Printf("Getting mined nonce failed: %s", err)
 	}
@@ -318,9 +318,9 @@ func (self *Fetcher) newNonceValidator() func(common.ActivityRecord) bool {
 	}
 }
 
-func (self *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord) map[common.ActivityID]common.ActivityStatus {
+func (f *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord) map[common.ActivityID]common.ActivityStatus {
 	result := map[common.ActivityID]common.ActivityStatus{}
-	nonceValidator := self.newNonceValidator()
+	nonceValidator := f.newNonceValidator()
 
 	for _, activity := range pendings {
 		if activity.IsBlockchainPending() && (activity.Action == common.ActionSetrate || activity.Action == common.ActionDeposit || activity.Action == common.ActionWithdraw) {
@@ -336,7 +336,7 @@ func (self *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord)
 			if tx.Big().IsInt64() && tx.Big().Int64() == 0 {
 				continue
 			}
-			status, blockNum, err = self.blockchain.TxStatus(tx)
+			status, blockNum, err = f.blockchain.TxStatus(tx)
 			if err != nil {
 				log.Printf("Getting tx status failed, tx will be considered as pending: %s", err)
 			}
@@ -484,7 +484,7 @@ func updateActivitywithExchangeStatus(activity *common.ActivityRecord, estatuses
 	}
 }
 
-func (self *Fetcher) PersistSnapshot(
+func (f *Fetcher) PersistSnapshot(
 	ebalances *sync.Map,
 	bbalances map[string]common.BalanceEntry,
 	estatuses *sync.Map,
@@ -510,9 +510,9 @@ func (self *Fetcher) PersistSnapshot(
 		if !v.Valid {
 			// get old auth data, because get balance error then we have to keep
 			// balance to the latest version then analytic won't get exchange balance to zero
-			authVersion, err := self.storage.CurrentAuthDataVersion(common.GetTimepoint())
+			authVersion, err := f.storage.CurrentAuthDataVersion(common.GetTimepoint())
 			if err == nil {
-				oldAuth, err := self.storage.GetAuthData(authVersion)
+				oldAuth, err := f.storage.GetAuthData(authVersion)
 				if err != nil {
 					allEBalances[exID] = common.EBalanceEntry{
 						Error: err.Error(),
@@ -539,7 +539,7 @@ func (self *Fetcher) PersistSnapshot(
 		if activity.IsPending() {
 			pendingActivities = append(pendingActivities, activity)
 		}
-		err := self.storage.UpdateActivity(activity.ID, activity)
+		err := f.storage.UpdateActivity(activity.ID, activity)
 		if err != nil {
 			snapshot.Valid = false
 			snapshot.Error = err.Error()
@@ -565,10 +565,10 @@ func (self *Fetcher) PersistSnapshot(
 	// persist blockchain balances
 	snapshot.ReserveBalances = bbalances
 	snapshot.PendingActivities = pendingActivities
-	return self.storage.StoreAuthSnapshot(snapshot, timepoint)
+	return f.storage.StoreAuthSnapshot(snapshot, timepoint)
 }
 
-func (self *Fetcher) FetchAuthDataFromExchange(
+func (f *Fetcher) FetchAuthDataFromExchange(
 	wg *sync.WaitGroup, exchange Exchange,
 	allBalances *sync.Map, allStatuses *sync.Map,
 	pendings []common.ActivityRecord,
@@ -583,13 +583,13 @@ func (self *Fetcher) FetchAuthDataFromExchange(
 	var statuses map[common.ActivityID]common.ActivityStatus
 	var err error
 	for {
-		preStatuses := self.FetchStatusFromExchange(exchange, pendings, timepoint)
+		preStatuses := f.FetchStatusFromExchange(exchange, pendings, timepoint)
 		balances, err = exchange.FetchEBalanceData(timepoint)
 		if err != nil {
 			log.Printf("Fetching exchange balances from %s failed: %v\n", exchange.Name(), err)
 			break
 		}
-		statuses = self.FetchStatusFromExchange(exchange, pendings, timepoint)
+		statuses = f.FetchStatusFromExchange(exchange, pendings, timepoint)
 		if unchanged(preStatuses, statuses) {
 			break
 		}
@@ -602,7 +602,7 @@ func (self *Fetcher) FetchAuthDataFromExchange(
 	}
 }
 
-func (self *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []common.ActivityRecord, timepoint uint64) map[common.ActivityID]common.ActivityStatus {
+func (f *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []common.ActivityRecord, timepoint uint64) map[common.ActivityID]common.ActivityStatus {
 	result := map[common.ActivityID]common.ActivityStatus{}
 	for _, activity := range pendings {
 		if activity.IsExchangePending() && activity.Destination == string(exchange.ID()) {
@@ -707,33 +707,33 @@ func (self *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []commo
 	return result
 }
 
-func (self *Fetcher) RunOrderbookFetcher() {
+func (f *Fetcher) RunOrderbookFetcher() {
 	for {
 		log.Printf("waiting for signal from runner orderbook channel")
-		t := <-self.runner.GetOrderbookTicker()
+		t := <-f.runner.GetOrderbookTicker()
 		log.Printf("got signal in orderbook channel with timestamp %d", common.TimeToTimepoint(t))
-		self.FetchOrderbook(common.TimeToTimepoint(t))
+		f.FetchOrderbook(common.TimeToTimepoint(t))
 		log.Printf("fetched data from exchanges")
 	}
 }
 
-func (self *Fetcher) FetchOrderbook(timepoint uint64) {
+func (f *Fetcher) FetchOrderbook(timepoint uint64) {
 	data := NewConcurrentAllPriceData()
 	// start fetching
 	wait := sync.WaitGroup{}
-	for _, exchange := range self.exchanges {
+	for _, exchange := range f.exchanges {
 		wait.Add(1)
-		go self.fetchPriceFromExchange(&wait, exchange, data, timepoint)
+		go f.fetchPriceFromExchange(&wait, exchange, data, timepoint)
 	}
 	wait.Wait()
-	data.SetBlockNumber(self.currentBlock)
-	err := self.storage.StorePrice(data.GetData(), timepoint)
+	data.SetBlockNumber(f.currentBlock)
+	err := f.storage.StorePrice(data.GetData(), timepoint)
 	if err != nil {
 		log.Printf("Storing data failed: %s\n", err)
 	}
 }
 
-func (self *Fetcher) fetchPriceFromExchange(wg *sync.WaitGroup, exchange Exchange, data *ConcurrentAllPriceData, timepoint uint64) {
+func (f *Fetcher) fetchPriceFromExchange(wg *sync.WaitGroup, exchange Exchange, data *ConcurrentAllPriceData, timepoint uint64) {
 	defer wg.Done()
 	exdata, err := exchange.FetchPriceData(timepoint)
 	if err != nil {

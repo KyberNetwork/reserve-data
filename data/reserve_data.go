@@ -21,30 +21,30 @@ type ReserveData struct {
 	setting           Setting
 }
 
-func (self ReserveData) CurrentGoldInfoVersion(timepoint uint64) (common.Version, error) {
-	return self.globalStorage.CurrentGoldInfoVersion(timepoint)
+func (rd ReserveData) CurrentGoldInfoVersion(timepoint uint64) (common.Version, error) {
+	return rd.globalStorage.CurrentGoldInfoVersion(timepoint)
 }
 
-func (self ReserveData) GetGoldData(timestamp uint64) (common.GoldData, error) {
-	version, err := self.CurrentGoldInfoVersion(timestamp)
+func (rd ReserveData) GetGoldData(timestamp uint64) (common.GoldData, error) {
+	version, err := rd.CurrentGoldInfoVersion(timestamp)
 	if err != nil {
 		return common.GoldData{}, nil
 	}
-	return self.globalStorage.GetGoldInfo(version)
+	return rd.globalStorage.GetGoldInfo(version)
 }
 
-func (self ReserveData) CurrentPriceVersion(timepoint uint64) (common.Version, error) {
-	return self.storage.CurrentPriceVersion(timepoint)
+func (rd ReserveData) CurrentPriceVersion(timepoint uint64) (common.Version, error) {
+	return rd.storage.CurrentPriceVersion(timepoint)
 }
 
-func (self ReserveData) GetAllPrices(timepoint uint64) (common.AllPriceResponse, error) {
+func (rd ReserveData) GetAllPrices(timepoint uint64) (common.AllPriceResponse, error) {
 	timestamp := common.GetTimestamp()
-	version, err := self.storage.CurrentPriceVersion(timepoint)
+	version, err := rd.storage.CurrentPriceVersion(timepoint)
 	if err != nil {
 		return common.AllPriceResponse{}, err
 	} else {
 		result := common.AllPriceResponse{}
-		data, err := self.storage.GetAllPrices(version)
+		data, err := rd.storage.GetAllPrices(version)
 		returnTime := common.GetTimestamp()
 		result.Version = version
 		result.Timestamp = timestamp
@@ -55,14 +55,14 @@ func (self ReserveData) GetAllPrices(timepoint uint64) (common.AllPriceResponse,
 	}
 }
 
-func (self ReserveData) GetOnePrice(pairID common.TokenPairID, timepoint uint64) (common.OnePriceResponse, error) {
+func (rd ReserveData) GetOnePrice(pairID common.TokenPairID, timepoint uint64) (common.OnePriceResponse, error) {
 	timestamp := common.GetTimestamp()
-	version, err := self.storage.CurrentPriceVersion(timepoint)
+	version, err := rd.storage.CurrentPriceVersion(timepoint)
 	if err != nil {
 		return common.OnePriceResponse{}, err
 	} else {
 		result := common.OnePriceResponse{}
-		data, err := self.storage.GetOnePrice(pairID, version)
+		data, err := rd.storage.GetOnePrice(pairID, version)
 		returnTime := common.GetTimestamp()
 		result.Version = version
 		result.Timestamp = timestamp
@@ -72,18 +72,18 @@ func (self ReserveData) GetOnePrice(pairID common.TokenPairID, timepoint uint64)
 	}
 }
 
-func (self ReserveData) CurrentAuthDataVersion(timepoint uint64) (common.Version, error) {
-	return self.storage.CurrentAuthDataVersion(timepoint)
+func (rd ReserveData) CurrentAuthDataVersion(timepoint uint64) (common.Version, error) {
+	return rd.storage.CurrentAuthDataVersion(timepoint)
 }
 
-func (self ReserveData) GetAuthData(timepoint uint64) (common.AuthDataResponse, error) {
+func (rd ReserveData) GetAuthData(timepoint uint64) (common.AuthDataResponse, error) {
 	timestamp := common.GetTimestamp()
-	version, err := self.storage.CurrentAuthDataVersion(timepoint)
+	version, err := rd.storage.CurrentAuthDataVersion(timepoint)
 	if err != nil {
 		return common.AuthDataResponse{}, err
 	} else {
 		result := common.AuthDataResponse{}
-		data, err := self.storage.GetAuthData(version)
+		data, err := rd.storage.GetAuthData(version)
 		returnTime := common.GetTimestamp()
 		result.Version = version
 		result.Timestamp = timestamp
@@ -97,7 +97,7 @@ func (self ReserveData) GetAuthData(timepoint uint64) (common.AuthDataResponse, 
 		result.Data.Block = data.Block
 		result.Data.ReserveBalances = map[string]common.BalanceResponse{}
 		for tokenID, balance := range data.ReserveBalances {
-			token, uErr := self.setting.GetInternalTokenByID(tokenID)
+			token, uErr := rd.setting.GetInternalTokenByID(tokenID)
 			//If the token is invalid, this must Panic
 			if uErr != nil {
 				return result, fmt.Errorf("Can't get Internal token %s: (%s)", tokenID, uErr)
@@ -152,9 +152,9 @@ func getOneRateData(rate common.AllRateEntry) map[string]common.RateResponse {
 	return data
 }
 
-func (self ReserveData) GetRates(fromTime, toTime uint64) ([]common.AllRateResponse, error) {
+func (rd ReserveData) GetRates(fromTime, toTime uint64) ([]common.AllRateResponse, error) {
 	result := []common.AllRateResponse{}
-	rates, err := self.storage.GetRates(fromTime, toTime)
+	rates, err := rd.storage.GetRates(fromTime, toTime)
 	if err != nil {
 		return result, err
 	}
@@ -184,14 +184,14 @@ func (self ReserveData) GetRates(fromTime, toTime uint64) ([]common.AllRateRespo
 
 	return result, nil
 }
-func (self ReserveData) GetRate(timepoint uint64) (common.AllRateResponse, error) {
+func (rd ReserveData) GetRate(timepoint uint64) (common.AllRateResponse, error) {
 	timestamp := common.GetTimestamp()
-	version, err := self.storage.CurrentRateVersion(timepoint)
+	version, err := rd.storage.CurrentRateVersion(timepoint)
 	if err != nil {
 		return common.AllRateResponse{}, err
 	} else {
 		result := common.AllRateResponse{}
-		rates, err := self.storage.GetRate(version)
+		rates, err := rd.storage.GetRate(version)
 		returnTime := common.GetTimestamp()
 		result.Version = version
 		result.Timestamp = timestamp
@@ -213,12 +213,12 @@ func (self ReserveData) GetRate(timepoint uint64) (common.AllRateResponse, error
 	}
 }
 
-func (self ReserveData) GetExchangeStatus() (common.ExchangesStatus, error) {
-	return self.setting.GetExchangeStatus()
+func (rd ReserveData) GetExchangeStatus() (common.ExchangesStatus, error) {
+	return rd.setting.GetExchangeStatus()
 }
 
-func (self ReserveData) UpdateExchangeStatus(exchange string, status bool, timestamp uint64) error {
-	currentExchangeStatus, err := self.setting.GetExchangeStatus()
+func (rd ReserveData) UpdateExchangeStatus(exchange string, status bool, timestamp uint64) error {
+	currentExchangeStatus, err := rd.setting.GetExchangeStatus()
 	if err != nil {
 		return err
 	}
@@ -226,55 +226,55 @@ func (self ReserveData) UpdateExchangeStatus(exchange string, status bool, times
 		Timestamp: timestamp,
 		Status:    status,
 	}
-	return self.setting.UpdateExchangeStatus(currentExchangeStatus)
+	return rd.setting.UpdateExchangeStatus(currentExchangeStatus)
 }
 
-func (self ReserveData) UpdateExchangeNotification(
+func (rd ReserveData) UpdateExchangeNotification(
 	exchange, action, tokenPair string, fromTime, toTime uint64, isWarning bool, msg string) error {
-	return self.setting.UpdateExchangeNotification(exchange, action, tokenPair, fromTime, toTime, isWarning, msg)
+	return rd.setting.UpdateExchangeNotification(exchange, action, tokenPair, fromTime, toTime, isWarning, msg)
 }
 
-func (self ReserveData) GetRecords(fromTime, toTime uint64) ([]common.ActivityRecord, error) {
-	return self.storage.GetAllRecords(fromTime, toTime)
+func (rd ReserveData) GetRecords(fromTime, toTime uint64) ([]common.ActivityRecord, error) {
+	return rd.storage.GetAllRecords(fromTime, toTime)
 }
 
-func (self ReserveData) GetPendingActivities() ([]common.ActivityRecord, error) {
-	return self.storage.GetPendingActivities()
+func (rd ReserveData) GetPendingActivities() ([]common.ActivityRecord, error) {
+	return rd.storage.GetPendingActivities()
 }
 
-func (self ReserveData) GetNotifications() (common.ExchangeNotifications, error) {
-	return self.setting.GetExchangeNotifications()
+func (rd ReserveData) GetNotifications() (common.ExchangeNotifications, error) {
+	return rd.setting.GetExchangeNotifications()
 }
 
 //Run run fetcher
-func (self ReserveData) Run() error {
-	return self.fetcher.Run()
+func (rd ReserveData) Run() error {
+	return rd.fetcher.Run()
 }
 
 //Stop stop the fetcher
-func (self ReserveData) Stop() error {
-	return self.fetcher.Stop()
+func (rd ReserveData) Stop() error {
+	return rd.fetcher.Stop()
 }
 
 //ControlAuthDataSize pack old data to file, push to S3 and prune outdated data
-func (self ReserveData) ControlAuthDataSize() error {
+func (rd ReserveData) ControlAuthDataSize() error {
 	for {
 		log.Printf("DataPruner: waiting for signal from runner AuthData controller channel")
-		t := <-self.storageController.Runner.GetAuthBucketTicker()
+		t := <-rd.storageController.Runner.GetAuthBucketTicker()
 		timepoint := common.TimeToTimepoint(t)
 		log.Printf("DataPruner: got signal in AuthData controller channel with timestamp %d", common.TimeToTimepoint(t))
 		fileName := fmt.Sprintf("./exported/ExpiredAuthData_at_%s", time.Unix(int64(timepoint/1000), 0).UTC())
-		nRecord, err := self.storage.ExportExpiredAuthData(common.TimeToTimepoint(t), fileName)
+		nRecord, err := rd.storage.ExportExpiredAuthData(common.TimeToTimepoint(t), fileName)
 		if err != nil {
 			log.Printf("ERROR: DataPruner export AuthData operation failed: %s", err)
 		} else {
 			var integrity bool
 			if nRecord > 0 {
-				err = self.storageController.Arch.UploadFile(self.storageController.Arch.GetReserveDataBucketName(), self.storageController.ExpiredAuthDataPath, fileName)
+				err = rd.storageController.Arch.UploadFile(rd.storageController.Arch.GetReserveDataBucketName(), rd.storageController.ExpiredAuthDataPath, fileName)
 				if err != nil {
 					log.Printf("DataPruner: Upload file failed: %s", err)
 				} else {
-					integrity, err = self.storageController.Arch.CheckFileIntergrity(self.storageController.Arch.GetReserveDataBucketName(), self.storageController.ExpiredAuthDataPath, fileName)
+					integrity, err = rd.storageController.Arch.CheckFileIntergrity(rd.storageController.Arch.GetReserveDataBucketName(), rd.storageController.ExpiredAuthDataPath, fileName)
 					if err != nil {
 						log.Printf("ERROR: DataPruner: error in file integrity check (%s):", err)
 					} else if !integrity {
@@ -283,7 +283,7 @@ func (self ReserveData) ControlAuthDataSize() error {
 					}
 					if err != nil || !integrity {
 						//if the intergrity check failed, remove the remote file.
-						removalErr := self.storageController.Arch.RemoveFile(self.storageController.Arch.GetReserveDataBucketName(), self.storageController.ExpiredAuthDataPath, fileName)
+						removalErr := rd.storageController.Arch.RemoveFile(rd.storageController.Arch.GetReserveDataBucketName(), rd.storageController.ExpiredAuthDataPath, fileName)
 						if removalErr != nil {
 							log.Printf("ERROR: DataPruner: cannot remove remote file :(%s)", removalErr)
 							return err
@@ -292,7 +292,7 @@ func (self ReserveData) ControlAuthDataSize() error {
 				}
 			}
 			if integrity && err == nil {
-				nPrunedRecords, err := self.storage.PruneExpiredAuthData(common.TimeToTimepoint(t))
+				nPrunedRecords, err := rd.storage.PruneExpiredAuthData(common.TimeToTimepoint(t))
 				if err != nil {
 					log.Printf("DataPruner: Can not prune Auth Data (%s)", err)
 					return err
@@ -309,10 +309,10 @@ func (self ReserveData) ControlAuthDataSize() error {
 	}
 }
 
-func (self ReserveData) GetTradeHistory(fromTime, toTime uint64) (common.AllTradeHistory, error) {
+func (rd ReserveData) GetTradeHistory(fromTime, toTime uint64) (common.AllTradeHistory, error) {
 	data := common.AllTradeHistory{}
 	data.Data = map[common.ExchangeID]common.ExchangeTradeHistory{}
-	for _, ex := range self.exchanges {
+	for _, ex := range rd.exchanges {
 		history, err := ex.GetTradeHistory(fromTime, toTime)
 		if err != nil {
 			return data, err
@@ -323,12 +323,12 @@ func (self ReserveData) GetTradeHistory(fromTime, toTime uint64) (common.AllTrad
 	return data, nil
 }
 
-func (self ReserveData) RunStorageController() error {
-	if err := self.storageController.Runner.Start(); err != nil {
+func (rd ReserveData) RunStorageController() error {
+	if err := rd.storageController.Runner.Start(); err != nil {
 		log.Fatalf("Storage controller runner error: %s", err.Error())
 	}
 	go func() {
-		if err := self.ControlAuthDataSize(); err != nil {
+		if err := rd.ControlAuthDataSize(); err != nil {
 			log.Printf("Control auth data size error: %s", err.Error())
 		}
 	}()

@@ -59,32 +59,32 @@ func pingHandler(c *gin.Context) {
 }
 
 // register setups the gin.Engine instance by registers HTTP handlers.
-func (self *HttpRunnerServer) register() {
-	self.r.GET("/ping", pingHandler)
+func (hrs *HttpRunnerServer) register() {
+	hrs.r.GET("/ping", pingHandler)
 
-	self.r.GET("/otick", newTickerHandler(self.runner.oticker))
-	self.r.GET("/atick", newTickerHandler(self.runner.aticker))
-	self.r.GET("/rtick", newTickerHandler(self.runner.rticker))
-	self.r.GET("/btick", newTickerHandler(self.runner.bticker))
-	self.r.GET("/gtick", newTickerHandler(self.runner.globalDataTicker))
+	hrs.r.GET("/otick", newTickerHandler(hrs.runner.oticker))
+	hrs.r.GET("/atick", newTickerHandler(hrs.runner.aticker))
+	hrs.r.GET("/rtick", newTickerHandler(hrs.runner.rticker))
+	hrs.r.GET("/btick", newTickerHandler(hrs.runner.bticker))
+	hrs.r.GET("/gtick", newTickerHandler(hrs.runner.globalDataTicker))
 }
 
 // Start creates the HTTP server if needed and starts it.
 // The HTTP server is running in foreground.
 // This function always return a non-nil error.
-func (self *HttpRunnerServer) Start() error {
-	if self.http == nil {
-		self.http = &http.Server{
-			Handler: self.r,
+func (hrs *HttpRunnerServer) Start() error {
+	if hrs.http == nil {
+		hrs.http = &http.Server{
+			Handler: hrs.r,
 		}
 
-		lis, err := net.Listen("tcp", self.host)
+		lis, err := net.Listen("tcp", hrs.host)
 		if err != nil {
 			return err
 		}
 
 		// if port is not provided, use a random one and set it back to runner.
-		if self.runner.port == 0 {
+		if hrs.runner.port == 0 {
 			_, listenedPort, sErr := net.SplitHostPort(lis.Addr().String())
 			if sErr != nil {
 				return sErr
@@ -93,22 +93,22 @@ func (self *HttpRunnerServer) Start() error {
 			if sErr != nil {
 				return sErr
 			}
-			self.runner.port = port
+			hrs.runner.port = port
 		}
 
-		self.notifyCh <- struct{}{}
+		hrs.notifyCh <- struct{}{}
 
-		return self.http.Serve(lis)
+		return hrs.http.Serve(lis)
 	}
 	return errors.New("server start already")
 }
 
 // Stop shutdowns the HTTP server and free the resources.
 // It returns an error if the server is shutdown already.
-func (self *HttpRunnerServer) Stop() error {
-	if self.http != nil {
-		err := self.http.Shutdown(nil)
-		self.http = nil
+func (hrs *HttpRunnerServer) Stop() error {
+	if hrs.http != nil {
+		err := hrs.http.Shutdown(nil)
+		hrs.http = nil
 		return err
 	}
 	return errors.New("server stop already")

@@ -1,8 +1,9 @@
 package fetcher
 
 import (
-	"github.com/KyberNetwork/reserve-data/common"
 	"sync"
+
+	"github.com/KyberNetwork/reserve-data/common"
 )
 
 type ConcurrentAllPriceData struct {
@@ -20,27 +21,27 @@ func NewConcurrentAllPriceData() *ConcurrentAllPriceData {
 	}
 }
 
-func (self *ConcurrentAllPriceData) SetBlockNumber(block uint64) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-	self.data.Block = block
+func (cap *ConcurrentAllPriceData) SetBlockNumber(block uint64) {
+	cap.mu.Lock()
+	defer cap.mu.Unlock()
+	cap.data.Block = block
 }
 
-func (self *ConcurrentAllPriceData) SetOnePrice(
+func (cap *ConcurrentAllPriceData) SetOnePrice(
 	exchange common.ExchangeID,
 	pair common.TokenPairID,
 	d common.ExchangePrice) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-	_, exist := self.data.Data[pair]
+	cap.mu.Lock()
+	defer cap.mu.Unlock()
+	_, exist := cap.data.Data[pair]
 	if !exist {
-		self.data.Data[pair] = common.OnePrice{}
+		cap.data.Data[pair] = common.OnePrice{}
 	}
-	self.data.Data[pair][exchange] = d
+	cap.data.Data[pair][exchange] = d
 }
 
-func (self *ConcurrentAllPriceData) GetData() common.AllPriceEntry {
-	self.mu.RLock()
-	defer self.mu.RUnlock()
-	return self.data
+func (cap *ConcurrentAllPriceData) GetData() common.AllPriceEntry {
+	cap.mu.RLock()
+	defer cap.mu.RUnlock()
+	return cap.data
 }
