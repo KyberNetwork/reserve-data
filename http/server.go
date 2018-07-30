@@ -103,14 +103,14 @@ func eligible(ups, allowedPerms []Permission) bool {
 // using HMAC512
 // params must contain "nonce" which is the unixtime in millisecond. The nonce will be invalid
 // if it differs from server time more than 10s
-func (h *HTTPServer) Authenticated(c *gin.Context, requiredParams []string, perms []Permission) (url.Values, bool) {
+func (hs *HTTPServer) Authenticated(c *gin.Context, requiredParams []string, perms []Permission) (url.Values, bool) {
 	err := c.Request.ParseForm()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("Malformed request package: %s", err.Error())))
 		return c.Request.Form, false
 	}
 
-	if !h.authEnabled {
+	if !hs.authEnabled {
 		return c.Request.Form, true
 	}
 
@@ -130,7 +130,7 @@ func (h *HTTPServer) Authenticated(c *gin.Context, requiredParams []string, perm
 
 	signed := c.GetHeader("signed")
 	message := c.Request.Form.Encode()
-	userPerms := h.auth.GetPermission(signed, message)
+	userPerms := hs.auth.GetPermission(signed, message)
 	if eligible(userPerms, perms) {
 		return params, true
 	} else {
@@ -143,9 +143,9 @@ func (h *HTTPServer) Authenticated(c *gin.Context, requiredParams []string, perm
 	}
 }
 
-func (h *HTTPServer) AllPricesVersion(c *gin.Context) {
+func (hs *HTTPServer) AllPricesVersion(c *gin.Context) {
 	log.Printf("Getting all prices version")
-	data, err := h.app.CurrentPriceVersion(getTimePoint(c, true))
+	data, err := hs.app.CurrentPriceVersion(getTimePoint(c, true))
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
@@ -153,9 +153,9 @@ func (h *HTTPServer) AllPricesVersion(c *gin.Context) {
 	}
 }
 
-func (h *HTTPServer) AllPrices(c *gin.Context) {
+func (hs *HTTPServer) AllPrices(c *gin.Context) {
 	log.Printf("Getting all prices \n")
-	data, err := h.app.GetAllPrices(getTimePoint(c, true))
+	data, err := hs.app.GetAllPrices(getTimePoint(c, true))
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
@@ -168,15 +168,15 @@ func (h *HTTPServer) AllPrices(c *gin.Context) {
 	}
 }
 
-func (h *HTTPServer) Price(c *gin.Context) {
+func (hs *HTTPServer) Price(c *gin.Context) {
 	base := c.Param("base")
 	quote := c.Param("quote")
 	log.Printf("Getting price for %s - %s \n", base, quote)
-	pair, err := h.setting.NewTokenPairFromID(base, quote)
+	pair, err := hs.setting.NewTokenPairFromID(base, quote)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithReason("Token pair is not supported"))
 	} else {
-		data, err := h.app.GetOnePrice(pair.PairID(), getTimePoint(c, true))
+		data, err := hs.app.GetOnePrice(pair.PairID(), getTimePoint(c, true))
 		if err != nil {
 			httputil.ResponseFailure(c, httputil.WithError(err))
 		} else {
@@ -189,14 +189,14 @@ func (h *HTTPServer) Price(c *gin.Context) {
 	}
 }
 
-func (h *HTTPServer) AuthDataVersion(c *gin.Context) {
+func (hs *HTTPServer) AuthDataVersion(c *gin.Context) {
 	log.Printf("Getting current auth data snapshot version")
-	_, ok := h.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
+	_, ok := hs.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
 	if !ok {
 		return
 	}
 
-	data, err := h.app.CurrentAuthDataVersion(getTimePoint(c, true))
+	data, err := hs.app.CurrentAuthDataVersion(getTimePoint(c, true))
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
@@ -204,14 +204,14 @@ func (h *HTTPServer) AuthDataVersion(c *gin.Context) {
 	}
 }
 
-func (h *HTTPServer) AuthData(c *gin.Context) {
+func (hs *HTTPServer) AuthData(c *gin.Context) {
 	log.Printf("Getting current auth data snapshot \n")
-	_, ok := h.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
+	_, ok := hs.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
 	if !ok {
 		return
 	}
 
-	data, err := h.app.GetAuthData(getTimePoint(c, true))
+	data, err := hs.app.GetAuthData(getTimePoint(c, true))
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
@@ -223,14 +223,14 @@ func (h *HTTPServer) AuthData(c *gin.Context) {
 	}
 }
 
-func (h *HTTPServer) GetRates(c *gin.Context) {
+func (hs *HTTPServer) GetRates(c *gin.Context) {
 	log.Printf("Getting all rates \n")
 	fromTime, _ := strconv.ParseUint(c.Query("fromTime"), 10, 64)
 	toTime, _ := strconv.ParseUint(c.Query("toTime"), 10, 64)
 	if toTime == 0 {
 		toTime = maxTimespot
 	}
-	data, err := h.app.GetRates(fromTime, toTime)
+	data, err := hs.app.GetRates(fromTime, toTime)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
@@ -238,9 +238,9 @@ func (h *HTTPServer) GetRates(c *gin.Context) {
 	}
 }
 
-func (h *HTTPServer) GetRate(c *gin.Context) {
+func (hs *HTTPServer) GetRate(c *gin.Context) {
 	log.Printf("Getting all rates \n")
-	data, err := h.app.GetRate(getTimePoint(c, true))
+	data, err := hs.app.GetRate(getTimePoint(c, true))
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
@@ -252,8 +252,8 @@ func (h *HTTPServer) GetRate(c *gin.Context) {
 	}
 }
 
-func (h *HTTPServer) SetRate(c *gin.Context) {
-	postForm, ok := h.Authenticated(c, []string{"tokens", "buys", "sells", "block", "afp_mid", "msgs"}, []Permission{RebalancePermission})
+func (hs *HTTPServer) SetRate(c *gin.Context) {
+	postForm, ok := hs.Authenticated(c, []string{"tokens", "buys", "sells", "block", "afp_mid", "msgs"}, []Permission{RebalancePermission})
 	if !ok {
 		return
 	}
@@ -265,7 +265,7 @@ func (h *HTTPServer) SetRate(c *gin.Context) {
 	msgs := strings.Split(postForm.Get("msgs"), "-")
 	tokens := []common.Token{}
 	for _, tok := range strings.Split(tokenAddrs, "-") {
-		token, err := h.setting.GetInternalTokenByID(tok)
+		token, err := hs.setting.GetInternalTokenByID(tok)
 		if err != nil {
 			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
@@ -304,7 +304,7 @@ func (h *HTTPServer) SetRate(c *gin.Context) {
 		}
 		bigAfpMid = append(bigAfpMid, r)
 	}
-	id, err := h.core.SetRates(tokens, bigBuys, bigSells, big.NewInt(intBlock), bigAfpMid, msgs)
+	id, err := hs.core.SetRates(tokens, bigBuys, bigSells, big.NewInt(intBlock), bigAfpMid, msgs)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -312,8 +312,8 @@ func (h *HTTPServer) SetRate(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithField("id", id))
 }
 
-func (h *HTTPServer) Trade(c *gin.Context) {
-	postForm, ok := h.Authenticated(c, []string{"base", "quote", "amount", "rate", "type"}, []Permission{RebalancePermission})
+func (hs *HTTPServer) Trade(c *gin.Context) {
+	postForm, ok := hs.Authenticated(c, []string{"base", "quote", "amount", "rate", "type"}, []Permission{RebalancePermission})
 	if !ok {
 		return
 	}
@@ -330,12 +330,12 @@ func (h *HTTPServer) Trade(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
-	base, err := h.setting.GetInternalTokenByID(baseTokenParam)
+	base, err := hs.setting.GetInternalTokenByID(baseTokenParam)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
-	quote, err := h.setting.GetInternalTokenByID(quoteTokenParam)
+	quote, err := hs.setting.GetInternalTokenByID(quoteTokenParam)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -355,7 +355,7 @@ func (h *HTTPServer) Trade(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("Trade type of %s is not supported.", typeParam)))
 		return
 	}
-	id, done, remaining, finished, err := h.core.Trade(
+	id, done, remaining, finished, err := hs.core.Trade(
 		exchange, typeParam, base, quote, rate, amount, getTimePoint(c, false))
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
@@ -369,8 +369,8 @@ func (h *HTTPServer) Trade(c *gin.Context) {
 	}))
 }
 
-func (h *HTTPServer) CancelOrder(c *gin.Context) {
-	postForm, ok := h.Authenticated(c, []string{"order_id"}, []Permission{RebalancePermission})
+func (hs *HTTPServer) CancelOrder(c *gin.Context) {
+	postForm, ok := hs.Authenticated(c, []string{"order_id"}, []Permission{RebalancePermission})
 	if !ok {
 		return
 	}
@@ -389,7 +389,7 @@ func (h *HTTPServer) CancelOrder(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
-	err = h.core.CancelOrder(activityID, exchange)
+	err = hs.core.CancelOrder(activityID, exchange)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -397,8 +397,8 @@ func (h *HTTPServer) CancelOrder(c *gin.Context) {
 	httputil.ResponseSuccess(c)
 }
 
-func (h *HTTPServer) Withdraw(c *gin.Context) {
-	postForm, ok := h.Authenticated(c, []string{"token", "amount"}, []Permission{RebalancePermission})
+func (hs *HTTPServer) Withdraw(c *gin.Context) {
+	postForm, ok := hs.Authenticated(c, []string{"token", "amount"}, []Permission{RebalancePermission})
 	if !ok {
 		return
 	}
@@ -412,7 +412,7 @@ func (h *HTTPServer) Withdraw(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
-	token, err := h.setting.GetInternalTokenByID(tokenParam)
+	token, err := hs.setting.GetInternalTokenByID(tokenParam)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -423,7 +423,7 @@ func (h *HTTPServer) Withdraw(c *gin.Context) {
 		return
 	}
 	log.Printf("Withdraw %s %s from %s\n", amount.Text(10), token.ID, exchange.ID())
-	id, err := h.core.Withdraw(exchange, token, amount, getTimePoint(c, false))
+	id, err := hs.core.Withdraw(exchange, token, amount, getTimePoint(c, false))
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -431,8 +431,8 @@ func (h *HTTPServer) Withdraw(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithField("id", id))
 }
 
-func (h *HTTPServer) Deposit(c *gin.Context) {
-	postForm, ok := h.Authenticated(c, []string{"amount", "token"}, []Permission{RebalancePermission})
+func (hs *HTTPServer) Deposit(c *gin.Context) {
+	postForm, ok := hs.Authenticated(c, []string{"amount", "token"}, []Permission{RebalancePermission})
 	if !ok {
 		return
 	}
@@ -446,7 +446,7 @@ func (h *HTTPServer) Deposit(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
-	token, err := h.setting.GetInternalTokenByID(tokenParam)
+	token, err := hs.setting.GetInternalTokenByID(tokenParam)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -457,7 +457,7 @@ func (h *HTTPServer) Deposit(c *gin.Context) {
 		return
 	}
 	log.Printf("Depositing %s %s to %s\n", amount.Text(10), token.ID, exchange.ID())
-	id, err := h.core.Deposit(exchange, token, amount, getTimePoint(c, false))
+	id, err := hs.core.Deposit(exchange, token, amount, getTimePoint(c, false))
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -465,9 +465,9 @@ func (h *HTTPServer) Deposit(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithField("id", id))
 }
 
-func (h *HTTPServer) GetActivities(c *gin.Context) {
+func (hs *HTTPServer) GetActivities(c *gin.Context) {
 	log.Printf("Getting all activity records \n")
-	_, ok := h.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
+	_, ok := hs.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
 	if !ok {
 		return
 	}
@@ -477,7 +477,7 @@ func (h *HTTPServer) GetActivities(c *gin.Context) {
 		toTime = common.GetTimepoint()
 	}
 
-	data, err := h.app.GetRecords(fromTime*1000000, toTime*1000000)
+	data, err := hs.app.GetRecords(fromTime*1000000, toTime*1000000)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
@@ -485,7 +485,7 @@ func (h *HTTPServer) GetActivities(c *gin.Context) {
 	}
 }
 
-func (h *HTTPServer) CatLogs(c *gin.Context) {
+func (hs *HTTPServer) CatLogs(c *gin.Context) {
 	log.Printf("Getting cat logs")
 	fromTime, err := strconv.ParseUint(c.Query("fromTime"), 10, 64)
 	if err != nil {
@@ -496,7 +496,7 @@ func (h *HTTPServer) CatLogs(c *gin.Context) {
 		toTime = common.GetTimepoint()
 	}
 
-	data, err := h.stat.GetCatLogs(fromTime, toTime)
+	data, err := hs.stat.GetCatLogs(fromTime, toTime)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
@@ -504,7 +504,7 @@ func (h *HTTPServer) CatLogs(c *gin.Context) {
 	}
 }
 
-func (h *HTTPServer) TradeLogs(c *gin.Context) {
+func (hs *HTTPServer) TradeLogs(c *gin.Context) {
 	log.Printf("Getting trade logs")
 	fromTime, err := strconv.ParseUint(c.Query("fromTime"), 10, 64)
 	if err != nil {
@@ -515,7 +515,7 @@ func (h *HTTPServer) TradeLogs(c *gin.Context) {
 		toTime = common.GetTimepoint()
 	}
 
-	data, err := h.stat.GetTradeLogs(fromTime, toTime)
+	data, err := hs.stat.GetTradeLogs(fromTime, toTime)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
@@ -523,8 +523,8 @@ func (h *HTTPServer) TradeLogs(c *gin.Context) {
 	}
 }
 
-func (h *HTTPServer) StopFetcher(c *gin.Context) {
-	err := h.app.Stop()
+func (hs *HTTPServer) StopFetcher(c *gin.Context) {
+	err := hs.app.Stop()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
@@ -532,14 +532,14 @@ func (h *HTTPServer) StopFetcher(c *gin.Context) {
 	}
 }
 
-func (h *HTTPServer) ImmediatePendingActivities(c *gin.Context) {
+func (hs *HTTPServer) ImmediatePendingActivities(c *gin.Context) {
 	log.Printf("Getting all immediate pending activity records \n")
-	_, ok := h.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
+	_, ok := hs.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
 	if !ok {
 		return
 	}
 
-	data, err := h.app.GetPendingActivities()
+	data, err := hs.app.GetPendingActivities()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
@@ -547,12 +547,12 @@ func (h *HTTPServer) ImmediatePendingActivities(c *gin.Context) {
 	}
 }
 
-func (h *HTTPServer) Metrics(c *gin.Context) {
+func (hs *HTTPServer) Metrics(c *gin.Context) {
 	response := common.MetricResponse{
 		Timestamp: common.GetTimepoint(),
 	}
 	log.Printf("Getting metrics")
-	postForm, ok := h.Authenticated(c, []string{"tokens", "from", "to"}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
+	postForm, ok := hs.Authenticated(c, []string{"tokens", "from", "to"}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
 	if !ok {
 		return
 	}
@@ -561,7 +561,7 @@ func (h *HTTPServer) Metrics(c *gin.Context) {
 	toParam := postForm.Get("to")
 	tokens := []common.Token{}
 	for _, tok := range strings.Split(tokenParam, "-") {
-		token, err := h.setting.GetInternalTokenByID(tok)
+		token, err := hs.setting.GetInternalTokenByID(tok)
 		if err != nil {
 			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
@@ -576,7 +576,7 @@ func (h *HTTPServer) Metrics(c *gin.Context) {
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 	}
-	data, err := h.metric.GetMetric(tokens, from, to)
+	data, err := hs.metric.GetMetric(tokens, from, to)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 	}
@@ -589,9 +589,9 @@ func (h *HTTPServer) Metrics(c *gin.Context) {
 	}))
 }
 
-func (h *HTTPServer) StoreMetrics(c *gin.Context) {
+func (hs *HTTPServer) StoreMetrics(c *gin.Context) {
 	log.Printf("Storing metrics")
-	postForm, ok := h.Authenticated(c, []string{"timestamp", "data"}, []Permission{RebalancePermission})
+	postForm, ok := hs.Authenticated(c, []string{"timestamp", "data"}, []Permission{RebalancePermission})
 	if !ok {
 		return
 	}
@@ -636,7 +636,7 @@ func (h *HTTPServer) StoreMetrics(c *gin.Context) {
 		}
 	}
 
-	err = h.metric.StoreMetric(&metricEntry, common.GetTimepoint())
+	err = hs.metric.StoreMetric(&metricEntry, common.GetTimepoint())
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
@@ -646,7 +646,7 @@ func (h *HTTPServer) StoreMetrics(c *gin.Context) {
 
 //ValidateExchangeInfo validate if data is complete exchange info with all token pairs supported
 // func ValidateExchangeInfo(exchange common.Exchange, data map[common.TokenPairID]common.ExchangePrecisionLimit) error {
-// 	exInfo, err :=h
+// 	exInfo, err :=hs
 // 	pairs := exchange.Pairs()
 // 	for _, pair := range pairs {
 // 		// stable exchange is a simulated exchange which is not a real exchange
@@ -664,7 +664,7 @@ func (h *HTTPServer) StoreMetrics(c *gin.Context) {
 
 //GetExchangeInfo return exchange info of one exchange if it is given exchangeID
 //otherwise return all exchanges info
-func (h *HTTPServer) GetExchangeInfo(c *gin.Context) {
+func (hs *HTTPServer) GetExchangeInfo(c *gin.Context) {
 	exchangeParam := c.Query("exchangeid")
 	if exchangeParam == "" {
 		data := map[string]common.ExchangeInfo{}
@@ -697,7 +697,7 @@ func (h *HTTPServer) GetExchangeInfo(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithData(exchangeInfo.GetData()))
 }
 
-func (h *HTTPServer) GetFee(c *gin.Context) {
+func (hs *HTTPServer) GetFee(c *gin.Context) {
 	data := map[string]common.ExchangeFees{}
 	for _, exchange := range common.SupportedExchanges {
 		fee, err := exchange.GetFee()
@@ -711,7 +711,7 @@ func (h *HTTPServer) GetFee(c *gin.Context) {
 	return
 }
 
-func (h *HTTPServer) GetMinDeposit(c *gin.Context) {
+func (hs *HTTPServer) GetMinDeposit(c *gin.Context) {
 	data := map[string]common.ExchangesMinDeposit{}
 	for _, exchange := range common.SupportedExchanges {
 		minDeposit, err := exchange.GetMinDeposit()
@@ -725,26 +725,26 @@ func (h *HTTPServer) GetMinDeposit(c *gin.Context) {
 	return
 }
 
-func (h *HTTPServer) GetTradeHistory(c *gin.Context) {
-	_, ok := h.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
+func (hs *HTTPServer) GetTradeHistory(c *gin.Context) {
+	_, ok := hs.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
 	if !ok {
 		return
 	}
-	fromTime, toTime, ok := h.ValidateTimeInput(c)
+	fromTime, toTime, ok := hs.ValidateTimeInput(c)
 	if !ok {
 		return
 	}
-	data, err := h.app.GetTradeHistory(fromTime, toTime)
+	data, err := hs.app.GetTradeHistory(fromTime, toTime)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 	}
 	httputil.ResponseSuccess(c, httputil.WithData(data))
 }
 
-func (h *HTTPServer) GetGoldData(c *gin.Context) {
+func (hs *HTTPServer) GetGoldData(c *gin.Context) {
 	log.Printf("Getting gold data")
 
-	data, err := h.app.GetGoldData(getTimePoint(c, true))
+	data, err := hs.app.GetGoldData(getTimePoint(c, true))
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
@@ -752,16 +752,16 @@ func (h *HTTPServer) GetGoldData(c *gin.Context) {
 	}
 }
 
-func (h *HTTPServer) GetTimeServer(c *gin.Context) {
+func (hs *HTTPServer) GetTimeServer(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithData(common.GetTimestamp()))
 }
 
-func (h *HTTPServer) GetRebalanceStatus(c *gin.Context) {
-	_, ok := h.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
+func (hs *HTTPServer) GetRebalanceStatus(c *gin.Context) {
+	_, ok := hs.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
 	if !ok {
 		return
 	}
-	data, err := h.metric.GetRebalanceControl()
+	data, err := hs.metric.GetRebalanceControl()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -769,12 +769,12 @@ func (h *HTTPServer) GetRebalanceStatus(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithData(data.Status))
 }
 
-func (h *HTTPServer) HoldRebalance(c *gin.Context) {
-	_, ok := h.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
+func (hs *HTTPServer) HoldRebalance(c *gin.Context) {
+	_, ok := hs.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
 	if !ok {
 		return
 	}
-	if err := h.metric.StoreRebalanceControl(false); err != nil {
+	if err := hs.metric.StoreRebalanceControl(false); err != nil {
 		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
 		return
 	}
@@ -782,24 +782,24 @@ func (h *HTTPServer) HoldRebalance(c *gin.Context) {
 	return
 }
 
-func (h *HTTPServer) EnableRebalance(c *gin.Context) {
-	_, ok := h.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
+func (hs *HTTPServer) EnableRebalance(c *gin.Context) {
+	_, ok := hs.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
 	if !ok {
 		return
 	}
-	if err := h.metric.StoreRebalanceControl(true); err != nil {
+	if err := hs.metric.StoreRebalanceControl(true); err != nil {
 		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
 	}
 	httputil.ResponseSuccess(c)
 	return
 }
 
-func (h *HTTPServer) GetSetrateStatus(c *gin.Context) {
-	_, ok := h.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
+func (hs *HTTPServer) GetSetrateStatus(c *gin.Context) {
+	_, ok := hs.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
 	if !ok {
 		return
 	}
-	data, err := h.metric.GetSetrateControl()
+	data, err := hs.metric.GetSetrateControl()
 	if err != nil {
 		httputil.ResponseFailure(c)
 		return
@@ -807,36 +807,36 @@ func (h *HTTPServer) GetSetrateStatus(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithData(data.Status))
 }
 
-func (h *HTTPServer) HoldSetrate(c *gin.Context) {
-	_, ok := h.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
+func (hs *HTTPServer) HoldSetrate(c *gin.Context) {
+	_, ok := hs.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
 	if !ok {
 		return
 	}
-	if err := h.metric.StoreSetrateControl(false); err != nil {
+	if err := hs.metric.StoreSetrateControl(false); err != nil {
 		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
 	}
 	httputil.ResponseSuccess(c)
 	return
 }
 
-func (h *HTTPServer) EnableSetrate(c *gin.Context) {
-	_, ok := h.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
+func (hs *HTTPServer) EnableSetrate(c *gin.Context) {
+	_, ok := hs.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
 	if !ok {
 		return
 	}
-	if err := h.metric.StoreSetrateControl(true); err != nil {
+	if err := hs.metric.StoreSetrateControl(true); err != nil {
 		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
 	}
 	httputil.ResponseSuccess(c)
 	return
 }
 
-func (h *HTTPServer) GetAssetVolume(c *gin.Context) {
+func (hs *HTTPServer) GetAssetVolume(c *gin.Context) {
 	fromTime, _ := strconv.ParseUint(c.Query("fromTime"), 10, 64)
 	toTime, _ := strconv.ParseUint(c.Query("toTime"), 10, 64)
 	freq := c.Query("freq")
 	asset := c.Query("asset")
-	data, err := h.stat.GetAssetVolume(fromTime, toTime, freq, asset)
+	data, err := hs.stat.GetAssetVolume(fromTime, toTime, freq, asset)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -844,7 +844,7 @@ func (h *HTTPServer) GetAssetVolume(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithData(data))
 }
 
-func (h *HTTPServer) GetBurnFee(c *gin.Context) {
+func (hs *HTTPServer) GetBurnFee(c *gin.Context) {
 	fromTime, _ := strconv.ParseUint(c.Query("fromTime"), 10, 64)
 	toTime, _ := strconv.ParseUint(c.Query("toTime"), 10, 64)
 	freq := c.Query("freq")
@@ -853,7 +853,7 @@ func (h *HTTPServer) GetBurnFee(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithReason("reserveAddr is required"))
 		return
 	}
-	data, err := h.stat.GetBurnFee(fromTime, toTime, freq, reserveAddr)
+	data, err := hs.stat.GetBurnFee(fromTime, toTime, freq, reserveAddr)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -861,13 +861,13 @@ func (h *HTTPServer) GetBurnFee(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithData(data))
 }
 
-func (h *HTTPServer) GetWalletFee(c *gin.Context) {
+func (hs *HTTPServer) GetWalletFee(c *gin.Context) {
 	fromTime, _ := strconv.ParseUint(c.Query("fromTime"), 10, 64)
 	toTime, _ := strconv.ParseUint(c.Query("toTime"), 10, 64)
 	freq := c.Query("freq")
 	reserveAddr := c.Query("reserveAddr")
 	walletAddr := c.Query("walletAddr")
-	data, err := h.stat.GetWalletFee(fromTime, toTime, freq, reserveAddr, walletAddr)
+	data, err := hs.stat.GetWalletFee(fromTime, toTime, freq, reserveAddr, walletAddr)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -875,7 +875,7 @@ func (h *HTTPServer) GetWalletFee(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithData(data))
 }
 
-func (h *HTTPServer) ExceedDailyLimit(c *gin.Context) {
+func (hs *HTTPServer) ExceedDailyLimit(c *gin.Context) {
 	addr := c.Param("addr")
 	log.Printf("Checking daily limit for %s", addr)
 	address := ethereum.HexToAddress(addr)
@@ -883,7 +883,7 @@ func (h *HTTPServer) ExceedDailyLimit(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithReason("address is not valid"))
 		return
 	}
-	exceeded, err := h.stat.ExceedDailyLimit(address)
+	exceeded, err := hs.stat.ExceedDailyLimit(address)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
@@ -891,7 +891,7 @@ func (h *HTTPServer) ExceedDailyLimit(c *gin.Context) {
 	}
 }
 
-func (h *HTTPServer) GetUserVolume(c *gin.Context) {
+func (hs *HTTPServer) GetUserVolume(c *gin.Context) {
 	fromTime, _ := strconv.ParseUint(c.Query("fromTime"), 10, 64)
 	toTime, _ := strconv.ParseUint(c.Query("toTime"), 10, 64)
 	freq := c.Query("freq")
@@ -900,7 +900,7 @@ func (h *HTTPServer) GetUserVolume(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithReason("User address is required"))
 		return
 	}
-	data, err := h.stat.GetUserVolume(fromTime, toTime, freq, userAddr)
+	data, err := hs.stat.GetUserVolume(fromTime, toTime, freq, userAddr)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -908,7 +908,7 @@ func (h *HTTPServer) GetUserVolume(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithData(data))
 }
 
-func (h *HTTPServer) GetUsersVolume(c *gin.Context) {
+func (hs *HTTPServer) GetUsersVolume(c *gin.Context) {
 	fromTime, _ := strconv.ParseUint(c.Query("fromTime"), 10, 64)
 	toTime, _ := strconv.ParseUint(c.Query("toTime"), 10, 64)
 	freq := c.Query("freq")
@@ -918,7 +918,7 @@ func (h *HTTPServer) GetUsersVolume(c *gin.Context) {
 		return
 	}
 	userAddrs := strings.Split(userAddr, ",")
-	data, err := h.stat.GetUsersVolume(fromTime, toTime, freq, userAddrs)
+	data, err := hs.stat.GetUsersVolume(fromTime, toTime, freq, userAddrs)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -926,7 +926,7 @@ func (h *HTTPServer) GetUsersVolume(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithData(data))
 }
 
-func (h *HTTPServer) ValidateTimeInput(c *gin.Context) (uint64, uint64, bool) {
+func (hs *HTTPServer) ValidateTimeInput(c *gin.Context) (uint64, uint64, bool) {
 	fromTime, ok := strconv.ParseUint(c.Query("fromTime"), 10, 64)
 	if ok != nil {
 		httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("fromTime param is invalid: %s", ok)))
@@ -939,8 +939,8 @@ func (h *HTTPServer) ValidateTimeInput(c *gin.Context) (uint64, uint64, bool) {
 	return fromTime, toTime, true
 }
 
-func (h *HTTPServer) GetTradeSummary(c *gin.Context) {
-	fromTime, toTime, ok := h.ValidateTimeInput(c)
+func (hs *HTTPServer) GetTradeSummary(c *gin.Context) {
+	fromTime, toTime, ok := hs.ValidateTimeInput(c)
 	if !ok {
 		return
 	}
@@ -949,7 +949,7 @@ func (h *HTTPServer) GetTradeSummary(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithReason("Timezone is not supported"))
 		return
 	}
-	data, err := h.stat.GetTradeSummary(fromTime, toTime, tzparam)
+	data, err := hs.stat.GetTradeSummary(fromTime, toTime, tzparam)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -957,14 +957,14 @@ func (h *HTTPServer) GetTradeSummary(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithData(data))
 }
 
-func (h *HTTPServer) GetCapByAddress(c *gin.Context) {
+func (hs *HTTPServer) GetCapByAddress(c *gin.Context) {
 	addr := c.Param("addr")
 	address := ethereum.HexToAddress(addr)
 	if address.Big().Cmp(ethereum.Big0) == 0 {
 		httputil.ResponseFailure(c, httputil.WithReason("address is not valid"))
 		return
 	}
-	data, err := h.stat.GetCapByAddress(address)
+	data, err := hs.stat.GetCapByAddress(address)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
@@ -972,9 +972,9 @@ func (h *HTTPServer) GetCapByAddress(c *gin.Context) {
 	}
 }
 
-func (h *HTTPServer) GetCapByUser(c *gin.Context) {
+func (hs *HTTPServer) GetCapByUser(c *gin.Context) {
 	user := c.Param("user")
-	data, err := h.stat.GetCapByUser(user)
+	data, err := hs.stat.GetCapByUser(user)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
@@ -982,8 +982,8 @@ func (h *HTTPServer) GetCapByUser(c *gin.Context) {
 	}
 }
 
-func (h *HTTPServer) GetPendingAddresses(c *gin.Context) {
-	data, err := h.stat.GetPendingAddresses()
+func (hs *HTTPServer) GetPendingAddresses(c *gin.Context) {
+	data, err := hs.stat.GetPendingAddresses()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
@@ -991,9 +991,9 @@ func (h *HTTPServer) GetPendingAddresses(c *gin.Context) {
 	}
 }
 
-func (h *HTTPServer) UpdateUserAddresses(c *gin.Context) {
+func (hs *HTTPServer) UpdateUserAddresses(c *gin.Context) {
 	var err error
-	postForm, ok := h.Authenticated(c, []string{"user", "addresses", "timestamps"}, []Permission{ConfirmConfPermission})
+	postForm, ok := hs.Authenticated(c, []string{"user", "addresses", "timestamps"}, []Permission{ConfirmConfPermission})
 	if !ok {
 		return
 	}
@@ -1023,7 +1023,7 @@ func (h *HTTPServer) UpdateUserAddresses(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("user %s doesn't have any valid addresses in %s", user, addresses)))
 		return
 	}
-	err = h.stat.UpdateUserAddresses(user, addrs, timestamps)
+	err = hs.stat.UpdateUserAddresses(user, addrs, timestamps)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
@@ -1031,8 +1031,8 @@ func (h *HTTPServer) UpdateUserAddresses(c *gin.Context) {
 	}
 }
 
-func (h *HTTPServer) GetWalletStats(c *gin.Context) {
-	fromTime, toTime, ok := h.ValidateTimeInput(c)
+func (hs *HTTPServer) GetWalletStats(c *gin.Context) {
+	fromTime, toTime, ok := hs.ValidateTimeInput(c)
 	if !ok {
 		return
 	}
@@ -1052,7 +1052,7 @@ func (h *HTTPServer) GetWalletStats(c *gin.Context) {
 		return
 	}
 
-	data, err := h.stat.GetWalletStats(fromTime, toTime, walletAddr.Hex(), tzparam)
+	data, err := hs.stat.GetWalletStats(fromTime, toTime, walletAddr.Hex(), tzparam)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -1060,8 +1060,8 @@ func (h *HTTPServer) GetWalletStats(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithData(data))
 }
 
-func (h *HTTPServer) GetWalletAddresses(c *gin.Context) {
-	data, err := h.stat.GetWalletAddresses()
+func (hs *HTTPServer) GetWalletAddresses(c *gin.Context) {
+	data, err := hs.stat.GetWalletAddresses()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -1069,7 +1069,7 @@ func (h *HTTPServer) GetWalletAddresses(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithData(data))
 }
 
-func (h *HTTPServer) GetReserveRate(c *gin.Context) {
+func (hs *HTTPServer) GetReserveRate(c *gin.Context) {
 	fromTime, _ := strconv.ParseUint(c.Query("fromTime"), 10, 64)
 	toTime, _ := strconv.ParseUint(c.Query("toTime"), 10, 64)
 	if toTime == 0 {
@@ -1080,7 +1080,7 @@ func (h *HTTPServer) GetReserveRate(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithReason("Reserve address is invalid"))
 		return
 	}
-	data, err := h.stat.GetReserveRates(fromTime, toTime, reserveAddr)
+	data, err := hs.stat.GetReserveRates(fromTime, toTime, reserveAddr)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -1088,8 +1088,8 @@ func (h *HTTPServer) GetReserveRate(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithData(data))
 }
 
-func (h *HTTPServer) GetExchangesStatus(c *gin.Context) {
-	data, err := h.app.GetExchangeStatus()
+func (hs *HTTPServer) GetExchangesStatus(c *gin.Context) {
+	data, err := hs.app.GetExchangeStatus()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -1097,8 +1097,8 @@ func (h *HTTPServer) GetExchangesStatus(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithData(data))
 }
 
-func (h *HTTPServer) UpdateExchangeStatus(c *gin.Context) {
-	postForm, ok := h.Authenticated(c, []string{"exchange", "status", "timestamp"}, []Permission{ConfirmConfPermission})
+func (hs *HTTPServer) UpdateExchangeStatus(c *gin.Context) {
+	postForm, ok := hs.Authenticated(c, []string{"exchange", "status", "timestamp"}, []Permission{ConfirmConfPermission})
 	if !ok {
 		return
 	}
@@ -1118,7 +1118,7 @@ func (h *HTTPServer) UpdateExchangeStatus(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
-	err = h.app.UpdateExchangeStatus(exchange, status, timestamp)
+	err = hs.app.UpdateExchangeStatus(exchange, status, timestamp)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -1126,8 +1126,8 @@ func (h *HTTPServer) UpdateExchangeStatus(c *gin.Context) {
 	httputil.ResponseSuccess(c)
 }
 
-func (h *HTTPServer) GetCountryStats(c *gin.Context) {
-	fromTime, toTime, ok := h.ValidateTimeInput(c)
+func (hs *HTTPServer) GetCountryStats(c *gin.Context) {
+	fromTime, toTime, ok := hs.ValidateTimeInput(c)
 	if !ok {
 		return
 	}
@@ -1137,7 +1137,7 @@ func (h *HTTPServer) GetCountryStats(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithReason("Timezone is not supported"))
 		return
 	}
-	data, err := h.stat.GetGeoData(fromTime, toTime, country, tzparam)
+	data, err := hs.stat.GetGeoData(fromTime, toTime, country, tzparam)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -1145,8 +1145,8 @@ func (h *HTTPServer) GetCountryStats(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithData(data))
 }
 
-func (h *HTTPServer) GetHeatMap(c *gin.Context) {
-	fromTime, toTime, ok := h.ValidateTimeInput(c)
+func (hs *HTTPServer) GetHeatMap(c *gin.Context) {
+	fromTime, toTime, ok := hs.ValidateTimeInput(c)
 	if !ok {
 		return
 	}
@@ -1156,7 +1156,7 @@ func (h *HTTPServer) GetHeatMap(c *gin.Context) {
 		return
 	}
 
-	data, err := h.stat.GetHeatMap(fromTime, toTime, tzparam)
+	data, err := hs.stat.GetHeatMap(fromTime, toTime, tzparam)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -1164,13 +1164,13 @@ func (h *HTTPServer) GetHeatMap(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithData(data))
 }
 
-func (h *HTTPServer) GetCountries(c *gin.Context) {
-	data, _ := h.stat.GetCountries()
+func (hs *HTTPServer) GetCountries(c *gin.Context) {
+	data, _ := hs.stat.GetCountries()
 	httputil.ResponseSuccess(c, httputil.WithData(data))
 }
 
-func (h *HTTPServer) UpdatePriceAnalyticData(c *gin.Context) {
-	postForm, ok := h.Authenticated(c, []string{}, []Permission{RebalancePermission})
+func (hs *HTTPServer) UpdatePriceAnalyticData(c *gin.Context) {
+	postForm, ok := hs.Authenticated(c, []string{}, []Permission{RebalancePermission})
 	if !ok {
 		return
 	}
@@ -1184,19 +1184,19 @@ func (h *HTTPServer) UpdatePriceAnalyticData(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithReason(errDataSizeExceed.Error()))
 		return
 	}
-	err = h.stat.UpdatePriceAnalyticData(timestamp, value)
+	err = hs.stat.UpdatePriceAnalyticData(timestamp, value)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c)
 }
-func (h *HTTPServer) GetPriceAnalyticData(c *gin.Context) {
-	_, ok := h.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, ConfigurePermission, ConfirmConfPermission, RebalancePermission})
+func (hs *HTTPServer) GetPriceAnalyticData(c *gin.Context) {
+	_, ok := hs.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, ConfigurePermission, ConfirmConfPermission, RebalancePermission})
 	if !ok {
 		return
 	}
-	fromTime, toTime, ok := h.ValidateTimeInput(c)
+	fromTime, toTime, ok := hs.ValidateTimeInput(c)
 	if !ok {
 		return
 	}
@@ -1204,7 +1204,7 @@ func (h *HTTPServer) GetPriceAnalyticData(c *gin.Context) {
 		toTime = common.GetTimepoint()
 	}
 
-	data, err := h.stat.GetPriceAnalyticData(fromTime, toTime)
+	data, err := hs.stat.GetPriceAnalyticData(fromTime, toTime)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -1212,8 +1212,8 @@ func (h *HTTPServer) GetPriceAnalyticData(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithData(data))
 }
 
-func (h *HTTPServer) ExchangeNotification(c *gin.Context) {
-	postForm, ok := h.Authenticated(c, []string{
+func (hs *HTTPServer) ExchangeNotification(c *gin.Context) {
+	postForm, ok := hs.Authenticated(c, []string{
 		"exchange", "action", "token", "fromTime", "toTime", "isWarning"}, []Permission{RebalancePermission})
 	if !ok {
 		return
@@ -1227,7 +1227,7 @@ func (h *HTTPServer) ExchangeNotification(c *gin.Context) {
 	isWarning, _ := strconv.ParseBool(postForm.Get("isWarning"))
 	msg := postForm.Get("msg")
 
-	err := h.app.UpdateExchangeNotification(exchange, action, tokenPair, from, to, isWarning, msg)
+	err := hs.app.UpdateExchangeNotification(exchange, action, tokenPair, from, to, isWarning, msg)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -1235,12 +1235,12 @@ func (h *HTTPServer) ExchangeNotification(c *gin.Context) {
 	httputil.ResponseSuccess(c)
 }
 
-func (h *HTTPServer) GetNotifications(c *gin.Context) {
-	_, ok := h.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
+func (hs *HTTPServer) GetNotifications(c *gin.Context) {
+	_, ok := hs.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
 	if !ok {
 		return
 	}
-	data, err := h.app.GetNotifications()
+	data, err := hs.app.GetNotifications()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -1248,12 +1248,12 @@ func (h *HTTPServer) GetNotifications(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithData(data))
 }
 
-func (h *HTTPServer) GetUserList(c *gin.Context) {
-	_, ok := h.Authenticated(c, []string{"fromTime", "toTime", "timeZone"}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
+func (hs *HTTPServer) GetUserList(c *gin.Context) {
+	_, ok := hs.Authenticated(c, []string{"fromTime", "toTime", "timeZone"}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
 	if !ok {
 		return
 	}
-	fromTime, toTime, ok := h.ValidateTimeInput(c)
+	fromTime, toTime, ok := hs.ValidateTimeInput(c)
 	if !ok {
 		return
 	}
@@ -1262,7 +1262,7 @@ func (h *HTTPServer) GetUserList(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("timeZone is required: %s", err.Error())))
 		return
 	}
-	data, err := h.stat.GetUserList(fromTime, toTime, timeZone)
+	data, err := hs.stat.GetUserList(fromTime, toTime, timeZone)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -1270,7 +1270,7 @@ func (h *HTTPServer) GetUserList(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithData(data))
 }
 
-func (h *HTTPServer) GetReserveVolume(c *gin.Context) {
+func (hs *HTTPServer) GetReserveVolume(c *gin.Context) {
 	fromTime, _ := strconv.ParseUint(c.Query("fromTime"), 10, 64)
 	toTime, _ := strconv.ParseUint(c.Query("toTime"), 10, 64)
 	freq := c.Query("freq")
@@ -1284,12 +1284,12 @@ func (h *HTTPServer) GetReserveVolume(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithReason("token is required"))
 		return
 	}
-	token, err := h.setting.GetActiveTokenByID(tokenName)
+	token, err := hs.setting.GetActiveTokenByID(tokenName)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
-	data, err := h.stat.GetReserveVolume(fromTime, toTime, freq, reserveAddr, token.Address)
+	data, err := hs.stat.GetReserveVolume(fromTime, toTime, freq, reserveAddr, token.Address)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -1297,8 +1297,8 @@ func (h *HTTPServer) GetReserveVolume(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithData(data))
 }
 
-func (h *HTTPServer) SetStableTokenParams(c *gin.Context) {
-	postForm, ok := h.Authenticated(c, []string{}, []Permission{ConfigurePermission})
+func (hs *HTTPServer) SetStableTokenParams(c *gin.Context) {
+	postForm, ok := hs.Authenticated(c, []string{}, []Permission{ConfigurePermission})
 	if !ok {
 		return
 	}
@@ -1307,7 +1307,7 @@ func (h *HTTPServer) SetStableTokenParams(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithReason(errDataSizeExceed.Error()))
 		return
 	}
-	err := h.metric.SetStableTokenParams(value)
+	err := hs.metric.SetStableTokenParams(value)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -1315,8 +1315,8 @@ func (h *HTTPServer) SetStableTokenParams(c *gin.Context) {
 	httputil.ResponseSuccess(c)
 }
 
-func (h *HTTPServer) ConfirmStableTokenParams(c *gin.Context) {
-	postForm, ok := h.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
+func (hs *HTTPServer) ConfirmStableTokenParams(c *gin.Context) {
+	postForm, ok := hs.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
 	if !ok {
 		return
 	}
@@ -1325,7 +1325,7 @@ func (h *HTTPServer) ConfirmStableTokenParams(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithReason(errDataSizeExceed.Error()))
 		return
 	}
-	err := h.metric.ConfirmStableTokenParams(value)
+	err := hs.metric.ConfirmStableTokenParams(value)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -1333,12 +1333,12 @@ func (h *HTTPServer) ConfirmStableTokenParams(c *gin.Context) {
 	httputil.ResponseSuccess(c)
 }
 
-func (h *HTTPServer) RejectStableTokenParams(c *gin.Context) {
-	_, ok := h.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
+func (hs *HTTPServer) RejectStableTokenParams(c *gin.Context) {
+	_, ok := hs.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
 	if !ok {
 		return
 	}
-	err := h.metric.RemovePendingStableTokenParams()
+	err := hs.metric.RemovePendingStableTokenParams()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -1346,13 +1346,13 @@ func (h *HTTPServer) RejectStableTokenParams(c *gin.Context) {
 	httputil.ResponseSuccess(c)
 }
 
-func (h *HTTPServer) GetPendingStableTokenParams(c *gin.Context) {
-	_, ok := h.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, ConfigurePermission, ConfirmConfPermission, RebalancePermission})
+func (hs *HTTPServer) GetPendingStableTokenParams(c *gin.Context) {
+	_, ok := hs.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, ConfigurePermission, ConfirmConfPermission, RebalancePermission})
 	if !ok {
 		return
 	}
 
-	data, err := h.metric.GetPendingStableTokenParams()
+	data, err := hs.metric.GetPendingStableTokenParams()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -1360,13 +1360,13 @@ func (h *HTTPServer) GetPendingStableTokenParams(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithData(data))
 }
 
-func (h *HTTPServer) GetStableTokenParams(c *gin.Context) {
-	_, ok := h.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, ConfigurePermission, ConfirmConfPermission, RebalancePermission})
+func (hs *HTTPServer) GetStableTokenParams(c *gin.Context) {
+	_, ok := hs.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, ConfigurePermission, ConfirmConfPermission, RebalancePermission})
 	if !ok {
 		return
 	}
 
-	data, err := h.metric.GetStableTokenParams()
+	data, err := hs.metric.GetStableTokenParams()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -1374,8 +1374,8 @@ func (h *HTTPServer) GetStableTokenParams(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithData(data))
 }
 
-func (h *HTTPServer) GetTokenHeatmap(c *gin.Context) {
-	fromTime, toTime, ok := h.ValidateTimeInput(c)
+func (hs *HTTPServer) GetTokenHeatmap(c *gin.Context) {
+	fromTime, toTime, ok := hs.ValidateTimeInput(c)
 	if !ok {
 		return
 	}
@@ -1386,7 +1386,7 @@ func (h *HTTPServer) GetTokenHeatmap(c *gin.Context) {
 		return
 	}
 
-	data, err := h.stat.GetTokenHeatmap(fromTime, toTime, token, freq)
+	data, err := hs.stat.GetTokenHeatmap(fromTime, toTime, token, freq)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -1395,8 +1395,8 @@ func (h *HTTPServer) GetTokenHeatmap(c *gin.Context) {
 }
 
 //SetTargetQtyV2 set token target quantity version 2
-func (h *HTTPServer) SetTargetQtyV2(c *gin.Context) {
-	postForm, ok := h.Authenticated(c, []string{}, []Permission{ConfigurePermission})
+func (hs *HTTPServer) SetTargetQtyV2(c *gin.Context) {
+	postForm, ok := hs.Authenticated(c, []string{}, []Permission{ConfigurePermission})
 	if !ok {
 		return
 	}
@@ -1412,13 +1412,13 @@ func (h *HTTPServer) SetTargetQtyV2(c *gin.Context) {
 	}
 
 	for tokenID := range tokenTargetQty {
-		if _, err := h.setting.GetInternalTokenByID(tokenID); err != nil {
+		if _, err := hs.setting.GetInternalTokenByID(tokenID); err != nil {
 			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
 		}
 	}
 
-	err := h.metric.StorePendingTargetQtyV2(value)
+	err := hs.metric.StorePendingTargetQtyV2(value)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -1426,13 +1426,13 @@ func (h *HTTPServer) SetTargetQtyV2(c *gin.Context) {
 	httputil.ResponseSuccess(c)
 }
 
-func (h *HTTPServer) GetPendingTargetQtyV2(c *gin.Context) {
-	_, ok := h.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, ConfigurePermission, ConfirmConfPermission, RebalancePermission})
+func (hs *HTTPServer) GetPendingTargetQtyV2(c *gin.Context) {
+	_, ok := hs.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, ConfigurePermission, ConfirmConfPermission, RebalancePermission})
 	if !ok {
 		return
 	}
 
-	data, err := h.metric.GetPendingTargetQtyV2()
+	data, err := hs.metric.GetPendingTargetQtyV2()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -1440,8 +1440,8 @@ func (h *HTTPServer) GetPendingTargetQtyV2(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithData(data))
 }
 
-func (h *HTTPServer) ConfirmTargetQtyV2(c *gin.Context) {
-	postForm, ok := h.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
+func (hs *HTTPServer) ConfirmTargetQtyV2(c *gin.Context) {
+	postForm, ok := hs.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
 	if !ok {
 		return
 	}
@@ -1450,19 +1450,19 @@ func (h *HTTPServer) ConfirmTargetQtyV2(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithReason(errDataSizeExceed.Error()))
 		return
 	}
-	err := h.metric.ConfirmTargetQtyV2(value)
+	err := hs.metric.ConfirmTargetQtyV2(value)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 	}
 	httputil.ResponseSuccess(c)
 }
 
-func (h *HTTPServer) CancelTargetQtyV2(c *gin.Context) {
-	_, ok := h.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
+func (hs *HTTPServer) CancelTargetQtyV2(c *gin.Context) {
+	_, ok := hs.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
 	if !ok {
 		return
 	}
-	err := h.metric.RemovePendingTargetQtyV2()
+	err := hs.metric.RemovePendingTargetQtyV2()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -1470,13 +1470,13 @@ func (h *HTTPServer) CancelTargetQtyV2(c *gin.Context) {
 	httputil.ResponseSuccess(c)
 }
 
-func (h *HTTPServer) GetTargetQtyV2(c *gin.Context) {
-	_, ok := h.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, ConfigurePermission, ConfirmConfPermission, RebalancePermission})
+func (hs *HTTPServer) GetTargetQtyV2(c *gin.Context) {
+	_, ok := hs.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, ConfigurePermission, ConfirmConfPermission, RebalancePermission})
 	if !ok {
 		return
 	}
 
-	data, err := h.metric.GetTargetQtyV2()
+	data, err := hs.metric.GetTargetQtyV2()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -1484,12 +1484,12 @@ func (h *HTTPServer) GetTargetQtyV2(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithData(data))
 }
 
-func (h *HTTPServer) GetFeeSetRateByDay(c *gin.Context) {
-	fromTime, toTime, ok := h.ValidateTimeInput(c)
+func (hs *HTTPServer) GetFeeSetRateByDay(c *gin.Context) {
+	fromTime, toTime, ok := hs.ValidateTimeInput(c)
 	if !ok {
 		return
 	}
-	data, err := h.stat.GetFeeSetRateByDay(fromTime, toTime)
+	data, err := hs.stat.GetFeeSetRateByDay(fromTime, toTime)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
 		return
@@ -1497,122 +1497,122 @@ func (h *HTTPServer) GetFeeSetRateByDay(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithData(data))
 }
 
-func (h *HTTPServer) register() {
-	stt := h.r.Group("/setting")
-	stt.POST("/set-token-update", h.SetTokenUpdate)
-	stt.GET("/pending-token-update", h.GetPendingTokenUpdates)
-	stt.POST("/confirm-token-update", h.ConfirmTokenUpdate)
-	stt.POST("/reject-token-update", h.RejectTokenUpdate)
-	stt.GET("/token-settings", h.TokenSettings)
-	stt.POST("/update-address", h.UpdateAddress)
-	stt.POST("/add-address-to-set", h.AddAddressToSet)
-	stt.POST("/update-exchange-fee", h.UpdateExchangeFee)
-	stt.POST("/update-exchange-mindeposit", h.UpdateExchangeMinDeposit)
-	stt.POST("/update-deposit-address", h.UpdateDepositAddress)
-	stt.POST("/update-exchange-info", h.UpdateExchangeInfo)
-	stt.GET("/all-settings", h.GetAllSetting)
+func (hs *HTTPServer) register() {
+	stt := hs.r.Group("/setting")
+	stt.POST("/set-token-update", hs.SetTokenUpdate)
+	stt.GET("/pending-token-update", hs.GetPendingTokenUpdates)
+	stt.POST("/confirm-token-update", hs.ConfirmTokenUpdate)
+	stt.POST("/reject-token-update", hs.RejectTokenUpdate)
+	stt.GET("/token-settings", hs.TokenSettings)
+	stt.POST("/update-address", hs.UpdateAddress)
+	stt.POST("/add-address-to-set", hs.AddAddressToSet)
+	stt.POST("/update-exchange-fee", hs.UpdateExchangeFee)
+	stt.POST("/update-exchange-mindeposit", hs.UpdateExchangeMinDeposit)
+	stt.POST("/update-deposit-address", hs.UpdateDepositAddress)
+	stt.POST("/update-exchange-info", hs.UpdateExchangeInfo)
+	stt.GET("/all-settings", hs.GetAllSetting)
 
-	if h.core != nil && h.app != nil {
-		v2 := h.r.Group("/v2")
+	if hs.core != nil && hs.app != nil {
+		v2 := hs.r.Group("/v2")
 
-		h.r.GET("/prices-version", h.AllPricesVersion)
-		h.r.GET("/prices", h.AllPrices)
-		h.r.GET("/prices/:base/:quote", h.Price)
-		h.r.GET("/getrates", h.GetRate)
-		h.r.GET("/get-all-rates", h.GetRates)
+		hs.r.GET("/prices-version", hs.AllPricesVersion)
+		hs.r.GET("/prices", hs.AllPrices)
+		hs.r.GET("/prices/:base/:quote", hs.Price)
+		hs.r.GET("/getrates", hs.GetRate)
+		hs.r.GET("/get-all-rates", hs.GetRates)
 
-		h.r.GET("/authdata-version", h.AuthDataVersion)
-		h.r.GET("/authdata", h.AuthData)
-		h.r.GET("/activities", h.GetActivities)
-		h.r.GET("/immediate-pending-activities", h.ImmediatePendingActivities)
-		h.r.GET("/metrics", h.Metrics)
-		h.r.POST("/metrics", h.StoreMetrics)
+		hs.r.GET("/authdata-version", hs.AuthDataVersion)
+		hs.r.GET("/authdata", hs.AuthData)
+		hs.r.GET("/activities", hs.GetActivities)
+		hs.r.GET("/immediate-pending-activities", hs.ImmediatePendingActivities)
+		hs.r.GET("/metrics", hs.Metrics)
+		hs.r.POST("/metrics", hs.StoreMetrics)
 
-		h.r.POST("/cancelorder/:exchangeid", h.CancelOrder)
-		h.r.POST("/deposit/:exchangeid", h.Deposit)
-		h.r.POST("/withdraw/:exchangeid", h.Withdraw)
-		h.r.POST("/trade/:exchangeid", h.Trade)
-		h.r.POST("/setrates", h.SetRate)
-		h.r.GET("/exchangeinfo", h.GetExchangeInfo)
-		h.r.GET("/exchangefees", h.GetFee)
-		h.r.GET("/exchange-min-deposit", h.GetMinDeposit)
-		h.r.GET("/tradehistory", h.GetTradeHistory)
+		hs.r.POST("/cancelorder/:exchangeid", hs.CancelOrder)
+		hs.r.POST("/deposit/:exchangeid", hs.Deposit)
+		hs.r.POST("/withdraw/:exchangeid", hs.Withdraw)
+		hs.r.POST("/trade/:exchangeid", hs.Trade)
+		hs.r.POST("/setrates", hs.SetRate)
+		hs.r.GET("/exchangeinfo", hs.GetExchangeInfo)
+		hs.r.GET("/exchangefees", hs.GetFee)
+		hs.r.GET("/exchange-min-deposit", hs.GetMinDeposit)
+		hs.r.GET("/tradehistory", hs.GetTradeHistory)
 
-		v2.GET("/targetqty", h.GetTargetQtyV2)
-		v2.GET("/pendingtargetqty", h.GetPendingTargetQtyV2)
-		v2.POST("/settargetqty", h.SetTargetQtyV2)
-		v2.POST("/confirmtargetqty", h.ConfirmTargetQtyV2)
-		v2.POST("/canceltargetqty", h.CancelTargetQtyV2)
+		v2.GET("/targetqty", hs.GetTargetQtyV2)
+		v2.GET("/pendingtargetqty", hs.GetPendingTargetQtyV2)
+		v2.POST("/settargetqty", hs.SetTargetQtyV2)
+		v2.POST("/confirmtargetqty", hs.ConfirmTargetQtyV2)
+		v2.POST("/canceltargetqty", hs.CancelTargetQtyV2)
 
-		h.r.GET("/timeserver", h.GetTimeServer)
+		hs.r.GET("/timeserver", hs.GetTimeServer)
 
-		h.r.GET("/rebalancestatus", h.GetRebalanceStatus)
-		h.r.POST("/holdrebalance", h.HoldRebalance)
-		h.r.POST("/enablerebalance", h.EnableRebalance)
+		hs.r.GET("/rebalancestatus", hs.GetRebalanceStatus)
+		hs.r.POST("/holdrebalance", hs.HoldRebalance)
+		hs.r.POST("/enablerebalance", hs.EnableRebalance)
 
-		h.r.GET("/setratestatus", h.GetSetrateStatus)
-		h.r.POST("/holdsetrate", h.HoldSetrate)
-		h.r.POST("/enablesetrate", h.EnableSetrate)
+		hs.r.GET("/setratestatus", hs.GetSetrateStatus)
+		hs.r.POST("/holdsetrate", hs.HoldSetrate)
+		hs.r.POST("/enablesetrate", hs.EnableSetrate)
 
-		v2.GET("/pwis-equation", h.GetPWIEquationV2)
-		v2.GET("/pending-pwis-equation", h.GetPendingPWIEquationV2)
-		v2.POST("/set-pwis-equation", h.SetPWIEquationV2)
-		v2.POST("/confirm-pwis-equation", h.ConfirmPWIEquationV2)
-		v2.POST("/reject-pwis-equation", h.RejectPWIEquationV2)
+		v2.GET("/pwis-equation", hs.GetPWIEquationV2)
+		v2.GET("/pending-pwis-equation", hs.GetPendingPWIEquationV2)
+		v2.POST("/set-pwis-equation", hs.SetPWIEquationV2)
+		v2.POST("/confirm-pwis-equation", hs.ConfirmPWIEquationV2)
+		v2.POST("/reject-pwis-equation", hs.RejectPWIEquationV2)
 
-		h.r.GET("/rebalance-quadratic", h.GetRebalanceQuadratic)
-		h.r.GET("/pending-rebalance-quadratic", h.GetPendingRebalanceQuadratic)
-		h.r.POST("/set-rebalance-quadratic", h.SetRebalanceQuadratic)
-		h.r.POST("/confirm-rebalance-quadratic", h.ConfirmRebalanceQuadratic)
-		h.r.POST("/reject-rebalance-quadratic", h.RejectRebalanceQuadratic)
+		hs.r.GET("/rebalance-quadratic", hs.GetRebalanceQuadratic)
+		hs.r.GET("/pending-rebalance-quadratic", hs.GetPendingRebalanceQuadratic)
+		hs.r.POST("/set-rebalance-quadratic", hs.SetRebalanceQuadratic)
+		hs.r.POST("/confirm-rebalance-quadratic", hs.ConfirmRebalanceQuadratic)
+		hs.r.POST("/reject-rebalance-quadratic", hs.RejectRebalanceQuadratic)
 
-		h.r.GET("/get-exchange-status", h.GetExchangesStatus)
-		h.r.POST("/update-exchange-status", h.UpdateExchangeStatus)
+		hs.r.GET("/get-exchange-status", hs.GetExchangesStatus)
+		hs.r.POST("/update-exchange-status", hs.UpdateExchangeStatus)
 
-		h.r.POST("/exchange-notification", h.ExchangeNotification)
-		h.r.GET("/exchange-notifications", h.GetNotifications)
+		hs.r.POST("/exchange-notification", hs.ExchangeNotification)
+		hs.r.GET("/exchange-notifications", hs.GetNotifications)
 
-		h.r.POST("/set-stable-token-params", h.SetStableTokenParams)
-		h.r.POST("/confirm-stable-token-params", h.ConfirmStableTokenParams)
-		h.r.POST("/reject-stable-token-params", h.RejectStableTokenParams)
-		h.r.GET("/pending-stable-token-params", h.GetPendingStableTokenParams)
-		h.r.GET("/stable-token-params", h.GetStableTokenParams)
+		hs.r.POST("/set-stable-token-params", hs.SetStableTokenParams)
+		hs.r.POST("/confirm-stable-token-params", hs.ConfirmStableTokenParams)
+		hs.r.POST("/reject-stable-token-params", hs.RejectStableTokenParams)
+		hs.r.GET("/pending-stable-token-params", hs.GetPendingStableTokenParams)
+		hs.r.GET("/stable-token-params", hs.GetStableTokenParams)
 
-		h.r.GET("/gold-feed", h.GetGoldData)
+		hs.r.GET("/gold-feed", hs.GetGoldData)
 	}
 
-	if h.stat != nil {
-		h.r.GET("/cap-by-address/:addr", h.GetCapByAddress)
-		h.r.GET("/cap-by-user/:user", h.GetCapByUser)
-		h.r.GET("/richguy/:addr", h.ExceedDailyLimit)
-		h.r.GET("/tradelogs", h.TradeLogs)
-		h.r.GET("/catlogs", h.CatLogs)
-		h.r.GET("/get-asset-volume", h.GetAssetVolume)
-		h.r.GET("/get-burn-fee", h.GetBurnFee)
-		h.r.GET("/get-wallet-fee", h.GetWalletFee)
-		h.r.GET("/get-user-volume", h.GetUserVolume)
-		h.r.GET("/get-users-volume", h.GetUsersVolume)
-		h.r.GET("/get-trade-summary", h.GetTradeSummary)
-		h.r.POST("/update-user-addresses", h.UpdateUserAddresses)
-		h.r.GET("/get-pending-addresses", h.GetPendingAddresses)
-		h.r.GET("/get-reserve-rate", h.GetReserveRate)
-		h.r.GET("/get-wallet-stats", h.GetWalletStats)
-		h.r.GET("/get-wallet-address", h.GetWalletAddresses)
-		h.r.GET("/get-country-stats", h.GetCountryStats)
-		h.r.GET("/get-heat-map", h.GetHeatMap)
-		h.r.GET("/get-countries", h.GetCountries)
-		h.r.POST("/update-price-analytic-data", h.UpdatePriceAnalyticData)
-		h.r.GET("/get-price-analytic-data", h.GetPriceAnalyticData)
-		h.r.GET("/get-reserve-volume", h.GetReserveVolume)
-		h.r.GET("/get-user-list", h.GetUserList)
-		h.r.GET("/get-token-heatmap", h.GetTokenHeatmap)
-		h.r.GET("/get-fee-setrate", h.GetFeeSetRateByDay)
+	if hs.stat != nil {
+		hs.r.GET("/cap-by-address/:addr", hs.GetCapByAddress)
+		hs.r.GET("/cap-by-user/:user", hs.GetCapByUser)
+		hs.r.GET("/richguy/:addr", hs.ExceedDailyLimit)
+		hs.r.GET("/tradelogs", hs.TradeLogs)
+		hs.r.GET("/catlogs", hs.CatLogs)
+		hs.r.GET("/get-asset-volume", hs.GetAssetVolume)
+		hs.r.GET("/get-burn-fee", hs.GetBurnFee)
+		hs.r.GET("/get-wallet-fee", hs.GetWalletFee)
+		hs.r.GET("/get-user-volume", hs.GetUserVolume)
+		hs.r.GET("/get-users-volume", hs.GetUsersVolume)
+		hs.r.GET("/get-trade-summary", hs.GetTradeSummary)
+		hs.r.POST("/update-user-addresses", hs.UpdateUserAddresses)
+		hs.r.GET("/get-pending-addresses", hs.GetPendingAddresses)
+		hs.r.GET("/get-reserve-rate", hs.GetReserveRate)
+		hs.r.GET("/get-wallet-stats", hs.GetWalletStats)
+		hs.r.GET("/get-wallet-address", hs.GetWalletAddresses)
+		hs.r.GET("/get-country-stats", hs.GetCountryStats)
+		hs.r.GET("/get-heat-map", hs.GetHeatMap)
+		hs.r.GET("/get-countries", hs.GetCountries)
+		hs.r.POST("/update-price-analytic-data", hs.UpdatePriceAnalyticData)
+		hs.r.GET("/get-price-analytic-data", hs.GetPriceAnalyticData)
+		hs.r.GET("/get-reserve-volume", hs.GetReserveVolume)
+		hs.r.GET("/get-user-list", hs.GetUserList)
+		hs.r.GET("/get-token-heatmap", hs.GetTokenHeatmap)
+		hs.r.GET("/get-fee-setrate", hs.GetFeeSetRateByDay)
 	}
 }
 
-func (h *HTTPServer) Run() {
-	h.register()
-	if err := h.r.Run(h.host); err != nil {
+func (hs *HTTPServer) Run() {
+	hs.register()
+	if err := hs.r.Run(hs.host); err != nil {
 		log.Panic(err)
 	}
 }

@@ -14,8 +14,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (h *HTTPServer) updateInternalTokensIndices(tokenUpdates map[string]common.TokenUpdate) error {
-	tokens, err := h.setting.GetInternalTokens()
+func (hs *HTTPServer) updateInternalTokensIndices(tokenUpdates map[string]common.TokenUpdate) error {
+	tokens, err := hs.setting.GetInternalTokens()
 	if err != nil {
 		return err
 	}
@@ -25,14 +25,14 @@ func (h *HTTPServer) updateInternalTokensIndices(tokenUpdates map[string]common.
 			tokens = append(tokens, token)
 		}
 	}
-	if err = h.blockchain.LoadAndSetTokenIndices(common.GetTokenAddressesList(tokens)); err != nil {
+	if err = hs.blockchain.LoadAndSetTokenIndices(common.GetTokenAddressesList(tokens)); err != nil {
 		return err
 	}
 	return nil
 }
 
 // ensureRunningExchange makes sure that the exchange input is avaialbe in current deployment
-func (h *HTTPServer) ensureRunningExchange(ex string) (settings.ExchangeName, error) {
+func (hs *HTTPServer) ensureRunningExchange(ex string) (settings.ExchangeName, error) {
 	exName, ok := settings.ExchangeTypeValues()[ex]
 	if !ok {
 		return exName, fmt.Errorf("Exchange %s is not in current deployment", ex)
@@ -42,36 +42,36 @@ func (h *HTTPServer) ensureRunningExchange(ex string) (settings.ExchangeName, er
 
 // getExchangeSetting will query the current exchange setting with key ExName.
 // return a struct contain all
-func (h *HTTPServer) getExchangeSetting(exName settings.ExchangeName) (*common.ExchangeSetting, error) {
-	exFee, err := h.setting.GetFee(exName)
+func (hs *HTTPServer) getExchangeSetting(exName settings.ExchangeName) (*common.ExchangeSetting, error) {
+	exFee, err := hs.setting.GetFee(exName)
 	if err != nil {
 		return nil, err
 	}
-	exMinDep, err := h.setting.GetMinDeposit(exName)
+	exMinDep, err := hs.setting.GetMinDeposit(exName)
 	if err != nil {
 		return nil, err
 	}
-	exInfos, err := h.setting.GetExchangeInfo(exName)
+	exInfos, err := hs.setting.GetExchangeInfo(exName)
 	if err != nil {
 		return nil, err
 	}
-	depAddrs, err := h.setting.GetDepositAddresses(exName)
+	depAddrs, err := hs.setting.GetDepositAddresses(exName)
 	if err != nil {
 		return nil, err
 	}
 	return common.NewExchangeSetting(depAddrs, exMinDep, exFee, exInfos), nil
 }
 
-func (h *HTTPServer) prepareExchangeSetting(token common.Token, tokExSetts map[string]common.TokenExchangeSetting, preparedExchangeSetting map[settings.ExchangeName]*common.ExchangeSetting) error {
+func (hs *HTTPServer) prepareExchangeSetting(token common.Token, tokExSetts map[string]common.TokenExchangeSetting, preparedExchangeSetting map[settings.ExchangeName]*common.ExchangeSetting) error {
 	for ex, tokExSett := range tokExSetts {
-		exName, err := h.ensureRunningExchange(ex)
+		exName, err := hs.ensureRunningExchange(ex)
 		if err != nil {
 			return fmt.Errorf("Exchange %s is not in current deployment", ex)
 		}
 		comExSet, ok := preparedExchangeSetting[exName]
 		//create a current ExchangeSetting from setting if it does not exist yet
 		if !ok {
-			comExSet, err = h.getExchangeSetting(exName)
+			comExSet, err = hs.getExchangeSetting(exName)
 			if err != nil {
 				return err
 			}
@@ -99,8 +99,8 @@ func (h *HTTPServer) prepareExchangeSetting(token common.Token, tokExSetts map[s
 // SetTokenUpdate will pre-process the token request and put into pending token request
 // It will not apply any change to DB if the request is not as dictated in documentation.
 // Newer request will append if the tokenID is not avail in pending, and overwrite otherwise
-func (h *HTTPServer) SetTokenUpdate(c *gin.Context) {
-	postForm, ok := h.Authenticated(c, []string{"data"}, []Permission{ConfigurePermission})
+func (hs *HTTPServer) SetTokenUpdate(c *gin.Context) {
+	postForm, ok := hs.Authenticated(c, []string{"data"}, []Permission{ConfigurePermission})
 	if !ok {
 		return
 	}
@@ -117,12 +117,12 @@ func (h *HTTPServer) SetTokenUpdate(c *gin.Context) {
 	)
 	hasInternal := thereIsInternal(tokenUpdates)
 	if hasInternal {
-		if h.hasMetricPending() {
+		if hs.hasMetricPending() {
 			httputil.ResponseFailure(c, httputil.WithReason("There is currently pending action on metrics. Clean it first"))
 			return
 		}
 		// verify exchange status and exchange precision limit for each exchange
-		exInfos, err = h.getInfosFromExchangeEndPoint(tokenUpdates)
+		exInfos, err = hs.getInfosFromExchangeEndPoint(tokenUpdates)
 		if err != nil {
 			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
@@ -134,7 +134,7 @@ func (h *HTTPServer) SetTokenUpdate(c *gin.Context) {
 		token.ID = tokenID
 		// if the token is internal, it must come with PWIEq, targetQty and QuadraticEquation and exchange setting
 		if token.Internal {
-			if uErr := h.ensureInternalSetting(tokenUpdate); uErr != nil {
+			if uErr := hs.ensureInternalSetting(tokenUpdate); uErr != nil {
 				httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("Token %s is internal, required more setting (%s)", token.ID, uErr.Error())))
 				return
 			}
@@ -162,19 +162,19 @@ func (h *HTTPServer) SetTokenUpdate(c *gin.Context) {
 		tokenUpdates[tokenID] = tokenUpdate
 	}
 
-	if err = h.setting.UpdatePendingTokenUpdates(tokenUpdates); err != nil {
+	if err = hs.setting.UpdatePendingTokenUpdates(tokenUpdates); err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c)
 }
 
-func (h *HTTPServer) GetPendingTokenUpdates(c *gin.Context) {
-	_, ok := h.Authenticated(c, []string{}, []Permission{RebalancePermission, ConfigurePermission, ReadOnlyPermission, ConfirmConfPermission})
+func (hs *HTTPServer) GetPendingTokenUpdates(c *gin.Context) {
+	_, ok := hs.Authenticated(c, []string{}, []Permission{RebalancePermission, ConfigurePermission, ReadOnlyPermission, ConfirmConfPermission})
 	if !ok {
 		return
 	}
-	data, err := h.setting.GetPendingTokenUpdates()
+	data, err := hs.setting.GetPendingTokenUpdates()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -183,8 +183,8 @@ func (h *HTTPServer) GetPendingTokenUpdates(c *gin.Context) {
 	return
 }
 
-func (h *HTTPServer) ConfirmTokenUpdate(c *gin.Context) {
-	postForm, ok := h.Authenticated(c, []string{"data"}, []Permission{ConfigurePermission})
+func (hs *HTTPServer) ConfirmTokenUpdate(c *gin.Context) {
+	postForm, ok := hs.Authenticated(c, []string{"data"}, []Permission{ConfigurePermission})
 	if !ok {
 		return
 	}
@@ -203,27 +203,27 @@ func (h *HTTPServer) ConfirmTokenUpdate(c *gin.Context) {
 	hasInternal := thereIsInternal(tokenUpdates)
 	//If there is internal token in the listing, query for related information.
 	if hasInternal {
-		pws, err = h.metric.GetPWIEquationV2()
+		pws, err = hs.metric.GetPWIEquationV2()
 		if err != nil {
 			log.Printf("WARNING: There is no current PWS equation in database, creating new instance...")
 			pws = make(common.PWIEquationRequestV2)
 		}
-		tarQty, err = h.metric.GetTargetQtyV2()
+		tarQty, err = hs.metric.GetTargetQtyV2()
 		if err != nil {
 			log.Printf("WARNING: There is no current target quantity in database, creating new instance...")
 			tarQty = make(common.TokenTargetQtyV2)
 		}
-		quadEq, err = h.metric.GetRebalanceQuadratic()
+		quadEq, err = hs.metric.GetRebalanceQuadratic()
 		if err != nil {
 			log.Printf("WARNING: There is no current quadratic equation in database, creating new instance...")
 			quadEq = make(common.RebalanceQuadraticRequest)
 		}
-		if h.hasMetricPending() {
+		if hs.hasMetricPending() {
 			httputil.ResponseFailure(c, httputil.WithReason("There is currently pending action on metrics. Clean it first"))
 			return
 		}
 	}
-	pendingTLs, err := h.setting.GetPendingTokenUpdates()
+	pendingTLs, err := hs.setting.GetPendingTokenUpdates()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("Can not get pending token listing (%s)", err.Error())))
 		return
@@ -253,24 +253,24 @@ func (h *HTTPServer) ConfirmTokenUpdate(c *gin.Context) {
 			httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("Confirm and pending token listing request for token %s are not equal", tokenID)))
 			return
 		}
-		if uErr := h.prepareExchangeSetting(token, tokenUpdate.Exchanges, preparedExchangeSetting); uErr != nil {
+		if uErr := hs.prepareExchangeSetting(token, tokenUpdate.Exchanges, preparedExchangeSetting); uErr != nil {
 			httputil.ResponseFailure(c, httputil.WithError(uErr))
 			return
 		}
 	}
 	//reload token indices and apply metric changes if the token is Internal
 	if hasInternal {
-		if err = h.updateInternalTokensIndices(tokenUpdates); err != nil {
+		if err = hs.updateInternalTokensIndices(tokenUpdates); err != nil {
 			httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("Can not update internal token indices (%s)", err.Error())))
 			return
 		}
-		if err = h.metric.ConfirmTokenUpdateInfo(tarQty, pws, quadEq); err != nil {
+		if err = hs.metric.ConfirmTokenUpdateInfo(tarQty, pws, quadEq); err != nil {
 			httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("Can not update metric data (%s)", err.Error())))
 			return
 		}
 	}
 	// Apply the change into setting database
-	if err = h.setting.ApplyTokenWithExchangeSetting(preparedToken, preparedExchangeSetting); err != nil {
+	if err = hs.setting.ApplyTokenWithExchangeSetting(preparedToken, preparedExchangeSetting); err != nil {
 		httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("Can not apply token and exchange setting for token listing (%s). Metric data and token indices changes has to be manually revert", err.Error())))
 		return
 	}
@@ -278,18 +278,18 @@ func (h *HTTPServer) ConfirmTokenUpdate(c *gin.Context) {
 	httputil.ResponseSuccess(c)
 }
 
-func (h *HTTPServer) RejectTokenUpdate(c *gin.Context) {
-	_, ok := h.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
+func (hs *HTTPServer) RejectTokenUpdate(c *gin.Context) {
+	_, ok := hs.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
 	if !ok {
 		return
 	}
-	listings, err := h.setting.GetPendingTokenUpdates()
+	listings, err := hs.setting.GetPendingTokenUpdates()
 	if (err != nil) || len(listings) == 0 {
 		httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("there is no pending token listing (%v)", err)))
 		return
 	}
 	// TODO: Handling odd case when setting bucket DB op successful but metric bucket DB op failed.
-	if err := h.setting.RemovePendingTokenUpdates(); err != nil {
+	if err := hs.setting.RemovePendingTokenUpdates(); err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
@@ -298,13 +298,13 @@ func (h *HTTPServer) RejectTokenUpdate(c *gin.Context) {
 
 // getInfosFromExchangeEndPoint assembles a map of exchange to lists of PairIDs and
 // query their exchange Info in one go
-func (h *HTTPServer) getInfosFromExchangeEndPoint(tokenUpdates map[string]common.TokenUpdate) (map[string]common.ExchangeInfo, error) {
+func (hs *HTTPServer) getInfosFromExchangeEndPoint(tokenUpdates map[string]common.TokenUpdate) (map[string]common.ExchangeInfo, error) {
 	const ETHID = "ETH"
 	exTokenPairIDs := make(map[string]([]common.TokenPairID))
 	result := make(map[string]common.ExchangeInfo)
 	for tokenID, tokenUpdate := range tokenUpdates {
 		for ex, exSetting := range tokenUpdate.Exchanges {
-			_, err := h.ensureRunningExchange(ex)
+			_, err := hs.ensureRunningExchange(ex)
 			if err != nil {
 				return result, err
 			}
@@ -338,14 +338,14 @@ func (h *HTTPServer) getInfosFromExchangeEndPoint(tokenUpdates map[string]common
 
 // hasPending return true if currently there is a pending request on Metric data
 // This is to ensure that token listing operations does not conflict with metric operations
-func (h *HTTPServer) hasMetricPending() bool {
-	if _, err := h.metric.GetPendingPWIEquationV2(); err == nil {
+func (hs *HTTPServer) hasMetricPending() bool {
+	if _, err := hs.metric.GetPendingPWIEquationV2(); err == nil {
 		return true
 	}
-	if _, err := h.metric.GetPendingRebalanceQuadratic(); err == nil {
+	if _, err := hs.metric.GetPendingRebalanceQuadratic(); err == nil {
 		return true
 	}
-	if _, err := h.metric.GetPendingTargetQtyV2(); err == nil {
+	if _, err := hs.metric.GetPendingTargetQtyV2(); err == nil {
 		return true
 	}
 	return false
@@ -360,9 +360,9 @@ func thereIsInternal(tokenUpdates map[string]common.TokenUpdate) bool {
 	return false
 }
 
-func (h *HTTPServer) ensureInternalSetting(tokenUpdate common.TokenUpdate) error {
+func (hs *HTTPServer) ensureInternalSetting(tokenUpdate common.TokenUpdate) error {
 	token := tokenUpdate.Token
-	if uErr := h.blockchain.CheckTokenIndices(ethereum.HexToAddress(token.Address)); uErr != nil {
+	if uErr := hs.blockchain.CheckTokenIndices(ethereum.HexToAddress(token.Address)); uErr != nil {
 		return fmt.Errorf("cannot get token indice from smart contract (%s) ", uErr.Error())
 	}
 	if tokenUpdate.Exchanges == nil {
@@ -378,12 +378,12 @@ func (h *HTTPServer) ensureInternalSetting(tokenUpdate common.TokenUpdate) error
 	return nil
 }
 
-func (h *HTTPServer) TokenSettings(c *gin.Context) {
-	_, ok := h.Authenticated(c, []string{}, []Permission{RebalancePermission, ConfigurePermission, ReadOnlyPermission, ConfirmConfPermission})
+func (hs *HTTPServer) TokenSettings(c *gin.Context) {
+	_, ok := hs.Authenticated(c, []string{}, []Permission{RebalancePermission, ConfigurePermission, ReadOnlyPermission, ConfirmConfPermission})
 	if !ok {
 		return
 	}
-	data, err := h.setting.GetAllTokens()
+	data, err := hs.setting.GetAllTokens()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -391,8 +391,8 @@ func (h *HTTPServer) TokenSettings(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithData(data))
 }
 
-func (h *HTTPServer) UpdateAddress(c *gin.Context) {
-	postForm, ok := h.Authenticated(c, []string{"name", "address"}, []Permission{RebalancePermission, ConfigurePermission})
+func (hs *HTTPServer) UpdateAddress(c *gin.Context) {
+	postForm, ok := hs.Authenticated(c, []string{"name", "address"}, []Permission{RebalancePermission, ConfigurePermission})
 	if !ok {
 		return
 	}
@@ -404,15 +404,15 @@ func (h *HTTPServer) UpdateAddress(c *gin.Context) {
 		return
 	}
 	addr := ethereum.HexToAddress(addrStr)
-	if err := h.setting.UpdateAddress(addressName, addr); err != nil {
+	if err := hs.setting.UpdateAddress(addressName, addr); err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c)
 }
 
-func (h *HTTPServer) AddAddressToSet(c *gin.Context) {
-	postForm, ok := h.Authenticated(c, []string{"name", "address"}, []Permission{RebalancePermission, ConfigurePermission})
+func (hs *HTTPServer) AddAddressToSet(c *gin.Context) {
+	postForm, ok := hs.Authenticated(c, []string{"name", "address"}, []Permission{RebalancePermission, ConfigurePermission})
 	if !ok {
 		return
 	}
@@ -424,15 +424,15 @@ func (h *HTTPServer) AddAddressToSet(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("invalid address set name: %s", setName)))
 		return
 	}
-	if err := h.setting.AddAddressToSet(addrSetName, addr); err != nil {
+	if err := hs.setting.AddAddressToSet(addrSetName, addr); err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c)
 }
 
-func (h *HTTPServer) UpdateExchangeFee(c *gin.Context) {
-	postForm, ok := h.Authenticated(c, []string{"name", "data"}, []Permission{RebalancePermission, ConfigurePermission})
+func (hs *HTTPServer) UpdateExchangeFee(c *gin.Context) {
+	postForm, ok := hs.Authenticated(c, []string{"name", "data"}, []Permission{RebalancePermission, ConfigurePermission})
 	if !ok {
 		return
 	}
@@ -448,15 +448,15 @@ func (h *HTTPServer) UpdateExchangeFee(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
-	if err := h.setting.UpdateFee(exName, exFee); err != nil {
+	if err := hs.setting.UpdateFee(exName, exFee); err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c)
 }
 
-func (h *HTTPServer) UpdateExchangeMinDeposit(c *gin.Context) {
-	postForm, ok := h.Authenticated(c, []string{"name", "data"}, []Permission{RebalancePermission, ConfigurePermission})
+func (hs *HTTPServer) UpdateExchangeMinDeposit(c *gin.Context) {
+	postForm, ok := hs.Authenticated(c, []string{"name", "data"}, []Permission{RebalancePermission, ConfigurePermission})
 	if !ok {
 		return
 	}
@@ -472,15 +472,15 @@ func (h *HTTPServer) UpdateExchangeMinDeposit(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
-	if err := h.setting.UpdateMinDeposit(exName, exMinDeposit); err != nil {
+	if err := hs.setting.UpdateMinDeposit(exName, exMinDeposit); err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c)
 }
 
-func (h *HTTPServer) UpdateDepositAddress(c *gin.Context) {
-	postForm, ok := h.Authenticated(c, []string{"name", "data"}, []Permission{RebalancePermission, ConfigurePermission})
+func (hs *HTTPServer) UpdateDepositAddress(c *gin.Context) {
+	postForm, ok := hs.Authenticated(c, []string{"name", "data"}, []Permission{RebalancePermission, ConfigurePermission})
 	if !ok {
 		return
 	}
@@ -502,15 +502,15 @@ func (h *HTTPServer) UpdateDepositAddress(c *gin.Context) {
 		exDepositAddress[tokenID] = ethereum.HexToAddress(addrStr)
 		log.Printf(exDepositAddress[tokenID].Hex())
 	}
-	if err := h.setting.UpdateDepositAddress(exName, exDepositAddress); err != nil {
+	if err := hs.setting.UpdateDepositAddress(exName, exDepositAddress); err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c)
 }
 
-func (h *HTTPServer) UpdateExchangeInfo(c *gin.Context) {
-	postForm, ok := h.Authenticated(c, []string{"name", "data"}, []Permission{RebalancePermission, ConfigurePermission})
+func (hs *HTTPServer) UpdateExchangeInfo(c *gin.Context) {
+	postForm, ok := hs.Authenticated(c, []string{"name", "data"}, []Permission{RebalancePermission, ConfigurePermission})
 	if !ok {
 		return
 	}
@@ -551,36 +551,36 @@ func (h *HTTPServer) UpdateExchangeInfo(c *gin.Context) {
 			exInfo[tokenPairID] = epl
 		}
 	}
-	if err := h.setting.UpdateExchangeInfo(exName, exInfo); err != nil {
+	if err := hs.setting.UpdateExchangeInfo(exName, exInfo); err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c)
 }
 
-func (h *HTTPServer) GetAllSetting(c *gin.Context) {
-	_, ok := h.Authenticated(c, []string{}, []Permission{RebalancePermission, ConfigurePermission, ReadOnlyPermission, ConfirmConfPermission})
+func (hs *HTTPServer) GetAllSetting(c *gin.Context) {
+	_, ok := hs.Authenticated(c, []string{}, []Permission{RebalancePermission, ConfigurePermission, ReadOnlyPermission, ConfirmConfPermission})
 	if !ok {
 		return
 	}
-	tokenSettings, err := h.setting.GetAllTokens()
+	tokenSettings, err := hs.setting.GetAllTokens()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
-	addressSettings, err := h.setting.GetAllAddresses()
+	addressSettings, err := hs.setting.GetAllAddresses()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	exchangeSettings := make(map[string]*common.ExchangeSetting)
 	for exID := range common.SupportedExchanges {
-		exName, vErr := h.ensureRunningExchange(string(exID))
+		exName, vErr := hs.ensureRunningExchange(string(exID))
 		if vErr != nil {
 			httputil.ResponseFailure(c, httputil.WithError(vErr))
 			return
 		}
-		exSett, vErr := h.getExchangeSetting(exName)
+		exSett, vErr := hs.getExchangeSetting(exName)
 		if vErr != nil {
 			httputil.ResponseFailure(c, httputil.WithError(vErr))
 			return
