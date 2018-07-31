@@ -51,19 +51,24 @@ func (self *HTTPServer) ensureRunningExchange(ex string) (settings.ExchangeName,
 func (self *HTTPServer) getExchangeSetting(exName settings.ExchangeName) (*common.ExchangeSetting, error) {
 	exFee, err := self.setting.GetFee(exName)
 	if err != nil {
-		return nil, err
+		log.Printf("cannot get current exchange fee for %s (err: %s). Overwrite new setting instead", exName, err)
+		fundingFee := common.NewFundingFee(make(map[string]float64), make(map[string]float64))
+		exFee = common.NewExchangeFee(make(common.TradingFee), fundingFee)
 	}
 	exMinDep, err := self.setting.GetMinDeposit(exName)
 	if err != nil {
-		return nil, err
+		log.Printf("cannot get current exchange minDeposit for %s (err: %s). Overwrite new setting instead", exName, err)
+		exMinDep = make(common.ExchangesMinDeposit)
 	}
 	exInfos, err := self.setting.GetExchangeInfo(exName)
 	if err != nil {
-		return nil, err
+		log.Printf("cannot get current exchange info for %s (err: %s). Overwrite new setting instead", exName, err)
+		exInfos = make(common.ExchangeInfo)
 	}
 	depAddrs, err := self.setting.GetDepositAddresses(exName)
 	if err != nil {
-		return nil, err
+		log.Printf("cannot get current exchange deposit address for %s (err: %s). Overwrite new setting instead", exName, err)
+		depAddrs = make(common.ExchangeAddresses)
 	}
 	return common.NewExchangeSetting(depAddrs, exMinDep, exFee, exInfos), nil
 }
