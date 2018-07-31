@@ -16,9 +16,10 @@ func (setting *Settings) GetFee(ex ExchangeName) (common.ExchangeFees, error) {
 // Afterwhich it stores the fee with exchangeName as key into database and return error if occur
 func (setting *Settings) UpdateFee(exName ExchangeName, exFee common.ExchangeFees) error {
 	currExFee, err := setting.GetFee(exName)
+	var currFundingFee = common.NewFundingFee(make(map[string]float64), make(map[string]float64))
 	if err != nil {
 		log.Printf("UpdateExchangeFee: Can't get current exchange fee of %s (%s), overwrite it with new data", exName.String(), err)
-		currExFee = common.NewExchangeFee(common.TradingFee{}, common.FundingFee{})
+		currExFee = common.NewExchangeFee(make(common.TradingFee), currFundingFee)
 	}
 	for tok, val := range exFee.Funding.Deposit {
 		currExFee.Funding.Deposit[tok] = val
