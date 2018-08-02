@@ -9,6 +9,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/archive"
 	"github.com/KyberNetwork/reserve-data/data/datapruner"
+	"github.com/KyberNetwork/reserve-data/settings"
 )
 
 //ReserveData struct for reserve data
@@ -74,6 +75,59 @@ func (self ReserveData) GetOnePrice(pairID common.TokenPairID, timepoint uint64)
 
 func (self ReserveData) CurrentAuthDataVersion(timepoint uint64) (common.Version, error) {
 	return self.storage.CurrentAuthDataVersion(timepoint)
+}
+
+func (self ReserveData) cointainAllInternalTokens(data common.AuthDataSnapshot) (bool, error) {
+	tokens, err := self.setting.GetInternalTokens()
+	if err != nil {
+		return false, err
+	}
+	//go through all exchange in exchangebalances, if an exchange supports a token but its
+	//available balance doesn't has that token, return false.
+	for exID, ebalance := range data.ExchangeBalances {
+		exName, ok := settings.ExchangeTypeValues()[string(exID)]
+		if !ok {
+			return false, fmt.Errorf("Exchange %s can not be found in current setting database", exID)
+		}
+		depositAddrs, vErr := self.setting.GetDepositAddresses(exName)
+		if vErr != nil {
+			return false, vErr
+		}
+		for _, token := range tokens {
+			_, exchangeHasToken := depositAddrs[token.ID]
+			_, balanceHasToken := ebalance.AvailableBalance[token.ID]
+			if exchangeHasToken && !balanceHasToken {
+				return false, nil
+			}
+		}
+	}
+
+	//check if all the internal token is avail in reserve balance
+	for _, token := range tokens {
+		if _, balanceHasToken := data.ReserveBalances[token.ID]; !balanceHasToken {
+
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
+func (self ReserveData) CheckAndModifyAuthDataAfterTokenUpdate() error {
+	timepoint := common.GetTimepoint()
+	version, err := self.storage.CurrentAuthDataVersion(timepoint)
+	data, err := self.storage.GetAuthData(version)
+	if err != nil {
+		return err
+	}
+	check, err := self.cointainAllInternalTokens(data)
+	if err != nil {
+		return err
+	}
+	if !check {
+		data.Valid = false
+		return self.storage.StoreAuthSnapshot(&data, timepoint)
+	}
+	return nil
 }
 
 func (self ReserveData) GetAuthData(timepoint uint64) (common.AuthDataResponse, error) {

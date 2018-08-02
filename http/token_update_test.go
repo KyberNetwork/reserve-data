@@ -10,6 +10,8 @@ import (
 	"testing"
 
 	"github.com/KyberNetwork/reserve-data/data/storage"
+
+	reservemock "github.com/KyberNetwork/reserve-data/data/mock"
 	_ "github.com/KyberNetwork/reserve-data/exchange/binance/mock"
 	"github.com/KyberNetwork/reserve-data/http/httputil"
 	"github.com/KyberNetwork/reserve-data/settings"
@@ -342,7 +344,7 @@ func TestHTTPServerUpdateToken(t *testing.T) {
 	}
 
 	testServer := HTTPServer{
-		app:         nil,
+		app:         reservemock.TestReserveData{},
 		core:        nil,
 		metric:      testStorage,
 		authEnabled: false,

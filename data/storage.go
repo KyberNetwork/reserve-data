@@ -12,6 +12,8 @@ type Storage interface {
 
 	CurrentAuthDataVersion(timepoint uint64) (common.Version, error)
 	GetAuthData(common.Version) (common.AuthDataSnapshot, error)
+	StoreAuthSnapshot(data *common.AuthDataSnapshot, timepoint uint64) error
+
 	//ExportExpiredAuthData: Write all expired records into a predetermined filepath
 	//each record will be represented in JSON format, and seperates by endline character
 	//Return: Number of records exported (uint64) and error

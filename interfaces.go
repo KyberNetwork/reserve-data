@@ -70,6 +70,7 @@ type ReserveData interface {
 	GetNotifications() (common.ExchangeNotifications, error)
 
 	GetTradeHistory(fromTime, toTime uint64) (common.AllTradeHistory, error)
+	CheckAndModifyAuthDataAfterTokenUpdate() error
 
 	Run() error
 	RunStorageController() error

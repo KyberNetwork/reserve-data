@@ -305,6 +305,11 @@ func (self *HTTPServer) ConfirmTokenUpdate(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("Can not apply token and exchange setting for token listing (%s). Metric data and token indices changes has to be manually revert", err.Error())))
 		return
 	}
+	// Check and modify authData for new setting
+	if err = self.app.CheckAndModifyAuthDataAfterTokenUpdate(); err != nil {
+		httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("Can not check and modify auth Data for new Token Setting (%s). This will need to token and exchange setting to be manually rerolled", err.Error())))
+		return
+	}
 
 	httputil.ResponseSuccess(c)
 }
