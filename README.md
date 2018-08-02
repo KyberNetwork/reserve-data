@@ -1453,7 +1453,7 @@ curl -X "GET" "http://localhost:8000/v2/pwis-equation" \
 ```
 
 response:
-```
+```json
 {
   "data": {
     "EOS": {
@@ -1664,21 +1664,21 @@ response
 
 ### Reject pending pwis equation v2 - (signing required)
 
-```
+```shell
 <host>:8000/v2/reject-pwis-equation
 POST request
 ```
 
 eg
 
-```
+```shell
 curl -X "POST" "http://localhost:8000/v2/reject-pwis-equation" \
      -H 'Content-Type: application/x-www-form-urlencoded'
 ```
 
 response
 
-```
+```json
   {
     "success": true,
   }
@@ -1686,20 +1686,20 @@ response
 
 ### Get rebalance quadratic - (signing required)
 
-```
+```shell
 <host>:8000/rebalance-quadratic
 GET request
 
 ```
 
 eg:
-```
+```shell
 curl -X "GET" "http://localhost:8000/rebalance-quadratic" \
      -H 'Content-Type: application/x-www-form-urlencoded' \
 ```
 
 response:
-```
+```json
 {
   "data": {
     "EOS": {
@@ -1723,7 +1723,7 @@ response:
 
 ### Set rebalance quadratic equation - (signing required)
 
-```
+```shell
 <host>:8000/set-rebalance-quadratic
 POST request
 Post form: json encoding data of rebalance quadratic equation
@@ -1731,7 +1731,7 @@ Post form: json encoding data of rebalance quadratic equation
 
 eg:
 
-```
+```shell
 curl -X "POST" "http://localhost:8000/set-rebalance-quadratic" \
      -H 'Content-Type: application/x-www-form-urlencoded' \
      --data-urlencode "data={
@@ -1755,23 +1755,25 @@ curl -X "POST" "http://localhost:8000/set-rebalance-quadratic" \
 response
 
 ```
+```
 
 ### Get pending rebalance quadratic - (signing required)
 
-```
+```shell
 <host>:8000/pending-rebalance-quadratic
 GET request
-
 ```
 
 eg:
-```
+
+```shell
 curl -X "GET" "http://localhost:8000/pending-rebalance-quadratic" \
      -H 'Content-Type: application/x-www-form-urlencoded' \
 ```
 
 response:
-```
+
+```json
 {
   "data": {
     "EOS": {
@@ -1796,7 +1798,7 @@ response:
 
 ### Confirm rebalance quadratic equation - (signing required)
 
-```
+```shell
 <host>:8000/confirm-rebalance-quadratic
 POST request
 Post form: json encoding data of pwis equation
@@ -1804,7 +1806,7 @@ Post form: json encoding data of pwis equation
 
 eg
 
-```
+```shell
 curl -X "POST" "http://localhost:8000/confirm-rebalance-quadratic" \
      -H 'Content-Type: application/x-www-form-urlencoded' \
      --data-urlencode "data={
@@ -1827,7 +1829,7 @@ curl -X "POST" "http://localhost:8000/confirm-rebalance-quadratic" \
 
 response
 
-```
+```json
   {
     "success": true,
   }
@@ -1835,21 +1837,21 @@ response
 
 ### Reject rebalance quadrtic equation - (signing required)
 
-```
+```shell
 <host>:8000/reject-rebalance-quadratic
 POST request
 ```
 
 eg
 
-```
+```shell
 curl -X "POST" "http://localhost:8000/reject-rebalance-quadratic" \
      -H 'Content-Type: application/x-www-form-urlencoded'
 ```
 
 response
 
-```
+```json
   {
     "success": true,
   }
@@ -1860,32 +1862,35 @@ response
 #### Token related APIs
 
 ##### Set token update - (signing required) Prepare token update and store the request as pending
+
 POST request 
-Post form: {"data" : "JSON enconding of token update Object"}
-```
+
+Post form: 
+  
+  {"data" : "JSON enconding of token update Object"}
+
+```shell
 <host>:8000/setting/set-token-update
 ```
+
 **Note**: 
-- The API allow user to update token settings and its status. Hence can be used both for **list** and **delist** a token, as well as 
-to do minor modification for the token setting. 
-To list a token, it active status is set to true. To delist a token, both its internal and active status is set to false.
+- The API allow user to update token settings and its status. Hence can be used both for **list** and **delist** a token, as well as to do minor modification for the token setting. To list a token, it active status is set to true. To delist a token, both its internal and active status is set to false.
+
 - This data is in the form of a map tokenID:tokenUpdate which allows mutiple token updates at once
-- It also allows mutiple requests, for example, one request update OMG, the other update KNC. Both these 
-requests will be aggregate in to a list of token to be listed. These can be overwritten as well : if there 
-are two requests update KNC, the later will overwite the ealier.  
-- If a token is marked as internal, it will be required to come with exchange setting( fee, min deposit, 
-exchange precision limit, deposit address) , and metric settings (pwis, targetQty). Since rebalance quadratic
-data can be zero value, it is optional. 
-- If exchange precision limit (tokenUpdate.Exchange.Info) is null, It can be queried from exchange and 
-set automatically for the pair (token-ETH). If this data is available in the request,
-it will be prioritize over the exchange queried data.
-- In addition, if the update contain any Internal token, that token must be available in Smart contract
-in order to update its indices. 
+
+- It also allows mutiple requests, for example, one request update OMG, the other update KNC. Both these requests will be aggregate in to a list of token to be listed. These can be overwritten as well : if there are two requests update KNC, the later will overwite the ealier.  
+
+- If a token is marked as internal, it will be required to come with exchange setting( fee, min deposit, exchange precision limit, deposit address) , and metric settings (pwis, targetQty). Since rebalance quadratic data can be zero value, it is optional. 
+
+- If exchange precision limit (tokenUpdate.Exchange.Info) is null, It can be queried from exchange and set automatically for the pair (token-ETH). If this data is available in the request, it will be prioritize over the exchange queried data.
+
+- In addition, if the update contain any Internal token, that token must be available in Smart contract in order to update its indices. 
+
 - The tokenID from the map object will overwrite the token object's ID. Hence this token object ID inside the request is optional.
 
 Example: This request will list token OMG and NEO. OMG is internal, NEO is external. 
 
-``` 
+```shell
 curl -X "POST" "http://localhost:8000/setting/set-token-update" \
      -H 'Content-Type: application/x-www-form-urlencoded'\
      --data-urlencode "data={  
@@ -1953,9 +1958,11 @@ curl -X "POST" "http://localhost:8000/setting/set-token-update" \
     }"
 
 ```
+
 response
 
-```
+
+```json
 on success:
 {"success":true}
 on failure:
@@ -1964,19 +1971,22 @@ on failure:
 ```
 
 ##### Get pending token update - (singing required) Return the current pending token updates information
+
 GET request
 
-``` 
+```shell
 <host>:8000/setting/pending-token-update
 ```
 
 Example
-``` 
+
+```shell
 curl -X "GET" "http://localhost:8000/setting/pending-token-update"
 ```
 
 response 
-```
+
+```json
 {
   "data": {
     "NEO": {
@@ -2074,18 +2084,23 @@ response
           "b": 2,
           "c": 3
         }
-
-##### Confirm token update - (signing required) Confirm token update and apply all the change to core.
-POST request 
-Post form: {"data" : "JSON enconding of token update Object"}
-Note: This data is similar to token update, but all field must be the same as the current pending. 
 ```
+
+### Confirm token update - (signing required) Confirm token update and apply all the change to core.
+
+POST request 
+
+Post form: {"data" : "JSON enconding of token update Object"}
+
+Note: This data is similar to token update, but all field must be the same as the current pending. 
+
+```shell
 <host>:8000/setting/confirm-token-update
 ```
 
 Example 
 
-``` 
+```shell
 curl -X "POST" "http://localhost:8000/setting/confirm-token-update" \
      -H 'Content-Type: application/x-www-form-urlencoded'\
      --data-urlencode "data={    
@@ -2189,7 +2204,7 @@ curl -X "POST" "http://localhost:8000/setting/confirm-token-update" \
 ```
 response
 
-```
+```json
 on success:
 {"success":true}
 on failure:
@@ -2200,17 +2215,20 @@ on failure:
 ##### Reject pending token update - (signing required) reject the update and remove the current pending update
 POST request
 
-```
+```shell
 <host>:8000/setting/reject-token-update
 ```
 
 Example
 
-```
+```shell
 curl -X "POST" "http://localhost:8000/setting/reject-token-update" \
      -H 'Content-Type: application/x-www-form-urlencoded'
+```
 
+response:
 
+```json
 on success:
 {"success":true}
 on failure:
@@ -2221,12 +2239,12 @@ on failure:
 ##### Get Token settings - (signing required) get current token settings of core.
 GET request
 
-``` 
+```shell 
 <host>:8000/setting/token-settings
 ```
 
 Example
-```
+```shell
 curl -X "GET" "http://localhost:8000/setting/token-settings"
 ```
 
@@ -2247,31 +2265,34 @@ response
   "success": true
 }
 ```
+
 #### Address related APIs
 
 ##### Update address - (signing required) update a single address
+
 POST request 
+
 Post form: {"name" : "Name of the address (reserve, deposit etc...)",
-            "address" : "Hex form of the new address"
-            "timestamp" (optional) uint64 "this will overwrite version in address setting"  }
+            "address" : "Hex form of the new address"}
+
 Note: This is used to update single address object. For list of address object, use add-address-to-set instead
-```
+
+```shell
 <host>:8000/setting/update-address
 ```
 
 Example 
 
-```
+```shell
 curl -X "POST" "http://localhost:8000/setting/update-address" \
      -H 'Content-Type: application/x-www-form-urlencoded'\
      --data-urlencode "name=bank"\
-     --data-urlencode "address=0x123456789aabbcceeeddff"\
-     --data-urlencode "timestamp=1111111111"
-
+     --data-urlencode "address=0x123456789aabbcceeeddff" 
 ```
+
 response
 
-```
+```json
 on success:
 {"success":true}
 on failure:
@@ -2280,26 +2301,29 @@ on failure:
 ```
 
 ##### Add address to set- (signing required) add address to a list of address
+
 POST request 
+
 Post form: {"name" : <Name of the address set(oldBurners etc...)>,
-            "address" : <Hex form of the new address>
-            "timestamp" (optional) uint64 <this will overwrite version in address setting> }
-```
+            "address" : <Hex form of the new address>}
+
+```shell
 <host>:8000/setting/add-address-to-set
 ```
 
 Example 
 
-```
+```shell
 curl -X "POST" "http://localhost:8000/setting/add-address-to-set" \
      -H 'Content-Type: application/x-www-form-urlencoded'\
      --data-urlencode "name="third_party_reserves"\
      --data-urlencode "address=0x123456789aabbcceeeddff" 
 
 ```
+
 response
 
-```
+```json
 on success:
 {"success":true}
 on failure:
@@ -2310,23 +2334,25 @@ on failure:
 #### Exchange related APIs
 
 ##### Update exchange fee - (signing required) update one exchange fee setting
+
 POST request 
+
 Post form: {"name" : <Name of the exchange (binance, huobi etc...)>,
-            "data" : <JSON encoded form of fee setting >
-            "timestamp" (optional) uint64 <this will overwrite version in exchange setting> }
-}
+            "data" : <JSON encoded form of fee setting >}
+
 **Note**: 
 UpdateFee will merge the new fee setting to the current fee setting,
 Any different key will be overwriten from new fee to current fee. This allows update
 one single token's exchange fee on a destined exchange.
 UpdateFee will not be mutiplied by any value, so please prepare a big enough number to avoid exchange's fee increasing.
-```
+
+```shell
 <host>:8000/setting/update-exchange-fee
 ```
 
 Example 
 
-```
+```shell
   curl -X "POST" "http://localhost:8000/setting/update-exchange-fee" \
      -H 'Content-Type: application/x-www-form-urlencoded'\
      --data-urlencode "name=binance"\
@@ -2349,24 +2375,27 @@ Example
       }
     }"
 ```
+
 ##### Update exchange mindeposit - (signing required) update one exchange min deposit
+
 POST request 
+
 Post form: {"name" : <Name of the exchange (binance, huobi etc...)>,
-            "data" : <JSON encoded form of min deposit>
-            "timestamp" (optional) uint64 <this will overwrite version in exchange setting> }
+            "data" : <JSON encoded form of min deposit>}
 
 **Note**: 
 Update Exchange minDeposit will merge the new minDeposit setting to the current minDeposit setting,
 Any different key will be overwriten from new minDeposit to current minDeposit. This allows update
 one single token's exchange minDeposit on a destined exchange.
 minDeposit input will not be mutiplied by any value, so please prepare a big enough number to avoid exchange's minDeposit increasing.
-```
+
+```shell
 <host>:8000/setting/update-exchange-mindeposit
 ```
 
 Example 
 
-```
+```shell
   curl -X "POST" "http://localhost:8000/setting/update-exchange-mindeposit" \
      -H 'Content-Type: application/x-www-form-urlencoded'\
      --data-urlencode "name=binance"\
@@ -2377,16 +2406,18 @@ Example
 ```
 
 #####  Update exchange deposit address - (signing required) update one exchange deposit address
+
 POST request 
+
 Post form: {"name" : <Name of the exchange (binance, huobi etc...)>,
-            "data" : <JSON encoded form of a map of token : depositaddress >
-            "timestamp" (optional) uint64 <this will overwrite version in exchange setting> }
+            "data" : <JSON encoded form of a map of token : depositaddress >}
 
 **Note**: 
 Update Exchange deposit address will merge the new deposit address setting to the current deposit address setting,
 Any different key will be overwriten from new deposit address to current deposit address. This allows update
 one single tokenpair's exchange precision limit on a destined exchange.
-```
+
+```shell
 <host>:8000/setting/update-deposit-address
 ```
 
@@ -2404,10 +2435,10 @@ Example
 #####  Update exchange info - (signing required) update one exchange's info
 
 POST request 
+
 Post form: {"name" : <Name of the exchange (binance, huobi etc...)>,
-            "data" : <JSON encoded form of exchange info >
-            "timestamp" (optional) uint64 <this will overwrite version in exchange setting> }
-}
+            "data" : <JSON encoded form of exchange info >}
+
 **Note**: 
 Update Exchange minDeposit will merge the new exchange info setting to the current exchange info setting,
 Any different key will be overwriten from new exchange info to current exchange info. This allows update
@@ -2450,13 +2481,11 @@ GET request
 ```
 
 Example
-
 ```shell
 curl -X "GET" "http://localhost:8000/setting/all-settings"
 ```
 
 Response
-
 ```json
 {
   "data": {
@@ -2646,11 +2675,29 @@ Response
   "timestamp": 1533615425492
 }
 
-```json
-  {
-    "success": true,
-  }
+### Get user cap
+
+Return user cap for one Tx by wei
+
 ```
+GET request
+<host>:8000/cap-by-address/:address
+```
+
+example:
+
+```shell
+curl -X "GET" "http://localhost:8000/cap-by-address/0x3baE9b9e1dca462Ad8827f62F4A8b5b3714d7700"
+```
+
+response:
+```json
+{
+  "data": 7093758000000000000,
+  "success": true
+}
+```
+
 
 ## Authentication
 All APIs that are marked with (signing required) must follow authentication mechanism below:

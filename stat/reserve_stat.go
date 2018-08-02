@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math/big"
 	"os"
 	"sort"
 	"strings"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/archive"
+	"github.com/KyberNetwork/reserve-data/common/blockchain"
 	"github.com/KyberNetwork/reserve-data/stat/statpruner"
 	ethereum "github.com/ethereum/go-ethereum/common"
 )
@@ -29,6 +31,7 @@ type ReserveStats struct {
 	fetcher           *Fetcher
 	storageController statpruner.StorageController
 	setting           Setting
+	cmcEthUSDRate     *blockchain.CMCEthUSDRate
 }
 
 func NewReserveStats(
@@ -41,7 +44,8 @@ func NewReserveStats(
 	controllerRunner statpruner.ControllerRunner,
 	fetcher *Fetcher,
 	arch archive.Archive,
-	setting Setting) *ReserveStats {
+	setting Setting,
+	cmcEthUSDRate *blockchain.CMCEthUSDRate) *ReserveStats {
 	storageController, err := statpruner.NewStorageController(controllerRunner, arch)
 	if err != nil {
 		panic(err)
@@ -56,6 +60,7 @@ func NewReserveStats(
 		fetcher:           fetcher,
 		storageController: storageController,
 		setting:           setting,
+		cmcEthUSDRate:     cmcEthUSDRate,
 	}
 }
 
@@ -392,6 +397,7 @@ func (self ReserveStats) Stop() error {
 	return self.fetcher.Stop()
 }
 
+//GetCapByAddress return user cap count by USD
 func (self ReserveStats) GetCapByAddress(addr ethereum.Address) (*common.UserCap, error) {
 	category, err := self.userStorage.GetCategory(addr)
 	if err != nil {
@@ -399,11 +405,34 @@ func (self ReserveStats) GetCapByAddress(addr ethereum.Address) (*common.UserCap
 	}
 	if category == "0x4" {
 		return common.KycedCap(), nil
-	} else {
-		return common.NonKycedCap(), nil
 	}
+	return common.NonKycedCap(), nil
 }
 
+//GetTxCapByAddress return user Tx limit by wei
+func (rs ReserveStats) GetTxCapByAddress(addr ethereum.Address) (*big.Int, error) {
+	category, err := rs.userStorage.GetCategory(addr)
+	if err != nil {
+		return nil, err
+	}
+	var cap float64
+	if category == "0x4" {
+		cap = common.KycedCap().TxLimit
+	} else {
+		cap = common.NonKycedCap().TxLimit
+	}
+	timepoint := common.GetTimepoint()
+	rate := rs.cmcEthUSDRate.GetUSDRate(timepoint)
+	var txLimit *big.Int
+	if rate == 0 {
+		return txLimit, errors.New("cannot get eth usd rate from cmc")
+	}
+	ethLimit := cap / rate
+	txLimit = common.EthToWei(ethLimit)
+	return txLimit, err
+}
+
+//GetCapByUser return limit of an user by USD
 func (self ReserveStats) GetCapByUser(userID string) (*common.UserCap, error) {
 	addresses, _, err := self.userStorage.GetAddressesOfUser(userID)
 	if err != nil {
@@ -412,9 +441,8 @@ func (self ReserveStats) GetCapByUser(userID string) (*common.UserCap, error) {
 	if len(addresses) == 0 {
 		log.Printf("Couldn't find any associated addresses. User %s is not kyced.", userID)
 		return common.NonKycedCap(), nil
-	} else {
-		return self.GetCapByAddress(addresses[0])
 	}
+	return self.GetCapByAddress(addresses[0])
 }
 
 func isDuplicate(currentRate, latestRate common.ReserveRates) bool {

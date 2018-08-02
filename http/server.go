@@ -964,7 +964,7 @@ func (self *HTTPServer) GetCapByAddress(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithReason("address is not valid"))
 		return
 	}
-	data, err := self.stat.GetCapByAddress(address)
+	data, err := self.stat.GetTxCapByAddress(address)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
@@ -1612,6 +1612,7 @@ func (self *HTTPServer) register() {
 		self.r.GET("/get-user-list", self.GetUserList)
 		self.r.GET("/get-token-heatmap", self.GetTokenHeatmap)
 		self.r.GET("/get-fee-setrate", self.GetFeeSetRateByDay)
+		self.r.POST("/userdashboard-kyc-info", self.KYCInfo)
 	}
 }
 
