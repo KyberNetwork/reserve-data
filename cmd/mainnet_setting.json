@@ -435,6 +435,13 @@
       "internal use": false,
       "listed": true
     },
+    "COFI":{
+      "name": "CoinFi",
+      "decimal": 18,
+      "address": "0x3136ef851592acf49ca4c825131e364170fa32b3",
+      "internal use": false,
+      "listed": true
+    },
     "ETH": {
       "name": "Ethereum",
       "decimals": 18,
@@ -649,6 +656,6 @@
   "begin_block_setrate": 5069586,
   "third_party_reserves": [
     "0x2aab2b157a03915c8a73adae735d0cf51c872f31","0x6f50e41885fdc44dbdf7797df0393779a9c0a3a6",
-    "0x4d864b5b4f866f65f53cbaad32eb9574760865e6"
+    "0x4d864b5b4f866f65f53cbaad32eb9574760865e6", "0xc935cad589bebd8673104073d5a5eccfe67fb7b1"
   ]
 }

@@ -27,7 +27,7 @@
       "minimalRecordResolution": "1000000000000000",
       "maxPerBlockImbalance": "938890140546807627776",
       "maxTotalImbalance": "1542127055848131526656",
-      "internal use": false,
+      "internal use": true,
       "listed": true
     },
     "SNT": {
@@ -279,6 +279,12 @@
       "internal use": true,
       "listed": true
     },
+    "COFI":{
+      "name": "CoinFi",
+      "decimals": 18,
+      "address": "0x3136ef851592acf49ca4c825131e364170fa32b3",
+      "symbol":"COFI"
+    },
     "ETH": {
       "name": "Ethereum",
       "decimals": 18,
@@ -293,6 +299,7 @@
       "OMG": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
       "KNC": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
       "SNT": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
+      "EOS": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
       "ELF": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
       "POWR": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
       "MANA": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
@@ -316,13 +323,19 @@
     },
     "huobi": {
       "ETH": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
+      "OMG": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
+      "KNC": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
       "SNT": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
+      "EOS": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
       "ELF": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
+      "POWR": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
+      "MANA": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
       "BAT": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
       "REQ": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
       "ENG": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
       "SALT": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
-      "APPC": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547"
+      "APPC": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
+      "RDN": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547"
     }
   },
   "permission": {
