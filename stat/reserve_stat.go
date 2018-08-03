@@ -411,12 +411,13 @@ func (self ReserveStats) GetCapByAddress(addr ethereum.Address) (*common.UserCap
 
 //GetTxCapByAddress return user Tx limit by wei
 func (rs ReserveStats) GetTxCapByAddress(addr ethereum.Address) (*big.Int, error) {
-	category, err := rs.userStorage.GetCategory(addr)
+	address := common.AddrToString(addr)
+	kyced, err := rs.GetKYCByAddress(address)
 	if err != nil {
 		return nil, err
 	}
 	var cap float64
-	if category == "0x4" {
+	if kyced {
 		cap = common.KycedCap().TxLimit
 	} else {
 		cap = common.NonKycedCap().TxLimit
@@ -429,7 +430,7 @@ func (rs ReserveStats) GetTxCapByAddress(addr ethereum.Address) (*big.Int, error
 	}
 	ethLimit := cap / rate
 	txLimit = common.EthToWei(ethLimit)
-	return txLimit, err
+	return txLimit, nil
 }
 
 //GetCapByUser return limit of an user by USD
@@ -574,4 +575,22 @@ func (self ReserveStats) GetPriceAnalyticData(fromTime uint64, toTime uint64) ([
 
 func (self ReserveStats) GetFeeSetRateByDay(fromTime uint64, toTime uint64) ([]common.FeeSetRate, error) {
 	return self.feeSetRateStorage.GetFeeSetRateByDay(fromTime, toTime)
+}
+
+//UpdateUserKYCInfo return error if cannot update user info
+func (rs ReserveStats) UpdateUserKYCInfo(email string, addresses []string, timestamps []uint64) error {
+	return rs.userStorage.SaveKYCInfo(email, addresses, timestamps)
+}
+
+//GetKYCByAddress return true if address is kyced else return false
+func (rs ReserveStats) GetKYCByAddress(address string) (bool, error) {
+	var result bool
+	email, err := rs.userStorage.GetKYCByAddress(address)
+	if err != nil {
+		return false, err
+	}
+	if email != "" {
+		result = true
+	}
+	return result, nil
 }

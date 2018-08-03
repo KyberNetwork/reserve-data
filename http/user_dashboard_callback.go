@@ -1,8 +1,8 @@
 package http
 
 import (
-	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/KyberNetwork/reserve-data/http/httputil"
@@ -11,12 +11,10 @@ import (
 
 //KYCInfo return kyc info of an user
 func (hs *HTTPServer) KYCInfo(c *gin.Context) {
-	err := c.Request.ParseForm()
-	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("Malformed request package: %s", err.Error())))
+	postForm, ok := hs.Authenticated(c, []string{"email", "addresses", "timestamps"}, []Permission{UserDashboardPermission})
+	if !ok {
 		return
 	}
-	postForm := c.Request.Form
 	// Get KYC info
 	email := postForm.Get("email")
 	if email == "" {
@@ -34,7 +32,22 @@ func (hs *HTTPServer) KYCInfo(c *gin.Context) {
 		return
 	}
 	addresses := strings.Split(addrStr, "-")
-	timestamps := strings.Split(timestampStr, "-")
+	timestampstr := strings.Split(timestampStr, "-")
+	// convert timestamp to uint64
+	var timestamps []uint64
+	for _, timestamp := range timestampstr {
+		v, err := strconv.ParseUint(timestamp, 10, 64)
+		if err != nil {
+			httputil.ResponseFailure(c, httputil.WithError(err))
+			return
+		}
+		timestamps = append(timestamps, v)
+	}
 	log.Printf("email: %s, addresses: %+v, timestamps: %+v", email, addresses, timestamps)
+	err := hs.stat.UpdateUserKYCInfo(email, addresses, timestamps)
+	if err != nil {
+		httputil.ResponseFailure(c, httputil.WithError(err))
+		return
+	}
 	httputil.ResponseSuccess(c)
 }

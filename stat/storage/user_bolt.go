@@ -20,8 +20,10 @@ const (
 	idAddress        string = "id_addresses"
 	addressTime      string = "address_time"
 	pendingAddresses string = "pending_addresses"
+	userKYCInfo      string = "user_kyc_info"
 )
 
+//BoltUserStorage storage to save user info
 type BoltUserStorage struct {
 	db *bolt.DB
 }
@@ -57,6 +59,10 @@ func NewBoltUserStorage(path string) (*BoltUserStorage, error) {
 			return err
 		}
 		_, err = tx.CreateBucketIfNotExists([]byte(catlogProcessorState))
+		if err != nil {
+			return err
+		}
+		_, err = tx.CreateBucketIfNotExists([]byte(userKYCInfo))
 		if err != nil {
 			return err
 		}
@@ -293,4 +299,36 @@ func (self *BoltUserStorage) GetPendingAddresses() ([]ethereum.Address, error) {
 		return err
 	})
 	return result, err
+}
+
+//SaveKYCInfo save user kyced information
+func (bus *BoltUserStorage) SaveKYCInfo(email string, addresses []string, timestamps []uint64) error {
+	err := bus.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(userKYCInfo))
+		for _, address := range addresses {
+			v := b.Get([]byte(address))
+			if v == nil {
+				uErr := b.Put([]byte(address), []byte(email))
+				if uErr != nil {
+					return uErr
+				}
+			}
+		}
+		return nil
+	})
+	return err
+}
+
+//GetKYCByAddress return email of address if user is kyc else return empty string
+func (bus *BoltUserStorage) GetKYCByAddress(address string) (string, error) {
+	var email string
+	err := bus.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(userKYCInfo))
+		v := b.Get([]byte(address))
+		if v != nil {
+			email = string(v)
+		}
+		return nil
+	})
+	return email, err
 }
