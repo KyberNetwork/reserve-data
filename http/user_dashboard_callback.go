@@ -11,12 +11,12 @@ import (
 
 //KYCInfo return kyc info of an user
 func (hs *HTTPServer) KYCInfo(c *gin.Context) {
-	postForm, ok := hs.Authenticated(c, []string{"email", "addresses", "timestamps"}, []Permission{UserDashboardPermission})
+	postForm, ok := hs.Authenticated(c, []string{"user", "addresses", "timestamps"}, []Permission{UserDashboardPermission})
 	if !ok {
 		return
 	}
 	// Get KYC info
-	email := postForm.Get("email")
+	email := postForm.Get("user")
 	if email == "" {
 		httputil.ResponseFailure(c, httputil.WithReason("email is empty"))
 		return
