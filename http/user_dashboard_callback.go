@@ -10,7 +10,7 @@ import (
 
 //KYCInfo return kyc info of an user
 func (hs *HTTPServer) KYCInfo(c *gin.Context) {
-	postForm, ok := hs.Authenticated(c, []string{"user", "addresses", "timestamps"}, []Permission{UserDashboardPermission})
+	postForm, ok := hs.Authenticated(c, []string{"user", "addresses", "timestamps"}, []Permission{ConfirmConfPermission})
 	if !ok {
 		return
 	}

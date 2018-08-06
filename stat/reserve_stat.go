@@ -416,11 +416,11 @@ func (rs ReserveStats) GetTxCapByAddress(addr ethereum.Address) (*big.Int, error
 	if err != nil {
 		return nil, err
 	}
-	var cap float64
+	var usdCap float64
 	if kyced {
-		cap = common.KycedCap().TxLimit
+		usdCap = common.KycedCap().TxLimit
 	} else {
-		cap = common.NonKycedCap().TxLimit
+		usdCap = common.NonKycedCap().TxLimit
 	}
 	timepoint := common.GetTimepoint()
 	rate := rs.cmcEthUSDRate.GetUSDRate(timepoint)
@@ -428,7 +428,7 @@ func (rs ReserveStats) GetTxCapByAddress(addr ethereum.Address) (*big.Int, error
 	if rate == 0 {
 		return txLimit, errors.New("cannot get eth usd rate from cmc")
 	}
-	ethLimit := cap / rate
+	ethLimit := usdCap / rate
 	txLimit = common.EthToWei(ethLimit)
 	return txLimit, nil
 }

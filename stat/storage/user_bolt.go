@@ -15,12 +15,13 @@ const (
 
 	catlogProcessorState string = "catlog_processor_state"
 
-	addressCategory  string = "address_category"
-	addressID        string = "address_id"
-	idAddress        string = "id_addresses"
-	addressTime      string = "address_time"
-	pendingAddresses string = "pending_addresses"
-	userKYCInfo      string = "user_kyc_info"
+	addressCategory    string = "address_category"
+	addressID          string = "address_id"
+	idAddress          string = "id_addresses"
+	addressTime        string = "address_time"
+	pendingAddresses   string = "pending_addresses"
+	userKYCInfo        string = "user_kyc_info"
+	userKYCAddressTime string = "kyced_adderss_time" // bucket save time that address was added as kyced
 )
 
 //BoltUserStorage storage to save user info
@@ -63,6 +64,11 @@ func NewBoltUserStorage(path string) (*BoltUserStorage, error) {
 			return err
 		}
 		_, err = tx.CreateBucketIfNotExists([]byte(userKYCInfo))
+		if err != nil {
+			return err
+		}
+
+		_, err = tx.CreateBucketIfNotExists([]byte(userKYCAddressTime))
 		if err != nil {
 			return err
 		}
@@ -305,13 +311,24 @@ func (self *BoltUserStorage) GetPendingAddresses() ([]ethereum.Address, error) {
 func (bus *BoltUserStorage) SaveKYCInfo(email string, addresses []string, timestamps []uint64) error {
 	err := bus.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(userKYCInfo))
-		for _, address := range addresses {
+		timeBucket := tx.Bucket([]byte(userKYCAddressTime))
+		for index, address := range addresses {
 			// standardize address
 			address = strings.ToLower(address)
+
+			// Save address as kyced to kyced bucket
 			v := b.Get([]byte(address))
 			if v == nil {
-				uErr := b.Put([]byte(address), []byte(email))
-				if uErr != nil {
+				if uErr := b.Put([]byte(address), []byte(email)); uErr != nil {
+					return uErr
+				}
+			}
+
+			// Save time address was added to kyced
+			v = timeBucket.Get([]byte(address))
+			if v == nil {
+				byteTimepoint := boltutil.Uint64ToBytes(timestamps[index])
+				if uErr := timeBucket.Put([]byte(address), byteTimepoint); uErr != nil {
 					return uErr
 				}
 			}
@@ -331,6 +348,14 @@ func (bus *BoltUserStorage) GetKYCByAddress(address string) (string, error) {
 		v := b.Get([]byte(address))
 		if v != nil {
 			email = string(v)
+		}
+
+		//  log here for test TODO: delete later
+		timeBucket := tx.Bucket([]byte(userKYCAddressTime))
+		v = timeBucket.Get([]byte(address))
+		if v != nil {
+			timeAdded := boltutil.BytesToUint64(v)
+			log.Printf("Time added: %d", timeAdded)
 		}
 		return nil
 	})
