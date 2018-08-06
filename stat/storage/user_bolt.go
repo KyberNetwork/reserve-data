@@ -306,6 +306,8 @@ func (bus *BoltUserStorage) SaveKYCInfo(email string, addresses []string, timest
 	err := bus.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(userKYCInfo))
 		for _, address := range addresses {
+			// standardize address
+			address = strings.ToLower(address)
 			v := b.Get([]byte(address))
 			if v == nil {
 				uErr := b.Put([]byte(address), []byte(email))
@@ -324,6 +326,8 @@ func (bus *BoltUserStorage) GetKYCByAddress(address string) (string, error) {
 	var email string
 	err := bus.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(userKYCInfo))
+		// standardize address
+		address = strings.ToLower(address)
 		v := b.Get([]byte(address))
 		if v != nil {
 			email = string(v)
