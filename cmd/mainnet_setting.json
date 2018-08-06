@@ -400,48 +400,6 @@
       "internal use": false,
       "listed": true
     },
-    "MDS": {
-      "name": "MediShares",
-      "decimals": 18,
-      "address": "0x66186008C1050627F979d464eABb258860563dbE",
-      "internal use": false,
-      "listed": true
-    },
-    "LEND": {
-      "name": "EthLend",
-      "decimals": 18,
-      "address": "0x80fB784B7eD66730e8b1DBd9820aFD29931aab03",
-      "internal use": false,
-      "listed": true
-    },
-    "WINGS": {
-      "name": "WINGS",
-      "decimals": 18,
-      "address": "0x667088b212ce3d06a1b553a7221E1fD19000d9aF",
-      "internal use": false,
-      "listed": true
-    },
-    "MTL": {
-      "name": "Metal",
-      "decimals": 8,
-      "address": "0xF433089366899D83a9f26A773D59ec7eCF30355e",
-      "internal use": false,
-      "listed": true
-    },
-    "WABI": {
-      "name": "WaBi",
-      "decimals": 18,
-      "address": "0x286BDA1413a2Df81731D4930ce2F862a35A609fE",
-      "internal use": false,
-      "listed": true
-    },
-    "COFI":{
-      "name": "CoinFi",
-      "decimal": 18,
-      "address": "0x3136ef851592acf49ca4c825131e364170fa32b3",
-      "internal use": false,
-      "listed": true
-    },
     "ETH": {
       "name": "Ethereum",
       "decimals": 18,
@@ -656,6 +614,6 @@
   "begin_block_setrate": 5069586,
   "third_party_reserves": [
     "0x2aab2b157a03915c8a73adae735d0cf51c872f31","0x6f50e41885fdc44dbdf7797df0393779a9c0a3a6",
-    "0x4d864b5b4f866f65f53cbaad32eb9574760865e6", "0xc935cad589bebd8673104073d5a5eccfe67fb7b1"
+    "0x4d864b5b4f866f65f53cbaad32eb9574760865e6"
   ]
 }

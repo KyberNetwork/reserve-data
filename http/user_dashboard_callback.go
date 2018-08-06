@@ -1,7 +1,6 @@
 package http
 
 import (
-	"log"
 	"strconv"
 	"strings"
 
@@ -43,7 +42,6 @@ func (hs *HTTPServer) KYCInfo(c *gin.Context) {
 		}
 		timestamps = append(timestamps, v)
 	}
-	log.Printf("email: %s, addresses: %+v, timestamps: %+v", email, addresses, timestamps)
 	err := hs.stat.UpdateUserKYCInfo(email, addresses, timestamps)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
