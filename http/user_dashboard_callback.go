@@ -1,48 +1,50 @@
 package http
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/KyberNetwork/reserve-data/http/httputil"
+	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/gin-gonic/gin"
 )
 
-//KYCInfo return kyc info of an user
-func (hs *HTTPServer) KYCInfo(c *gin.Context) {
+// UpdateUserAddresses receive callback from userdashboard and save kycinfo
+func (hs *HTTPServer) UpdateUserAddresses(c *gin.Context) {
+	var err error
 	postForm, ok := hs.Authenticated(c, []string{"user", "addresses", "timestamps"}, []Permission{ConfirmConfPermission})
 	if !ok {
 		return
 	}
-	// Get KYC info
-	email := postForm.Get("user")
-	if email == "" {
-		httputil.ResponseFailure(c, httputil.WithReason("email is empty"))
+	user := postForm.Get("user")
+	addresses := postForm.Get("addresses")
+	times := postForm.Get("timestamps")
+	addrs := []ethereum.Address{}
+	timestamps := []uint64{}
+	addrsStr := strings.Split(addresses, "-")
+	timesStr := strings.Split(times, "-")
+	if len(addrsStr) != len(timesStr) {
+		httputil.ResponseFailure(c, httputil.WithReason("addresses and timestamps must have the same number of elements"))
 		return
 	}
-	addrStr := postForm.Get("addresses")
-	if addrStr == "" {
-		httputil.ResponseFailure(c, httputil.WithReason("address list is empty"))
-		return
-	}
-	timestampStr := postForm.Get("timestamps")
-	if timestampStr == "" {
-		httputil.ResponseFailure(c, httputil.WithReason("timestamps list is empty"))
-		return
-	}
-	addresses := strings.Split(addrStr, "-")
-	timestampstr := strings.Split(timestampStr, "-")
-	// convert timestamp to uint64
-	var timestamps []uint64
-	for _, timestamp := range timestampstr {
-		v, err := strconv.ParseUint(timestamp, 10, 64)
-		if err != nil {
-			httputil.ResponseFailure(c, httputil.WithError(err))
-			return
+	for i, addr := range addrsStr {
+		var (
+			t uint64
+			a = ethereum.HexToAddress(addr)
+		)
+		t, err = strconv.ParseUint(timesStr[i], 10, 64)
+		if a.Big().Cmp(ethereum.Big0) != 0 && err == nil {
+			addrs = append(addrs, a)
+			timestamps = append(timestamps, t)
 		}
-		timestamps = append(timestamps, v)
 	}
-	err := hs.stat.UpdateUserKYCInfo(email, addresses, timestamps)
+	if len(addrs) == 0 {
+		httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("user %s doesn't have any valid addresses in %s", user, addresses)))
+		return
+	}
+
+	err = hs.stat.UpdateUserAddresses(user, addrs, timestamps)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return

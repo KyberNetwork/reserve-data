@@ -39,9 +39,6 @@ type ReserveStats interface {
 	GetUserList(fromTime, toTime uint64, timezone int64) (common.UserListResponse, error)
 	GetFeeSetRateByDay(fromTime uint64, toTime uint64) ([]common.FeeSetRate, error)
 
-	UpdateUserKYCInfo(email string, addresses []string, timestamps []uint64) error
-	GetKYCByAddress(address string) (bool, error)
-
 	RunStorageController() error
 	Run() error
 	Stop() error

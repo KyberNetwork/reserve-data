@@ -24,10 +24,4 @@ type UserStorage interface {
 	// returns all of addresses that's not pushed to the chain
 	// for kyced category
 	GetPendingAddresses() ([]ethereum.Address, error)
-
-	// return error if cannot save kyc info
-	SaveKYCInfo(email string, addresses []string, timestamps []uint64) error
-
-	// return email if address is kyced else return empty string
-	GetKYCByAddress(address string) (string, error)
 }
