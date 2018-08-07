@@ -403,7 +403,7 @@ func (self ReserveStats) GetCapByAddress(addr ethereum.Address) (*common.UserCap
 	if err != nil {
 		return nil, err
 	}
-	if category == "0x4" {
+	if category == "0x4" { // TODO: ask Victor about this logic, why "0x4"
 		return common.KycedCap(), nil
 	}
 	return common.NonKycedCap(), nil
@@ -411,12 +411,12 @@ func (self ReserveStats) GetCapByAddress(addr ethereum.Address) (*common.UserCap
 
 //GetTxCapByAddress return user Tx limit by wei
 func (rs ReserveStats) GetTxCapByAddress(addr ethereum.Address) (*big.Int, error) {
-	category, err := rs.userStorage.GetCategory(addr)
+	email, err := rs.userStorage.GetKYCAddress(addr)
 	if err != nil {
 		return nil, err
 	}
 	var usdCap float64
-	if category == "0x4" {
+	if email != "" {
 		usdCap = common.KycedCap().TxLimit
 	} else {
 		usdCap = common.NonKycedCap().TxLimit
