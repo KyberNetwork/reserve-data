@@ -190,14 +190,15 @@ func (self *BoltUserStorage) UpdateUserAddresses(user string, addrs []ethereum.A
 			if uErr = userBucket.Put([]byte(address), []byte{1}); uErr != nil {
 				return uErr
 			}
-			cat := catBk.Get([]byte(address))
-			if string(cat) != kycCategory {
-				if uErr = pendingBk.Put([]byte(address), []byte{1}); uErr != nil {
-					return uErr
-				}
-			}
+
+			// store time address added
 			log.Printf("storing timestamp for %s - %d", address, timestamps[i])
 			if err = timeBucket.Put([]byte(address), boltutil.Uint64ToBytes(timestamps[i])); err != nil {
+				return err
+			}
+
+			// update address as kyced
+			if err = catBk.Put([]byte(address), []byte(kycCategory)); err != nil {
 				return err
 			}
 		}
