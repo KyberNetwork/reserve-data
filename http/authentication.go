@@ -16,6 +16,7 @@ type Authentication interface {
 	GetPermission(signed string, message string) []Permission
 }
 
+// KNAuthentication save authentication key for each permission
 type KNAuthentication struct {
 	KNSecret        string `json:"kn_secret"`
 	KNReadOnly      string `json:"kn_readonly"`
@@ -23,6 +24,7 @@ type KNAuthentication struct {
 	KNConfirmConf   string `json:"kn_confirm_configuration"`
 }
 
+// NewKNAuthenticationFromFile read authentication from file and save to KNAuthentication object
 func NewKNAuthenticationFromFile(path string) KNAuthentication {
 	raw, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -35,6 +37,7 @@ func NewKNAuthenticationFromFile(path string) KNAuthentication {
 	return result
 }
 
+// KNSign return signed key for rebalance permission
 func (self KNAuthentication) KNSign(msg string) string {
 	mac := hmac.New(sha512.New, []byte(self.KNSecret))
 	if _, err := mac.Write([]byte(msg)); err != nil {

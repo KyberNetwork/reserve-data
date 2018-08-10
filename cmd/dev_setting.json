@@ -27,7 +27,7 @@
       "minimalRecordResolution": "1000000000000000",
       "maxPerBlockImbalance": "938890140546807627776",
       "maxTotalImbalance": "1542127055848131526656",
-      "internal use": false,
+      "internal use": true,
       "listed": true
     },
     "SNT": {
@@ -150,7 +150,6 @@
       "internal use": true,
       "listed": true
     },
-
     "ADX": {
       "name": "AdEx",
       "decimals": 4,
@@ -161,7 +160,6 @@
       "internal use": false,
       "listed": true
     },
-
     "AST": {
       "name": "AirSwap",
       "decimals": 4,
@@ -172,7 +170,6 @@
       "internal use": true,
       "listed": true
     },
-
     "RCN": {
       "name": "Ripio Credit Network",
       "decimals": 18,
@@ -183,7 +180,6 @@
       "internal use": false,
       "listed": true
     },
-
     "ZIL": {
       "name": "Zilliqa",
       "decimals": 12,
@@ -194,7 +190,6 @@
       "internal use": true,
       "listed": true
     },
-
     "LINK": {
       "name": "Chain Link",
       "decimals": 18,
@@ -205,7 +200,6 @@
       "internal use": true,
       "listed": true
     },
-
     "DAI": {
       "name" : "DAI",
       "decimals": 18,
@@ -214,6 +208,13 @@
       "maxPerBlockImbalance": "2711997842670896021504",
       "maxTotalImbalance": "3833713935933528080384",
       "internal use": false,
+      "listed": true
+    },
+    "DGX": {
+      "name": "Digix Gold",
+      "decimals": 9,
+      "address": "0x4f3afec4e5a3f2a6a1a411def7d7dfe50ee057bf",
+      "internal use": true,
       "listed": true
     },
     "MOT": {
@@ -237,13 +238,6 @@
       "internal use": false,
       "listed": true
     },
-    "DGX": {
-      "name": "Digix Gold",
-      "decimals": 9,
-      "address": "0x4f3afec4e5a3f2a6a1a411def7d7dfe50ee057bf",
-      "internal use": true,
-      "listed": true
-    },
     "ABT": {
       "name": "ArcBlock",
       "decimals": 18,
@@ -252,7 +246,7 @@
       "listed": true
     },
     "ENJ": {
-      "name": "Enjin Coin",
+      "name": "EnjinCoin",
       "decimals": 18,
       "address": "0xf629cbd94d3791c9250152bd8dfbdf380e2a3b9c",
       "internal use": true,
@@ -279,6 +273,124 @@
       "internal use": true,
       "listed": true
     },
+    "PAL": {
+      "name": "PolicyPal Network",
+      "decimals": 18,
+      "address": "0xfedae5642668f8636a11987ff386bfd215f942ee",
+      "internal use": false,
+      "listed": true
+    },
+    "ELEC": {
+      "name": "ElectrifyAsia",
+      "decimals": 18,
+      "address": "0xd49ff13661451313ca1553fd6954bd1d9b6e02b9",
+      "internal use": false,
+      "listed": true
+    },
+    "BBO": {
+      "name": "Bigbom",
+      "decimals": 18,
+      "address": "0x84f7c44b6fed1080f647e354d552595be2cc602f",
+      "internal use": false,
+      "listed": true
+    },
+    "POLY": {
+      "name": "Polymath",
+      "decimals": 18,
+      "address": "0x9992ec3cf6a55b00978cddf2b27bc6882d88d1ec",
+      "internal use": true,
+      "listed": true
+    },
+    "LBA": {
+      "name": "Libra Credit",
+      "decimals": 18,
+      "address": "0xfe5f141bf94fe84bc28ded0ab966c16b17490657",
+      "internal use": true,
+      "listed": true
+    },
+    "EDU": {
+      "name": "EduCoin",
+      "decimals": 18,
+      "address": "0xf263292e14d9d8ecd55b58dad1f1df825a874b7c",
+      "internal use": true,
+      "listed": true
+    },
+    "CVC": {
+      "name": "Civic",
+      "decimals": 8,
+      "address": "0x41e5560054824eA6B0732E656E3Ad64E20e94E45",
+      "internal use": true,
+      "listed": true
+    },
+    "WAX": {
+      "name": "Wax",
+      "decimals": 8,
+      "address": "0x39bb259f66e1c59d5abef88375979b4d20d98022",
+      "internal use": true,
+      "listed": true
+    },
+    "SUB": {
+      "name": "Substratum",
+      "decimals": 2,
+      "address": "0x12480e24eb5bec1a9d4369cab6a80cad3c0a377a",
+      "internal use": true,
+      "listed": true
+    },
+    "POE": {
+      "name": "Po.et",
+      "decimals": 8,
+      "address": "0x0e0989b1f9b8a38983c2ba8053269ca62ec9b195",
+      "internal use": true,
+      "listed": true
+    },
+    "PAY": {
+      "name": "TenX",
+      "decimals": 18,
+      "address": "0xB97048628DB6B661D4C2aA833e95Dbe1A905B280",
+      "internal use": true,
+      "listed": true
+    },
+    "CHAT": {
+      "name": "Chatcoin",
+      "decimals": 18,
+      "address": "0x442bc47357919446eabc18c7211e57a13d983469",
+      "internal use": true,
+      "listed": true
+    },
+    "DTA": {
+      "name": "Data",
+      "decimals": 18,
+      "address": "0x69b148395ce0015c13e36bffbad63f49ef874e03",
+      "internal use": true,
+      "listed": true
+    },
+    "BNT": {
+      "name": "Bancor",
+      "decimals": 18,
+      "address": "0x1f573d6fb3f13d689ff844b4ce37794d79a7ff1c",
+      "internal use": true,
+      "listed": true
+    },
+    "TUSD": {
+      "name": "TrueUSD",
+      "decimals": 18,
+      "address": "0x8dd5fbce2f6a956c3022ba3663759011dd51e73e",
+      "internal use": true,
+      "listed": true
+    },
+    "TOMO": {
+      "name": "Tomocoin",
+      "decimals": 18,
+      "address": "0x8b353021189375591723E7384262F45709A3C3dC",
+      "internal use": false,
+      "listed": true
+    },
+    "COFI":{
+      "name": "CoinFi",
+      "decimals": 18,
+      "address": "0x3136ef851592acf49ca4c825131e364170fa32b3",
+      "symbol":"COFI"
+    },
     "ETH": {
       "name": "Ethereum",
       "decimals": 18,
@@ -293,6 +405,7 @@
       "OMG": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
       "KNC": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
       "SNT": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
+      "EOS": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
       "ELF": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
       "POWR": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
       "MANA": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
@@ -316,13 +429,19 @@
     },
     "huobi": {
       "ETH": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
+      "OMG": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
+      "KNC": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
       "SNT": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
+      "EOS": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
       "ELF": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
+      "POWR": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
+      "MANA": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
       "BAT": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
       "REQ": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
       "ENG": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
       "SALT": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
-      "APPC": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547"
+      "APPC": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
+      "RDN": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547"
     }
   },
   "permission": {

@@ -249,6 +249,7 @@ func CreateStat(config *configuration.Config, kyberENV string, bc *blockchain.St
 		statFetcher,
 		config.Archive,
 		settingClient,
+		baseblockchain.NewCMCEthUSDRate(),
 	)
 	return rStat
 }

@@ -84,43 +84,11 @@ func (self *UserStorageTest) TestUpdateUserAddressesThenUpdateAddressCategory() 
 	if err != nil {
 		return err
 	}
-	// test if pending addresses are correct
-	pendingAddrs, err := self.storage.GetPendingAddresses()
-	if err != nil {
-		return err
-	}
-	expectedAddresses := map[ethereum.Address]uint64{
-		addr1: time1,
-		addr3: time3,
-	}
+	// no need to check pending addresses anymore
+	expectedAddresses := map[ethereum.Address]uint64{}
 
-	if len(pendingAddrs) != len(expectedAddresses) {
-		return fmt.Errorf("Expected to get %d addresses, got %d addresses", len(expectedAddresses), len(pendingAddrs))
-	}
-	for _, addr := range pendingAddrs {
-		if _, found := expectedAddresses[addr]; !found {
-			return fmt.Errorf("Expected to find %v, got not found", addr)
-		}
-	}
 	if err = self.storage.UpdateUserAddresses(email, []ethereum.Address{addr1, addr2}, []uint64{time1, time2}); err != nil {
 		return err
-	}
-	// test if pending addresses are correct
-	pendingAddrs, err = self.storage.GetPendingAddresses()
-	if err != nil {
-		return err
-	}
-	expectedAddresses = map[ethereum.Address]uint64{
-		addr1: time1,
-		addr2: time2,
-	}
-	if len(pendingAddrs) != len(expectedAddresses) {
-		return fmt.Errorf("Expected to get %d addresses, got %d addresses", len(expectedAddresses), len(pendingAddrs))
-	}
-	for _, addr := range pendingAddrs {
-		if _, found := expectedAddresses[addr]; !found {
-			return fmt.Errorf("Expected to find %s, got not found", addr)
-		}
 	}
 	// Start receiving cat logs
 	if err = self.storage.UpdateAddressCategory(addr1, cat); err != nil {
@@ -128,22 +96,6 @@ func (self *UserStorageTest) TestUpdateUserAddressesThenUpdateAddressCategory() 
 	}
 	if err = self.storage.UpdateUserAddresses(email, []ethereum.Address{addr1, addr2}, []uint64{time1, time2}); err != nil {
 		return err
-	}
-	// test if pending addresses are correct
-	pendingAddrs, err = self.storage.GetPendingAddresses()
-	if err != nil {
-		return err
-	}
-	expectedAddresses = map[ethereum.Address]uint64{
-		addr2: time2,
-	}
-	if len(pendingAddrs) != len(expectedAddresses) {
-		return fmt.Errorf("Expected to get %d addresses, got %d addresses", len(expectedAddresses), len(pendingAddrs))
-	}
-	for _, addr := range pendingAddrs {
-		if _, found := expectedAddresses[addr]; !found {
-			return fmt.Errorf("Expected to find %s, got not found", addr)
-		}
 	}
 	if err = self.storage.UpdateAddressCategory(addr2, cat); err != nil {
 		return err
