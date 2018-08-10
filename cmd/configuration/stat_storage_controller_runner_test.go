@@ -12,7 +12,7 @@ const (
 )
 
 func SetupTickerTestForControllerRunner(duration time.Duration) (*statpruner.ControllerRunnerTest, error) {
-	tickerRuner := statpruner.NewControllerTickerRunner(duration)
+	tickerRuner := statpruner.NewControllerTickerRunner(duration, duration)
 	return statpruner.NewControllerRunnerTest(tickerRuner), nil
 }
 

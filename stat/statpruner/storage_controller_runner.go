@@ -7,39 +7,55 @@ import (
 // ControllerRunner contains the tickers that control the pruner services.
 type ControllerRunner interface {
 	GetAnalyticStorageControlTicker() <-chan time.Time
+	GetRateStorageControlTicker() <-chan time.Time
 	Start() error
 	Stop() error
 }
 
 type ControllerTickerRunner struct {
-	ascduration time.Duration
-	ascclock    *time.Ticker
-	signal      chan bool
+	ascDuration  time.Duration
+	rateDuration time.Duration
+	ascClock     *time.Ticker
+	rateClock    *time.Ticker
+	signal       chan bool
 }
 
 func (self *ControllerTickerRunner) GetAnalyticStorageControlTicker() <-chan time.Time {
-	if self.ascclock == nil {
+	if self.ascClock == nil {
 		<-self.signal
 	}
-	return self.ascclock.C
+	return self.ascClock.C
+}
+
+func (self *ControllerTickerRunner) GetRateStorageControlTicker() <-chan time.Time {
+	if self.rateClock == nil {
+		<-self.signal
+	}
+	return self.rateClock.C
 }
 
 func (self *ControllerTickerRunner) Start() error {
-	self.ascclock = time.NewTicker(self.ascduration)
+	self.ascClock = time.NewTicker(self.ascDuration)
+	self.signal <- true
+	self.rateClock = time.NewTicker(self.rateDuration)
 	self.signal <- true
 	return nil
 }
 
 func (self *ControllerTickerRunner) Stop() error {
-	self.ascclock.Stop()
+	self.rateClock.Stop()
+	self.ascClock.Stop()
 	return nil
 }
 
 func NewControllerTickerRunner(
-	ascduration time.Duration) *ControllerTickerRunner {
+	ascDuration time.Duration,
+	rateDuration time.Duration) *ControllerTickerRunner {
 	return &ControllerTickerRunner{
-		ascduration,
-		nil,
-		make(chan bool, 1),
+		ascDuration:  ascDuration,
+		rateDuration: rateDuration,
+		ascClock:     nil,
+		rateClock:    nil,
+		signal:       make(chan bool, 2),
 	}
 }

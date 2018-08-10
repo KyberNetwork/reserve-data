@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"os"
 	"sort"
 	"strings"
 	"time"
@@ -318,70 +317,6 @@ func (self ReserveStats) GetPendingAddresses() ([]string, error) {
 		result = append(result, common.AddrToString(addr))
 	}
 	return result, nil
-}
-
-func (self ReserveStats) ControllPriceAnalyticSize() error {
-	for {
-		log.Printf("StatPruner: waiting for signal from analytic storage control channel")
-		t := <-self.storageController.Runner.GetAnalyticStorageControlTicker()
-		timepoint := common.TimeToTimepoint(t)
-		log.Printf("StatPruner: got signal in analytic storage control channel with timestamp %d", timepoint)
-		fileName := fmt.Sprintf("./exported/ExpiredPriceAnalyticData_%s", time.Unix(int64(timepoint/1000), 0).UTC())
-		nRecord, err := self.analyticStorage.ExportExpiredPriceAnalyticData(common.GetTimepoint(), fileName)
-		if err != nil {
-			log.Printf("ERROR: StatPruner export Price Analytic operation failed: %s", err)
-		} else {
-			var integrity bool
-			if nRecord > 0 {
-				err = self.storageController.Arch.UploadFile(self.storageController.Arch.GetStatDataBucketName(), self.storageController.ExpiredPriceAnalyticPath, fileName)
-				if err != nil {
-					log.Printf("StatPruner: Upload file failed: %s", err)
-				} else {
-					integrity, err = self.storageController.Arch.CheckFileIntergrity(self.storageController.Arch.GetStatDataBucketName(), self.storageController.ExpiredPriceAnalyticPath, fileName)
-					if err != nil {
-						log.Printf("ERROR: StatPruner: error in file integrity check (%s):", err)
-					}
-					if !integrity {
-						log.Printf("ERROR: StatPruner: file upload corrupted")
-
-					}
-					if err != nil || !integrity {
-						//if the intergrity check failed, remove the remote file.
-						removalErr := self.storageController.Arch.RemoveFile(self.storageController.Arch.GetStatDataBucketName(), self.storageController.ExpiredPriceAnalyticPath, fileName)
-						if removalErr != nil {
-							log.Printf("ERROR: StatPruner: cannot remove remote file :(%s)", removalErr)
-						}
-					}
-				}
-			}
-			if integrity && err == nil {
-				nPrunedRecords, err := self.analyticStorage.PruneExpiredPriceAnalyticData(common.TimeToTimepoint(t))
-				if err != nil {
-					log.Printf("StatPruner: cannot prune Price Analytic Data (%s)", err)
-				} else if nPrunedRecords != nRecord {
-					log.Printf("StatPruner: Number of exported Data is %d, which is different from number of Pruned Data %d", nRecord, nPrunedRecords)
-				} else {
-					log.Printf("StatPruner: exported and pruned %d expired records from Price Analytic Data", nRecord)
-				}
-			}
-		}
-		if err := os.Remove(fileName); err != nil {
-			log.Fatal(err)
-		}
-	}
-}
-
-func (self ReserveStats) RunStorageController() error {
-	err := self.storageController.Runner.Start()
-	if err != nil {
-		return err
-	}
-	go func() {
-		if cErr := self.ControllPriceAnalyticSize(); cErr != nil {
-			log.Printf("Control price analytic failed: %s", cErr.Error())
-		}
-	}()
-	return err
 }
 
 func (self ReserveStats) Run() error {
