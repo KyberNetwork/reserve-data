@@ -316,11 +316,6 @@ func calculateNewGasPrice(initPrice *big.Int, count uint64) *big.Int {
 		newPrice := initPrice * math.Pow(base, float64(count)/4.0)
 		return common.FloatToBigInt(newPrice, 9)
 	}
-	// new = old + (50.1 - old) / (5 - count)
-	return old.Add(
-		old,
-		big.NewInt(0).Div(big.NewInt(0).Sub(common.GweiToWei(highBoundGasPrice), old), big.NewInt(int64(5-count))),
-	)
 }
 
 func (rc ReserveCore) pendingSetrateInfo(minedNonce uint64) (*big.Int, *big.Int, uint64, error) {
@@ -353,7 +348,7 @@ func (rc ReserveCore) pendingSetrateInfo(minedNonce uint64) (*big.Int, *big.Int,
 }
 
 //GetSetRateResult return result of a setrate activity
-func (rc ReserveCore) GetSetRateResult(tokens []common.Token,
+func (self ReserveCore) GetSetRateResult(tokens []common.Token,
 	buys, sells, afpMids []*big.Int,
 	block *big.Int) (*types.Transaction, error) {
 	var (
@@ -384,19 +379,18 @@ func (rc ReserveCore) GetSetRateResult(tokens []common.Token,
 		minedNonce uint64
 		count      uint64
 	)
-	minedNonce, err = rc.blockchain.SetRateMinedNonce()
+	minedNonce, err = self.blockchain.SetRateMinedNonce()
 	if err != nil {
 		return tx, fmt.Errorf("Couldn't get mined nonce of set rate operator (%s)", err.Error())
 	}
-	oldNonce, oldPrice, count, err = rc.pendingSetrateInfo(minedNonce)
-	log.Printf("old nonce: %v, old price: %v, count: %d, err: %s", oldNonce, oldPrice, count, common.ErrorToString(err))
+	oldNonce, initPrice, count, err = self.pendingSetrateInfo(minedNonce)
+	log.Printf("old nonce: %v, init price: %v, count: %d, err: %s", oldNonce, initPrice, count, common.ErrorToString(err))
 	if err != nil {
 		return tx, fmt.Errorf("Couldn't check pending set rate tx pool (%s). Please try later", err.Error())
 	}
 	if oldNonce != nil {
-		newPrice := calculateNewGasPrice(oldPrice, count)
-		log.Printf("Trying to replace old tx with new price: %s", newPrice.Text(10))
-		tx, err = rc.blockchain.SetRates(
+		newPrice := calculateNewGasPrice(initPrice, count)
+		tx, err = self.blockchain.SetRates(
 			tokenAddrs, buys, sells, block,
 			oldNonce,
 			newPrice,
@@ -412,7 +406,7 @@ func (rc ReserveCore) GetSetRateResult(tokens []common.Token,
 			)
 		}
 	} else {
-		recommendedPrice := rc.blockchain.StandardGasPrice()
+		recommendedPrice := self.blockchain.StandardGasPrice()
 		var initPrice *big.Int
 		if recommendedPrice == 0 || recommendedPrice > highBoundGasPrice {
 			initPrice = common.GweiToWei(10)
@@ -420,7 +414,7 @@ func (rc ReserveCore) GetSetRateResult(tokens []common.Token,
 			initPrice = common.GweiToWei(recommendedPrice)
 		}
 		log.Printf("initial set rate tx, init price: %s", initPrice.String())
-		tx, err = rc.blockchain.SetRates(
+		tx, err = self.blockchain.SetRates(
 			tokenAddrs, buys, sells, block,
 			big.NewInt(int64(minedNonce)),
 			initPrice,
