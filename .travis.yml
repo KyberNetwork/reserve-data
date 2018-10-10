@@ -7,8 +7,11 @@ language: go
 services:
   - docker
 
+env:
+  global:
+    -GOMETALINTER_VERSION=2.0.11
+    
 install:
-  - export GOMETALINTER_VERSION=2.0.11
   - ./.travis/gometalinter-install.sh
   - export PATH=$PATH:${TRAVIS_HOME}/gometalinter/gometalinter-${GOMETALINTER_VERSION}-linux-amd64
   - go get github.com/mattn/goveralls
