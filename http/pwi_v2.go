@@ -11,10 +11,6 @@ import (
 
 // GetPWIEquationV2 returns the current PWI equations.
 func (self *HTTPServer) GetPWIEquationV2(c *gin.Context) {
-	_, ok := self.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
-	if !ok {
-		return
-	}
 	data, err := self.metric.GetPWIEquationV2()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
@@ -27,7 +23,7 @@ func (self *HTTPServer) GetPWIEquationV2(c *gin.Context) {
 func (self *HTTPServer) SetPWIEquationV2(c *gin.Context) {
 	const dataPostFormKey = "data"
 
-	postForm, ok := self.Authenticated(c, []string{dataPostFormKey}, []Permission{ConfigurePermission})
+	postForm, ok := self.Authenticated(c, []string{dataPostFormKey})
 	if !ok {
 		return
 	}
@@ -58,10 +54,6 @@ func (self *HTTPServer) SetPWIEquationV2(c *gin.Context) {
 
 // GetPendingPWIEquationV2 returns the pending PWI equations.
 func (self *HTTPServer) GetPendingPWIEquationV2(c *gin.Context) {
-	_, ok := self.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
-	if !ok {
-		return
-	}
 	data, err := self.metric.GetPendingPWIEquationV2()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
@@ -74,7 +66,7 @@ func (self *HTTPServer) GetPendingPWIEquationV2(c *gin.Context) {
 func (self *HTTPServer) ConfirmPWIEquationV2(c *gin.Context) {
 	const dataPostFormKey = "data"
 
-	postForm, ok := self.Authenticated(c, []string{dataPostFormKey}, []Permission{ConfirmConfPermission})
+	postForm, ok := self.Authenticated(c, []string{dataPostFormKey})
 	if !ok {
 		return
 	}
@@ -90,11 +82,6 @@ func (self *HTTPServer) ConfirmPWIEquationV2(c *gin.Context) {
 // RejectPWIEquationV2 rejects the PWI equations request and removes
 // it from pending storage.
 func (self *HTTPServer) RejectPWIEquationV2(c *gin.Context) {
-	_, ok := self.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
-	if !ok {
-		return
-	}
-
 	if err := self.metric.RemovePendingPWIEquationV2(); err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return

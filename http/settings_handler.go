@@ -125,7 +125,7 @@ func (self *HTTPServer) prepareExchangeSetting(token common.Token, tokExSetts ma
 // It will not apply any change to DB if the request is not as dictated in documentation.
 // Newer request will append if the tokenID is not avail in pending, and overwrite otherwise
 func (self *HTTPServer) SetTokenUpdate(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{"data"}, []Permission{ConfigurePermission})
+	postForm, ok := self.Authenticated(c, []string{"data"})
 	if !ok {
 		return
 	}
@@ -203,10 +203,6 @@ func (self *HTTPServer) SetTokenUpdate(c *gin.Context) {
 }
 
 func (self *HTTPServer) GetPendingTokenUpdates(c *gin.Context) {
-	_, ok := self.Authenticated(c, []string{}, []Permission{RebalancePermission, ConfigurePermission, ReadOnlyPermission, ConfirmConfPermission})
-	if !ok {
-		return
-	}
 	data, err := self.setting.GetPendingTokenUpdates()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
@@ -217,7 +213,7 @@ func (self *HTTPServer) GetPendingTokenUpdates(c *gin.Context) {
 }
 
 func (self *HTTPServer) ConfirmTokenUpdate(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{"data"}, []Permission{ConfirmConfPermission})
+	postForm, ok := self.Authenticated(c, []string{"data"})
 	if !ok {
 		return
 	}
@@ -314,10 +310,6 @@ func (self *HTTPServer) ConfirmTokenUpdate(c *gin.Context) {
 }
 
 func (self *HTTPServer) RejectTokenUpdate(c *gin.Context) {
-	_, ok := self.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
-	if !ok {
-		return
-	}
 	listings, err := self.setting.GetPendingTokenUpdates()
 	if (err != nil) || len(listings) == 0 {
 		httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("there is no pending token listing (%v)", err)))
@@ -414,10 +406,6 @@ func (self *HTTPServer) ensureInternalSetting(tokenUpdate common.TokenUpdate) er
 }
 
 func (self *HTTPServer) TokenSettings(c *gin.Context) {
-	_, ok := self.Authenticated(c, []string{}, []Permission{RebalancePermission, ConfigurePermission, ReadOnlyPermission, ConfirmConfPermission})
-	if !ok {
-		return
-	}
 	data, err := self.setting.GetAllTokens()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
@@ -427,7 +415,7 @@ func (self *HTTPServer) TokenSettings(c *gin.Context) {
 }
 
 func (self *HTTPServer) UpdateExchangeFee(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{"name", "data"}, []Permission{RebalancePermission, ConfigurePermission})
+	postForm, ok := self.Authenticated(c, []string{"name", "data"})
 	if !ok {
 		return
 	}
@@ -456,7 +444,7 @@ func (self *HTTPServer) UpdateExchangeFee(c *gin.Context) {
 }
 
 func (self *HTTPServer) UpdateExchangeMinDeposit(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{"name", "data"}, []Permission{RebalancePermission, ConfigurePermission})
+	postForm, ok := self.Authenticated(c, []string{"name", "data"})
 	if !ok {
 		return
 	}
@@ -482,7 +470,7 @@ func (self *HTTPServer) UpdateExchangeMinDeposit(c *gin.Context) {
 }
 
 func (self *HTTPServer) UpdateDepositAddress(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{"name", "data"}, []Permission{RebalancePermission, ConfigurePermission})
+	postForm, ok := self.Authenticated(c, []string{"name", "data"})
 	if !ok {
 		return
 	}
@@ -514,7 +502,7 @@ func (self *HTTPServer) UpdateDepositAddress(c *gin.Context) {
 }
 
 func (self *HTTPServer) UpdateExchangeInfo(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{"name", "data"}, []Permission{RebalancePermission, ConfigurePermission})
+	postForm, ok := self.Authenticated(c, []string{"name", "data"})
 	if !ok {
 		return
 	}
@@ -565,10 +553,6 @@ func (self *HTTPServer) UpdateExchangeInfo(c *gin.Context) {
 }
 
 func (self *HTTPServer) GetAllSetting(c *gin.Context) {
-	_, ok := self.Authenticated(c, []string{}, []Permission{RebalancePermission, ConfigurePermission, ReadOnlyPermission, ConfirmConfPermission})
-	if !ok {
-		return
-	}
 	addrReponse, err := self.getAddressResponse()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
@@ -643,10 +627,6 @@ func (self *HTTPServer) getExchangeResponse() (*common.ExchangeResponse, error) 
 }
 
 func (self *HTTPServer) GetInternalTokens(c *gin.Context) {
-	_, ok := self.Authenticated(c, []string{}, []Permission{RebalancePermission, ConfigurePermission, ReadOnlyPermission, ConfirmConfPermission})
-	if !ok {
-		return
-	}
 	tokens, err := self.setting.GetInternalTokens()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
@@ -656,10 +636,6 @@ func (self *HTTPServer) GetInternalTokens(c *gin.Context) {
 }
 
 func (self *HTTPServer) GetActiveTokens(c *gin.Context) {
-	_, ok := self.Authenticated(c, []string{}, []Permission{RebalancePermission, ConfigurePermission, ReadOnlyPermission, ConfirmConfPermission})
-	if !ok {
-		return
-	}
 	tokens, err := self.setting.GetActiveTokens()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
@@ -669,10 +645,6 @@ func (self *HTTPServer) GetActiveTokens(c *gin.Context) {
 }
 
 func (self *HTTPServer) GetTokenByAddress(c *gin.Context) {
-	_, ok := self.Authenticated(c, []string{}, []Permission{RebalancePermission, ConfigurePermission, ReadOnlyPermission, ConfirmConfPermission})
-	if !ok {
-		return
-	}
 	addr := c.Query("address")
 	if len(addr) != validAddressLength {
 		httputil.ResponseFailure(c, httputil.WithReason("address is invalid length "))
@@ -687,10 +659,6 @@ func (self *HTTPServer) GetTokenByAddress(c *gin.Context) {
 }
 
 func (self *HTTPServer) GetActiveTokenByID(c *gin.Context) {
-	_, ok := self.Authenticated(c, []string{}, []Permission{RebalancePermission, ConfigurePermission, ReadOnlyPermission, ConfirmConfPermission})
-	if !ok {
-		return
-	}
 	ID := c.Query("ID")
 	token, err := self.setting.GetActiveTokenByID((ID))
 	if err != nil {
@@ -701,10 +669,6 @@ func (self *HTTPServer) GetActiveTokenByID(c *gin.Context) {
 }
 
 func (self *HTTPServer) GetAddress(c *gin.Context) {
-	_, ok := self.Authenticated(c, []string{}, []Permission{RebalancePermission, ConfigurePermission, ReadOnlyPermission, ConfirmConfPermission})
-	if !ok {
-		return
-	}
 	name := c.Query("name")
 	addressNames := settings.AddressNameValues()
 	addrName, ok := addressNames[name]
@@ -721,10 +685,6 @@ func (self *HTTPServer) GetAddress(c *gin.Context) {
 }
 
 func (self *HTTPServer) GetAddresses(c *gin.Context) {
-	_, ok := self.Authenticated(c, []string{}, []Permission{RebalancePermission, ConfigurePermission, ReadOnlyPermission, ConfirmConfPermission})
-	if !ok {
-		return
-	}
 	name := c.Query("name")
 	addressSetNames := settings.AddressSetNameValues()
 	addrSetName, ok := addressSetNames[name]
@@ -741,9 +701,5 @@ func (self *HTTPServer) GetAddresses(c *gin.Context) {
 }
 
 func (self *HTTPServer) ReadyToServe(c *gin.Context) {
-	_, ok := self.Authenticated(c, []string{}, []Permission{RebalancePermission, ConfigurePermission, ReadOnlyPermission, ConfirmConfPermission})
-	if !ok {
-		return
-	}
 	httputil.ResponseSuccess(c)
 }

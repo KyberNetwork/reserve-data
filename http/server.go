@@ -103,7 +103,7 @@ func eligible(ups, allowedPerms []Permission) bool {
 // using HMAC512
 // params must contain "nonce" which is the unixtime in millisecond. The nonce will be invalid
 // if it differs from server time more than 10s
-func (self *HTTPServer) Authenticated(c *gin.Context, requiredParams []string, perms []Permission) (url.Values, bool) {
+func (self *HTTPServer) Authenticated(c *gin.Context, requiredParams []string) (url.Values, bool) {
 	err := c.Request.ParseForm()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("Malformed request package: %s", err.Error())))
@@ -116,10 +116,6 @@ func (self *HTTPServer) Authenticated(c *gin.Context, requiredParams []string, p
 
 	params := c.Request.Form
 	log.Printf("Form params: %s\n", params)
-	if !IsIntime(params.Get("nonce")) {
-		httputil.ResponseFailure(c, httputil.WithReason("Your nonce is invalid"))
-		return c.Request.Form, false
-	}
 
 	for _, p := range requiredParams {
 		if params.Get(p) == "" {
@@ -128,19 +124,7 @@ func (self *HTTPServer) Authenticated(c *gin.Context, requiredParams []string, p
 		}
 	}
 
-	signed := c.GetHeader("signed")
-	message := c.Request.Form.Encode()
-	userPerms := self.auth.GetPermission(signed, message)
-	if eligible(userPerms, perms) {
-		return params, true
-	} else {
-		if len(userPerms) == 0 {
-			httputil.ResponseFailure(c, httputil.WithReason("Invalid signed token"))
-		} else {
-			httputil.ResponseFailure(c, httputil.WithReason("You don't have permission to proceed"))
-		}
-		return params, false
-	}
+	return params, false
 }
 
 func (self *HTTPServer) AllPricesVersion(c *gin.Context) {
@@ -191,10 +175,6 @@ func (self *HTTPServer) Price(c *gin.Context) {
 
 func (self *HTTPServer) AuthDataVersion(c *gin.Context) {
 	log.Printf("Getting current auth data snapshot version")
-	_, ok := self.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
-	if !ok {
-		return
-	}
 
 	data, err := self.app.CurrentAuthDataVersion(getTimePoint(c, true))
 	if err != nil {
@@ -206,10 +186,6 @@ func (self *HTTPServer) AuthDataVersion(c *gin.Context) {
 
 func (self *HTTPServer) AuthData(c *gin.Context) {
 	log.Printf("Getting current auth data snapshot \n")
-	_, ok := self.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
-	if !ok {
-		return
-	}
 
 	data, err := self.app.GetAuthData(getTimePoint(c, true))
 	if err != nil {
@@ -253,7 +229,7 @@ func (self *HTTPServer) GetRate(c *gin.Context) {
 }
 
 func (self *HTTPServer) SetRate(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{"tokens", "buys", "sells", "block", "afp_mid", "msgs"}, []Permission{RebalancePermission})
+	postForm, ok := self.Authenticated(c, []string{"tokens", "buys", "sells", "block", "afp_mid", "msgs"})
 	if !ok {
 		return
 	}
@@ -313,7 +289,7 @@ func (self *HTTPServer) SetRate(c *gin.Context) {
 }
 
 func (self *HTTPServer) Trade(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{"base", "quote", "amount", "rate", "type"}, []Permission{RebalancePermission})
+	postForm, ok := self.Authenticated(c, []string{"base", "quote", "amount", "rate", "type"})
 	if !ok {
 		return
 	}
@@ -370,7 +346,7 @@ func (self *HTTPServer) Trade(c *gin.Context) {
 }
 
 func (self *HTTPServer) CancelOrder(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{"order_id"}, []Permission{RebalancePermission})
+	postForm, ok := self.Authenticated(c, []string{"order_id"})
 	if !ok {
 		return
 	}
@@ -398,7 +374,7 @@ func (self *HTTPServer) CancelOrder(c *gin.Context) {
 }
 
 func (self *HTTPServer) Withdraw(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{"token", "amount"}, []Permission{RebalancePermission})
+	postForm, ok := self.Authenticated(c, []string{"token", "amount"})
 	if !ok {
 		return
 	}
@@ -432,7 +408,7 @@ func (self *HTTPServer) Withdraw(c *gin.Context) {
 }
 
 func (self *HTTPServer) Deposit(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{"amount", "token"}, []Permission{RebalancePermission})
+	postForm, ok := self.Authenticated(c, []string{"amount", "token"})
 	if !ok {
 		return
 	}
@@ -467,10 +443,6 @@ func (self *HTTPServer) Deposit(c *gin.Context) {
 
 func (self *HTTPServer) GetActivities(c *gin.Context) {
 	log.Printf("Getting all activity records \n")
-	_, ok := self.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
-	if !ok {
-		return
-	}
 	fromTime, _ := strconv.ParseUint(c.Query("fromTime"), 10, 64)
 	toTime, _ := strconv.ParseUint(c.Query("toTime"), 10, 64)
 	if toTime == 0 {
@@ -534,11 +506,6 @@ func (self *HTTPServer) StopFetcher(c *gin.Context) {
 
 func (self *HTTPServer) ImmediatePendingActivities(c *gin.Context) {
 	log.Printf("Getting all immediate pending activity records \n")
-	_, ok := self.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
-	if !ok {
-		return
-	}
-
 	data, err := self.app.GetPendingActivities()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
@@ -552,7 +519,7 @@ func (self *HTTPServer) Metrics(c *gin.Context) {
 		Timestamp: common.GetTimepoint(),
 	}
 	log.Printf("Getting metrics")
-	postForm, ok := self.Authenticated(c, []string{"tokens", "from", "to"}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
+	postForm, ok := self.Authenticated(c, []string{"tokens", "from", "to"})
 	if !ok {
 		return
 	}
@@ -591,7 +558,7 @@ func (self *HTTPServer) Metrics(c *gin.Context) {
 
 func (self *HTTPServer) StoreMetrics(c *gin.Context) {
 	log.Printf("Storing metrics")
-	postForm, ok := self.Authenticated(c, []string{"timestamp", "data"}, []Permission{RebalancePermission})
+	postForm, ok := self.Authenticated(c, []string{"timestamp", "data"})
 	if !ok {
 		return
 	}
@@ -726,10 +693,6 @@ func (self *HTTPServer) GetMinDeposit(c *gin.Context) {
 }
 
 func (self *HTTPServer) GetTradeHistory(c *gin.Context) {
-	_, ok := self.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
-	if !ok {
-		return
-	}
 	fromTime, toTime, ok := self.ValidateTimeInput(c)
 	if !ok {
 		return
@@ -757,10 +720,6 @@ func (self *HTTPServer) GetTimeServer(c *gin.Context) {
 }
 
 func (self *HTTPServer) GetRebalanceStatus(c *gin.Context) {
-	_, ok := self.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
-	if !ok {
-		return
-	}
 	data, err := self.metric.GetRebalanceControl()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
@@ -770,10 +729,6 @@ func (self *HTTPServer) GetRebalanceStatus(c *gin.Context) {
 }
 
 func (self *HTTPServer) HoldRebalance(c *gin.Context) {
-	_, ok := self.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
-	if !ok {
-		return
-	}
 	if err := self.metric.StoreRebalanceControl(false); err != nil {
 		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
 		return
@@ -783,10 +738,6 @@ func (self *HTTPServer) HoldRebalance(c *gin.Context) {
 }
 
 func (self *HTTPServer) EnableRebalance(c *gin.Context) {
-	_, ok := self.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
-	if !ok {
-		return
-	}
 	if err := self.metric.StoreRebalanceControl(true); err != nil {
 		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
 	}
@@ -795,10 +746,6 @@ func (self *HTTPServer) EnableRebalance(c *gin.Context) {
 }
 
 func (self *HTTPServer) GetSetrateStatus(c *gin.Context) {
-	_, ok := self.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
-	if !ok {
-		return
-	}
 	data, err := self.metric.GetSetrateControl()
 	if err != nil {
 		httputil.ResponseFailure(c)
@@ -808,10 +755,6 @@ func (self *HTTPServer) GetSetrateStatus(c *gin.Context) {
 }
 
 func (self *HTTPServer) HoldSetrate(c *gin.Context) {
-	_, ok := self.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
-	if !ok {
-		return
-	}
 	if err := self.metric.StoreSetrateControl(false); err != nil {
 		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
 	}
@@ -820,10 +763,6 @@ func (self *HTTPServer) HoldSetrate(c *gin.Context) {
 }
 
 func (self *HTTPServer) EnableSetrate(c *gin.Context) {
-	_, ok := self.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
-	if !ok {
-		return
-	}
 	if err := self.metric.StoreSetrateControl(true); err != nil {
 		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
 	}
@@ -1063,7 +1002,7 @@ func (self *HTTPServer) GetExchangesStatus(c *gin.Context) {
 }
 
 func (self *HTTPServer) UpdateExchangeStatus(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{"exchange", "status", "timestamp"}, []Permission{ConfirmConfPermission})
+	postForm, ok := self.Authenticated(c, []string{"exchange", "status", "timestamp"})
 	if !ok {
 		return
 	}
@@ -1135,7 +1074,7 @@ func (self *HTTPServer) GetCountries(c *gin.Context) {
 }
 
 func (self *HTTPServer) UpdatePriceAnalyticData(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{}, []Permission{RebalancePermission})
+	postForm, ok := self.Authenticated(c, []string{})
 	if !ok {
 		return
 	}
@@ -1157,10 +1096,6 @@ func (self *HTTPServer) UpdatePriceAnalyticData(c *gin.Context) {
 	httputil.ResponseSuccess(c)
 }
 func (self *HTTPServer) GetPriceAnalyticData(c *gin.Context) {
-	_, ok := self.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, ConfigurePermission, ConfirmConfPermission, RebalancePermission})
-	if !ok {
-		return
-	}
 	fromTime, toTime, ok := self.ValidateTimeInput(c)
 	if !ok {
 		return
@@ -1179,7 +1114,7 @@ func (self *HTTPServer) GetPriceAnalyticData(c *gin.Context) {
 
 func (self *HTTPServer) ExchangeNotification(c *gin.Context) {
 	postForm, ok := self.Authenticated(c, []string{
-		"exchange", "action", "token", "fromTime", "toTime", "isWarning"}, []Permission{RebalancePermission})
+		"exchange", "action", "token", "fromTime", "toTime", "isWarning"})
 	if !ok {
 		return
 	}
@@ -1201,10 +1136,6 @@ func (self *HTTPServer) ExchangeNotification(c *gin.Context) {
 }
 
 func (self *HTTPServer) GetNotifications(c *gin.Context) {
-	_, ok := self.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
-	if !ok {
-		return
-	}
 	data, err := self.app.GetNotifications()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
@@ -1214,10 +1145,6 @@ func (self *HTTPServer) GetNotifications(c *gin.Context) {
 }
 
 func (self *HTTPServer) GetUserList(c *gin.Context) {
-	_, ok := self.Authenticated(c, []string{"fromTime", "toTime", "timeZone"}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
-	if !ok {
-		return
-	}
 	fromTime, toTime, ok := self.ValidateTimeInput(c)
 	if !ok {
 		return
@@ -1259,7 +1186,7 @@ func (self *HTTPServer) GetReserveVolume(c *gin.Context) {
 }
 
 func (self *HTTPServer) SetStableTokenParams(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{}, []Permission{ConfigurePermission})
+	postForm, ok := self.Authenticated(c, []string{})
 	if !ok {
 		return
 	}
@@ -1277,7 +1204,7 @@ func (self *HTTPServer) SetStableTokenParams(c *gin.Context) {
 }
 
 func (self *HTTPServer) ConfirmStableTokenParams(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
+	postForm, ok := self.Authenticated(c, []string{})
 	if !ok {
 		return
 	}
@@ -1295,7 +1222,7 @@ func (self *HTTPServer) ConfirmStableTokenParams(c *gin.Context) {
 }
 
 func (self *HTTPServer) RejectStableTokenParams(c *gin.Context) {
-	_, ok := self.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
+	_, ok := self.Authenticated(c, []string{})
 	if !ok {
 		return
 	}
@@ -1308,11 +1235,6 @@ func (self *HTTPServer) RejectStableTokenParams(c *gin.Context) {
 }
 
 func (self *HTTPServer) GetPendingStableTokenParams(c *gin.Context) {
-	_, ok := self.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, ConfigurePermission, ConfirmConfPermission, RebalancePermission})
-	if !ok {
-		return
-	}
-
 	data, err := self.metric.GetPendingStableTokenParams()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
@@ -1322,11 +1244,6 @@ func (self *HTTPServer) GetPendingStableTokenParams(c *gin.Context) {
 }
 
 func (self *HTTPServer) GetStableTokenParams(c *gin.Context) {
-	_, ok := self.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, ConfigurePermission, ConfirmConfPermission, RebalancePermission})
-	if !ok {
-		return
-	}
-
 	data, err := self.metric.GetStableTokenParams()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
@@ -1357,7 +1274,7 @@ func (self *HTTPServer) GetTokenHeatmap(c *gin.Context) {
 
 //SetTargetQtyV2 set token target quantity version 2
 func (self *HTTPServer) SetTargetQtyV2(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{}, []Permission{ConfigurePermission})
+	postForm, ok := self.Authenticated(c, []string{})
 	if !ok {
 		return
 	}
@@ -1388,11 +1305,6 @@ func (self *HTTPServer) SetTargetQtyV2(c *gin.Context) {
 }
 
 func (self *HTTPServer) GetPendingTargetQtyV2(c *gin.Context) {
-	_, ok := self.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, ConfigurePermission, ConfirmConfPermission, RebalancePermission})
-	if !ok {
-		return
-	}
-
 	data, err := self.metric.GetPendingTargetQtyV2()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
@@ -1402,7 +1314,7 @@ func (self *HTTPServer) GetPendingTargetQtyV2(c *gin.Context) {
 }
 
 func (self *HTTPServer) ConfirmTargetQtyV2(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
+	postForm, ok := self.Authenticated(c, []string{})
 	if !ok {
 		return
 	}
@@ -1419,10 +1331,6 @@ func (self *HTTPServer) ConfirmTargetQtyV2(c *gin.Context) {
 }
 
 func (self *HTTPServer) CancelTargetQtyV2(c *gin.Context) {
-	_, ok := self.Authenticated(c, []string{}, []Permission{ConfirmConfPermission})
-	if !ok {
-		return
-	}
 	err := self.metric.RemovePendingTargetQtyV2()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
@@ -1432,11 +1340,6 @@ func (self *HTTPServer) CancelTargetQtyV2(c *gin.Context) {
 }
 
 func (self *HTTPServer) GetTargetQtyV2(c *gin.Context) {
-	_, ok := self.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, ConfigurePermission, ConfirmConfPermission, RebalancePermission})
-	if !ok {
-		return
-	}
-
 	data, err := self.metric.GetTargetQtyV2()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
