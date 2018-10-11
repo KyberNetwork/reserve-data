@@ -23,7 +23,7 @@ func (h *HTTPServer) CheckRebalanceQuadraticRequest(rq common.RebalanceQuadratic
 //SetRebalanceQuadratic set pending rebalance quadratic equation
 //input data follow json: {"data":{"KNC": {"a": 0.7, "b": 1.2, "c": 1.3}}}
 func (h *HTTPServer) SetRebalanceQuadratic(c *gin.Context) {
-	postForm, ok := h.Authenticated(c, []string{"value"})
+	postForm, ok := h.CheckRequiredParams(c, []string{"value"})
 	if !ok {
 		return
 	}
@@ -61,7 +61,7 @@ func (h *HTTPServer) GetPendingRebalanceQuadratic(c *gin.Context) {
 
 //ConfirmRebalanceQuadratic confirm configuration for current pending config for rebalance quadratic equation
 func (h *HTTPServer) ConfirmRebalanceQuadratic(c *gin.Context) {
-	postForm, ok := h.Authenticated(c, []string{})
+	postForm, ok := h.CheckRequiredParams(c, []string{})
 	if !ok {
 		return
 	}

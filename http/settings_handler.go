@@ -125,7 +125,7 @@ func (self *HTTPServer) prepareExchangeSetting(token common.Token, tokExSetts ma
 // It will not apply any change to DB if the request is not as dictated in documentation.
 // Newer request will append if the tokenID is not avail in pending, and overwrite otherwise
 func (self *HTTPServer) SetTokenUpdate(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{"data"})
+	postForm, ok := self.CheckRequiredParams(c, []string{"data"})
 	if !ok {
 		return
 	}
@@ -213,7 +213,7 @@ func (self *HTTPServer) GetPendingTokenUpdates(c *gin.Context) {
 }
 
 func (self *HTTPServer) ConfirmTokenUpdate(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{"data"})
+	postForm, ok := self.CheckRequiredParams(c, []string{"data"})
 	if !ok {
 		return
 	}
@@ -415,7 +415,7 @@ func (self *HTTPServer) TokenSettings(c *gin.Context) {
 }
 
 func (self *HTTPServer) UpdateExchangeFee(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{"name", "data"})
+	postForm, ok := self.CheckRequiredParams(c, []string{"name", "data"})
 	if !ok {
 		return
 	}
@@ -444,7 +444,7 @@ func (self *HTTPServer) UpdateExchangeFee(c *gin.Context) {
 }
 
 func (self *HTTPServer) UpdateExchangeMinDeposit(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{"name", "data"})
+	postForm, ok := self.CheckRequiredParams(c, []string{"name", "data"})
 	if !ok {
 		return
 	}
@@ -470,7 +470,7 @@ func (self *HTTPServer) UpdateExchangeMinDeposit(c *gin.Context) {
 }
 
 func (self *HTTPServer) UpdateDepositAddress(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{"name", "data"})
+	postForm, ok := self.CheckRequiredParams(c, []string{"name", "data"})
 	if !ok {
 		return
 	}
@@ -502,7 +502,7 @@ func (self *HTTPServer) UpdateDepositAddress(c *gin.Context) {
 }
 
 func (self *HTTPServer) UpdateExchangeInfo(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{"name", "data"})
+	postForm, ok := self.CheckRequiredParams(c, []string{"name", "data"})
 	if !ok {
 		return
 	}

@@ -18,7 +18,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/metric"
 	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	raven "github.com/getsentry/raven-go"
+	"github.com/getsentry/raven-go"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sentry"
 	"github.com/gin-gonic/gin"
@@ -72,38 +72,11 @@ func getTimePoint(c *gin.Context, useDefault bool) uint64 {
 	}
 }
 
-func IsIntime(nonce string) bool {
-	serverTime := common.GetTimepoint()
-	log.Printf("Server time: %d, None: %s", serverTime, nonce)
-	nonceInt, err := strconv.ParseInt(nonce, 10, 64)
-	if err != nil {
-		log.Printf("IsIntime returns false, err: %v", err)
-		return false
-	}
-	difference := nonceInt - int64(serverTime)
-	if difference < -30000 || difference > 30000 {
-		log.Printf("IsIntime returns false, nonce: %d, serverTime: %d, difference: %d", nonceInt, int64(serverTime), difference)
-		return false
-	}
-	return true
-}
-
-func eligible(ups, allowedPerms []Permission) bool {
-	for _, up := range ups {
-		for _, ap := range allowedPerms {
-			if up == ap {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-// Authenticated signed message (message = url encoded both query params and post params, keys are sorted) in "signed" header
+// CheckRequiredParams signed message (message = url encoded both query params and post params, keys are sorted) in "signed" header
 // using HMAC512
 // params must contain "nonce" which is the unixtime in millisecond. The nonce will be invalid
 // if it differs from server time more than 10s
-func (self *HTTPServer) Authenticated(c *gin.Context, requiredParams []string) (url.Values, bool) {
+func (self *HTTPServer) CheckRequiredParams(c *gin.Context, requiredParams []string) (url.Values, bool) {
 	err := c.Request.ParseForm()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("Malformed request package: %s", err.Error())))
@@ -229,7 +202,7 @@ func (self *HTTPServer) GetRate(c *gin.Context) {
 }
 
 func (self *HTTPServer) SetRate(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{"tokens", "buys", "sells", "block", "afp_mid", "msgs"})
+	postForm, ok := self.CheckRequiredParams(c, []string{"tokens", "buys", "sells", "block", "afp_mid", "msgs"})
 	if !ok {
 		return
 	}
@@ -289,7 +262,7 @@ func (self *HTTPServer) SetRate(c *gin.Context) {
 }
 
 func (self *HTTPServer) Trade(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{"base", "quote", "amount", "rate", "type"})
+	postForm, ok := self.CheckRequiredParams(c, []string{"base", "quote", "amount", "rate", "type"})
 	if !ok {
 		return
 	}
@@ -346,7 +319,7 @@ func (self *HTTPServer) Trade(c *gin.Context) {
 }
 
 func (self *HTTPServer) CancelOrder(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{"order_id"})
+	postForm, ok := self.CheckRequiredParams(c, []string{"order_id"})
 	if !ok {
 		return
 	}
@@ -374,7 +347,7 @@ func (self *HTTPServer) CancelOrder(c *gin.Context) {
 }
 
 func (self *HTTPServer) Withdraw(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{"token", "amount"})
+	postForm, ok := self.CheckRequiredParams(c, []string{"token", "amount"})
 	if !ok {
 		return
 	}
@@ -408,7 +381,7 @@ func (self *HTTPServer) Withdraw(c *gin.Context) {
 }
 
 func (self *HTTPServer) Deposit(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{"amount", "token"})
+	postForm, ok := self.CheckRequiredParams(c, []string{"amount", "token"})
 	if !ok {
 		return
 	}
@@ -519,7 +492,7 @@ func (self *HTTPServer) Metrics(c *gin.Context) {
 		Timestamp: common.GetTimepoint(),
 	}
 	log.Printf("Getting metrics")
-	postForm, ok := self.Authenticated(c, []string{"tokens", "from", "to"})
+	postForm, ok := self.CheckRequiredParams(c, []string{"tokens", "from", "to"})
 	if !ok {
 		return
 	}
@@ -558,7 +531,7 @@ func (self *HTTPServer) Metrics(c *gin.Context) {
 
 func (self *HTTPServer) StoreMetrics(c *gin.Context) {
 	log.Printf("Storing metrics")
-	postForm, ok := self.Authenticated(c, []string{"timestamp", "data"})
+	postForm, ok := self.CheckRequiredParams(c, []string{"timestamp", "data"})
 	if !ok {
 		return
 	}
@@ -1002,7 +975,7 @@ func (self *HTTPServer) GetExchangesStatus(c *gin.Context) {
 }
 
 func (self *HTTPServer) UpdateExchangeStatus(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{"exchange", "status", "timestamp"})
+	postForm, ok := self.CheckRequiredParams(c, []string{"exchange", "status", "timestamp"})
 	if !ok {
 		return
 	}
@@ -1074,7 +1047,7 @@ func (self *HTTPServer) GetCountries(c *gin.Context) {
 }
 
 func (self *HTTPServer) UpdatePriceAnalyticData(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{})
+	postForm, ok := self.CheckRequiredParams(c, []string{})
 	if !ok {
 		return
 	}
@@ -1113,7 +1086,7 @@ func (self *HTTPServer) GetPriceAnalyticData(c *gin.Context) {
 }
 
 func (self *HTTPServer) ExchangeNotification(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{
+	postForm, ok := self.CheckRequiredParams(c, []string{
 		"exchange", "action", "token", "fromTime", "toTime", "isWarning"})
 	if !ok {
 		return
@@ -1186,7 +1159,7 @@ func (self *HTTPServer) GetReserveVolume(c *gin.Context) {
 }
 
 func (self *HTTPServer) SetStableTokenParams(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{})
+	postForm, ok := self.CheckRequiredParams(c, []string{})
 	if !ok {
 		return
 	}
@@ -1204,7 +1177,7 @@ func (self *HTTPServer) SetStableTokenParams(c *gin.Context) {
 }
 
 func (self *HTTPServer) ConfirmStableTokenParams(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{})
+	postForm, ok := self.CheckRequiredParams(c, []string{})
 	if !ok {
 		return
 	}
@@ -1222,7 +1195,7 @@ func (self *HTTPServer) ConfirmStableTokenParams(c *gin.Context) {
 }
 
 func (self *HTTPServer) RejectStableTokenParams(c *gin.Context) {
-	_, ok := self.Authenticated(c, []string{})
+	_, ok := self.CheckRequiredParams(c, []string{})
 	if !ok {
 		return
 	}
@@ -1274,7 +1247,7 @@ func (self *HTTPServer) GetTokenHeatmap(c *gin.Context) {
 
 //SetTargetQtyV2 set token target quantity version 2
 func (self *HTTPServer) SetTargetQtyV2(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{})
+	postForm, ok := self.CheckRequiredParams(c, []string{})
 	if !ok {
 		return
 	}
@@ -1314,7 +1287,7 @@ func (self *HTTPServer) GetPendingTargetQtyV2(c *gin.Context) {
 }
 
 func (self *HTTPServer) ConfirmTargetQtyV2(c *gin.Context) {
-	postForm, ok := self.Authenticated(c, []string{})
+	postForm, ok := self.CheckRequiredParams(c, []string{})
 	if !ok {
 		return
 	}
@@ -1364,92 +1337,128 @@ func (self *HTTPServer) GetFeeSetRateByDay(c *gin.Context) {
 func (self *HTTPServer) register() {
 
 	if self.core != nil && self.app != nil {
-		stt := self.r.Group("/setting")
-		stt.POST("/set-token-update", self.SetTokenUpdate)
-		stt.GET("/pending-token-update", self.GetPendingTokenUpdates)
-		stt.POST("/confirm-token-update", self.ConfirmTokenUpdate)
-		stt.POST("/reject-token-update", self.RejectTokenUpdate)
-		stt.GET("/token-settings", self.TokenSettings)
-		stt.POST("/update-exchange-fee", self.UpdateExchangeFee)
-		stt.POST("/update-exchange-mindeposit", self.UpdateExchangeMinDeposit)
-		stt.POST("/update-deposit-address", self.UpdateDepositAddress)
-		stt.POST("/update-exchange-info", self.UpdateExchangeInfo)
-		stt.GET("/all-settings", self.GetAllSetting)
-		stt.GET("/internal-tokens", self.GetInternalTokens)
-		stt.GET("/active-tokens", self.GetActiveTokens)
-		stt.GET("/token-by-address", self.GetTokenByAddress)
-		stt.GET("/active-token-by-id", self.GetActiveTokenByID)
-		stt.GET("/address", self.GetAddress)
-		stt.GET("/addresses", self.GetAddresses)
-		stt.GET("/ping", self.ReadyToServe)
-		v2 := self.r.Group("/v2")
+		//Configure group
+		configure := self.r.Group("/")
+		{
+			configure.POST("setting/set-token-update", self.SetTokenUpdate)
+			configure.POST("setting/update-exchange-fee", self.UpdateExchangeFee)
+			configure.POST("setting/update-exchange-mindeposit", self.UpdateExchangeMinDeposit)
+			configure.POST("setting/update-deposit-address", self.UpdateDepositAddress)
+			configure.POST("setting/update-exchange-info", self.UpdateExchangeInfo)
 
+			configure.POST("v2/settargetqty", self.SetTargetQtyV2)
+			configure.POST("v2/set-pwis-equation", self.SetPWIEquationV2)
+
+			configure.POST("set-rebalance-quadratic", self.SetRebalanceQuadratic)
+			configure.POST("set-stable-token-params", self.SetStableTokenParams)
+		}
+
+		confirm := self.r.Group("/")
+		{
+			confirm.POST("setting/confirm-token-update", self.ConfirmTokenUpdate)
+			confirm.POST("setting/reject-token-update", self.RejectTokenUpdate)
+
+			confirm.POST("v2/confirmtargetqty", self.ConfirmTargetQtyV2)
+			confirm.POST("v2/canceltargetqty", self.CancelTargetQtyV2)
+			confirm.POST("v2/confirm-pwis-equation", self.ConfirmPWIEquationV2)
+			confirm.POST("v2/reject-pwis-equation", self.RejectPWIEquationV2)
+
+			confirm.POST("holdrebalance", self.HoldRebalance)
+			confirm.POST("enablerebalance", self.EnableRebalance)
+			confirm.POST("holdsetrate", self.HoldSetrate)
+			confirm.POST("enablesetrate", self.EnableSetrate)
+			confirm.POST("confirm-rebalance-quadratic", self.ConfirmRebalanceQuadratic)
+			confirm.POST("reject-rebalance-quadratic", self.RejectRebalanceQuadratic)
+			confirm.POST("update-exchange-status", self.UpdateExchangeStatus)
+			confirm.POST("confirm-stable-token-params", self.ConfirmStableTokenParams)
+			confirm.POST("reject-stable-token-params", self.RejectStableTokenParams)
+		}
+
+		//Read group
+		read := self.r.Group("/")
+		{
+			read.GET("setting/pending-token-update", self.GetPendingTokenUpdates)
+			read.GET("setting/token-settings", self.TokenSettings)
+			read.GET("setting/all-settings", self.GetAllSetting)
+			read.GET("setting/internal-tokens", self.GetInternalTokens)
+			read.GET("setting/active-tokens", self.GetActiveTokens)
+			read.GET("setting/token-by-address", self.GetTokenByAddress)
+			read.GET("setting/active-token-by-id", self.GetActiveTokenByID)
+			read.GET("setting/address", self.GetAddress)
+			read.GET("setting/addresses", self.GetAddresses)
+			read.GET("setting/ping", self.ReadyToServe)
+
+			read.GET("authdata-version", self.AuthDataVersion)
+			read.GET("authdata", self.AuthData)
+			read.GET("activities", self.GetActivities)
+			read.GET("immediate-pending-activities", self.ImmediatePendingActivities)
+			read.GET("metrics", self.Metrics)
+			read.GET("tradehistory", self.GetTradeHistory)
+			read.GET("rebalancestatus", self.GetRebalanceStatus)
+			read.GET("rebalance-quadratic", self.GetRebalanceQuadratic)
+			read.GET("pending-rebalance-quadratic", self.GetPendingRebalanceQuadratic)
+			read.GET("setratestatus", self.GetSetrateStatus)
+			read.GET("exchange-notifications", self.GetNotifications)
+			read.GET("get-step-function-data", self.GetStepFunctionData)
+			read.GET("pending-stable-token-params", self.GetPendingStableTokenParams)
+			read.GET("stable-token-params", self.GetStableTokenParams)
+
+			read.GET("v2/targetqty", self.GetTargetQtyV2)
+			read.GET("v2/pendingtargetqty", self.GetPendingTargetQtyV2)
+			read.GET("v2/pwis-equation", self.GetPWIEquationV2)
+			read.GET("v2/pending-pwis-equation", self.GetPendingPWIEquationV2)
+		}
+
+		//Rebalance group
+		rebalance := self.r.Group("/")
+		{
+			rebalance.POST("metrics", self.StoreMetrics)
+			rebalance.POST("cancelorder/:exchangeid", self.CancelOrder)
+			rebalance.POST("deposit/:exchangeid", self.Deposit)
+			rebalance.POST("withdraw/:exchangeid", self.Withdraw)
+			rebalance.POST("trade/:exchangeid", self.Trade)
+			rebalance.POST("setrates", self.SetRate)
+			rebalance.POST("exchange-notification", self.ExchangeNotification)
+		}
+
+		//No auth
 		self.r.GET("/prices-version", self.AllPricesVersion)
 		self.r.GET("/prices", self.AllPrices)
 		self.r.GET("/prices/:base/:quote", self.Price)
 		self.r.GET("/getrates", self.GetRate)
 		self.r.GET("/get-all-rates", self.GetRates)
-
-		self.r.GET("/authdata-version", self.AuthDataVersion)
-		self.r.GET("/authdata", self.AuthData)
-		self.r.GET("/activities", self.GetActivities)
-		self.r.GET("/immediate-pending-activities", self.ImmediatePendingActivities)
-		self.r.GET("/metrics", self.Metrics)
-		self.r.POST("/metrics", self.StoreMetrics)
-
-		self.r.POST("/cancelorder/:exchangeid", self.CancelOrder)
-		self.r.POST("/deposit/:exchangeid", self.Deposit)
-		self.r.POST("/withdraw/:exchangeid", self.Withdraw)
-		self.r.POST("/trade/:exchangeid", self.Trade)
-		self.r.POST("/setrates", self.SetRate)
 		self.r.GET("/exchangeinfo", self.GetExchangeInfo)
 		self.r.GET("/exchangefees", self.GetFee)
 		self.r.GET("/exchange-min-deposit", self.GetMinDeposit)
-		self.r.GET("/tradehistory", self.GetTradeHistory)
-
-		v2.GET("/targetqty", self.GetTargetQtyV2)
-		v2.GET("/pendingtargetqty", self.GetPendingTargetQtyV2)
-		v2.POST("/settargetqty", self.SetTargetQtyV2)
-		v2.POST("/confirmtargetqty", self.ConfirmTargetQtyV2)
-		v2.POST("/canceltargetqty", self.CancelTargetQtyV2)
-
 		self.r.GET("/timeserver", self.GetTimeServer)
-
-		self.r.GET("/rebalancestatus", self.GetRebalanceStatus)
-		self.r.POST("/holdrebalance", self.HoldRebalance)
-		self.r.POST("/enablerebalance", self.EnableRebalance)
-
-		self.r.GET("/setratestatus", self.GetSetrateStatus)
-		self.r.POST("/holdsetrate", self.HoldSetrate)
-		self.r.POST("/enablesetrate", self.EnableSetrate)
-
-		v2.GET("/pwis-equation", self.GetPWIEquationV2)
-		v2.GET("/pending-pwis-equation", self.GetPendingPWIEquationV2)
-		v2.POST("/set-pwis-equation", self.SetPWIEquationV2)
-		v2.POST("/confirm-pwis-equation", self.ConfirmPWIEquationV2)
-		v2.POST("/reject-pwis-equation", self.RejectPWIEquationV2)
-
-		self.r.GET("/rebalance-quadratic", self.GetRebalanceQuadratic)
-		self.r.GET("/pending-rebalance-quadratic", self.GetPendingRebalanceQuadratic)
-		self.r.POST("/set-rebalance-quadratic", self.SetRebalanceQuadratic)
-		self.r.POST("/confirm-rebalance-quadratic", self.ConfirmRebalanceQuadratic)
-		self.r.POST("/reject-rebalance-quadratic", self.RejectRebalanceQuadratic)
-
-		self.r.GET("/get-exchange-status", self.GetExchangesStatus)
-		self.r.POST("/update-exchange-status", self.UpdateExchangeStatus)
-
-		self.r.POST("/exchange-notification", self.ExchangeNotification)
-		self.r.GET("/exchange-notifications", self.GetNotifications)
-
-		self.r.POST("/set-stable-token-params", self.SetStableTokenParams)
-		self.r.POST("/confirm-stable-token-params", self.ConfirmStableTokenParams)
-		self.r.POST("/reject-stable-token-params", self.RejectStableTokenParams)
-		self.r.GET("/pending-stable-token-params", self.GetPendingStableTokenParams)
-		self.r.GET("/stable-token-params", self.GetStableTokenParams)
-
-		self.r.GET("/get-step-function-data", self.GetStepFunctionData)
-
 		self.r.GET("/gold-feed", self.GetGoldData)
+		self.r.GET("/get-exchange-status", self.GetExchangesStatus)
+
+		if self.authEnabled{
+			readPermissionsCheck, err := self.auth.ReadPermissionCheck()
+			if err != nil {
+				panic(err)
+			}
+			read.Use(readPermissionsCheck)
+
+			configurePermissionCheck, err := self.auth.ConfigurePermissionCheck()
+			if err != nil {
+				panic(err)
+			}
+			configure.Use(configurePermissionCheck)
+
+			confirmPermissionCheck, err := self.auth.ConfirmPermissionCheck()
+			if err != nil {
+				panic(err)
+			}
+			confirm.Use(confirmPermissionCheck)
+
+			rebalancePermissionCheck, err := self.auth.RebalancePermissionCheck()
+			if err != nil {
+				panic(err)
+			}
+			rebalance.Use(rebalancePermissionCheck)
+		}
 	}
 
 	if self.stat != nil {

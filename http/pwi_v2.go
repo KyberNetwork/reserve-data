@@ -23,7 +23,7 @@ func (self *HTTPServer) GetPWIEquationV2(c *gin.Context) {
 func (self *HTTPServer) SetPWIEquationV2(c *gin.Context) {
 	const dataPostFormKey = "data"
 
-	postForm, ok := self.Authenticated(c, []string{dataPostFormKey})
+	postForm, ok := self.CheckRequiredParams(c, []string{dataPostFormKey})
 	if !ok {
 		return
 	}
@@ -66,7 +66,7 @@ func (self *HTTPServer) GetPendingPWIEquationV2(c *gin.Context) {
 func (self *HTTPServer) ConfirmPWIEquationV2(c *gin.Context) {
 	const dataPostFormKey = "data"
 
-	postForm, ok := self.Authenticated(c, []string{dataPostFormKey})
+	postForm, ok := self.CheckRequiredParams(c, []string{dataPostFormKey})
 	if !ok {
 		return
 	}

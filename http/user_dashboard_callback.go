@@ -13,7 +13,7 @@ import (
 // UpdateUserAddresses receive callback from userdashboard and save kycinfo
 func (hs *HTTPServer) UpdateUserAddresses(c *gin.Context) {
 	var err error
-	postForm, ok := hs.Authenticated(c, []string{"user", "addresses", "timestamps"})
+	postForm, ok := hs.CheckRequiredParams(c, []string{"user", "addresses", "timestamps"})
 	if !ok {
 		return
 	}
