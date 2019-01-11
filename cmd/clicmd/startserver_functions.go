@@ -38,10 +38,10 @@ const (
 )
 
 var (
-	oldBurners        = [2]string{"0x4E89bc8484B2c454f2F7B25b612b648c45e14A8e", "0x07f6e905f2a1559cd9fd43cb92f8a1062a3ca706"}
-	oldNetwork        = [1]string{"0x964F35fAe36d75B1e72770e244F6595B68508CF5"}
-	stagingOldBurners = [1]string{"0xB2cB365D803Ad914e63EA49c95eC663715c2F673"}
-	stagingOldNetwork = [1]string{"0xD2D21FdeF0D054D2864ce328cc56D1238d6b239e"}
+	oldBurners        = [3]string{"0x4E89bc8484B2c454f2F7B25b612b648c45e14A8e", "0x07f6e905f2a1559cd9fd43cb92f8a1062a3ca706", "0xed4f53268bfdFF39B36E8786247bA3A02Cf34B04"}
+	oldNetwork        = [2]string{"0x964F35fAe36d75B1e72770e244F6595B68508CF5", "0x91a502C678605fbCe581eae053319747482276b9"}
+	stagingOldBurners = [2]string{"0xB2cB365D803Ad914e63EA49c95eC663715c2F673", "0xd6703974Dc30155d768c058189A2936Cf7C62Da6"}
+	stagingOldNetwork = [2]string{"0xD2D21FdeF0D054D2864ce328cc56D1238d6b239e", "0x706aBcE058DB29eB36578c463cf295F180a1Fe9C"}
 )
 
 func backupLog(arch archive.Archive, cronTimeExpression string, fileNameRegrexPattern string) {

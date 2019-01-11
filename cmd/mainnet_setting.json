@@ -150,53 +150,48 @@
       "internal use": true,
       "listed": true
     },
-
     "ADX": {
       "name": "AdEx",
       "decimals": 4,
       "address": "0x4470BB87d77b963A013DB939BE332f927f2b992e",
-      "minimalRecordResolution" : "10",
-      "maxPerBlockImbalance" : "1925452883",
-      "maxTotalImbalance" : "1925452883",
+      "minimalRecordResolution": "10",
+      "maxPerBlockImbalance": "1925452883",
+      "maxTotalImbalance": "1925452883",
       "internal use": false,
       "listed": true
     },
-
     "AST": {
       "name": "AirSwap",
       "decimals": 4,
       "address": "0x27054b13b1b798b345b591a4d22e6562d47ea75a",
-      "minimalRecordResolution" : "10",
-      "maxPerBlockImbalance" : "1925452883",
-      "maxTotalImbalance" : "1925452883",
+      "minimalRecordResolution": "10",
+      "maxPerBlockImbalance": "1925452883",
+      "maxTotalImbalance": "1925452883",
       "internal use": true,
       "listed": true
     },
-
     "RCN": {
       "name": "Ripio Credit Network",
       "decimals": 18,
       "address": "0xf970b8e36e23f7fc3fd752eea86f8be8d83375a6",
-      "minimalRecordResolution" : "10",
-      "maxPerBlockImbalance" : "1925452883",
-      "maxTotalImbalance" : "1925452883",
+      "minimalRecordResolution": "10",
+      "maxPerBlockImbalance": "1925452883",
+      "maxTotalImbalance": "1925452883",
       "internal use": false,
       "listed": true
     },
-
     "ZIL": {
       "name": "Zilliqa",
       "decimals": 12,
       "address": "0x05f4a42e251f2d52b8ed15e9fedaacfcef1fad27",
-      "minimalRecordResolution" : "10",
-      "maxPerBlockImbalance" : "1925452883",
-      "maxTotalImbalance" : "1925452883",
+      "minimalRecordResolution": "10",
+      "maxPerBlockImbalance": "1925452883",
+      "maxTotalImbalance": "1925452883",
       "internal use": true,
       "listed": true
     },
-
     "DAI": {
-      "name" : "DAI",
+      "name": "DAI",
       "decimals": 18,
       "address": "0x89d24a6b4ccb1b6faa2625fe562bdd9a23260359",
       "minimalRecordResolution": "1000000000000000",
@@ -205,14 +200,13 @@
       "internal use": false,
       "listed": true
     },
-
     "LINK": {
       "name": "Chain Link",
       "decimals": 18,
       "address": "0x514910771af9ca656af840dff83e8264ecf986ca",
-      "minimalRecordResolution" : "10",
-      "maxPerBlockImbalance" : "1925452883",
-      "maxTotalImbalance" : "1925452883",
+      "minimalRecordResolution": "10",
+      "maxPerBlockImbalance": "1925452883",
+      "maxTotalImbalance": "1925452883",
       "internal use": true,
       "listed": true
     },
@@ -435,7 +429,7 @@
       "internal use": false,
       "listed": true
     },
-    "COFI":{
+    "COFI": {
       "name": "CoinFi",
       "decimal": 18,
       "address": "0x3136ef851592acf49ca4c825131e364170fa32b3",
@@ -477,10 +471,10 @@
       "ZIL": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
       "AST": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
       "LINK": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
-      "ENJ" : "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
-      "AION":  "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
-      "AE":  "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
-      "BLZ":  "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
+      "ENJ": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
+      "AION": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
+      "AE": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
+      "BLZ": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
       "SUB": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
       "POE": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
       "CHAT": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
@@ -654,15 +648,17 @@
   "valid duration block": 60,
   "reserve": "0x63825c174ab367968EC60f061753D3bbD36A0D8F",
   "pricing": "0x798AbDA6Cc246D0EDbA912092A2a3dBd3d11191B",
-  "pricing wrapper":"0x97b82E42a0c04bAd5E61e7cFb4806317d608D809",
+  "pricing wrapper": "0x97b82E42a0c04bAd5E61e7cFb4806317d608D809",
   "network": "0x818E6FECD516Ecc3849DAf6845e3EC868087B755",
-  "internal network": "0x91a502C678605fbCe581eae053319747482276b9",
+  "internal network": "0x9ae49C0d7F8F9EF4B864e004FE86Ac8294E20950",
   "wrapper": "0x6172AFC8c00c46E0D07ce3AF203828198194620a",
-  "feeburner": "0xed4f53268bfdFF39B36E8786247bA3A02Cf34B04",
-  "whitelist" : "0x6e106a75d369d09a9ea1dcc16da844792aa669a3",
+  "feeburner": "0x52166528FCC12681aF996e409Ee3a421a4e128A3",
+  "whitelist": "0x6e106a75d369d09a9ea1dcc16da844792aa669a3",
   "begin_block_setrate": 5069586,
   "third_party_reserves": [
-    "0x2aab2b157a03915c8a73adae735d0cf51c872f31","0x6f50e41885fdc44dbdf7797df0393779a9c0a3a6",
-    "0x4d864b5b4f866f65f53cbaad32eb9574760865e6", "0xc935cad589bebd8673104073d5a5eccfe67fb7b1"
+    "0x2aab2b157a03915c8a73adae735d0cf51c872f31",
+    "0x6f50e41885fdc44dbdf7797df0393779a9c0a3a6",
+    "0x4d864b5b4f866f65f53cbaad32eb9574760865e6",
+    "0xc935cad589bebd8673104073d5a5eccfe67fb7b1"
   ]
 }
