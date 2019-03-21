@@ -1,0 +1,118 @@
+  {
+    "exchanges": [
+      {
+        "id": 1,
+        "name": "huobi",
+        "trading_fee_maker": 0.002,
+        "trading_fee_taker": 0.002
+      },
+      {
+        "id": 2,
+        "name": "binance",
+        "trading_fee_maker": 0.001,
+        "trading_fee_taker": 0.001
+      }
+    ],
+    "tokens": [
+      {
+        "id": 1,
+        "symbol": "ABT",
+        "name": "ArcBlock",
+        "address": "0xb98d4c97425d9908e66e53a6fdf673acca0be986",
+        "decimals": 18,
+        "internal": true,
+        "created": 1553151647703,
+        "updated": 1553151647703,
+        "exchanges": [
+          {
+            "id": 1,
+            "deposit_address": "0x0c8fd73eaf6089ef1b91231d0a07d0d2ca2b9d66",
+            "min_deposit": 4,
+            "withdraw_fee": 4,
+            "deposit_fee": 0,
+            "price_precision": 8,
+            "amount_precision": 2,
+            "amount_limit_min": 0,
+            "amount_limit_max": 0,
+            "price_limit_min": 0,
+            "price_limit_max": 0,
+            "min_notional": 0.02,
+            "exchange_id": 1
+          }
+        ],
+        "target": {
+          "total": 22083,
+          "reserve": 14795.6,
+          "rebalance_threshold": 0.33,
+          "transfer_threshold": 0.33
+        },
+        "pwi": {
+          "a_ask": 13.88888,
+          "a_bid": 13.88888,
+          "b_ask": -0.11111,
+          "b_bid": -0.11111,
+          "c_ask": 0,
+          "c_bid": 0,
+          "min_min_spread_ask": 0.005,
+          "min_min_spread_bid": 0.005,
+          "price_multiply_factor_ask": 0.45,
+          "price_multiply_factor_bid": 0.45
+        },
+        "rebalance_quadratic": {
+          "a": 0.000001754386,
+          "b": 0.0004894737,
+          "c": 0.9995088
+        }
+      },
+      {
+        "id": 2,
+        "symbol": "AE",
+        "name": "Aeternity",
+        "address": "0x5ca9a71b1d01849c0a95490cc00559717fcf0d1d",
+        "decimals": 18,
+        "internal": true,
+        "created": 1535021910205,
+        "updated": 1535021910205,
+        "exchanges": [
+          {
+            "id": 2,
+            "deposit_address": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
+            "min_deposit": 0,
+            "withdraw_fee": 4.6,
+            "deposit_fee": 0,
+            "price_precision": 6,
+            "amount_precision": 2,
+            "amount_limit_min": 0.01,
+            "amount_limit_max": 90000000,
+            "price_limit_min": 0,
+            "price_limit_max": 0,
+            "min_notional": 0.01,
+            "exchange_id": 2
+          }
+        ],
+        "target": {
+          "total": 3399,
+          "reserve": 3000,
+          "rebalance_threshold": 0.33,
+          "transfer_threshold": 0.2
+        },
+        "pwi": {
+          "a_ask": 13.88888,
+          "a_bid": 13.88888,
+          "b_ask": -0.11111,
+          "b_bid": -0.11111,
+          "c_ask": 0,
+          "c_bid": 0,
+          "min_min_spread_ask": 0.005,
+          "min_min_spread_bid": 0.005,
+          "price_multiply_factor_ask": 0.45,
+          "price_multiply_factor_bid": 0.45
+        },
+        "rebalance_quadratic": {
+          "a": 0.000001754386,
+          "b": 0.0004894737,
+          "c": 0.9995088
+        }
+      }
+    ]
+  }
