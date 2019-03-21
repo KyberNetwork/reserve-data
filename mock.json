@@ -426,5 +426,104 @@
         "afp_mid": 2.5
       }
     ]
+  },
+  "auth_data": {
+    "balances": [
+      {
+        "asset_id": 1,
+        "exchanges": [
+          {
+            "exchange_id": 1,
+            "available": 99.01583652879484,
+            "locked": 0
+          },
+          {
+            "exchange_id": 2,
+            "available": 181.8038571,
+            "locked": 0
+          }
+        ],
+        "reserve": 1717.0532129686085,
+        "error": ""
+      },
+      {
+        "asset_id": 2,
+        "exchanges": [
+          {
+            "exchange_id": 1,
+            "available": 11574.235393,
+            "locked": 0
+          }
+        ],
+        "reserve": 15360.30933492698,
+        "error": ""
+      },
+      {
+        "asset_id": 3,
+        "exchanges": [
+          {
+            "exchange_id": 2,
+            "available": 4.602309,
+            "locked": 0
+          }
+        ],
+        "reserve": 2559.238495969894,
+        "error": ""
+      }
+    ],
+    "pending_activities": {
+      "set_rates": {
+        "data": [
+          {
+            "id": "1553164292266910443|0x303b6541817b328cc00d627ddab452a146fb403b16f1fc6a8db6e36216fe54ab",
+            "params": {
+              "block": 7411639,
+              "afp_mid": [
+                165405861856343,
+                108819058000000000,
+                4377249572437696
+              ],
+              "buys": [
+                6.022698129896374e+21,
+                9154550619948383000,
+                227387262849142330000
+              ],
+              "sells": [
+                164217513027505,
+                108181761942374060,
+                4360506592823122
+              ],
+              "tokens": [
+                1,
+                2,
+                3
+              ]
+            }
+          }
+        ],
+        "gasPrice": "8000000000",
+        "nonce": "345612",
+        "tx": "0x303b6541817b328cc00d627ddab452a146fb403b16f1fc6a8db6e36216fe54ab",
+        "mining_status": "submitted",
+        "error": ""
+      },
+      "withdraw": [
+        {
+          "id": "1553164258017310762|721813701",
+          "exchange_id": 1,
+          "params": {
+            "amount": "13504.7761",
+            "timepoint": 1553164257651,
+            "token": 2
+          },
+          "exchange_tx": "721813701",
+          "tx": "",
+          "exchange_status": "",
+          "mining_status": "",
+          "error": ""
+        }
+      ]
+    },
+    "version": 1553164294136
   }
 }
