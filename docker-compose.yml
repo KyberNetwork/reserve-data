@@ -6,4 +6,4 @@ services:
     volumes:
       - ./mock.json:/data/db.json:ro
     ports:
-      - '127.0.0.1:8090:80'
+      - '80:80'

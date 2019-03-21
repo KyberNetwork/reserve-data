@@ -1,118 +1,430 @@
-  {
-    "exchanges": [
-      {
+{
+  "exchanges": [
+    {
+      "id": 1,
+      "name": "huobi",
+      "trading_fee_maker": 0.002,
+      "trading_fee_taker": 0.002,
+      "disable": false
+    },
+    {
+      "id": 2,
+      "name": "binance",
+      "trading_fee_maker": 0.001,
+      "trading_fee_taker": 0.001,
+      "disable": false
+    }
+  ],
+  "assets": [
+    {
+      "id": 1,
+      "symbol": "ETH",
+      "name": "Ethereum",
+      "address": "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "decimals": 18,
+      "set_rate": false,
+      "rebalance": true,
+      "created": 1535021910205,
+      "updated": 1535021910205,
+      "exchanges": [
+        {
+          "id": 2,
+          "deposit_address": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
+          "min_deposit": 0,
+          "withdraw_fee": 4.6,
+          "deposit_fee": 0,
+          "price_precision": 6,
+          "amount_precision": 2,
+          "amount_limit_min": 0.01,
+          "amount_limit_max": 90000000,
+          "price_limit_min": 0,
+          "price_limit_max": 0,
+          "min_notional": 0.01,
+          "exchange_id": 2
+        }
+      ],
+      "target": {
         "id": 1,
-        "name": "huobi",
-        "trading_fee_maker": 0.002,
-        "trading_fee_taker": 0.002
-      },
-      {
-        "id": 2,
-        "name": "binance",
-        "trading_fee_maker": 0.001,
-        "trading_fee_taker": 0.001
-      }
-    ],
-    "tokens": [
-      {
-        "id": 1,
-        "symbol": "ABT",
-        "name": "ArcBlock",
-        "address": "0xb98d4c97425d9908e66e53a6fdf673acca0be986",
-        "decimals": 18,
-        "internal": true,
-        "created": 1553151647703,
-        "updated": 1553151647703,
+        "total": 300,
+        "reserve": 113.9,
+        "rebalance_threshold": 0.33,
+        "transfer_threshold": 0.2,
         "exchanges": [
           {
             "id": 1,
-            "deposit_address": "0x0c8fd73eaf6089ef1b91231d0a07d0d2ca2b9d66",
-            "min_deposit": 4,
-            "withdraw_fee": 4,
-            "deposit_fee": 0,
-            "price_precision": 8,
-            "amount_precision": 2,
-            "amount_limit_min": 0,
-            "amount_limit_max": 0,
-            "price_limit_min": 0,
-            "price_limit_max": 0,
-            "min_notional": 0.02,
-            "exchange_id": 1
-          }
-        ],
-        "target": {
-          "total": 22083,
-          "reserve": 14795.6,
-          "rebalance_threshold": 0.33,
-          "transfer_threshold": 0.33
-        },
-        "pwi": {
-          "a_ask": 13.88888,
-          "a_bid": 13.88888,
-          "b_ask": -0.11111,
-          "b_bid": -0.11111,
-          "c_ask": 0,
-          "c_bid": 0,
-          "min_min_spread_ask": 0.005,
-          "min_min_spread_bid": 0.005,
-          "price_multiply_factor_ask": 0.45,
-          "price_multiply_factor_bid": 0.45
-        },
-        "rebalance_quadratic": {
-          "a": 0.000001754386,
-          "b": 0.0004894737,
-          "c": 0.9995088
-        }
-      },
-      {
-        "id": 2,
-        "symbol": "AE",
-        "name": "Aeternity",
-        "address": "0x5ca9a71b1d01849c0a95490cc00559717fcf0d1d",
-        "decimals": 18,
-        "internal": true,
-        "created": 1535021910205,
-        "updated": 1535021910205,
-        "exchanges": [
+            "recommended": 100,
+            "ratio": 1
+          },
           {
             "id": 2,
-            "deposit_address": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
-            "min_deposit": 0,
-            "withdraw_fee": 4.6,
-            "deposit_fee": 0,
-            "price_precision": 6,
-            "amount_precision": 2,
-            "amount_limit_min": 0.01,
-            "amount_limit_max": 90000000,
-            "price_limit_min": 0,
-            "price_limit_max": 0,
-            "min_notional": 0.01,
-            "exchange_id": 2
+            "recommended": 150,
+            "ratio": 4
           }
-        ],
-        "target": {
-          "total": 3399,
-          "reserve": 3000,
-          "rebalance_threshold": 0.33,
-          "transfer_threshold": 0.2
-        },
-        "pwi": {
-          "a_ask": 13.88888,
-          "a_bid": 13.88888,
-          "b_ask": -0.11111,
-          "b_bid": -0.11111,
-          "c_ask": 0,
-          "c_bid": 0,
-          "min_min_spread_ask": 0.005,
-          "min_min_spread_bid": 0.005,
-          "price_multiply_factor_ask": 0.45,
-          "price_multiply_factor_bid": 0.45
-        },
-        "rebalance_quadratic": {
-          "a": 0.000001754386,
-          "b": 0.0004894737,
-          "c": 0.9995088
+        ]
+      },
+      "pwi": {
+        "a_ask": 13.88888,
+        "a_bid": 13.88888,
+        "b_ask": -0.11111,
+        "b_bid": -0.11111,
+        "c_ask": 0,
+        "c_bid": 0,
+        "min_min_spread_ask": 0.005,
+        "min_min_spread_bid": 0.005,
+        "price_multiply_factor_ask": 0.45,
+        "price_multiply_factor_bid": 0.45
+      },
+      "rebalance_quadratic": {
+        "a": 0.000001754386,
+        "b": 0.0004894737,
+        "c": 0.9995088
+      }
+    },
+    {
+      "id": 2,
+      "symbol": "ABT",
+      "name": "ArcBlock",
+      "address": "0xb98d4c97425d9908e66e53a6fdf673acca0be986",
+      "decimals": 18,
+      "set_rate": true,
+      "rebalance": true,
+      "created": 1553151647703,
+      "updated": 1553151647703,
+      "exchanges": [
+        {
+          "id": 1,
+          "deposit_address": "0x0c8fd73eaf6089ef1b91231d0a07d0d2ca2b9d66",
+          "min_deposit": 4,
+          "withdraw_fee": 4,
+          "deposit_fee": 0,
+          "price_precision": 8,
+          "amount_precision": 2,
+          "amount_limit_min": 0,
+          "amount_limit_max": 0,
+          "price_limit_min": 0,
+          "price_limit_max": 0,
+          "min_notional": 0.02,
+          "exchange_id": 1
         }
+      ],
+      "target": {
+        "id": 2,
+        "total": 22083,
+        "reserve": 14795.6,
+        "rebalance_threshold": 0.33,
+        "transfer_threshold": 0.33
+      },
+      "pwi": {
+        "a_ask": 13.88888,
+        "a_bid": 13.88888,
+        "b_ask": -0.11111,
+        "b_bid": -0.11111,
+        "c_ask": 0,
+        "c_bid": 0,
+        "min_min_spread_ask": 0.005,
+        "min_min_spread_bid": 0.005,
+        "price_multiply_factor_ask": 0.45,
+        "price_multiply_factor_bid": 0.45
+      },
+      "rebalance_quadratic": {
+        "a": 0.000001754386,
+        "b": 0.0004894737,
+        "c": 0.9995088
+      }
+    },
+    {
+      "id": 3,
+      "symbol": "AE",
+      "name": "Aeternity",
+      "address": "0x5ca9a71b1d01849c0a95490cc00559717fcf0d1d",
+      "decimals": 18,
+      "set_rate": true,
+      "rebalance": true,
+      "created": 1535021910205,
+      "updated": 1535021910205,
+      "exchanges": [
+        {
+          "id": 2,
+          "deposit_address": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
+          "min_deposit": 0,
+          "withdraw_fee": 4.6,
+          "deposit_fee": 0,
+          "price_precision": 6,
+          "amount_precision": 2,
+          "amount_limit_min": 0.01,
+          "amount_limit_max": 90000000,
+          "price_limit_min": 0,
+          "price_limit_max": 0,
+          "min_notional": 0.01,
+          "exchange_id": 2
+        }
+      ],
+      "target": {
+        "id": 2,
+        "total": 3399,
+        "reserve": 3000,
+        "rebalance_threshold": 0.33,
+        "transfer_threshold": 0.2
+      },
+      "pwi": {
+        "a_ask": 13.88888,
+        "a_bid": 13.88888,
+        "b_ask": -0.11111,
+        "b_bid": -0.11111,
+        "c_ask": 0,
+        "c_bid": 0,
+        "min_min_spread_ask": 0.005,
+        "min_min_spread_bid": 0.005,
+        "price_multiply_factor_ask": 0.45,
+        "price_multiply_factor_bid": 0.45
+      },
+      "rebalance_quadratic": {
+        "a": 0.000001754386,
+        "b": 0.0004894737,
+        "c": 0.9995088
+      }
+    }
+  ],
+  "prices": {
+    "block": 7411234,
+    "data": [
+      {
+        "base": 2,
+        "quote": 1,
+        "exchange": 1,
+        "bids": [
+          [
+            0.000977700000000000,
+            76.700000000000000000
+          ],
+          [
+            0.000976600000000000,
+            23.260000000000000000
+          ],
+          [
+            0.000976000000000000,
+            250.000000000000000000
+          ],
+          [
+            0.000974900000000000,
+            1511.000000000000000000
+          ],
+          [
+            0.000974700000000000,
+            250.000000000000000000
+          ],
+          [
+            0.000974300000000000,
+            142.920000000000000000
+          ],
+          [
+            0.000973700000000000,
+            276.000000000000000000
+          ],
+          [
+            0.000973500000000000,
+            160.000000000000000000
+          ],
+          [
+            0.000973000000000000,
+            2620.000000000000000000
+          ],
+          [
+            0.000971700000000000,
+            250.000000000000000000
+          ],
+          [
+            0.000970000000000000,
+            45423.390000000000000000
+          ],
+          [
+            0.000968700000000000,
+            250.000000000000000000
+          ],
+          [
+            0.000967600000000000,
+            142.920000000000000000
+          ],
+          [
+            0.000967200000000000,
+            365.280000000000000000
+          ],
+          [
+            0.000967000000000000,
+            250.000000000000000000
+          ],
+          [
+            0.000965700000000000,
+            250.000000000000000000
+          ],
+          [
+            0.000964000000000000,
+            250.000000000000000000
+          ],
+          [
+            0.000960800000000000,
+            142.920000000000000000
+          ],
+          [
+            0.000960700000000000,
+            0.100000000000000000
+          ],
+          [
+            0.000960000000000000,
+            4945.580000000000000000
+          ]
+        ],
+        "asks": [
+          [
+            0.000982000000000000,
+            343.640000000000000000
+          ],
+          [
+            0.000983800000000000,
+            540.000000000000000000
+          ],
+          [
+            0.000984800000000000,
+            36.000000000000000000
+          ],
+          [
+            0.000985000000000000,
+            250.000000000000000000
+          ],
+          [
+            0.000986600000000000,
+            1500.000000000000000000
+          ],
+          [
+            0.000986800000000000,
+            250.000000000000000000
+          ],
+          [
+            0.000987900000000000,
+            142.920000000000000000
+          ],
+          [
+            0.000988000000000000,
+            250.000000000000000000
+          ],
+          [
+            0.000988500000000000,
+            150.000000000000000000
+          ],
+          [
+            0.000989800000000000,
+            250.000000000000000000
+          ],
+          [
+            0.000991000000000000,
+            250.000000000000000000
+          ],
+          [
+            0.000992800000000000,
+            250.000000000000000000
+          ],
+          [
+            0.000993500000000000,
+            40.000000000000000000
+          ],
+          [
+            0.000994000000000000,
+            250.000000000000000000
+          ],
+          [
+            0.000994700000000000,
+            142.920000000000000000
+          ],
+          [
+            0.000995800000000000,
+            250.000000000000000000
+          ],
+          [
+            0.000996600000000000,
+            23.030000000000000000
+          ],
+          [
+            0.000997000000000000,
+            250.000000000000000000
+          ],
+          [
+            0.000998800000000000,
+            250.000000000000000000
+          ],
+          [
+            0.001000000000000000,
+            250.000000000000000000
+          ]
+        ],
+        "version": 100008879313
+      },
+      {
+        "base": 3,
+        "quote": 1,
+        "exchange": 2,
+        "bids": [
+          [
+            "0.00351700",
+            "601.23000000"
+          ],
+          [
+            "0.00351600",
+            "227.00000000"
+          ],
+          [
+            "0.00351400",
+            "69.23000000"
+          ],
+          [
+            "0.00351300",
+            "1143.22000000"
+          ],
+          [
+            "0.00351200",
+            "45.35000000"
+          ]
+        ],
+        "asks": [
+          [
+            "0.00352600",
+            "140.64000000"
+          ],
+          [
+            "0.00355200",
+            "225.41000000"
+          ],
+          [
+            "0.00355300",
+            "271.35000000"
+          ],
+          [
+            "0.00355400",
+            "51.76000000"
+          ],
+          [
+            "0.00355500",
+            "645.90000000"
+          ]
+        ],
+        "version": 46245240
+      }
+    ]
+  },
+  "rates": {
+    "block": 2342353,
+    "data": [
+      {
+        "id": 2,
+        "buy": 1,
+        "sell": 2,
+        "afp_mid": 1.5
+      },
+      {
+        "id": 3,
+        "buy": 2,
+        "sell": 3,
+        "afp_mid": 2.5
       }
     ]
   }
+}
