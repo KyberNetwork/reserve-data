@@ -29,6 +29,7 @@
       "exchanges": [
         {
           "id": 2,
+          "symbol": "ETH",
           "deposit_address": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
           "min_deposit": 0,
           "withdraw_fee": 4.6,
@@ -93,6 +94,7 @@
       "exchanges": [
         {
           "id": 1,
+          "symbol": "ABT",
           "deposit_address": "0x0c8fd73eaf6089ef1b91231d0a07d0d2ca2b9d66",
           "min_deposit": 4,
           "withdraw_fee": 4,
@@ -145,6 +147,7 @@
       "exchanges": [
         {
           "id": 2,
+          "symbol": "AE",
           "deposit_address": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90",
           "min_deposit": 0,
           "withdraw_fee": 4.6,
