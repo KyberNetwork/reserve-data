@@ -367,6 +367,15 @@ func (self *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord)
 			switch status {
 			case common.MiningStatusPending:
 				log.Printf("TX_STATUS: tx (%s) status is pending", tx)
+				if nonceValidator(activity) {
+					result[activity.ID] = common.NewActivityStatus(
+						activity.ExchangeStatus,
+						txStr,
+						blockNum,
+						common.MiningStatusFailed,
+						err,
+					)
+				}
 			case common.MiningStatusMined:
 				if activity.Action == common.ActionSetrate {
 					log.Printf("TX_STATUS set rate transaction is mined, id: %s", activity.ID.EID)
