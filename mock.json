@@ -53,11 +53,13 @@
         "exchanges": [
           {
             "id": 1,
+            "exchange_id": 2,
             "recommended": 100,
             "ratio": 1
           },
           {
             "id": 2,
+            "exchange_id": 1,
             "recommended": 150,
             "ratio": 4
           }
