@@ -106,7 +106,10 @@
           "price_limit_min": 0,
           "price_limit_max": 0,
           "min_notional": 0.02,
-          "exchange_id": 1
+          "exchange_id": 1,
+          "quotes": [
+            1
+          ]
         }
       ],
       "target": {
@@ -159,7 +162,10 @@
           "price_limit_min": 0,
           "price_limit_max": 0,
           "min_notional": 0.01,
-          "exchange_id": 2
+          "exchange_id": 2,
+          "quotes": [
+            1
+          ]
         }
       ],
       "target": {
