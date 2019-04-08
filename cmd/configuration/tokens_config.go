@@ -200,7 +200,7 @@ var TokenConfigs = map[string]map[string]common.Token{
 	},
 }
 
-func mustGetConfigToken(kyberEnv string) map[string]common.Token {
+func mustGetTokenConfig(kyberEnv string) map[string]common.Token {
 	result, avail := TokenConfigs[kyberEnv]
 	if avail {
 		return result
@@ -216,7 +216,7 @@ func mustGetConfigToken(kyberEnv string) map[string]common.Token {
 	if kyberEnv == common.ProductionMode {
 		return TokenConfigs[common.MainnetMode]
 	}
-	log.Panicf("cannot get token Config for mode %s", kyberEnv)
+	log.Panicf("cannot get token config for mode %s", kyberEnv)
 	return nil
 }
 

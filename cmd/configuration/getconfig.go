@@ -88,10 +88,10 @@ func GetSetting(setPath SettingPaths, kyberENV string, addressSetting *settings.
 		tokenSetting,
 		addressSetting,
 		exchangeSetting,
-		settings.WithHandleEmptyToken(mustGetConfigToken(kyberENV)),
+		settings.WithHandleEmptyToken(mustGetTokenConfig(kyberENV)),
 		settings.WithHandleEmptyFee(setPath.feePath),
 		settings.WithHandleEmptyMinDeposit(filepath.Join(common.CmdDirLocation(), "min_deposit.json")),
-		settings.WithHandleEmptyDepositAddress(ExchangeConfigs[kyberENV]),
+		settings.WithHandleEmptyDepositAddress(mustGetExchangeConfig(kyberENV)),
 		settings.WithHandleEmptyExchangeInfo())
 	return setting, err
 }

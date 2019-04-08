@@ -53,9 +53,9 @@ func WithHandleEmptyMinDeposit(pathJSON string) SettingOption {
 
 // WithHandleEmptyDepositAddress will load the MinDeposit setting from fefault file
 // if the DepositAddress database is empty
-func WithHandleEmptyDepositAddress(data string) SettingOption {
+func WithHandleEmptyDepositAddress(data map[common.ExchangeID]common.ExchangeAddresses) SettingOption {
 	return func(setting *Settings) {
-		if err := setting.loadDepositAddressFromString(data); err != nil {
+		if err := setting.savePreconfigExchangeDepositAddress(data); err != nil {
 			log.Printf("WARNING: Setting Init: cannot load DepositAddress from file: %s, Fee is needed to be updated manually", err.Error())
 		}
 	}

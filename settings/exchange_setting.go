@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/KyberNetwork/reserve-data/common"
-	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
 // ExchangeName is the name of exchanges of which core will use to rebalance.
@@ -148,21 +147,10 @@ func (setting *Settings) loadMinDepositFromFile(path string) error {
 	return nil
 }
 
-// exchangeDepositAddress type stores a map[tokenID]depositaddress
-// it is used to read address config from a file.
-type exchangeDepositAddress map[string]string
-
-// AddressDepositConfig struct contain a map[exchangeName],
-// it is used mainly to read addfress config from JSON file.
-type AddressDepositConfig struct {
-	Exchanges map[string]exchangeDepositAddress `json:"exchanges"`
-}
-
-func (setting *Settings) loadDepositAddressFromString(data string) error {
-	var exAddressConfig AddressDepositConfig
-	if err := json.Unmarshal([]byte(data), &exAddressConfig); err != nil {
-		return err
-	}
+func (setting *Settings) savePreconfigExchangeDepositAddress(data map[common.ExchangeID]common.ExchangeAddresses) error {
+	const (
+		version = 1
+	)
 	runningExs := RunningExchanges()
 	for _, ex := range runningExs {
 		//Check if the exchange is in current code deployment.
@@ -174,27 +162,18 @@ func (setting *Settings) loadDepositAddressFromString(data string) error {
 		if _, err := setting.Exchange.Storage.GetDepositAddresses(exName); err != nil {
 			log.Printf("Exchange %s is in KYBER_EXCHANGES but can't load DepositAddress in Database (%s). atempt to load it from config file", exName.String(), err.Error())
 			//Check if the config file has config for such exchange
-			exchangeAddressStr, ok := exAddressConfig.Exchanges[ex]
+			exchangeAddress, ok := data[common.ExchangeID(ex)]
 			if !ok {
-				log.Printf("Warning: Exchange %s is in KYBER_EXCHANGES, but not avail in DepositAddress config file", ex)
+				log.Printf("Warning: Exchange %s is in KYBER_EXCHANGES, but not avail in preconfig data", ex)
 				continue
 			}
-			exchangeAddresses := convertToAddressMap(exchangeAddressStr)
 			//version =1 means it is init from config file
-			if err = setting.Exchange.Storage.StoreDepositAddress(exName, exchangeAddresses, 1); err != nil {
+			if err = setting.Exchange.Storage.StoreDepositAddress(exName, exchangeAddress, version); err != nil {
 				return err
 			}
 		}
 	}
 	return nil
-}
-
-func convertToAddressMap(data exchangeDepositAddress) common.ExchangeAddresses {
-	result := make(common.ExchangeAddresses)
-	for token, addrStr := range data {
-		result[token] = ethereum.HexToAddress(addrStr)
-	}
-	return result
 }
 
 func (setting *Settings) handleEmptyExchangeInfo() error {
