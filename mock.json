@@ -66,16 +66,20 @@
         ]
       },
       "pwi": {
-        "a_ask": 13.88888,
-        "a_bid": 13.88888,
-        "b_ask": -0.11111,
-        "b_bid": -0.11111,
-        "c_ask": 0,
-        "c_bid": 0,
-        "min_min_spread_ask": 0.005,
-        "min_min_spread_bid": 0.005,
-        "price_multiply_factor_ask": 0.45,
-        "price_multiply_factor_bid": 0.45
+        "ask": {
+          "a": 13.88888,
+          "b": -0.11111,
+          "c": 0,
+          "min_min_spread": 0.005,
+          "price_multiply_factor": 0.45
+        },
+        "bid": {
+          "a": 13.88888,
+          "b": -0.11111,
+          "c": 0,
+          "min_min_spread": 0.005,
+          "price_multiply_factor": 0.45
+        }
       },
       "rebalance_quadratic": {
         "a": 0.000001754386,
@@ -122,16 +126,20 @@
         "transfer_threshold": 0.33
       },
       "pwi": {
-        "a_ask": 13.88888,
-        "a_bid": 13.88888,
-        "b_ask": -0.11111,
-        "b_bid": -0.11111,
-        "c_ask": 0,
-        "c_bid": 0,
-        "min_min_spread_ask": 0.005,
-        "min_min_spread_bid": 0.005,
-        "price_multiply_factor_ask": 0.45,
-        "price_multiply_factor_bid": 0.45
+        "ask": {
+          "a": 13.88888,
+          "b": -0.11111,
+          "c": 0,
+          "min_min_spread": 0.005,
+          "price_multiply_factor": 0.45
+        },
+        "bid": {
+          "a": 13.88888,
+          "b": -0.11111,
+          "c": 0,
+          "min_min_spread": 0.005,
+          "price_multiply_factor": 0.45
+        }
       },
       "rebalance_quadratic": {
         "a": 0.000001754386,
@@ -178,16 +186,20 @@
         "transfer_threshold": 0.2
       },
       "pwi": {
-        "a_ask": 13.88888,
-        "a_bid": 13.88888,
-        "b_ask": -0.11111,
-        "b_bid": -0.11111,
-        "c_ask": 0,
-        "c_bid": 0,
-        "min_min_spread_ask": 0.005,
-        "min_min_spread_bid": 0.005,
-        "price_multiply_factor_ask": 0.45,
-        "price_multiply_factor_bid": 0.45
+        "ask": {
+          "a": 13.88888,
+          "b": -0.11111,
+          "c": 0,
+          "min_min_spread": 0.005,
+          "price_multiply_factor": 0.45
+        },
+        "bid": {
+          "a": 13.88888,
+          "b": -0.11111,
+          "c": 0,
+          "min_min_spread": 0.005,
+          "price_multiply_factor": 0.45
+        }
       },
       "rebalance_quadratic": {
         "a": 0.000001754386,
@@ -438,6 +450,55 @@
       }
     ]
   },
+  "update_price_factor": {
+    "timestamp": 1554703408000,
+    "data": [
+      {
+        "id": 2,
+        "afp_mid": 1.5,
+        "spread": 0.02
+      },
+      {
+        "id": 3,
+        "afp_mid": 2.5,
+        "spread": 0.02
+      }
+    ]
+  },
+  "get_price_factor": {
+    "data": [
+      {
+        "id": 2,
+        "data": [
+          {
+            "timestamp": 1554703408000,
+            "afp_mid": 1.5,
+            "spread": 0.02
+          },
+          {
+            "timestamp": 1554703508000,
+            "afp_mid": 1.45,
+            "spread": 0.015
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "data": [
+          {
+            "timestamp": 1554703408000,
+            "afp_mid": 1.5,
+            "spread": 0.02
+          },
+          {
+            "timestamp": 1554703508000,
+            "afp_mid": 1.45,
+            "spread": 0.015
+          }
+        ]
+      }
+    ]
+  },
   "auth_data": {
     "balances": [
       {
@@ -483,54 +544,68 @@
       }
     ],
     "pending_activities": {
-      "set_rates": {
-        "data": [
-          {
-            "id": "1553164292266910443|0x303b6541817b328cc00d627ddab452a146fb403b16f1fc6a8db6e36216fe54ab",
-            "params": {
-              "block": 7411639,
-              "afp_mid": [
-                165405861856343,
-                108819058000000000,
-                4377249572437696
-              ],
-              "buys": [
-                6.022698129896374e+21,
-                9154550619948383000,
-                227387262849142330000
-              ],
-              "sells": [
-                164217513027505,
-                108181761942374060,
-                4360506592823122
-              ],
-              "tokens": [
-                1,
-                2,
-                3
-              ]
-            }
-          }
-        ],
-        "gasPrice": "8000000000",
-        "nonce": "345612",
-        "tx": "0x303b6541817b328cc00d627ddab452a146fb403b16f1fc6a8db6e36216fe54ab",
-        "mining_status": "submitted",
-        "error": ""
-      },
+      "set_rates": [
+        {
+          "id": "1553164292266910443|0x303b6541817b328cc00d627ddab452a146fb403b16f1fc6a8db6e36216fe54ab",
+          "params": {
+            "block": 7411639,
+            "afp_mid": [
+              165405861856343,
+              108819058000000000,
+              4377249572437696
+            ],
+            "buys": [
+              6.022698129896374e+21,
+              9154550619948383000,
+              227387262849142330000
+            ],
+            "sells": [
+              164217513027505,
+              108181761942374060,
+              4360506592823122
+            ],
+            "tokens": [
+              1,
+              2,
+              3
+            ]
+          },
+          "gasPrice": "8000000000",
+          "nonce": "345612",
+          "tx": "0x303b6541817b328cc00d627ddab452a146fb403b16f1fc6a8db6e36216fe54ab",
+          "mining_status": "submitted",
+          "error": ""
+        }
+      ],
       "withdraw": [
         {
           "id": "1553164258017310762|721813701",
-          "exchange_id": 1,
           "params": {
-            "amount": "13504.7761",
+            "exchange_id": 1,
+            "amount": 13504.7761,
             "timepoint": 1553164257651,
             "token": 2
           },
           "exchange_tx": "721813701",
-          "tx": "",
-          "exchange_status": "",
+          "tx": "0xc481ec82aa2b4b33a4fccf94ecd4bdd278af0b6d8f381463ba934bf6d66880e9",
+          "exchange_status": "submitted",
           "mining_status": "",
+          "error": ""
+        }
+      ],
+      "deposit": [
+        {
+          "id": "1553164258017310762|721813701",
+          "params": {
+            "exchange_id": 1,
+            "amount": 3504.7761,
+            "timepoint": 1553164257651,
+            "token": 3
+          },
+          "exchange_tx": "721813701",
+          "tx": "0xc481ec82aa2b4b33a4fccf94ecd4bdd278af0b6d8f381463ba934bf6d66880e9",
+          "exchange_status": "",
+          "mining_status": "mined",
           "error": ""
         }
       ]
