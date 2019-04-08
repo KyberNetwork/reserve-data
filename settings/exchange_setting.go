@@ -158,13 +158,9 @@ type AddressDepositConfig struct {
 	Exchanges map[string]exchangeDepositAddress `json:"exchanges"`
 }
 
-func (setting *Settings) loadDepositAddressFromFile(path string) error {
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		return err
-	}
+func (setting *Settings) loadDepositAddressFromString(data string) error {
 	var exAddressConfig AddressDepositConfig
-	if err = json.Unmarshal(data, &exAddressConfig); err != nil {
+	if err := json.Unmarshal([]byte(data), &exAddressConfig); err != nil {
 		return err
 	}
 	runningExs := RunningExchanges()

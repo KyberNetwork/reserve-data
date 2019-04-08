@@ -2,7 +2,6 @@ package settings
 
 import (
 	"encoding/json"
-	"io/ioutil"
 
 	ethereum "github.com/ethereum/go-ethereum/common"
 )
@@ -82,26 +81,22 @@ type AddressSetting struct {
 	AddressSets map[AddressSetName]([]ethereum.Address)
 }
 
-func NewAddressSetting(path string) (*AddressSetting, error) {
+func NewAddressSetting(data string) (*AddressSetting, error) {
 	address := make(map[AddressName]ethereum.Address)
 	addressSets := make(map[AddressSetName]([]ethereum.Address))
 	addressSetting := &AddressSetting{
 		Addresses:   address,
 		AddressSets: addressSets,
 	}
-	if err := addressSetting.loadAddressFromFile(path); err != nil {
+	if err := addressSetting.loadAddressFromString(data); err != nil {
 		return addressSetting, err
 	}
 	return addressSetting, nil
 }
 
-func (addrSetting *AddressSetting) loadAddressFromFile(path string) error {
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		return err
-	}
+func (addrSetting *AddressSetting) loadAddressFromString(data string) error {
 	addrs := AddressConfig{}
-	if err = json.Unmarshal(data, &addrs); err != nil {
+	if err := json.Unmarshal([]byte(data), &addrs); err != nil {
 		return err
 	}
 	addrSetting.Addresses[Bank] = ethereum.HexToAddress(addrs.Bank)

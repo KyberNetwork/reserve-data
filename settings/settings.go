@@ -13,7 +13,7 @@ type Settings struct {
 
 // WithHandleEmptyToken will load the token settings from default file if the
 // database is empty.
-func WithHandleEmptyToken(pathJSON string) SettingOption {
+func WithHandleEmptyToken(data string) SettingOption {
 	return func(setting *Settings) {
 		allToks, err := setting.GetAllTokens()
 		if err != nil || len(allToks) < 1 {
@@ -22,7 +22,7 @@ func WithHandleEmptyToken(pathJSON string) SettingOption {
 			} else {
 				log.Printf("Setting Init: Token DB is empty, attempt to load token from file")
 			}
-			if err = setting.loadTokenFromFile(pathJSON); err != nil {
+			if err = setting.loadTokenFromString(data); err != nil {
 				log.Printf("Setting Init: Can not load Token from file: %s, Token DB is needed to be updated manually", err.Error())
 			}
 		}
@@ -51,9 +51,9 @@ func WithHandleEmptyMinDeposit(pathJSON string) SettingOption {
 
 // WithHandleEmptyDepositAddress will load the MinDeposit setting from fefault file
 // if the DepositAddress database is empty
-func WithHandleEmptyDepositAddress(pathJSON string) SettingOption {
+func WithHandleEmptyDepositAddress(data string) SettingOption {
 	return func(setting *Settings) {
-		if err := setting.loadDepositAddressFromFile(pathJSON); err != nil {
+		if err := setting.loadDepositAddressFromString(data); err != nil {
 			log.Printf("WARNING: Setting Init: cannot load DepositAddress from file: %s, Fee is needed to be updated manually", err.Error())
 		}
 	}
