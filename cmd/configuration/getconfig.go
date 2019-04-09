@@ -90,7 +90,7 @@ func GetSetting(setPath SettingPaths, kyberENV string, addressSetting *settings.
 		exchangeSetting,
 		settings.WithHandleEmptyToken(mustGetTokenConfig(kyberENV)),
 		settings.WithHandleEmptyFee(FeeConfigs),
-		settings.WithHandleEmptyMinDeposit(filepath.Join(common.CmdDirLocation(), "min_deposit.json")),
+		settings.WithHandleEmptyMinDeposit(ExchangesMinDepositConfig),
 		settings.WithHandleEmptyDepositAddress(mustGetExchangeConfig(kyberENV)),
 		settings.WithHandleEmptyExchangeInfo())
 	return setting, err

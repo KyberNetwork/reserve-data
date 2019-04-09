@@ -43,9 +43,9 @@ func WithHandleEmptyFee(feeConfig map[string]common.ExchangeFees) SettingOption 
 
 // WithHandleEmptyMinDeposit will load the MinDeposit setting from fefault file
 // if the Mindeposit database is empty. It will mutiply the MinDeposit value by 2
-func WithHandleEmptyMinDeposit(pathJSON string) SettingOption {
+func WithHandleEmptyMinDeposit(data map[string]common.ExchangesMinDeposit) SettingOption {
 	return func(setting *Settings) {
-		if err := setting.loadMinDepositFromFile(pathJSON); err != nil {
+		if err := setting.savePrecofigMinDeposit(data); err != nil {
 			log.Printf("WARNING: Setting Init: cannot load MinDeposit from file: %s, Fee is needed to be updated manually", err.Error())
 		}
 	}
