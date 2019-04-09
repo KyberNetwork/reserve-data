@@ -33,9 +33,9 @@ func WithHandleEmptyToken(data map[string]common.Token) SettingOption {
 
 // WithHandleEmptyFee will load the Fee settings from default file
 // if the fee database is empty. It will mutiply the Funding fee value by 2
-func WithHandleEmptyFee(pathJSON string) SettingOption {
+func WithHandleEmptyFee(feeConfig map[string]common.ExchangeFees) SettingOption {
 	return func(setting *Settings) {
-		if err := setting.loadFeeFromFile(pathJSON); err != nil {
+		if err := setting.savePreconfigFee(feeConfig); err != nil {
 			log.Printf("WARNING: Setting Init: cannot load Fee from file: %s, Fee is needed to be updated manually", err.Error())
 		}
 	}

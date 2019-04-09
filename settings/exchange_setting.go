@@ -26,10 +26,6 @@ const exchangeEnv string = "KYBER_EXCHANGES"
 
 var ErrExchangeRecordNotFound = errors.New("exchange record not found")
 
-type ExchangeFeesConfig struct {
-	Exchanges map[string]common.ExchangeFees `json:"exchanges"`
-}
-
 var exchangeNameValue = map[string]ExchangeName{
 	"binance":         Binance,
 	"bittrex":         Bittrex,
@@ -62,15 +58,7 @@ func NewExchangeSetting(exchangeStorage ExchangeStorage) (*ExchangeSetting, erro
 	return &ExchangeSetting{exchangeStorage}, nil
 }
 
-func (setting *Settings) loadFeeFromFile(path string) error {
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		return err
-	}
-	var exFeeConfig ExchangeFeesConfig
-	if err = json.Unmarshal(data, &exFeeConfig); err != nil {
-		return err
-	}
+func (setting *Settings) savePreconfigFee(exFeeConfig map[string]common.ExchangeFees) error {
 	runningExs := RunningExchanges()
 
 	for _, ex := range runningExs {
@@ -83,7 +71,7 @@ func (setting *Settings) loadFeeFromFile(path string) error {
 		if _, err := setting.Exchange.Storage.GetFee(exName); err != nil {
 			log.Printf("Exchange %s is in KYBER_EXCHANGES but can't load fee in Database (%s). atempt to load it from config file", exName.String(), err.Error())
 			//Check if the config file has config for such exchange
-			exFee, ok := exFeeConfig.Exchanges[ex]
+			exFee, ok := exFeeConfig[ex]
 			if !ok {
 				log.Printf("Warning: Exchange %s is in KYBER_EXCHANGES, but not avail in Fee config file.", ex)
 				continue

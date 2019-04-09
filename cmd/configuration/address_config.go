@@ -60,11 +60,11 @@ func mustGetAddressesConfig(kyberEnv string) common.AddressConfig {
 		return result
 	}
 	if kyberEnv == common.SimulationMode {
-		result, err := loadAddressFromFile(simSettingPath)
+		resultFromFile, err := loadAddressFromFile(simSettingPath)
 		if err != nil {
 			log.Panicf("cannot load address from file, err: %v", err)
 		}
-		return result
+		return resultFromFile
 	}
 	if kyberEnv == common.ProductionMode {
 		return AddressConfigs[common.MainnetMode]

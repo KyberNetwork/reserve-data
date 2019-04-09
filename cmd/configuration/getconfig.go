@@ -89,7 +89,7 @@ func GetSetting(setPath SettingPaths, kyberENV string, addressSetting *settings.
 		addressSetting,
 		exchangeSetting,
 		settings.WithHandleEmptyToken(mustGetTokenConfig(kyberENV)),
-		settings.WithHandleEmptyFee(setPath.feePath),
+		settings.WithHandleEmptyFee(FeeConfigs),
 		settings.WithHandleEmptyMinDeposit(filepath.Join(common.CmdDirLocation(), "min_deposit.json")),
 		settings.WithHandleEmptyDepositAddress(mustGetExchangeConfig(kyberENV)),
 		settings.WithHandleEmptyExchangeInfo())
@@ -105,7 +105,7 @@ func GetConfig(kyberENV string, authEnbl bool, endpointOW string) *Config {
 	}
 
 	hmac512auth := http.NewKNAuthenticationFromFile(setPath.secretPath)
-	addressSetting, err := settings.NewAddressSetting(AddressConfigs[kyberENV])
+	addressSetting, err := settings.NewAddressSetting(mustGetAddressesConfig(kyberENV))
 	if err != nil {
 		log.Panicf("cannot init address setting %s", err)
 	}
