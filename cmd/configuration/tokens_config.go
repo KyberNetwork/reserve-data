@@ -15,7 +15,7 @@ const (
 //TokenConfigs store token configuration for each modes
 //Sim mode require special care.
 var TokenConfigs = map[string]map[string]common.Token{
-	common.DevMode: map[string]common.Token{
+	common.DevMode: {
 		"KNC":   common.NewToken("KNC", "KyberNetwork", "0xdd974D5C2e2928deA5F71b9825b8b646686BD200", 18, true, true, common.GetTimepoint()),
 		"BQX":   common.NewToken("BQX", "Ethos", "0x5Af2Be193a6ABCa9c8817001F45744777Db30756", 8, true, true, common.GetTimepoint()),
 		"WAX":   common.NewToken("WAX", "Wax", "0x39bb259f66e1c59d5abef88375979b4d20d98022", 8, true, true, common.GetTimepoint()),
@@ -71,7 +71,7 @@ var TokenConfigs = map[string]map[string]common.Token{
 		"AE":    common.NewToken("AE", "Aeternity", "0x5ca9a71b1d01849c0a95490cc00559717fcf0d1d", 18, true, true, common.GetTimepoint()),
 		"POE":   common.NewToken("POE", "Po.et", "0x0e0989b1f9b8a38983c2ba8053269ca62ec9b195", 8, true, true, common.GetTimepoint()),
 	},
-	common.StagingMode: map[string]common.Token{
+	common.StagingMode: {
 		"PAY":   common.NewToken("PAY", "TenX", "0xB97048628DB6B661D4C2aA833e95Dbe1A905B280", 18, true, true, common.GetTimepoint()),
 		"MTL":   common.NewToken("MTL", "Metal", "0xF433089366899D83a9f26A773D59ec7eCF30355e", 8, true, false, common.GetTimepoint()),
 		"LEND":  common.NewToken("LEND", "EthLend", "0x80fB784B7eD66730e8b1DBd9820aFD29931aab03", 18, true, false, common.GetTimepoint()),
@@ -126,7 +126,7 @@ var TokenConfigs = map[string]map[string]common.Token{
 		"LBA":   common.NewToken("LBA", "Libra Credit", "0xfe5f141bf94fe84bc28ded0ab966c16b17490657", 18, true, true, common.GetTimepoint()),
 		"PAL":   common.NewToken("PAL", "PolicyPal Network", "0xfedae5642668f8636a11987ff386bfd215f942ee", 18, true, false, common.GetTimepoint()),
 	},
-	common.MainnetMode: map[string]common.Token{
+	common.MainnetMode: {
 		"ETH":   common.NewToken("ETH", "Ethereum", "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", 18, true, true, common.GetTimepoint()),
 		"ADX":   common.NewToken("ADX", "AdEx", "0x4470BB87d77b963A013DB939BE332f927f2b992e", 4, true, false, common.GetTimepoint()),
 		"LINK":  common.NewToken("LINK", "Chain Link", "0x514910771af9ca656af840dff83e8264ecf986ca", 18, true, true, common.GetTimepoint()),
@@ -182,7 +182,7 @@ var TokenConfigs = map[string]map[string]common.Token{
 		"BQX":   common.NewToken("BQX", "Ethos", "0x5Af2Be193a6ABCa9c8817001F45744777Db30756", 8, true, true, common.GetTimepoint()),
 		"DAI":   common.NewToken("DAI", "DAI", "0x89d24a6b4ccb1b6faa2625fe562bdd9a23260359", 18, true, false, common.GetTimepoint()),
 	},
-	common.RopstenMode: map[string]common.Token{
+	common.RopstenMode: {
 		"SNT":  common.NewToken("SNT", "STATUS", "0xF739577d63cdA4a534B0fB92ABf8BBf6EA48d36c", 18, false, false, common.GetTimepoint()),
 		"BAT":  common.NewToken("BAT", "Basic Attention Token", "0x04A34c8f5101Dcc50bF4c64D1C7C124F59bb988c", 18, false, false, common.GetTimepoint()),
 		"BITX": common.NewToken("BITX", "BitScreenerToken", "0x7a17267576318efb728bc4a0833e489a46ba138f", 0, false, false, common.GetTimepoint()),

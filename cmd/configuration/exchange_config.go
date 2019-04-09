@@ -12,7 +12,7 @@ import (
 
 //ExchangeConfigs store exchange config according to env mode.
 var ExchangeConfigs = map[string]map[common.ExchangeID]common.ExchangeAddresses{
-	common.DevMode: map[common.ExchangeID]common.ExchangeAddresses{
+	common.DevMode: {
 		"binance": map[string]ethereum.Address{
 			"ETH":  ethereum.HexToAddress("0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90"),
 			"OMG":  ethereum.HexToAddress("0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90"),
@@ -58,7 +58,7 @@ var ExchangeConfigs = map[string]map[common.ExchangeID]common.ExchangeAddresses{
 			"DGX": ethereum.HexToAddress("0xFDF28Bf25779ED4cA74e958d54653260af604C20"),
 		},
 	},
-	common.StagingMode: map[common.ExchangeID]common.ExchangeAddresses{
+	common.StagingMode: {
 		"binance": map[string]ethereum.Address{
 			"ETH":  ethereum.HexToAddress("0x1ae659f93ba2fc0a1f379545cf9335adb75fa547"),
 			"OMG":  ethereum.HexToAddress("0x1ae659f93ba2fc0a1f379545cf9335adb75fa547"),
@@ -104,7 +104,7 @@ var ExchangeConfigs = map[string]map[common.ExchangeID]common.ExchangeAddresses{
 			"DGX": ethereum.HexToAddress("0xFDF28Bf25779ED4cA74e958d54653260af604C20"),
 		},
 	},
-	common.MainnetMode: map[common.ExchangeID]common.ExchangeAddresses{
+	common.MainnetMode: {
 		"binance": {
 			"ETH":  ethereum.HexToAddress("0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90"),
 			"OMG":  ethereum.HexToAddress("0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90"),
@@ -150,7 +150,7 @@ var ExchangeConfigs = map[string]map[common.ExchangeID]common.ExchangeAddresses{
 			"DGX": ethereum.HexToAddress("0xFDF28Bf25779ED4cA74e958d54653260af604C20"),
 		},
 	},
-	common.RopstenMode: map[common.ExchangeID]common.ExchangeAddresses{
+	common.RopstenMode: {
 		"binance": {
 			"ETH":  ethereum.HexToAddress("0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90"),
 			"OMG":  ethereum.HexToAddress("0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90"),

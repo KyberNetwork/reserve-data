@@ -10,7 +10,7 @@ import (
 
 //AddressConfigs store token configs according to env mode.
 var AddressConfigs = map[string]common.AddressConfig{
-	common.DevMode: common.AddressConfig{
+	common.DevMode: {
 		Reserve:            "0x63825c174ab367968EC60f061753D3bbD36A0D8F",
 		Network:            "0x818E6FECD516Ecc3849DAf6845e3EC868087B755",
 		Wrapper:            "0x6172AFC8c00c46E0D07ce3AF203828198194620a",
@@ -20,7 +20,7 @@ var AddressConfigs = map[string]common.AddressConfig{
 		ThirdPartyReserves: []string{"0x2aab2b157a03915c8a73adae735d0cf51c872f31"},
 		InternalNetwork:    "0x91a502C678605fbCe581eae053319747482276b9",
 	},
-	common.StagingMode: common.AddressConfig{
+	common.StagingMode: {
 		Reserve:   "0x2C5a182d280EeB5824377B98CD74871f78d6b8BC",
 		Network:   "0xC14f34233071543E979F6A79AA272b0AB1B4947D",
 		Wrapper:   "0x6172AFC8c00c46E0D07ce3AF203828198194620a",
@@ -32,7 +32,7 @@ var AddressConfigs = map[string]common.AddressConfig{
 			"0x1f58a138c976ceface828fd9e0b82295e85e7c81"},
 		InternalNetwork: "0x706aBcE058DB29eB36578c463cf295F180a1Fe9C",
 	},
-	common.MainnetMode: common.AddressConfig{
+	common.MainnetMode: {
 		Reserve:   "0x63825c174ab367968EC60f061753D3bbD36A0D8F",
 		Network:   "0x818E6FECD516Ecc3849DAf6845e3EC868087B755",
 		Wrapper:   "0x6172AFC8c00c46E0D07ce3AF203828198194620a",
@@ -45,7 +45,7 @@ var AddressConfigs = map[string]common.AddressConfig{
 			"0xc935cad589bebd8673104073d5a5eccfe67fb7b1"},
 		InternalNetwork: "0x91a502C678605fbCe581eae053319747482276b9",
 	},
-	common.RopstenMode: common.AddressConfig{
+	common.RopstenMode: {
 		Reserve:   "0x0FC1CF3e7DD049F7B42e6823164A64F76fC06Be0",
 		Network:   "0x0a56d8a49E71da8d7F9C65F95063dB48A3C9560B",
 		Wrapper:   "0x9de0a60F4A489e350cD8E3F249f4080858Af41d3",
