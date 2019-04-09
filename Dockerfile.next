@@ -9,7 +9,7 @@ FROM debian:stretch
 ENV KYBER_EXCHANGES huobi,binance
 COPY --from=build-env /go/bin/cmd /cmd
 COPY ./entrypoint.sh /entrypoint.sh
-COPY ./cmd/dev_setting.json ./cmd/fee.json ./cmd/kovan_setting.json ./cmd/mainnet_setting.json ./cmd/min_deposit.json ./cmd/ropsten_setting.json ./cmd/staging_setting.json ./cmd/deposit_keystore ./cmd/keystore ./cmd/intermediate_account_keystore /setting/
+COPY ./cmd/deposit_keystore ./cmd/keystore ./cmd/intermediate_account_keystore /setting/
 COPY ./common/blockchain/ERC20.abi /go/src/github.com/KyberNetwork/reserve-data/common/blockchain/ERC20.abi
 COPY ./blockchain/*.abi /go/src/github.com/KyberNetwork/reserve-data/blockchain/
 
