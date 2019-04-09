@@ -1,8 +1,7 @@
 package settings
 
 import (
-	"encoding/json"
-
+	"github.com/KyberNetwork/reserve-data/common"
 	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
@@ -11,14 +10,22 @@ import (
 type AddressName int
 
 const (
-	Reserve         AddressName = iota //reserve
-	Burner                             //burner
-	Bank                               //bank
-	Network                            //network
-	Wrapper                            //wrapper
-	Pricing                            //pricing
-	Whitelist                          //whitelist
-	InternalNetwork                    //internal_network
+	//Reserve is the enumerated key for reserve
+	Reserve AddressName = iota //reserve
+	//Burner is the enumberated key for burner
+	Burner //burner
+	//Bank is the enumberated key for bank
+	Bank //bank
+	//Network is the enumberated key for network
+	Network //network
+	//Wrapper is the enumberated key for wrapper
+	Wrapper //wrapper
+	//Pricing is the enumberated key for pricing
+	Pricing //pricing
+	//Whitelist is the enumberated key for whitelist
+	Whitelist //whitelist
+	//InternalNetwork is the enumberated key for internal_network
+	InternalNetwork //internal_network
 )
 
 var addressNameValues = map[string]AddressName{
@@ -43,9 +50,12 @@ func AddressNameValues() map[string]AddressName {
 type AddressSetName int
 
 const (
+	//ThirdPartyReserves is the enumerated key for third_party_reserves
 	ThirdPartyReserves AddressSetName = iota //third_party_reserves
-	OldNetworks                              //old_networks
-	OldBurners                               //old_burners
+	//OldNetworks is the enumerated key for old_networks
+	OldNetworks //old_networks
+	//OldBurners is the enumerated key for old_burners
+	OldBurners //old_burners
 )
 
 var addressSetNameValues = map[string]AddressSetName{
@@ -60,20 +70,6 @@ func AddressSetNameValues() map[string]AddressSetName {
 	return addressSetNameValues
 }
 
-// AddressConfig type defines a list of address attribute avaiable in core.
-// It is used mainly for
-type AddressConfig struct {
-	Bank               string   `json:"bank"`
-	Reserve            string   `json:"reserve"`
-	Network            string   `json:"network"`
-	Wrapper            string   `json:"wrapper"`
-	Pricing            string   `json:"pricing"`
-	FeeBurner          string   `json:"feeburner"`
-	Whitelist          string   `json:"whitelist"`
-	ThirdPartyReserves []string `json:"third_party_reserves"`
-	InternalNetwork    string   `json:"internal network"`
-}
-
 // AddressSetting type defines component to handle all address setting in core.
 // It contains the storage interface used to query addresses.
 type AddressSetting struct {
@@ -81,24 +77,21 @@ type AddressSetting struct {
 	AddressSets map[AddressSetName]([]ethereum.Address)
 }
 
-func NewAddressSetting(data string) (*AddressSetting, error) {
+//NewAddressSetting return an implementation of Address Setting
+func NewAddressSetting(data common.AddressConfig) (*AddressSetting, error) {
 	address := make(map[AddressName]ethereum.Address)
 	addressSets := make(map[AddressSetName]([]ethereum.Address))
 	addressSetting := &AddressSetting{
 		Addresses:   address,
 		AddressSets: addressSets,
 	}
-	if err := addressSetting.loadAddressFromString(data); err != nil {
+	if err := addressSetting.saveAddressFromAddressConfig(data); err != nil {
 		return addressSetting, err
 	}
 	return addressSetting, nil
 }
 
-func (addrSetting *AddressSetting) loadAddressFromString(data string) error {
-	addrs := AddressConfig{}
-	if err := json.Unmarshal([]byte(data), &addrs); err != nil {
-		return err
-	}
+func (addrSetting *AddressSetting) saveAddressFromAddressConfig(addrs common.AddressConfig) error {
 	addrSetting.Addresses[Bank] = ethereum.HexToAddress(addrs.Bank)
 	addrSetting.Addresses[Reserve] = ethereum.HexToAddress(addrs.Reserve)
 	addrSetting.Addresses[Network] = ethereum.HexToAddress(addrs.Network)
