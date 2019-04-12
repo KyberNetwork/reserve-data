@@ -93,6 +93,7 @@ func configLog(stdoutLog bool) {
 	c.Start()
 }
 
+//InitInterface initialize core interface
 func InitInterface() {
 	if baseURL != defaultBaseURL {
 		log.Printf("Overwriting base URL with %s \n", baseURL)
@@ -100,7 +101,7 @@ func InitInterface() {
 	configuration.SetInterface(baseURL)
 }
 
-// GetConfigFromENV: From ENV variable and overwriting instruction, build the config
+// GetConfigFromENV From ENV variable and overwriting instruction, build the config
 func GetConfigFromENV(kyberENV string) *configuration.Config {
 	log.Printf("Running in %s mode \n", kyberENV)
 	config := configuration.GetConfig(kyberENV,
