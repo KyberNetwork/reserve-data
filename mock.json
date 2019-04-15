@@ -22,7 +22,7 @@
       "name": "Ethereum",
       "address": "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
       "decimals": 18,
-      "set_rate": false,
+      "set_rate": "",
       "rebalance": true,
       "created": 1535021910205,
       "updated": 1535021910205,
@@ -93,7 +93,7 @@
       "name": "ArcBlock",
       "address": "0xb98d4c97425d9908e66e53a6fdf673acca0be986",
       "decimals": 18,
-      "set_rate": true,
+      "set_rate": "exchange_feed",
       "rebalance": true,
       "created": 1553151647703,
       "updated": 1553151647703,
@@ -153,7 +153,7 @@
       "name": "Aeternity",
       "address": "0x5ca9a71b1d01849c0a95490cc00559717fcf0d1d",
       "decimals": 18,
-      "set_rate": true,
+      "set_rate": "exchange_feed",
       "rebalance": true,
       "created": 1535021910205,
       "updated": 1535021910205,
@@ -205,6 +205,46 @@
         "a": 0.000001754386,
         "b": 0.0004894737,
         "c": 0.9995088
+      }
+    },
+    {
+      "id": 4,
+      "symbol": "WBTC",
+      "name": "Wrapped BTC",
+      "address": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+      "decimals": 6,
+      "set_rate": "gold_feed",
+      "rebalance": true,
+      "created": 1535021910205,
+      "updated": 1535021910205,
+      "exchanges": [],
+      "target": {
+        "id": 2,
+        "total": 3399,
+        "reserve": 3000,
+        "rebalance_threshold": 0.33,
+        "transfer_threshold": 0.2
+      },
+      "pwi": {
+        "ask": {
+          "a": 0,
+          "b": 0,
+          "c": 0,
+          "min_min_spread": 0.035,
+          "price_multiply_factor": 1
+        },
+        "bid": {
+          "a": 0,
+          "b": 0,
+          "c": 0,
+          "min_min_spread": 0.035,
+          "price_multiply_factor": 1
+        }
+      },
+      "rebalance_quadratic": {
+        "a": 0,
+        "b": 0,
+        "c": 0
       }
     }
   ],
