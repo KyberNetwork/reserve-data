@@ -21,4 +21,5 @@ WORKDIR /go/src/github.com/KyberNetwork/reserve-data/cmd
 EXPOSE 8000
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["server", "--log-to-stdout"]
+# need to mount config.json to /
+CMD ["server", "--log-to-stdout", "--config=/config.json"]

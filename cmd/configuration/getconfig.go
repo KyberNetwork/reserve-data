@@ -39,6 +39,7 @@ func GetSettingDBName(kyberENV string) string {
 	}
 }
 
+//GetChainType return type of chain base on running env
 func GetChainType(kyberENV string) string {
 	switch kyberENV {
 	case common.MainnetMode, common.ProductionMode:
@@ -58,19 +59,24 @@ func GetChainType(kyberENV string) string {
 	}
 }
 
-func GetConfigPaths(kyberENV string) SettingPaths {
+//GetConfigPaths return paths for config files
+func GetConfigPaths(kyberENV, configFile string) SettingPaths {
 	// common.ProductionMode and common.MainnetMode are same thing.
 	if kyberENV == common.ProductionMode {
 		kyberENV = common.MainnetMode
 	}
 
 	if sp, ok := ConfigPaths[kyberENV]; ok {
+		sp.secretPath = configFile
 		return sp
 	}
 	log.Println("Environment setting paths is not found, using dev...")
-	return ConfigPaths[common.DevMode]
+	sp := ConfigPaths[common.DevMode]
+	sp.secretPath = configFile
+	return sp
 }
 
+//GetSetting return setting base on running environment
 func GetSetting(setPath SettingPaths, kyberENV string, addressSetting *settings.AddressSetting) (*settings.Settings, error) {
 	boltSettingStorage, err := settingstorage.NewBoltSettingStorage(filepath.Join(common.CmdDirLocation(), GetSettingDBName(kyberENV)))
 	if err != nil {
