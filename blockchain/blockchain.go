@@ -449,32 +449,13 @@ func NewBlockchain(base *blockchain.BaseBlockchain, setting Setting) (*Blockchai
 		pricingAddr,
 		filepath.Join(common.CurrentDir(), "pricing.abi"),
 	)
-	burnerAddr, err := setting.GetAddress(settings.Burner)
-	if err != nil {
-		return nil, err
-	}
-	log.Printf("burner address: %s", burnerAddr.Hex())
-	networkAddr, err := setting.GetAddress(settings.Network)
-	if err != nil {
-		return nil, err
-	}
-	log.Printf("network address: %s", networkAddr.Hex())
-	whitelistAddr, err := setting.GetAddress(settings.Whitelist)
-	if err != nil {
-		return nil, err
-	}
-	log.Printf("whitelist address: %s", whitelistAddr.Hex())
 
 	return &Blockchain{
 		BaseBlockchain: base,
-		// blockchain.NewBaseBlockchain(
-		// 	client, etherCli, operators, blockchain.NewBroadcaster(clients),
-		// 	ethUSDRate, chainType,
-		// ),
-		wrapper: wrapper,
-		pricing: pricing,
-		reserve: reserve,
-		setting: setting,
+		wrapper:        wrapper,
+		pricing:        pricing,
+		reserve:        reserve,
+		setting:        setting,
 	}, nil
 }
 

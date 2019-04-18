@@ -8,11 +8,12 @@ import (
 	"reflect"
 	"strconv"
 
+	ethereum "github.com/ethereum/go-ethereum/common"
+	"github.com/gin-gonic/gin"
+
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/http/httputil"
 	"github.com/KyberNetwork/reserve-data/settings"
-	ethereum "github.com/ethereum/go-ethereum/common"
-	"github.com/gin-gonic/gin"
 )
 
 const (
@@ -229,9 +230,9 @@ func (s *Server) ConfirmTokenUpdate(c *gin.Context) {
 		return
 	}
 	var (
-		pws    common.PWIEquationRequestV2
-		tarQty common.TokenTargetQtyV2
-		quadEq common.RebalanceQuadraticRequest
+		pws    = make(common.PWIEquationRequestV2)
+		tarQty = make(common.TokenTargetQtyV2)
+		quadEq = make(common.RebalanceQuadraticRequest)
 		err    error
 	)
 	hasInternal := thereIsInternal(tokenUpdates)
@@ -601,9 +602,6 @@ func (s *Server) getAddressResponse() (*common.AddressesResponse, error) {
 	if _, ok := common.SupportedExchanges["huobi"]; ok {
 		addressSettings[intermediateOPAddressName] = s.blockchain.GetIntermediatorOPAddress().Hex()
 	}
-	if err != nil {
-		return nil, err
-	}
 	addressResponse := common.NewAddressResponse(addressSettings)
 	return addressResponse, nil
 }
@@ -691,7 +689,7 @@ func (s *Server) GetActiveTokenByID(c *gin.Context) {
 		return
 	}
 	ID := c.Query("ID")
-	token, err := s.setting.GetActiveTokenByID((ID))
+	token, err := s.setting.GetActiveTokenByID(ID)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -712,26 +710,6 @@ func (s *Server) GetAddress(c *gin.Context) {
 		return
 	}
 	address, err := s.setting.GetAddress(addrName)
-	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	httputil.ResponseSuccess(c, httputil.WithData(address))
-}
-
-func (s *Server) GetAddresses(c *gin.Context) {
-	_, ok := s.Authenticated(c, []string{}, []Permission{RebalancePermission, ConfigurePermission, ReadOnlyPermission, ConfirmConfPermission})
-	if !ok {
-		return
-	}
-	name := c.Query("name")
-	addressSetNames := settings.AddressSetNameValues()
-	addrSetName, ok := addressSetNames[name]
-	if !ok {
-		httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("address set name %s is not avail in this list of valid address set name", name)))
-		return
-	}
-	address, err := s.setting.GetAddresses(addrSetName)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return

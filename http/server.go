@@ -1042,7 +1042,6 @@ func (s *Server) register() {
 		stt.GET("/token-by-address", s.GetTokenByAddress)
 		stt.GET("/active-token-by-id", s.GetActiveTokenByID)
 		stt.GET("/address", s.GetAddress)
-		stt.GET("/addresses", s.GetAddresses)
 		stt.GET("/ping", s.ReadyToServe)
 		v2 := s.r.Group("/v2")
 

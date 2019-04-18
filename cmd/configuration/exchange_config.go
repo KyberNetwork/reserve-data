@@ -206,7 +206,7 @@ func loadDepositAddressFromFile(path string) (map[common.ExchangeID]common.Excha
 	if err != nil {
 		return result, err
 	}
-	if err := json.Unmarshal([]byte(data), &exAddressConfig); err != nil {
+	if err := json.Unmarshal(data, &exAddressConfig); err != nil {
 		return result, err
 	}
 	for exchangeID, addrs := range exAddressConfig.Exchanges {

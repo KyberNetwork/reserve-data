@@ -88,7 +88,7 @@ func GetSetting(setPath SettingPaths, kyberENV string, addressSetting *settings.
 		tokenSetting,
 		addressSetting,
 		exchangeSetting,
-		settings.WithHandleEmptyToken(mustGetTokenConfig(kyberENV)),
+		settings.WithHandleEmptyToken(mustGetSimulationTokenConfig(kyberENV)),
 		settings.WithHandleEmptyFee(FeeConfigs),
 		settings.WithHandleEmptyMinDeposit(ExchangesMinDepositConfig),
 		settings.WithHandleEmptyDepositAddress(mustGetExchangeConfig(kyberENV)),

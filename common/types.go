@@ -728,13 +728,7 @@ type FetcherConfiguration struct {
 // AddressConfig type defines a list of address attribute avaiable in core.
 // It is used mainly for
 type AddressConfig struct {
-	Bank               string   `json:"bank"`
-	Reserve            string   `json:"reserve"`
-	Network            string   `json:"network"`
-	Wrapper            string   `json:"wrapper"`
-	Pricing            string   `json:"pricing"`
-	FeeBurner          string   `json:"feeburner"`
-	Whitelist          string   `json:"whitelist"`
-	ThirdPartyReserves []string `json:"third_party_reserves"`
-	InternalNetwork    string   `json:"internal network"`
+	Reserve string `json:"reserve"`
+	Wrapper string `json:"wrapper"`
+	Pricing string `json:"pricing"`
 }

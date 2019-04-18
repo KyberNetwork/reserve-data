@@ -4,9 +4,18 @@ package settings
 
 import "strconv"
 
-const _AddressName_name = "reserveburnerbanknetworkwrapperpricingwhitelistinternal_network"
+func _() {
+	// An "invalid array index" compiler error signifies that the constant values have changed.
+	// Re-run the stringer command to generate them again.
+	var x [1]struct{}
+	_ = x[Reserve-0]
+	_ = x[Wrapper-1]
+	_ = x[Pricing-2]
+}
 
-var _AddressName_index = [...]uint8{0, 7, 13, 17, 24, 31, 38, 47, 63}
+const _AddressName_name = "reservewrapperpricing"
+
+var _AddressName_index = [...]uint8{0, 7, 14, 21}
 
 func (i AddressName) String() string {
 	if i < 0 || i >= AddressName(len(_AddressName_index)-1) {

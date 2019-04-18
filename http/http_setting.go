@@ -33,5 +33,4 @@ type Setting interface {
 	GetActiveTokens() ([]common.Token, error)
 	GetTokenByAddress(ethereum.Address) (common.Token, error)
 	GetAddress(settings.AddressName) (ethereum.Address, error)
-	GetAddresses(settings.AddressSetName) ([]ethereum.Address, error)
 }
