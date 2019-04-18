@@ -60,20 +60,17 @@ func GetChainType(kyberENV string) string {
 }
 
 //GetConfigPaths return paths for config files
-func GetConfigPaths(kyberENV, configFile string) SettingPaths {
+func GetConfigPaths(kyberENV string) SettingPaths {
 	// common.ProductionMode and common.MainnetMode are same thing.
 	if kyberENV == common.ProductionMode {
 		kyberENV = common.MainnetMode
 	}
 
 	if sp, ok := ConfigPaths[kyberENV]; ok {
-		sp.secretPath = configFile
 		return sp
 	}
 	log.Println("Environment setting paths is not found, using dev...")
-	sp := ConfigPaths[common.DevMode]
-	sp.secretPath = configFile
-	return sp
+	return ConfigPaths[common.DevMode]
 }
 
 //GetSetting return setting base on running environment
