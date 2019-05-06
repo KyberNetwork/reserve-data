@@ -37,7 +37,7 @@ require (
 	github.com/rs/cors v0.0.0-20170801073201-eabcc6af4bbe // indirect
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/pflag v1.0.3 // indirect
-	github.com/stretchr/testify v1.3.0 // indirect
+	github.com/stretchr/testify v1.3.0
 	github.com/syndtr/goleveldb v0.0.0-20181128100959-b001fa50d6b2 // indirect
 	github.com/ugorji/go v0.0.0-20170918222552-54210f4e076c // indirect
 	golang.org/x/crypto v0.0.0-20171023145632-2509b142fb2b // indirect
