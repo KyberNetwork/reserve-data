@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"math/big"
@@ -12,6 +13,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/settings/storage"
 	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/stretchr/testify/assert"
 )
 
 type testExchange struct {
@@ -103,7 +105,8 @@ func (tbc testBlockchain) SetRateMinedNonce() (uint64, error) {
 }
 
 type testActivityStorage struct {
-	PendingDeposit bool
+	PendingDeposit  bool
+	PendingDeposits map[string]bool
 }
 
 func (tas testActivityStorage) Record(
@@ -115,6 +118,17 @@ func (tas testActivityStorage) Record(
 	estatus string,
 	mstatus string,
 	timepoint uint64) error {
+	if !tas.PendingDeposit {
+		return nil
+	}
+	if action == common.ActionDeposit {
+		token := params["token"].(common.Token)
+		exchange := params["exchange"].(common.Exchange)
+		tokenExchange := fmt.Sprintf("%s_%s", token.ID, exchange.ID())
+		log.Printf("Logging deposit for %s", tokenExchange)
+		tas.PendingDeposits[tokenExchange] = true
+	}
+
 	return nil
 }
 
@@ -127,8 +141,11 @@ func (tas testActivityStorage) PendingSetRate(minedNonce uint64) (*common.Activi
 }
 
 func (tas testActivityStorage) HasPendingDeposit(token common.Token, exchange common.Exchange) (bool, error) {
-	if token.ID == "OMG" && exchange.ID() == "bittrex" {
+	tokenExchange := fmt.Sprintf("%s_%s", token.ID, exchange.ID())
+	log.Printf("Checking deposit for %s", tokenExchange)
+	if _, avail := tas.PendingDeposits[tokenExchange]; avail {
 		return tas.PendingDeposit, nil
+
 	}
 	return false, nil
 }
@@ -158,7 +175,7 @@ func getTestCore(hasPendingDeposit bool) *ReserveCore {
 	}
 	return NewReserveCore(
 		testBlockchain{},
-		testActivityStorage{hasPendingDeposit},
+		testActivityStorage{hasPendingDeposit, make(map[string]bool)},
 		setting,
 	)
 }
@@ -166,6 +183,16 @@ func getTestCore(hasPendingDeposit bool) *ReserveCore {
 func TestNotAllowDeposit(t *testing.T) {
 	core := getTestCore(true)
 	_, err := core.Deposit(
+		testExchange{},
+		common.NewToken("OMG", "omise-go", "0x1111111111111111111111111111111111111111", 18, true, true, 0),
+		big.NewInt(10),
+		common.GetTimepoint(),
+	)
+	if err != nil {
+		t.Fatalf("Expected deposit succesfully the first time it is called")
+	}
+
+	_, err = core.Deposit(
 		testExchange{},
 		common.NewToken("OMG", "omise-go", "0x1111111111111111111111111111111111111111", 18, true, true, 0),
 		big.NewInt(10),
@@ -203,4 +230,34 @@ func TestCalculateNewGasPrice(t *testing.T) {
 		t.Logf("new price: %s", newPrice.String())
 		prevPrice = newPrice
 	}
+}
+
+func TestRaceConditionWithMultipleDeposit(t *testing.T) {
+	var (
+		nThread = 10
+		errChn  = make(chan error, nThread)
+		nErr    = 0
+	)
+	core := getTestCore(true)
+	for i := 0; i < nThread; i++ {
+		go func(i int) {
+			_, err := core.Deposit(
+				testExchange{},
+				common.NewToken("OMG", "omise-go", "0x1111111111111111111111111111111111111111", 18, true, true, 0),
+				big.NewInt(10),
+				common.GetTimepoint(),
+			)
+			errChn <- err
+
+		}(i)
+	}
+	for i := 0; i < nThread; i++ {
+		select {
+		case err := <-errChn:
+			if err != nil {
+				nErr++
+			}
+		}
+	}
+	assert.Equal(t, nThread-1, nErr)
 }

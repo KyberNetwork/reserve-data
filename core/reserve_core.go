@@ -7,6 +7,7 @@ import (
 	"math"
 	"math/big"
 	"strconv"
+	"sync"
 	"time"
 
 	ethereum "github.com/ethereum/go-ethereum/common"
@@ -30,6 +31,7 @@ type ReserveCore struct {
 	blockchain      Blockchain
 	activityStorage ActivityStorage
 	setting         Setting
+	mu              *sync.Mutex
 }
 
 func NewReserveCore(
@@ -40,6 +42,7 @@ func NewReserveCore(
 		blockchain,
 		storage,
 		setting,
+		&sync.Mutex{},
 	}
 }
 
@@ -156,7 +159,8 @@ func (rc ReserveCore) Deposit(
 		tx          *types.Transaction
 		amountFloat = common.BigToFloat(amount, token.Decimals)
 	)
-
+	rc.mu.Lock()
+	defer rc.mu.Unlock()
 	uidGenerator := func(txhex string) common.ActivityID {
 		return timebasedID(txhex + "|" + token.ID + "|" + strconv.FormatFloat(amountFloat, 'f', -1, 64))
 	}
