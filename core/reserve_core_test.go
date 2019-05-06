@@ -6,6 +6,7 @@ import (
 	"log"
 	"math/big"
 	"path/filepath"
+	"sync"
 	"testing"
 
 	"github.com/KyberNetwork/reserve-data/common"
@@ -237,9 +238,11 @@ func TestRaceConditionWithMultipleDeposit(t *testing.T) {
 		nThread = 10
 		errChn  = make(chan error, nThread)
 		nErr    = 0
+		wg      = sync.WaitGroup{}
 	)
 	core := getTestCore(true)
 	for i := 0; i < nThread; i++ {
+		wg.Add(1)
 		go func(i int) {
 			_, err := core.Deposit(
 				testExchange{},
@@ -248,15 +251,15 @@ func TestRaceConditionWithMultipleDeposit(t *testing.T) {
 				common.GetTimepoint(),
 			)
 			errChn <- err
+			wg.Done()
 
 		}(i)
 	}
-	for i := 0; i < nThread; i++ {
-		select {
-		case err := <-errChn:
-			if err != nil {
-				nErr++
-			}
+	wg.Wait()
+	close(errChn)
+	for err := range errChn {
+		if err != nil {
+			nErr++
 		}
 	}
 	assert.Equal(t, nThread-1, nErr)
