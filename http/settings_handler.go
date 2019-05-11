@@ -137,9 +137,8 @@ func (s *Server) SetTokenUpdate(c *gin.Context) {
 	}
 
 	var (
-		exInfos              map[string]common.ExchangeInfo
-		toRemoveFromExchange []string
-		err                  error
+		exInfos map[string]common.ExchangeInfo
+		err     error
 	)
 	hasInternal := thereIsInternal(tokenUpdates)
 	if hasInternal {
@@ -191,9 +190,6 @@ func (s *Server) SetTokenUpdate(c *gin.Context) {
 				}
 				tokenUpdate.Exchanges[ex] = tokExSett
 			}
-		} else {
-			//if token is not internal, add it to the removal list
-			toRemoveFromExchange = append(toRemoveFromExchange, tokenID)
 		}
 		tokenUpdate.Token = token
 		tokenUpdates[tokenID] = tokenUpdate
