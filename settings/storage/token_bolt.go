@@ -244,7 +244,7 @@ func (boltSettingStorage *BoltSettingStorage) GetExternalTokenByAddress(addr eth
 
 // UpdateTokenWithExchangeSetting will attempt to apply all the token and exchange settings
 // as well as remove pending Token listing in one TX. reroll and return err if occur
-func (boltSettingStorage *BoltSettingStorage) UpdateTokenWithExchangeSetting(tokens []common.Token, exSetting map[settings.ExchangeName]*common.ExchangeSetting, timestamp uint64) error {
+func (boltSettingStorage *BoltSettingStorage) UpdateTokenWithExchangeSetting(tokens []common.Token, exSetting map[settings.ExchangeName]*common.ExchangeSetting, availExs []settings.ExchangeName, timestamp uint64) error {
 	err := boltSettingStorage.db.Update(func(tx *bolt.Tx) error {
 		//Apply tokens setting
 		for _, t := range tokens {
@@ -254,6 +254,15 @@ func (boltSettingStorage *BoltSettingStorage) UpdateTokenWithExchangeSetting(tok
 			if uErr := addTokenByAddress(tx, t); uErr != nil {
 				return uErr
 			}
+		}
+		var toRemoveFromExchanges []string
+		for _, token := range tokens {
+			if !token.Internal {
+				toRemoveFromExchanges = append(toRemoveFromExchanges, token.ID)
+			}
+		}
+		if uErr := removeTokensFromExchanges(tx, toRemoveFromExchanges, availExs); uErr != nil {
+			return uErr
 		}
 		//Apply exchanges setting
 		for exName, exSett := range exSetting {

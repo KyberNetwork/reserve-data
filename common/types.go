@@ -50,6 +50,10 @@ func NewExchangeAddresses() *ExchangeAddresses {
 	return &exAddr
 }
 
+func (ea ExchangeAddresses) Remove(tokenID string) {
+	delete(ea, tokenID)
+}
+
 func (ea ExchangeAddresses) Update(tokenID string, address ethereum.Address) {
 	ea[tokenID] = address
 }

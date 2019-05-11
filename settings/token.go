@@ -97,7 +97,17 @@ func (setting *Settings) ApplyTokenWithExchangeSetting(tokens []common.Token, ex
 	if timestamp == 0 {
 		timestamp = common.GetTimepoint()
 	}
-	return setting.Tokens.Storage.UpdateTokenWithExchangeSetting(tokens, exSetting, timestamp)
+	exStatus, err := setting.GetExchangeStatus()
+	if err != nil {
+		return err
+	}
+	var availExs []ExchangeName
+	for name, status := range exStatus {
+		if status.Status {
+			availExs = append(availExs, exchangeNameValue[name])
+		}
+	}
+	return setting.Tokens.Storage.UpdateTokenWithExchangeSetting(tokens, exSetting, availExs, timestamp)
 }
 
 func (setting *Settings) UpdatePendingTokenUpdates(tokenUpdates map[string]common.TokenUpdate) error {

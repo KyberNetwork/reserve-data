@@ -133,7 +133,46 @@ func (boltSettingStorage *BoltSettingStorage) GetDepositAddresses(ex settings.Ex
 		return nil
 	})
 	return result, err
+}
 
+func removeTokensFromExchanges(tx *bolt.Tx, tokens []string, availExs []settings.ExchangeName) error {
+	for _, ex := range availExs {
+		if dErr := delDepositAddress(tx, ex, tokens); dErr != nil {
+			return fmt.Errorf("cannot remove deposit address of tokens %v from exchange %s, error: %s", tokens, ex.String(), dErr)
+		}
+	}
+	return nil
+}
+
+func delDepositAddress(tx *bolt.Tx, ex settings.ExchangeName, tokens []string) error {
+	exAddresses := make(common.ExchangeAddresses)
+
+	b := tx.Bucket([]byte(ExchangeDepositAddress))
+	if b == nil {
+		return fmt.Errorf("bucket %s does not exist", ExchangeDepositAddress)
+	}
+	//Get Curren exchange's Addresses
+	data := b.Get(boltutil.Uint64ToBytes(uint64(ex)))
+	if data == nil {
+		log.Printf("key %s hasn't existed yet", ex.String())
+		return settings.ErrExchangeRecordNotFound
+	}
+	uErr := json.Unmarshal(data, &exAddresses)
+	if uErr != nil {
+		return uErr
+	}
+
+	//For evey token in the input, if avail from exchange's Addresses, remove it
+	for _, token := range tokens {
+		if _, avail := exAddresses[token]; avail {
+			exAddresses.Remove(token)
+		}
+	}
+	dataJSON, uErr := json.Marshal(exAddresses)
+	if uErr != nil {
+		return uErr
+	}
+	return b.Put(boltutil.Uint64ToBytes(uint64(ex)), dataJSON)
 }
 
 func putDepositAddress(tx *bolt.Tx, ex settings.ExchangeName, addrs common.ExchangeAddresses) error {
