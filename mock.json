@@ -26,6 +26,7 @@
       "rebalance": true,
       "created": 1535021910205,
       "updated": 1535021910205,
+      "is_quote": true,
       "exchanges": [
         {
           "id": 2,
@@ -97,6 +98,7 @@
       "rebalance": true,
       "created": 1553151647703,
       "updated": 1553151647703,
+      "is_quote": false,
       "exchanges": [
         {
           "id": 1,
@@ -113,8 +115,10 @@
           "price_limit_max": 0,
           "min_notional": 0.02,
           "exchange_id": 1,
-          "quotes": [
-            1
+          "orderbook": [
+            {
+              "quote": 1
+            }
           ]
         }
       ],
@@ -173,9 +177,9 @@
           "price_limit_max": 0,
           "min_notional": 0.01,
           "exchange_id": 2,
-          "quotes": [
-            1
-          ]
+          "orderbook": {
+            "quote": 1
+          }
         }
       ],
       "target": {
