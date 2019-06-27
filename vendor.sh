@@ -8,7 +8,7 @@ go mod vendor
 
 mkdir -p "$src_dir"
 pushd "$src_dir"
-[[ -d go-ethereum ]] || git clone https://github.com/favadi/go-ethereum.git
+[[ -d go-ethereum ]] || git clone https://github.com/ethereum/go-ethereum.git
 popd
 
 cp -R "$src_dir"/go-ethereum/crypto/secp256k1/libsecp256k1 \

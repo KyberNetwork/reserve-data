@@ -17,6 +17,9 @@ import (
 )
 
 const (
+	reserveAddressName        = "reserve"
+	wrapperAddressName        = "wrapper"
+	pricingAddressName        = "pricing"
 	pricingOPAddressName      = "pricing_operator"
 	depositOPAddressName      = "deposit_operator"
 	intermediateOPAddressName = "intermediate_operator"
@@ -230,9 +233,9 @@ func (s *Server) ConfirmTokenUpdate(c *gin.Context) {
 		return
 	}
 	var (
-		pws    common.PWIEquationRequestV2
-		tarQty common.TokenTargetQtyV2
-		quadEq common.RebalanceQuadraticRequest
+		pws    = make(common.PWIEquationRequestV2)
+		tarQty = make(common.TokenTargetQtyV2)
+		quadEq = make(common.RebalanceQuadraticRequest)
 		err    error
 	)
 	hasInternal := thereIsInternal(tokenUpdates)
@@ -595,17 +598,14 @@ func (s *Server) GetAllSetting(c *gin.Context) {
 }
 
 func (s *Server) getAddressResponse() (*common.AddressesResponse, error) {
-	addressSettings, err := s.setting.GetAllAddresses()
-	if err != nil {
-		return nil, err
-	}
-	addressSettings[pricingOPAddressName] = s.blockchain.GetPricingOPAddress().Hex()
-	addressSettings[depositOPAddressName] = s.blockchain.GetDepositOPAddress().Hex()
+	var addressSettings = make(map[string]ethereum.Address)
+	addressSettings[reserveAddressName] = s.contractAddressConf.Reserve
+	addressSettings[wrapperAddressName] = s.contractAddressConf.Wrapper
+	addressSettings[pricingAddressName] = s.contractAddressConf.Pricing
+	addressSettings[pricingOPAddressName] = s.blockchain.GetPricingOPAddress()
+	addressSettings[depositOPAddressName] = s.blockchain.GetDepositOPAddress()
 	if _, ok := common.SupportedExchanges["huobi"]; ok {
-		addressSettings[intermediateOPAddressName] = s.blockchain.GetIntermediatorOPAddress().Hex()
-	}
-	if err != nil {
-		return nil, err
+		addressSettings[intermediateOPAddressName] = s.blockchain.GetIntermediatorOPAddress()
 	}
 	addressResponse := common.NewAddressResponse(addressSettings)
 	return addressResponse, nil
@@ -708,18 +708,17 @@ func (s *Server) GetAddress(c *gin.Context) {
 		return
 	}
 	name := c.Query("name")
-	addressNames := settings.AddressNameValues()
-	addrName, ok := addressNames[name]
-	if !ok {
-		httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("address name %s is not avail in this list of valid address name", name)))
+
+	switch name {
+	case reserveAddressName:
+		httputil.ResponseSuccess(c, httputil.WithData(s.contractAddressConf.Reserve))
+		return
+	case wrapperAddressName:
+		httputil.ResponseSuccess(c, httputil.WithData(s.contractAddressConf.Wrapper))
+	case pricingAddressName:
+		httputil.ResponseSuccess(c, httputil.WithData(s.contractAddressConf.Pricing))
 		return
 	}
-	address, err := s.setting.GetAddress(addrName)
-	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	httputil.ResponseSuccess(c, httputil.WithData(address))
 }
 
 func (s *Server) ReadyToServe(c *gin.Context) {

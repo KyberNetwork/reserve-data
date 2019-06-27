@@ -8,13 +8,15 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/gin-gonic/gin"
+
+	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/core"
 	"github.com/KyberNetwork/reserve-data/data"
 	"github.com/KyberNetwork/reserve-data/data/storage"
 	"github.com/KyberNetwork/reserve-data/http/httputil"
 	"github.com/KyberNetwork/reserve-data/settings"
 	settingsstorage "github.com/KyberNetwork/reserve-data/settings/storage"
-	"github.com/gin-gonic/gin"
 )
 
 const (
@@ -88,14 +90,14 @@ func TestHTTPUpdateExchange(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	addressSetting := &settings.AddressSetting{}
+	addressConf := &common.ContractAddressConfiguration{}
 
 	exchangeSetting, err := settings.NewExchangeSetting(boltSettingStorage)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	setting, err := settings.NewSetting(tokenSetting, addressSetting, exchangeSetting)
+	setting, err := settings.NewSetting(tokenSetting, addressConf, exchangeSetting)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -107,7 +109,7 @@ func TestHTTPUpdateExchange(t *testing.T) {
 
 	testServer := Server{
 		app:         data.NewReserveData(nil, nil, nil, nil, nil, nil, setting),
-		core:        core.NewReserveCore(nil, nil, setting),
+		core:        core.NewReserveCore(nil, nil, addressConf),
 		metric:      testStorage,
 		authEnabled: false,
 		r:           gin.Default(),

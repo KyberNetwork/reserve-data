@@ -625,40 +625,11 @@ type ExchangeActionNoti map[string]ExchangeTokenNoti
 
 type ExchangeNotifications map[string]ExchangeActionNoti
 
-type TransactionInfo struct {
-	BlockNumber string `json:"blockNumber"`
-	TimeStamp   string `json:"timeStamp"`
-	Value       string `json:"value"`
-	GasPrice    string `json:"gasPrice"`
-	GasUsed     string `json:"gasUsed"`
-}
-
-type SetRateTxInfo struct {
-	BlockNumber      string `json:"blockNumber"`
-	TimeStamp        string `json:"timeStamp"`
-	TransactionIndex string `json:"transactionIndex"`
-	Input            string `json:"input"`
-	GasPrice         string `json:"gasPrice"`
-	GasUsed          string `json:"gasUsed"`
-}
-
-type StoreSetRateTx struct {
-	TimeStamp uint64 `json:"timeStamp"`
-	GasPrice  uint64 `json:"gasPrice"`
-	GasUsed   uint64 `json:"gasUsed"`
-}
-
-type FeeSetRate struct {
-	TimeStamp     uint64     `json:"timeStamp"`
-	GasUsed       *big.Float `json:"gasUsed"`
-	TotalGasSpent *big.Float `json:"totalGasSpent"`
-}
-
 type AddressesResponse struct {
-	Addresses map[string]interface{} `json:"addresses"`
+	Addresses map[string]ethereum.Address `json:"addresses"`
 }
 
-func NewAddressResponse(addrs map[string]interface{}) *AddressesResponse {
+func NewAddressResponse(addrs map[string]ethereum.Address) *AddressesResponse {
 	return &AddressesResponse{
 		Addresses: addrs,
 	}
@@ -727,11 +698,4 @@ type StepFunctionResponse struct {
 //FetcherConfiguration is configuration of fetcher
 type FetcherConfiguration struct {
 	BTC bool `json:"btc" binding:"exists"`
-}
-
-// AddressConfig type defines a list of address attribute available in core.
-type AddressConfig struct {
-	Reserve string `json:"reserve"`
-	Wrapper string `json:"wrapper"`
-	Pricing string `json:"pricing"`
 }

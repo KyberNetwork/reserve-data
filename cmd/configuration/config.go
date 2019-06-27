@@ -2,9 +2,9 @@ package configuration
 
 import (
 	"log"
-	"path/filepath"
 	"time"
 
+	"github.com/KyberNetwork/reserve-data/cmd/deployment"
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/archive"
 	"github.com/KyberNetwork/reserve-data/common/blockchain"
@@ -21,52 +21,6 @@ import (
 	"github.com/KyberNetwork/reserve-data/settings"
 	"github.com/KyberNetwork/reserve-data/world"
 )
-
-const (
-	infuraProjectID = "/v3/59d9e06a1abe487e8e74664c06b337f9"
-
-	alchemyapiMainnetEndpoint = "https://eth-mainnet.alchemyapi.io/jsonrpc/V1GjKybGLx6rzSu517KSWpSrTSIIXmV7"
-	infuraMainnetEndpoint     = "https://mainnet.infura.io" + infuraProjectID
-	infuraKovanEndpoint       = "https://kovan.infura.io" + infuraProjectID
-	infuraRopstenEndpoint     = "https://ropsten.infura.io" + infuraProjectID
-	myEtherAPIMainnetEndpoint = "https://api.myetherwallet.com/eth"
-	myEtherAPIRopstenEndpoint = "https://api.myetherwallet.com/rop"
-	semidNodeKyberEndpoint    = "https://semi-node.kyber.network"
-	myCryptoAPIEndpoint       = "https://api.mycryptoapi.com/eth"
-	mewGivethAPIEndpoint      = "https://mew.giveth.io/"
-
-	localDevChainEndpoint = "http://blockchain:8545"
-)
-
-// SettingPaths contains path of all setting files.
-type SettingPaths struct {
-	settingPath           string
-	feePath               string
-	dataStoragePath       string
-	analyticStoragePath   string
-	feeSetRateStoragePath string
-	secretPath            string
-	endPoint              string
-	bkendpoints           []string
-}
-
-// NewSettingPaths creates new SettingPaths instance from given parameters.
-func NewSettingPaths(
-	settingPath, feePath, dataStoragePath, analyticStoragePath,
-	feeSetRateStoragePath, secretPath, endPoint string,
-	bkendpoints []string) SettingPaths {
-	cmdDir := common.CmdDirLocation()
-	return SettingPaths{
-		settingPath:           filepath.Join(cmdDir, settingPath),
-		feePath:               filepath.Join(cmdDir, feePath),
-		dataStoragePath:       filepath.Join(cmdDir, dataStoragePath),
-		analyticStoragePath:   filepath.Join(cmdDir, analyticStoragePath),
-		feeSetRateStoragePath: filepath.Join(cmdDir, feeSetRateStoragePath),
-		secretPath:            filepath.Join(cmdDir, secretPath),
-		endPoint:              endPoint,
-		bkendpoints:           bkendpoints,
-	}
-}
 
 type Config struct {
 	ActivityStorage      core.ActivityStorage
@@ -92,27 +46,37 @@ type Config struct {
 	BackupEthereumEndpoints []string
 	Blockchain              *blockchain.BaseBlockchain
 
-	ChainType      string
-	Setting        *settings.Settings
-	AddressSetting *settings.AddressSetting
+	Setting           *settings.Settings
+	ContractAddresses *common.ContractAddressConfiguration
 }
 
-func (c *Config) AddCoreConfig(settingPath SettingPaths, kyberENV string) {
-	setting, err := GetSetting(kyberENV, c.AddressSetting)
+func (c *Config) AddCoreConfig(
+	secretConfigFile string,
+	dpl deployment.Deployment,
+	bi binance.Interface,
+	hi huobi.Interface,
+	contractAddressConf *common.ContractAddressConfiguration,
+	dataFile string,
+	settingDataFile string,
+) error {
+	setting, err := GetSetting(dpl, contractAddressConf, settingDataFile)
 	if err != nil {
-		log.Panicf("Failed to create setting: %s", err.Error())
+		log.Printf("Failed to create setting: %s", err.Error())
+		return err
 	}
 	c.Setting = setting
-	dataStorage, err := storage.NewBoltStorage(settingPath.dataStoragePath)
+	dataStorage, err := storage.NewBoltStorage(dataFile)
 	if err != nil {
-		panic(err)
+		log.Printf("failed create new data storage database")
+		return err
 	}
 
 	var fetcherRunner fetcher.Runner
 	var dataControllerRunner datapruner.StorageControllerRunner
-	if common.RunningMode() == common.SimulationMode {
+	if dpl == deployment.Simulation {
 		if fetcherRunner, err = httprunner.NewHTTPRunner(httprunner.WithPort(8001)); err != nil {
-			log.Fatalf("failed to create HTTP runner: %s", err.Error())
+			log.Printf("failed to create HTTP runner: %s", err.Error())
+			return err
 		}
 	} else {
 		fetcherRunner = fetcher.NewTickerRunner(
@@ -125,8 +89,16 @@ func (c *Config) AddCoreConfig(settingPath SettingPaths, kyberENV string) {
 		dataControllerRunner = datapruner.NewStorageControllerTickerRunner(24 * time.Hour)
 	}
 
-	pricingSigner := PricingSignerFromConfigFile(settingPath.secretPath)
-	depositSigner := DepositSignerFromConfigFile(settingPath.secretPath)
+	pricingSigner, err := PricingSignerFromConfigFile(secretConfigFile)
+	if err != nil {
+		log.Printf("failed to get pricing signeeer from config file err=%s", err.Error())
+		return err
+	}
+	depositSigner, err := DepositSignerFromConfigFile(secretConfigFile)
+	if err != nil {
+		log.Printf("failed to get deposit signer from config file err=%s", err.Error())
+		return err
+	}
 
 	c.ActivityStorage = dataStorage
 	c.DataStorage = dataStorage
@@ -141,158 +113,28 @@ func (c *Config) AddCoreConfig(settingPath SettingPaths, kyberENV string) {
 
 	// create Exchange pool
 	exchangePool, err := NewExchangePool(
-		settingPath,
+		secretConfigFile,
 		c.Blockchain,
-		kyberENV,
+		dpl,
 		c.Setting,
+		bi,
+		hi,
 	)
 	if err != nil {
-		log.Panicf("Can not create exchangePool: %s", err.Error())
+		log.Printf("Can not create exchangePool: %s", err.Error())
+		return err
 	}
 	fetcherExchanges, err := exchangePool.FetcherExchanges()
 	if err != nil {
-		log.Panicf("cannot Create fetcher exchanges : (%s)", err.Error())
+		log.Printf("cannot Create fetcher exchanges : (%s)", err.Error())
+		return err
 	}
 	c.FetcherExchanges = fetcherExchanges
 	coreExchanges, err := exchangePool.CoreExchanges()
 	if err != nil {
-		log.Panicf("cannot Create core exchanges : (%s)", err.Error())
+		log.Printf("cannot Create core exchanges : (%s)", err.Error())
+		return err
 	}
 	c.Exchanges = coreExchanges
-}
-
-var ConfigPaths = map[string]SettingPaths{
-	common.DevMode: NewSettingPaths(
-		"dev_setting.json",
-		"fee.json",
-		"dev.db",
-		"dev_analytics.db",
-		"dev_fee_setrate.db",
-		"config.json",
-		infuraMainnetEndpoint,
-		[]string{
-			semidNodeKyberEndpoint,
-			infuraMainnetEndpoint,
-			myCryptoAPIEndpoint,
-			myEtherAPIMainnetEndpoint,
-		},
-	),
-	common.KovanMode: NewSettingPaths(
-		"kovan_setting.json",
-		"fee.json",
-		"kovan.db",
-		"kovan_analytics.db",
-		"kovan_fee_setrate.db",
-		"config.json",
-		infuraKovanEndpoint,
-		[]string{},
-	),
-	common.ProductionMode: NewSettingPaths(
-		"mainnet_setting.json",
-		"fee.json",
-		"mainnet.db",
-		"mainnet_analytics.db",
-		"mainnet_fee_setrate.db",
-		"mainnet_config.json",
-		alchemyapiMainnetEndpoint,
-		[]string{
-			alchemyapiMainnetEndpoint,
-			infuraMainnetEndpoint,
-			semidNodeKyberEndpoint,
-			myCryptoAPIEndpoint,
-			myEtherAPIMainnetEndpoint,
-			mewGivethAPIEndpoint,
-		},
-	),
-	common.MainnetMode: NewSettingPaths(
-		"mainnet_setting.json",
-		"fee.json",
-		"mainnet.db",
-		"mainnet_analytics.db",
-		"mainnet_fee_setrate.db",
-		"mainnet_config.json",
-		alchemyapiMainnetEndpoint,
-		[]string{
-			alchemyapiMainnetEndpoint,
-			infuraMainnetEndpoint,
-			semidNodeKyberEndpoint,
-			myCryptoAPIEndpoint,
-			myEtherAPIMainnetEndpoint,
-			mewGivethAPIEndpoint,
-		},
-	),
-	common.StagingMode: NewSettingPaths(
-		"staging_setting.json",
-		"fee.json",
-		"staging.db",
-		"staging_analytics.db",
-		"staging_fee_setrate.db",
-		"staging_config.json",
-		alchemyapiMainnetEndpoint,
-		[]string{
-			alchemyapiMainnetEndpoint,
-			infuraMainnetEndpoint,
-			semidNodeKyberEndpoint,
-			myCryptoAPIEndpoint,
-			myEtherAPIMainnetEndpoint,
-			mewGivethAPIEndpoint,
-		},
-	),
-	common.SimulationMode: NewSettingPaths(
-		"shared/deployment_dev.json",
-		"fee.json",
-		"core.db",
-		"core_analytics.db",
-		"core_fee_setrate.db",
-		"config.json",
-		localDevChainEndpoint,
-		[]string{
-			localDevChainEndpoint,
-		},
-	),
-	common.RopstenMode: NewSettingPaths(
-		"ropsten_setting.json",
-		"fee.json",
-		"ropsten.db",
-		"ropsten_analytics.db",
-		"ropsten_fee_setrate.db",
-		"config.json",
-		infuraRopstenEndpoint,
-		[]string{
-			myEtherAPIRopstenEndpoint,
-		},
-	),
-	common.AnalyticDevMode: NewSettingPaths(
-		"shared/deployment_dev.json",
-		"fee.json",
-		"core.db",
-		"core_analytics.db",
-		"core_fee_setrate.db",
-		"config.json",
-		localDevChainEndpoint,
-		[]string{
-			localDevChainEndpoint,
-		},
-	),
-}
-
-var BinanceInterfaces = make(map[string]binance.Interface)
-var HuobiInterfaces = make(map[string]huobi.Interface)
-
-func SetInterface(baseURL string) {
-	HuobiInterfaces[common.DevMode] = huobi.NewDevInterface()
-	HuobiInterfaces[common.KovanMode] = huobi.NewKovanInterface(baseURL)
-	HuobiInterfaces[common.MainnetMode] = huobi.NewRealInterface()
-	HuobiInterfaces[common.StagingMode] = huobi.NewRealInterface()
-	HuobiInterfaces[common.SimulationMode] = huobi.NewSimulatedInterface(baseURL)
-	HuobiInterfaces[common.RopstenMode] = huobi.NewRopstenInterface(baseURL)
-	HuobiInterfaces[common.AnalyticDevMode] = huobi.NewRopstenInterface(baseURL)
-
-	BinanceInterfaces[common.DevMode] = binance.NewDevInterface()
-	BinanceInterfaces[common.KovanMode] = binance.NewKovanInterface(baseURL)
-	BinanceInterfaces[common.MainnetMode] = binance.NewRealInterface()
-	BinanceInterfaces[common.StagingMode] = binance.NewRealInterface()
-	BinanceInterfaces[common.SimulationMode] = binance.NewSimulatedInterface(baseURL)
-	BinanceInterfaces[common.RopstenMode] = binance.NewRopstenInterface(baseURL)
-	BinanceInterfaces[common.AnalyticDevMode] = binance.NewRopstenInterface(baseURL)
+	return nil
 }

@@ -13,7 +13,6 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 
 	"github.com/KyberNetwork/reserve-data/common"
-	"github.com/KyberNetwork/reserve-data/settings"
 )
 
 const (
@@ -29,17 +28,17 @@ const (
 type ReserveCore struct {
 	blockchain      Blockchain
 	activityStorage ActivityStorage
-	setting         Setting
+	addressConf     *common.ContractAddressConfiguration
 }
 
 func NewReserveCore(
 	blockchain Blockchain,
 	storage ActivityStorage,
-	setting Setting) *ReserveCore {
+	addressConf *common.ContractAddressConfiguration) *ReserveCore {
 	return &ReserveCore{
-		blockchain,
-		storage,
-		setting,
+		blockchain:      blockchain,
+		activityStorage: storage,
+		addressConf:     addressConf,
 	}
 }
 
@@ -289,14 +288,7 @@ func (rc ReserveCore) Withdraw(
 		return common.ActivityID{}, common.CombineActivityStorageErrs(err, sErr)
 	}
 
-	reserveAddr, err := rc.setting.GetAddress(settings.Reserve)
-	if err != nil {
-		sErr := activityRecord("", statusFailed, err)
-		if sErr != nil {
-			log.Printf("failed to store activiry record: %s", sErr.Error())
-		}
-		return common.ActivityID{}, common.CombineActivityStorageErrs(err, sErr)
-	}
+	reserveAddr := rc.addressConf.Reserve
 
 	id, err := exchange.Withdraw(token, amount, reserveAddr, timepoint)
 	if err != nil {

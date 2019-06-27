@@ -23,13 +23,13 @@ package bind
 import (
 	"bytes"
 	"fmt"
+	"go/format"
 	"regexp"
 	"strings"
 	"text/template"
 	"unicode"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
-	"golang.org/x/tools/imports"
 )
 
 // Lang is a target programming language selector to generate bindings for.
@@ -145,9 +145,9 @@ func Bind(types []string, abis []string, bytecodes []string, pkg string, lang La
 	if err := tmpl.Execute(buffer, data); err != nil {
 		return "", err
 	}
-	// For Go bindings pass the code through goimports to clean it up and double check
+	// For Go bindings pass the code through gofmt to clean it up
 	if lang == LangGo {
-		code, err := imports.Process(".", buffer.Bytes(), nil)
+		code, err := format.Source(buffer.Bytes())
 		if err != nil {
 			return "", fmt.Errorf("%v\n%s", err, buffer)
 		}
@@ -381,54 +381,23 @@ func namedTypeJava(javaKind string, solKind abi.Type) string {
 // methodNormalizer is a name transformer that modifies Solidity method names to
 // conform to target language naming concentions.
 var methodNormalizer = map[Lang]func(string) string{
-	LangGo:   capitalise,
+	LangGo:   abi.ToCamelCase,
 	LangJava: decapitalise,
 }
 
 // capitalise makes a camel-case string which starts with an upper case character.
 func capitalise(input string) string {
-	for len(input) > 0 && input[0] == '_' {
-		input = input[1:]
-	}
-	if len(input) == 0 {
-		return ""
-	}
-	return toCamelCase(strings.ToUpper(input[:1]) + input[1:])
+	return abi.ToCamelCase(input)
 }
 
 // decapitalise makes a camel-case string which starts with a lower case character.
 func decapitalise(input string) string {
-	for len(input) > 0 && input[0] == '_' {
-		input = input[1:]
-	}
 	if len(input) == 0 {
-		return ""
+		return input
 	}
-	return toCamelCase(strings.ToLower(input[:1]) + input[1:])
-}
 
-// toCamelCase converts an under-score string to a camel-case string
-func toCamelCase(input string) string {
-	toupper := false
-
-	result := ""
-	for k, v := range input {
-		switch {
-		case k == 0:
-			result = strings.ToUpper(string(input[0]))
-
-		case toupper:
-			result += strings.ToUpper(string(v))
-			toupper = false
-
-		case v == '_':
-			toupper = true
-
-		default:
-			result += string(v)
-		}
-	}
-	return result
+	goForm := abi.ToCamelCase(input)
+	return strings.ToLower(goForm[:1]) + goForm[1:]
 }
 
 // structured checks whether a list of ABI data types has enough information to

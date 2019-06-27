@@ -2,14 +2,16 @@ package configuration
 
 import (
 	"log"
-	"path/filepath"
 
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
 
+	"github.com/KyberNetwork/reserve-data/cmd/deployment"
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/archive"
 	"github.com/KyberNetwork/reserve-data/common/blockchain"
+	"github.com/KyberNetwork/reserve-data/exchange/binance"
+	"github.com/KyberNetwork/reserve-data/exchange/huobi"
 	"github.com/KyberNetwork/reserve-data/http"
 	"github.com/KyberNetwork/reserve-data/settings"
 	settingstorage "github.com/KyberNetwork/reserve-data/settings/storage"
@@ -21,59 +23,30 @@ const (
 	homesteadChainType = "homestead"
 )
 
-func GetSettingDBName(kyberENV string) string {
-	switch kyberENV {
-	case common.MainnetMode, common.ProductionMode:
-		return "mainnet_setting.db"
-	case common.DevMode:
-		return "dev_setting.db"
-	case common.KovanMode:
-		return "kovan_setting.db"
-	case common.StagingMode:
-		return "staging_setting.db"
-	case common.SimulationMode, common.AnalyticDevMode:
-		return "sim_setting.db"
-	case common.RopstenMode:
-		return "ropsten_setting.db"
-	default:
-		return "dev_setting.db"
-	}
-}
-
-func GetChainType(kyberENV string) string {
-	switch kyberENV {
-	case common.MainnetMode, common.ProductionMode:
+func GetChainType(dpl deployment.Deployment) string {
+	switch dpl {
+	case deployment.Production:
 		return byzantiumChainType
-	case common.DevMode:
+	case deployment.Development:
 		return homesteadChainType
-	case common.KovanMode:
+	case deployment.Kovan:
 		return homesteadChainType
-	case common.StagingMode:
+	case deployment.Staging:
 		return byzantiumChainType
-	case common.SimulationMode, common.AnalyticDevMode:
+	case deployment.Simulation, deployment.Analytic:
 		return homesteadChainType
-	case common.RopstenMode:
+	case deployment.Ropsten:
 		return byzantiumChainType
 	default:
 		return homesteadChainType
 	}
 }
 
-func GetConfigPaths(kyberENV string) SettingPaths {
-	// common.ProductionMode and common.MainnetMode are same thing.
-	if kyberENV == common.ProductionMode {
-		kyberENV = common.MainnetMode
-	}
-
-	if sp, ok := ConfigPaths[kyberENV]; ok {
-		return sp
-	}
-	log.Println("Environment setting paths is not found, using dev...")
-	return ConfigPaths[common.DevMode]
-}
-
-func GetSetting(kyberENV string, addressSetting *settings.AddressSetting) (*settings.Settings, error) {
-	boltSettingStorage, err := settingstorage.NewBoltSettingStorage(filepath.Join(common.CmdDirLocation(), GetSettingDBName(kyberENV)))
+func GetSetting(
+	dpl deployment.Deployment,
+	contractAddressConf *common.ContractAddressConfiguration,
+	settingDataFile string) (*settings.Settings, error) {
+	boltSettingStorage, err := settingstorage.NewBoltSettingStorage(settingDataFile)
 	if err != nil {
 		return nil, err
 	}
@@ -85,59 +58,51 @@ func GetSetting(kyberENV string, addressSetting *settings.AddressSetting) (*sett
 	if err != nil {
 		return nil, err
 	}
+
 	setting, err := settings.NewSetting(
 		tokenSetting,
-		addressSetting,
+		contractAddressConf,
 		exchangeSetting,
-		settings.WithHandleEmptyToken(mustGetTokenConfig(kyberENV)),
+		settings.WithHandleEmptyToken(mustGetTokenConfig(dpl)),
 		settings.WithHandleEmptyFee(FeeConfigs),
 		settings.WithHandleEmptyMinDeposit(ExchangesMinDepositConfig),
-		settings.WithHandleEmptyDepositAddress(mustGetExchangeConfig(kyberENV)),
+		settings.WithHandleEmptyDepositAddress(mustGetExchangeConfig(dpl)),
 		settings.WithHandleEmptyExchangeInfo())
 	return setting, err
 }
 
-func GetConfig(kyberENV string, authEnbl bool, endpointOW string) *Config {
-	setPath := GetConfigPaths(kyberENV)
-
-	theWorld, err := world.NewTheWorld(kyberENV, setPath.secretPath)
+func GetConfig(
+	dpl deployment.Deployment,
+	authEnbl bool,
+	nodeConf *EthereumNodeConfiguration,
+	bi binance.Interface,
+	hi huobi.Interface,
+	contractAddressConf *common.ContractAddressConfiguration,
+	dataFile string,
+	secretConfigFile string,
+	settingDataFile string,
+) (*Config, error) {
+	theWorld, err := world.NewTheWorld(dpl, secretConfigFile)
 	if err != nil {
-		panic("Can't init the world (which is used to get global data), err " + err.Error())
+		log.Printf("Can't init the world (which is used to get global data), err " + err.Error())
+		return nil, err
 	}
 
-	hmac512auth := http.NewKNAuthenticationFromFile(setPath.secretPath)
-	addressSetting, err := settings.NewAddressSetting(mustGetAddressesConfig(kyberENV))
-	if err != nil {
-		log.Panicf("cannot init address setting %s", err)
-	}
-	var endpoint string
-	if endpointOW != "" {
-		log.Printf("overwriting Endpoint with %s\n", endpointOW)
-		endpoint = endpointOW
-	} else {
-		endpoint = setPath.endPoint
-	}
+	hmac512auth := http.NewKNAuthenticationFromFile(secretConfigFile)
 
-	bkEndpoints := setPath.bkendpoints
-
-	// appending secret node to backup endpoints, as the fallback contract won't use endpoint
-	if endpointOW != "" {
-		bkEndpoints = append([]string{endpointOW}, bkEndpoints...)
-	}
-
-	chainType := GetChainType(kyberENV)
+	chainType := GetChainType(dpl)
 
 	//set client & endpoint
-	client, err := rpc.Dial(endpoint)
+	client, err := rpc.Dial(nodeConf.Main)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	mainClient := ethclient.NewClient(client)
 	bkClients := map[string]*ethclient.Client{}
 
 	var callClients []*ethclient.Client
-	for _, ep := range bkEndpoints {
+	for _, ep := range nodeConf.Backup {
 		var bkClient *ethclient.Client
 		bkClient, err = ethclient.Dial(ep)
 		if err != nil {
@@ -152,31 +117,32 @@ func GetConfig(kyberENV string, authEnbl bool, endpointOW string) *Config {
 		client, mainClient, map[string]*blockchain.Operator{},
 		blockchain.NewBroadcaster(bkClients),
 		chainType,
-		blockchain.NewContractCaller(callClients, bkEndpoints),
+		blockchain.NewContractCaller(callClients, nodeConf.Backup),
 	)
 
 	if !authEnbl {
 		log.Printf("\nWARNING: No authentication mode\n")
 	}
-	awsConf, err := archive.GetAWSconfigFromFile(setPath.secretPath)
+	awsConf, err := archive.GetAWSconfigFromFile(secretConfigFile)
 	if err != nil {
-		panic(err)
+		log.Printf("failed to load AWS config from file %s", secretConfigFile)
+		return nil, err
 	}
 	s3archive := archive.NewS3Archive(awsConf)
 	config := &Config{
 		Blockchain:              bc,
-		EthereumEndpoint:        endpoint,
-		BackupEthereumEndpoints: bkEndpoints,
-		ChainType:               chainType,
+		EthereumEndpoint:        nodeConf.Main,
+		BackupEthereumEndpoints: nodeConf.Backup,
 		AuthEngine:              hmac512auth,
 		EnableAuthentication:    authEnbl,
 		Archive:                 s3archive,
 		World:                   theWorld,
-		AddressSetting:          addressSetting,
+		ContractAddresses:       contractAddressConf,
 	}
 
 	log.Printf("configured endpoint: %s, backup: %v", config.EthereumEndpoint, config.BackupEthereumEndpoints)
-
-	config.AddCoreConfig(setPath, kyberENV)
-	return config
+	if err = config.AddCoreConfig(secretConfigFile, dpl, bi, hi, contractAddressConf, dataFile, settingDataFile); err != nil {
+		return nil, err
+	}
+	return config, nil
 }

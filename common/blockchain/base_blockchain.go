@@ -36,11 +36,10 @@ const (
 // It has eth usd rate lookup function.
 
 type BaseBlockchain struct {
-	client      *ethclient.Client
-	rpcClient   *rpc.Client
-	operators   map[string]*Operator
-	broadcaster *Broadcaster
-	//ethRate        EthUSDRate
+	client         *ethclient.Client
+	rpcClient      *rpc.Client
+	operators      map[string]*Operator
+	broadcaster    *Broadcaster
 	chainType      string
 	contractCaller *ContractCaller
 	erc20abi       abi.ABI
@@ -182,7 +181,7 @@ func (b *BaseBlockchain) transactTx(context context.Context, opts TxOpts, contra
 	gasLimit := opts.GasLimit
 	if gasLimit == 0 {
 		// Gas estimation cannot succeed without code for method invocations
-		if contract.Big().Cmp(ethereum.Big0) == 0 {
+		if contract.Hash().Big().Cmp(ethereum.Big0) == 0 {
 			if code, pErr := b.client.PendingCodeAt(ensureContext(context), contract); pErr != nil {
 				return nil, pErr
 			} else if len(code) == 0 {
@@ -200,7 +199,7 @@ func (b *BaseBlockchain) transactTx(context context.Context, opts TxOpts, contra
 	}
 	// Create the transaction, sign it and schedule it for execution
 	var rawTx *types.Transaction
-	if contract.Big().Cmp(ethereum.Big0) == 0 {
+	if contract.Hash().Big().Cmp(ethereum.Big0) == 0 {
 		rawTx = types.NewContractCreation(nonce, value, gasLimit, opts.GasPrice, input)
 	} else {
 		rawTx = types.NewTransaction(nonce, contract, value, gasLimit, opts.GasPrice, input)

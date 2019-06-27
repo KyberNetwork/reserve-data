@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"sync"
 
+	"github.com/KyberNetwork/reserve-data/cmd/deployment"
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/blockchain"
 	"github.com/KyberNetwork/reserve-data/common/blockchain/nonce"
@@ -32,26 +33,14 @@ func AsyncUpdateDepositAddress(ex common.Exchange, tokenID, addr string, wait *s
 	}
 }
 
-func getBinanceInterface(kyberENV string) binance.Interface {
-	envInterface, ok := BinanceInterfaces[kyberENV]
-	if !ok {
-		envInterface = BinanceInterfaces[common.DevMode]
-	}
-	return envInterface
-}
-
-func getHuobiInterface(kyberENV string) huobi.Interface {
-	envInterface, ok := HuobiInterfaces[kyberENV]
-	if !ok {
-		envInterface = HuobiInterfaces[common.DevMode]
-	}
-	return envInterface
-}
-
 func NewExchangePool(
-	settingPaths SettingPaths,
+	secretConfigFile string,
 	blockchain *blockchain.BaseBlockchain,
-	kyberENV string, setting *settings.Settings) (*ExchangePool, error) {
+	dpl deployment.Deployment,
+	setting *settings.Settings,
+	bi binance.Interface,
+	hi huobi.Interface,
+) (*ExchangePool, error) {
 	exchanges := map[common.ExchangeID]interface{}{}
 	exparams := settings.RunningExchanges()
 	for _, exparam := range exparams {
@@ -65,8 +54,8 @@ func NewExchangePool(
 			}
 			exchanges[stableEx.ID()] = stableEx
 		case "binance":
-			binanceSigner := binance.NewSignerFromFile(settingPaths.secretPath)
-			endpoint := binance.NewBinanceEndpoint(binanceSigner, getBinanceInterface(kyberENV))
+			binanceSigner := binance.NewSignerFromFile(secretConfigFile)
+			endpoint := binance.NewBinanceEndpoint(binanceSigner, bi, dpl)
 			storage, err := binance.NewBoltStorage(filepath.Join(common.CmdDirLocation(), "binance.db"))
 			if err != nil {
 				return nil, fmt.Errorf("can not create Binance storage: (%s)", err.Error())
@@ -94,13 +83,17 @@ func NewExchangePool(
 			}
 			exchanges[bin.ID()] = bin
 		case "huobi":
-			huobiSigner := huobi.NewSignerFromFile(settingPaths.secretPath)
-			endpoint := huobi.NewHuobiEndpoint(huobiSigner, getHuobiInterface(kyberENV))
+			huobiSigner := huobi.NewSignerFromFile(secretConfigFile)
+			endpoint := huobi.NewHuobiEndpoint(huobiSigner, hi)
 			storage, err := huobi.NewBoltStorage(filepath.Join(common.CmdDirLocation(), "huobi.db"))
 			if err != nil {
 				return nil, fmt.Errorf("can not create Huobi storage: (%s)", err.Error())
 			}
-			intermediatorSigner := HuobiIntermediatorSignerFromFile(settingPaths.secretPath)
+			intermediatorSigner, err := HuobiIntermediatorSignerFromFile(secretConfigFile)
+			if err != nil {
+				log.Printf("failed to get itermediator signer from file err=%s", err.Error())
+				return nil, err
+			}
 			intermediatorNonce := nonce.NewTimeWindow(intermediatorSigner.GetAddress(), 10000)
 			huobi, err := exchange.NewHuobi(
 				endpoint,

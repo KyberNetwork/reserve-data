@@ -14,7 +14,6 @@ import (
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/blockchain"
 	huobiblockchain "github.com/KyberNetwork/reserve-data/exchange/huobi/blockchain"
-	"github.com/KyberNetwork/reserve-data/settings"
 )
 
 const (
@@ -56,6 +55,7 @@ type Blockchain struct {
 	localSetRateNonce     uint64
 	setRateNonceTimestamp uint64
 	setting               Setting
+	contractAddress       *common.ContractAddressConfiguration
 }
 
 func (bc *Blockchain) StandardGasPrice() float64 {
@@ -70,13 +70,10 @@ func (bc *Blockchain) StandardGasPrice() float64 {
 
 func (bc *Blockchain) CheckTokenIndices(tokenAddr ethereum.Address) error {
 	opts := bc.GetCallOpts(0)
-	pricingAddr, err := bc.setting.GetAddress(settings.Pricing)
-	if err != nil {
-		return err
-	}
+	pricingAddr := bc.contractAddress.Pricing
 	tokenAddrs := []ethereum.Address{}
 	tokenAddrs = append(tokenAddrs, tokenAddr)
-	_, _, err = bc.GeneratedGetTokenIndicies(
+	_, _, err := bc.GeneratedGetTokenIndicies(
 		opts,
 		pricingAddr,
 		tokenAddrs,
@@ -94,10 +91,7 @@ func (bc *Blockchain) LoadAndSetTokenIndices(tokenAddrs []ethereum.Address) erro
 	// this is not really needed. Just a safe guard. Use a very big indices so it would not exist.
 	bc.tokenIndices[ethereum.HexToAddress(bc.setting.ETHToken().Address).Hex()] = tbindex{1000000, 1000000}
 	opts := bc.GetCallOpts(0)
-	pricingAddr, err := bc.setting.GetAddress(settings.Pricing)
-	if err != nil {
-		return err
-	}
+	pricingAddr := bc.contractAddress.Pricing
 	bulkIndices, indicesInBulk, err := bc.GeneratedGetTokenIndicies(
 		opts,
 		pricingAddr,
@@ -147,10 +141,7 @@ func (bc *Blockchain) SetRates(
 	block *big.Int,
 	nonce *big.Int,
 	gasPrice *big.Int) (*types.Transaction, error) {
-	pricingAddr, err := bc.setting.GetAddress(settings.Pricing)
-	if err != nil {
-		return nil, err
-	}
+	pricingAddr := bc.contractAddress.Pricing
 	block.Add(block, big.NewInt(1))
 	copts := bc.GetCallOpts(0)
 	baseBuys, baseSells, _, _, _, err := bc.GeneratedGetTokenRates(
@@ -346,10 +337,7 @@ func (bc *Blockchain) FetchRates(atBlock uint64, currentBlock uint64) (common.Al
 	}
 	timestamp := common.GetTimestamp()
 	opts := bc.GetCallOpts(atBlock)
-	pricingAddr, err := bc.setting.GetAddress(settings.Pricing)
-	if err != nil {
-		return result, err
-	}
+	pricingAddr := bc.contractAddress.Pricing
 	baseBuys, baseSells, compactBuys, compactSells, blocks, err := bc.GeneratedGetTokenRates(
 		opts, pricingAddr, tokenAddrs,
 	)
@@ -422,41 +410,32 @@ func (bc *Blockchain) SetRateMinedNonce() (uint64, error) {
 	return nonceFromNode, nil
 }
 
-func NewBlockchain(base *blockchain.BaseBlockchain, setting Setting) (*Blockchain, error) {
-	wrapperAddr, err := setting.GetAddress(settings.Wrapper)
-	if err != nil {
-		return nil, err
-	}
-	log.Printf("wrapper address: %s", wrapperAddr.Hex())
+func NewBlockchain(base *blockchain.BaseBlockchain, setting Setting, contractAddressConf *common.ContractAddressConfiguration) (*Blockchain, error) {
+	log.Printf("wrapper address: %s", contractAddressConf.Wrapper.Hex())
 	wrapper := blockchain.NewContract(
-		wrapperAddr,
+		contractAddressConf.Wrapper,
 		filepath.Join(common.CurrentDir(), "wrapper.abi"),
 	)
-	reserveAddr, err := setting.GetAddress(settings.Reserve)
-	if err != nil {
-		return nil, err
-	}
-	log.Printf("reserve address: %s", reserveAddr.Hex())
+
+	log.Printf("reserve address: %s", contractAddressConf.Reserve.Hex())
 	reserve := blockchain.NewContract(
-		reserveAddr,
+		contractAddressConf.Reserve,
 		filepath.Join(common.CurrentDir(), "reserve.abi"),
 	)
-	pricingAddr, err := setting.GetAddress(settings.Pricing)
-	if err != nil {
-		return nil, err
-	}
-	log.Printf("pricing address: %s", pricingAddr.Hex())
+
+	log.Printf("pricing address: %s", contractAddressConf.Pricing.Hex())
 	pricing := blockchain.NewContract(
-		pricingAddr,
+		contractAddressConf.Pricing,
 		filepath.Join(common.CurrentDir(), "pricing.abi"),
 	)
 
 	return &Blockchain{
-		BaseBlockchain: base,
-		wrapper:        wrapper,
-		pricing:        pricing,
-		reserve:        reserve,
-		setting:        setting,
+		BaseBlockchain:  base,
+		wrapper:         wrapper,
+		pricing:         pricing,
+		reserve:         reserve,
+		setting:         setting,
+		contractAddress: contractAddressConf,
 	}, nil
 }
 

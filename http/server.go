@@ -18,6 +18,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/KyberNetwork/reserve-data"
+	"github.com/KyberNetwork/reserve-data/cmd/deployment"
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/http/httputil"
 	"github.com/KyberNetwork/reserve-data/metric"
@@ -34,15 +35,16 @@ var (
 )
 
 type Server struct {
-	app         reserve.Data
-	core        reserve.Core
-	metric      metric.Storage
-	host        string
-	authEnabled bool
-	auth        Authentication
-	r           *gin.Engine
-	blockchain  Blockchain
-	setting     Setting
+	app                 reserve.Data
+	core                reserve.Core
+	metric              metric.Storage
+	host                string
+	authEnabled         bool
+	auth                Authentication
+	r                   *gin.Engine
+	blockchain          Blockchain
+	setting             Setting
+	contractAddressConf *common.ContractAddressConfiguration
 }
 
 func getTimePoint(c *gin.Context, useDefault bool) uint64 {
@@ -1132,14 +1134,15 @@ func NewHTTPServer(
 	host string,
 	enableAuth bool,
 	authEngine Authentication,
-	env string,
+	dpl deployment.Deployment,
 	bc Blockchain,
-	setting Setting) *Server {
+	setting Setting,
+	contractAddressConf *common.ContractAddressConfiguration) *Server {
 	r := gin.Default()
 	sentryCli, err := raven.NewWithTags(
 		"https://bf15053001464a5195a81bc41b644751:eff41ac715114b20b940010208271b13@sentry.io/228067",
 		map[string]string{
-			"env": env,
+			"env": dpl.String(),
 		},
 	)
 	if err != nil {
@@ -1156,6 +1159,15 @@ func NewHTTPServer(
 	r.Use(cors.New(corsConfig))
 
 	return &Server{
-		app, core, metric, host, enableAuth, authEngine, r, bc, setting,
+		app:                 app,
+		core:                core,
+		metric:              metric,
+		host:                host,
+		authEnabled:         enableAuth,
+		auth:                authEngine,
+		r:                   r,
+		blockchain:          bc,
+		setting:             setting,
+		contractAddressConf: contractAddressConf,
 	}
 }

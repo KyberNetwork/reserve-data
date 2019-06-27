@@ -5,14 +5,15 @@ import (
 	"io/ioutil"
 	"log"
 
+	"github.com/KyberNetwork/reserve-data/cmd/deployment"
 	"github.com/KyberNetwork/reserve-data/common"
 
 	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
 //ExchangeConfigs store exchange config according to env mode.
-var ExchangeConfigs = map[string]map[common.ExchangeID]common.ExchangeAddresses{
-	common.DevMode: {
+var ExchangeConfigs = map[deployment.Deployment]map[common.ExchangeID]common.ExchangeAddresses{
+	deployment.Development: {
 		"binance": map[string]ethereum.Address{
 			"ETH":  ethereum.HexToAddress("0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90"),
 			"OMG":  ethereum.HexToAddress("0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90"),
@@ -58,7 +59,7 @@ var ExchangeConfigs = map[string]map[common.ExchangeID]common.ExchangeAddresses{
 			"DGX": ethereum.HexToAddress("0xFDF28Bf25779ED4cA74e958d54653260af604C20"),
 		},
 	},
-	common.StagingMode: {
+	deployment.Staging: {
 		"binance": map[string]ethereum.Address{
 			"ETH":  ethereum.HexToAddress("0x1ae659f93ba2fc0a1f379545cf9335adb75fa547"),
 			"OMG":  ethereum.HexToAddress("0x1ae659f93ba2fc0a1f379545cf9335adb75fa547"),
@@ -104,7 +105,7 @@ var ExchangeConfigs = map[string]map[common.ExchangeID]common.ExchangeAddresses{
 			"DGX": ethereum.HexToAddress("0xFDF28Bf25779ED4cA74e958d54653260af604C20"),
 		},
 	},
-	common.MainnetMode: {
+	deployment.Production: {
 		"binance": {
 			"ETH":  ethereum.HexToAddress("0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90"),
 			"OMG":  ethereum.HexToAddress("0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90"),
@@ -150,7 +151,7 @@ var ExchangeConfigs = map[string]map[common.ExchangeID]common.ExchangeAddresses{
 			"DGX": ethereum.HexToAddress("0xFDF28Bf25779ED4cA74e958d54653260af604C20"),
 		},
 	},
-	common.RopstenMode: {
+	deployment.Ropsten: {
 		"binance": {
 			"ETH":  ethereum.HexToAddress("0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90"),
 			"OMG":  ethereum.HexToAddress("0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90"),
@@ -167,23 +168,19 @@ var ExchangeConfigs = map[string]map[common.ExchangeID]common.ExchangeAddresses{
 	},
 }
 
-func mustGetExchangeConfig(kyberEnv string) map[common.ExchangeID]common.ExchangeAddresses {
-	result, avail := ExchangeConfigs[kyberEnv]
+func mustGetExchangeConfig(dpl deployment.Deployment) map[common.ExchangeID]common.ExchangeAddresses {
+	result, avail := ExchangeConfigs[dpl]
 	if avail {
 		return result
 	}
-	if kyberEnv == common.SimulationMode {
+	if dpl == deployment.Simulation {
 		result, err := loadDepositAddressFromFile(simSettingPath)
 		if err != nil {
 			log.Panicf("cannot load data from pre-defined simluation setting file, err: %v", err)
 		}
 		return result
 	}
-	if kyberEnv == common.ProductionMode {
-		return ExchangeConfigs[common.MainnetMode]
-	}
-	log.Panicf("cannot get exchange config for mode %s", kyberEnv)
-
+	log.Panicf("cannot get exchange config for mode %s", dpl.String())
 	return nil
 }
 

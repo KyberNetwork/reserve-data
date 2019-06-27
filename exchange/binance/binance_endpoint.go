@@ -14,9 +14,11 @@ import (
 	"strings"
 	"time"
 
+	ethereum "github.com/ethereum/go-ethereum/common"
+
+	"github.com/KyberNetwork/reserve-data/cmd/deployment"
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/exchange"
-	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
 // Endpoint object stand for Binance endpoint
@@ -443,10 +445,10 @@ func (ep *Endpoint) UpdateTimeDelta() error {
 }
 
 //NewBinanceEndpoint return new endpoint instance for using binance
-func NewBinanceEndpoint(signer Signer, interf Interface) *Endpoint {
-	endpoint := &Endpoint{signer, interf, 0}
-	switch interf.(type) {
-	case *SimulatedInterface:
+func NewBinanceEndpoint(signer Signer, interf Interface, dpl deployment.Deployment) *Endpoint {
+	endpoint := &Endpoint{signer: signer, interf: interf}
+	switch dpl {
+	case deployment.Simulation:
 		log.Println("Simulate environment, no updateTime called...")
 	default:
 		err := endpoint.UpdateTimeDelta()

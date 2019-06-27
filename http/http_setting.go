@@ -28,10 +28,8 @@ type Setting interface {
 	ApplyTokenWithExchangeSetting([]common.Token, map[settings.ExchangeName]*common.ExchangeSetting, uint64) error
 	GetPendingTokenUpdates() (map[string]common.TokenUpdate, error)
 	RemovePendingTokenUpdates() error
-	GetAllAddresses() (map[string]interface{}, error)
 	GetTokenVersion() (uint64, error)
 	GetExchangeVersion() (uint64, error)
 	GetActiveTokens() ([]common.Token, error)
 	GetTokenByAddress(ethereum.Address) (common.Token, error)
-	GetAddress(settings.AddressName) (ethereum.Address, error)
 }

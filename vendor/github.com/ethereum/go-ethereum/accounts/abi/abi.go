@@ -21,6 +21,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // The ABI holds information about a contract's context and available
@@ -58,13 +60,11 @@ func (abi ABI) Pack(name string, args ...interface{}) ([]byte, error) {
 			return nil, err
 		}
 		return arguments, nil
-
 	}
 	method, exist := abi.Methods[name]
 	if !exist {
 		return nil, fmt.Errorf("method '%s' not found", name)
 	}
-
 	arguments, err := method.Inputs.Pack(args...)
 	if err != nil {
 		return nil, err
@@ -74,19 +74,39 @@ func (abi ABI) Pack(name string, args ...interface{}) ([]byte, error) {
 }
 
 // Unpack output in v according to the abi specification
-func (abi ABI) Unpack(v interface{}, name string, output []byte) (err error) {
-	if len(output) == 0 {
+func (abi ABI) Unpack(v interface{}, name string, data []byte) (err error) {
+	if len(data) == 0 {
 		return fmt.Errorf("abi: unmarshalling empty output")
 	}
 	// since there can't be naming collisions with contracts and events,
 	// we need to decide whether we're calling a method or an event
 	if method, ok := abi.Methods[name]; ok {
-		if len(output)%32 != 0 {
+		if len(data)%32 != 0 {
+			return fmt.Errorf("abi: improperly formatted output: %s - Bytes: [%+v]", string(data), data)
+		}
+		return method.Outputs.Unpack(v, data)
+	}
+	if event, ok := abi.Events[name]; ok {
+		return event.Inputs.Unpack(v, data)
+	}
+	return fmt.Errorf("abi: could not locate named method or event")
+}
+
+// UnpackIntoMap unpacks a log into the provided map[string]interface{}
+func (abi ABI) UnpackIntoMap(v map[string]interface{}, name string, data []byte) (err error) {
+	if len(data) == 0 {
+		return fmt.Errorf("abi: unmarshalling empty output")
+	}
+	// since there can't be naming collisions with contracts and events,
+	// we need to decide whether we're calling a method or an event
+	if method, ok := abi.Methods[name]; ok {
+		if len(data)%32 != 0 {
 			return fmt.Errorf("abi: improperly formatted output")
 		}
-		return method.Outputs.Unpack(v, output)
-	} else if event, ok := abi.Events[name]; ok {
-		return event.Inputs.Unpack(v, output)
+		return method.Outputs.UnpackIntoMap(v, data)
+	}
+	if event, ok := abi.Events[name]; ok {
+		return event.Inputs.UnpackIntoMap(v, data)
 	}
 	return fmt.Errorf("abi: could not locate named method or event")
 }
@@ -137,10 +157,24 @@ func (abi *ABI) UnmarshalJSON(data []byte) error {
 // MethodById looks up a method by the 4-byte id
 // returns nil if none found
 func (abi *ABI) MethodById(sigdata []byte) (*Method, error) {
+	if len(sigdata) < 4 {
+		return nil, fmt.Errorf("data too short (%d bytes) for abi method lookup", len(sigdata))
+	}
 	for _, method := range abi.Methods {
 		if bytes.Equal(method.Id(), sigdata[:4]) {
 			return &method, nil
 		}
 	}
 	return nil, fmt.Errorf("no method with id: %#x", sigdata[:4])
+}
+
+// EventByID looks an event up by its topic hash in the
+// ABI and returns nil if none found.
+func (abi *ABI) EventByID(topic common.Hash) (*Event, error) {
+	for _, event := range abi.Events {
+		if bytes.Equal(event.Id().Bytes(), topic.Bytes()) {
+			return &event, nil
+		}
+	}
+	return nil, fmt.Errorf("no event with id: %#x", topic.Hex())
 }

@@ -173,14 +173,14 @@ func TestHTTPServerPWIEquationV2(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	addressSetting := &settings.AddressSetting{}
+	addressConf := &common.ContractAddressConfiguration{}
 
 	exchangeSetting, err := settings.NewExchangeSetting(boltSettingStorage)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	setting, err := settings.NewSetting(tokenSetting, addressSetting, exchangeSetting)
+	setting, err := settings.NewSetting(tokenSetting, addressConf, exchangeSetting)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -204,7 +204,7 @@ func TestHTTPServerPWIEquationV2(t *testing.T) {
 	}
 	s := Server{
 		app:         data.NewReserveData(st, nil, nil, nil, nil, nil, setting),
-		core:        core.NewReserveCore(nil, st, setting),
+		core:        core.NewReserveCore(nil, st, addressConf),
 		metric:      st,
 		authEnabled: false,
 		r:           gin.Default(),

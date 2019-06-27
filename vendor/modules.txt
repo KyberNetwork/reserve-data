@@ -1,6 +1,9 @@
-# github.com/aristanetworks/goarista v0.0.0-20171023173523-aa6ce169f053
+# github.com/allegro/bigcache v1.2.1
+github.com/allegro/bigcache
+github.com/allegro/bigcache/queue
+# github.com/aristanetworks/goarista v0.0.0-20190625195245-f3b0eb5a88b2
 github.com/aristanetworks/goarista/monotime
-# github.com/aws/aws-sdk-go v1.16.11
+# github.com/aws/aws-sdk-go v1.20.10
 github.com/aws/aws-sdk-go/aws
 github.com/aws/aws-sdk-go/aws/credentials
 github.com/aws/aws-sdk-go/aws/session
@@ -27,6 +30,7 @@ github.com/aws/aws-sdk-go/private/protocol/eventstream
 github.com/aws/aws-sdk-go/private/protocol/eventstream/eventstreamapi
 github.com/aws/aws-sdk-go/private/protocol/rest
 github.com/aws/aws-sdk-go/private/protocol/restxml
+github.com/aws/aws-sdk-go/private/protocol/xml/xmlutil
 github.com/aws/aws-sdk-go/service/s3/s3iface
 github.com/aws/aws-sdk-go/internal/sdkrand
 github.com/aws/aws-sdk-go/service/sts
@@ -34,123 +38,102 @@ github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds
 github.com/aws/aws-sdk-go/aws/credentials/endpointcreds
 github.com/aws/aws-sdk-go/aws/ec2metadata
 github.com/aws/aws-sdk-go/private/protocol/query
-github.com/aws/aws-sdk-go/private/protocol/xml/xmlutil
 github.com/aws/aws-sdk-go/internal/sdkuri
+github.com/aws/aws-sdk-go/private/protocol/json/jsonutil
 github.com/aws/aws-sdk-go/private/protocol/query/queryutil
 # github.com/boltdb/bolt v0.0.0-20170907202052-fa5367d20c99
 github.com/boltdb/bolt
-# github.com/btcsuite/btcd v0.0.0-20181130015935-7d2daa5bfef2
+# github.com/btcsuite/btcd v0.0.0-20190614013741-962a206e94e9
 github.com/btcsuite/btcd/btcec
-# github.com/certifi/gocertifi v0.0.0-20170727155124-3fd9e1adb12b
+# github.com/certifi/gocertifi v0.0.0-20190506164543-d2eda7129713
 github.com/certifi/gocertifi
 # github.com/deckarep/golang-set v1.7.1
 github.com/deckarep/golang-set
-# github.com/ethereum/go-ethereum v0.0.0-20171018091612-eea996e4e182 => github.com/favadi/go-ethereum v1.8.16-fork
-github.com/ethereum/go-ethereum/accounts/abi
-github.com/ethereum/go-ethereum/accounts/abi/bind
+# github.com/elastic/gosigar v0.10.3
+github.com/elastic/gosigar
+github.com/elastic/gosigar/sys/windows
+# github.com/ethereum/go-ethereum v1.8.22-0.20190625100134-54fd263b400d
 github.com/ethereum/go-ethereum/common
 github.com/ethereum/go-ethereum/core/types
 github.com/ethereum/go-ethereum/ethclient
 github.com/ethereum/go-ethereum/rpc
 github.com/ethereum/go-ethereum
+github.com/ethereum/go-ethereum/accounts/abi
+github.com/ethereum/go-ethereum/accounts/abi/bind
 github.com/ethereum/go-ethereum/common/hexutil
-github.com/ethereum/go-ethereum/common/math
 github.com/ethereum/go-ethereum/crypto
-github.com/ethereum/go-ethereum/accounts/keystore
-github.com/ethereum/go-ethereum/event
-github.com/ethereum/go-ethereum/log
-github.com/ethereum/go-ethereum/crypto/sha3
 github.com/ethereum/go-ethereum/params
 github.com/ethereum/go-ethereum/rlp
 github.com/ethereum/go-ethereum/trie
+github.com/ethereum/go-ethereum/log
 github.com/ethereum/go-ethereum/p2p/netutil
-github.com/ethereum/go-ethereum/crypto/secp256k1
+github.com/ethereum/go-ethereum/common/math
 github.com/ethereum/go-ethereum/accounts
-github.com/ethereum/go-ethereum/common/mclock
+github.com/ethereum/go-ethereum/accounts/keystore
+github.com/ethereum/go-ethereum/event
+github.com/ethereum/go-ethereum/crypto/secp256k1
 github.com/ethereum/go-ethereum/common/prque
 github.com/ethereum/go-ethereum/ethdb
 github.com/ethereum/go-ethereum/metrics
-# github.com/getsentry/raven-go v0.0.0-20170918144728-1452f6376ddb
+github.com/ethereum/go-ethereum/common/mclock
+# github.com/getsentry/raven-go v0.2.0
 github.com/getsentry/raven-go
-# github.com/gin-contrib/cors v0.0.0-20181206035131-7c641a7a7dc5
+# github.com/gin-contrib/cors v1.3.0
 github.com/gin-contrib/cors
-# github.com/gin-contrib/sentry v0.0.0-20170917021533-5806d6ecb7b2
+# github.com/gin-contrib/sentry v0.0.0-20190528141903-48a399dfd39f
 github.com/gin-contrib/sentry
-# github.com/gin-contrib/sse v0.0.0-20170109093832-22d885f9ecc7
+# github.com/gin-contrib/sse v0.1.0
 github.com/gin-contrib/sse
-# github.com/gin-gonic/gin v0.0.0-20171102134854-76ad15ab32d0
+# github.com/gin-gonic/gin v1.4.0
 github.com/gin-gonic/gin
-github.com/gin-gonic/gin/json
 github.com/gin-gonic/gin/binding
+github.com/gin-gonic/gin/internal/json
 github.com/gin-gonic/gin/render
-# github.com/go-stack/stack v1.6.0
+# github.com/go-stack/stack v1.8.0
 github.com/go-stack/stack
-# github.com/golang/protobuf v1.2.0
+# github.com/golang/protobuf v1.3.1
 github.com/golang/protobuf/proto
-# github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db
-github.com/golang/snappy
-# github.com/inconshreveable/mousetrap v1.0.0
-github.com/inconshreveable/mousetrap
+# github.com/google/uuid v1.1.1
+github.com/google/uuid
 # github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af
 github.com/jmespath/go-jmespath
-# github.com/json-iterator/go v1.1.5
+# github.com/json-iterator/go v1.1.6
 github.com/json-iterator/go
-# github.com/mattn/go-isatty v0.0.5
+# github.com/mattn/go-isatty v0.0.8
 github.com/mattn/go-isatty
 # github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd
 github.com/modern-go/concurrent
 # github.com/modern-go/reflect2 v1.0.1
 github.com/modern-go/reflect2
-# github.com/pborman/uuid v0.0.0-20170612153648-e790cca94e6c
+# github.com/pborman/uuid v1.2.0
 github.com/pborman/uuid
+# github.com/pkg/errors v0.8.1
+github.com/pkg/errors
 # github.com/rjeczalik/notify v0.9.2
 github.com/rjeczalik/notify
-# github.com/robfig/cron v0.0.0-20180505203441-b41be1df6967
-github.com/robfig/cron
-# github.com/rs/cors v0.0.0-20170801073201-eabcc6af4bbe
+# github.com/rs/cors v1.6.0
 github.com/rs/cors
-# github.com/spf13/cobra v0.0.3
-github.com/spf13/cobra
-# github.com/spf13/pflag v1.0.3
-github.com/spf13/pflag
-# github.com/syndtr/goleveldb v0.0.0-20181128100959-b001fa50d6b2
-github.com/syndtr/goleveldb/leveldb
-github.com/syndtr/goleveldb/leveldb/errors
-github.com/syndtr/goleveldb/leveldb/filter
-github.com/syndtr/goleveldb/leveldb/iterator
-github.com/syndtr/goleveldb/leveldb/opt
-github.com/syndtr/goleveldb/leveldb/util
-github.com/syndtr/goleveldb/leveldb/cache
-github.com/syndtr/goleveldb/leveldb/comparer
-github.com/syndtr/goleveldb/leveldb/journal
-github.com/syndtr/goleveldb/leveldb/memdb
-github.com/syndtr/goleveldb/leveldb/storage
-github.com/syndtr/goleveldb/leveldb/table
-# github.com/ugorji/go v0.0.0-20170918222552-54210f4e076c
+# github.com/steakknife/bloomfilter v0.0.0-20180922174646-6819c0d2a570
+github.com/steakknife/bloomfilter
+# github.com/steakknife/hamming v0.0.0-20180906055917-c99c65617cd3
+github.com/steakknife/hamming
+# github.com/ugorji/go/codec v1.1.5-pre
 github.com/ugorji/go/codec
-# golang.org/x/crypto v0.0.0-20171023145632-2509b142fb2b
+# github.com/urfave/cli v1.20.0
+github.com/urfave/cli
+# golang.org/x/crypto v0.0.0-20190621222207-cc06ce4a13d4
+golang.org/x/crypto/sha3
 golang.org/x/crypto/pbkdf2
 golang.org/x/crypto/scrypt
-# golang.org/x/net v0.0.0-20181011144130-49bb7cea24b1
+# golang.org/x/net v0.0.0-20190620200207-3b0461eec859
 golang.org/x/net/websocket
-# golang.org/x/sys v0.0.0-20190222072716-a9d3bda3a223
+# golang.org/x/sys v0.0.0-20190626221950-04f50cda93cb
 golang.org/x/sys/unix
-# golang.org/x/tools v0.0.0-20181221235234-d00ac6d27372
-golang.org/x/tools/imports
-golang.org/x/tools/go/ast/astutil
-golang.org/x/tools/go/packages
-golang.org/x/tools/internal/gopathwalk
-golang.org/x/tools/go/gcexportdata
-golang.org/x/tools/go/internal/cgo
-golang.org/x/tools/go/internal/packagesdriver
-golang.org/x/tools/internal/semver
-golang.org/x/tools/internal/fastwalk
-golang.org/x/tools/go/internal/gcimporter
+golang.org/x/sys/cpu
+golang.org/x/sys/windows
 # gopkg.in/go-playground/validator.v8 v8.18.2
 gopkg.in/go-playground/validator.v8
-# gopkg.in/natefinch/lumberjack.v2 v2.0.0
-gopkg.in/natefinch/lumberjack.v2
 # gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce
 gopkg.in/natefinch/npipe.v2
-# gopkg.in/yaml.v2 v2.2.1
+# gopkg.in/yaml.v2 v2.2.2
 gopkg.in/yaml.v2

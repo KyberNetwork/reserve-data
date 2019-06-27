@@ -87,14 +87,14 @@ func TestHTTPServerRebalanceQuadratic(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	addressSetting := &settings.AddressSetting{}
+	addressConf := &common.ContractAddressConfiguration{}
 
 	exchangeSetting, err := settings.NewExchangeSetting(boltSettingStorage)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	setting, err := settings.NewSetting(tokenSetting, addressSetting, exchangeSetting)
+	setting, err := settings.NewSetting(tokenSetting, addressConf, exchangeSetting)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -104,10 +104,10 @@ func TestHTTPServerRebalanceQuadratic(t *testing.T) {
 		}
 	}()
 
-	if uErr := setting.UpdateToken(common.NewToken("KNC", "KyberNetwork", "xxx", 18, true, true, 0), 0); err != nil {
+	if uErr := setting.UpdateToken(common.NewToken("KNC", "KyberNetwork", "xxx", 18, true, true, 0), 0); uErr != nil {
 		t.Fatal(uErr)
 	}
-	if uErr := setting.UpdateToken(common.NewToken("ETH", "Etherium", "xxx", 18, true, true, 0), 0); err != nil {
+	if uErr := setting.UpdateToken(common.NewToken("ETH", "Etherium", "xxx", 18, true, true, 0), 0); uErr != nil {
 		t.Error(uErr)
 	}
 	rqStorage, err := storage.NewBoltStorage(filepath.Join(tmpDir, "test.db"))
@@ -117,7 +117,7 @@ func TestHTTPServerRebalanceQuadratic(t *testing.T) {
 
 	s := Server{
 		app:         data.NewReserveData(rqStorage, nil, nil, nil, nil, nil, setting),
-		core:        core.NewReserveCore(nil, rqStorage, setting),
+		core:        core.NewReserveCore(nil, rqStorage, addressConf),
 		metric:      rqStorage,
 		authEnabled: false,
 		r:           gin.Default(),

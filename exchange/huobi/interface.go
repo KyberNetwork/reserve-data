@@ -1,11 +1,9 @@
 package huobi
 
-import "fmt"
-
-const huobiAPIEndpoint = "https://api.huobi.pro"
-
 // Interface is Huobi exchange API endpoints interface.
 type Interface interface {
+	// isHuobi is a safe guard to make sure nothing outside this package can implement this interface.
+	isHuobi()
 	// PublicEndpoint returns the endpoint that does not requires authentication.
 	PublicEndpoint() string
 	// AuthenticatedEndpoint returns the endpoint that requires authentication.
@@ -13,89 +11,21 @@ type Interface interface {
 	AuthenticatedEndpoint() string
 }
 
-// getSimulationURL returns url of the simulated Huobi endpoint.
-// It returns the local default endpoint if given URL empty.
-func getSimulationURL(baseURL string) string {
-	const port = "5200"
-	if len(baseURL) == 0 {
-		baseURL = "http://127.0.0.1"
-	}
-
-	return fmt.Sprintf("%s:%s", baseURL, port)
+type RealInterface struct {
+	publicEndpoint        string
+	authenticatedEndpoint string
 }
 
-type RealInterface struct{}
+func NewRealInterface(publicEndpoint string, authenticatedEndpoint string) *RealInterface {
+	return &RealInterface{publicEndpoint: publicEndpoint, authenticatedEndpoint: authenticatedEndpoint}
+}
+
+func (r *RealInterface) isHuobi() {}
 
 func (r *RealInterface) PublicEndpoint() string {
-	return huobiAPIEndpoint
+	return r.publicEndpoint
 }
 
 func (r *RealInterface) AuthenticatedEndpoint() string {
-	return huobiAPIEndpoint
-}
-
-func NewRealInterface() *RealInterface {
-	return &RealInterface{}
-}
-
-type SimulatedInterface struct {
-	baseURL string
-}
-
-func (s *SimulatedInterface) PublicEndpoint() string {
-	return getSimulationURL(s.baseURL)
-}
-
-func (s *SimulatedInterface) AuthenticatedEndpoint() string {
-	return getSimulationURL(s.baseURL)
-}
-
-func NewSimulatedInterface(flagVariable string) *SimulatedInterface {
-	return &SimulatedInterface{baseURL: flagVariable}
-}
-
-type RopstenInterface struct {
-	baseURL string
-}
-
-func (r *RopstenInterface) PublicEndpoint() string {
-	return huobiAPIEndpoint
-}
-
-func (r *RopstenInterface) AuthenticatedEndpoint() string {
-	return getSimulationURL(r.baseURL)
-}
-
-func NewRopstenInterface(flagVariable string) *RopstenInterface {
-	return &RopstenInterface{baseURL: flagVariable}
-}
-
-type KovanInterface struct {
-	baseURL string
-}
-
-func (ki *KovanInterface) PublicEndpoint() string {
-	return huobiAPIEndpoint
-}
-
-func (ki *KovanInterface) AuthenticatedEndpoint() string {
-	return getSimulationURL(ki.baseURL)
-}
-
-func NewKovanInterface(flagVariable string) *KovanInterface {
-	return &KovanInterface{baseURL: flagVariable}
-}
-
-type DevInterface struct{}
-
-func (d *DevInterface) PublicEndpoint() string {
-	return huobiAPIEndpoint
-}
-
-func (d *DevInterface) AuthenticatedEndpoint() string {
-	return huobiAPIEndpoint
-}
-
-func NewDevInterface() *DevInterface {
-	return &DevInterface{}
+	return r.authenticatedEndpoint
 }

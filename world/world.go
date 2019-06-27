@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/KyberNetwork/reserve-data/cmd/deployment"
 	"github.com/KyberNetwork/reserve-data/common"
 )
 
@@ -312,15 +313,21 @@ func (tw *TheWorld) GetGoldInfo() (common.GoldData, error) {
 }
 
 //NewTheWorld return new world instance
-func NewTheWorld(env string, keyfile string) (*TheWorld, error) {
-	switch env {
-	case common.DevMode, common.KovanMode, common.MainnetMode, common.ProductionMode, common.StagingMode, common.RopstenMode, common.AnalyticDevMode:
+func NewTheWorld(dpl deployment.Deployment, keyfile string) (*TheWorld, error) {
+	switch dpl {
+	case deployment.Development,
+		deployment.Production,
+		deployment.Kovan,
+		deployment.Staging,
+		deployment.Ropsten,
+		deployment.Analytic:
+		// TODO: make key file a cli flag
 		endpoint, err := NewRealEndpointFromFile(keyfile)
 		if err != nil {
 			return nil, err
 		}
 		return &TheWorld{endpoint}, nil
-	case common.SimulationMode:
+	case deployment.Simulation:
 		return &TheWorld{SimulatedEndpoint{}}, nil
 	}
 	panic("unsupported environment")

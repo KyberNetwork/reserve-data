@@ -109,17 +109,17 @@ func TestExchangeDown(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	addressSetting := &settings.AddressSetting{}
+	addressConf := &common.ContractAddressConfiguration{}
 	exchangeSetting, err := settings.NewExchangeSetting(boltSettingStorage)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	setting, err := settings.NewSetting(tokenSetting, addressSetting, exchangeSetting)
+	setting, err := settings.NewSetting(tokenSetting, addressConf, exchangeSetting)
 	if err != nil {
 		t.Fatal(err)
 	}
-	fetcher := NewFetcher(fstorage, fstorage, &world.TheWorld{}, runner, true, setting)
+	fetcher := NewFetcher(fstorage, fstorage, &world.TheWorld{}, runner, true, setting, addressConf)
 
 	// mock normal data
 	var estatuses, bstatuses sync.Map

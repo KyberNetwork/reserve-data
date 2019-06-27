@@ -9,7 +9,7 @@ import (
 // Settings contains shared common settings between all components.
 type Settings struct {
 	Tokens   *TokenSetting
-	Address  *AddressSetting
+	Address  *common.ContractAddressConfiguration
 	Exchange *ExchangeSetting
 }
 
@@ -76,7 +76,7 @@ type SettingOption func(s *Settings)
 
 // NewSetting create setting object from its component, and handle if the setting database is empty
 // returns a pointer to setting object from which all core setting can be read and write to; and error if occurs.
-func NewSetting(token *TokenSetting, address *AddressSetting, exchange *ExchangeSetting, options ...SettingOption) (*Settings, error) {
+func NewSetting(token *TokenSetting, address *common.ContractAddressConfiguration, exchange *ExchangeSetting, options ...SettingOption) (*Settings, error) {
 	setting := &Settings{
 		Tokens:   token,
 		Address:  address,

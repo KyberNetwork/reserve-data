@@ -7,10 +7,11 @@ import (
 	"reflect"
 	"testing"
 
+	ethereum "github.com/ethereum/go-ethereum/common"
+
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/settings"
 	settingsstorage "github.com/KyberNetwork/reserve-data/settings/storage"
-	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
 func newTestSetting(t *testing.T, tmpDir string) *settings.Settings {
@@ -23,13 +24,13 @@ func newTestSetting(t *testing.T, tmpDir string) *settings.Settings {
 	if err != nil {
 		t.Fatal(err)
 	}
-	addressSetting := &settings.AddressSetting{}
+	addressConfiguration := &common.ContractAddressConfiguration{}
 
 	exchangeSetting, err := settings.NewExchangeSetting(boltSettingStorage)
 	if err != nil {
 		t.Fatal(err)
 	}
-	setting, err := settings.NewSetting(tokenSetting, addressSetting, exchangeSetting)
+	setting, err := settings.NewSetting(tokenSetting, addressConfiguration, exchangeSetting)
 	if err != nil {
 		t.Fatal(err)
 	}

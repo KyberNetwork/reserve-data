@@ -1,17 +1,13 @@
 package core
 
 import (
-	"io/ioutil"
-	"log"
 	"math/big"
-	"path/filepath"
 	"testing"
 
-	"github.com/KyberNetwork/reserve-data/common"
-	"github.com/KyberNetwork/reserve-data/settings"
-	"github.com/KyberNetwork/reserve-data/settings/storage"
 	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+
+	"github.com/KyberNetwork/reserve-data/common"
 )
 
 type testExchange struct {
@@ -134,32 +130,12 @@ func (tas testActivityStorage) HasPendingDeposit(token common.Token, exchange co
 }
 
 func getTestCore(hasPendingDeposit bool) *ReserveCore {
-	tmpDir, err := ioutil.TempDir("", "core_test")
-	if err != nil {
-		log.Fatal(err)
-	}
-	boltSettingStorage, err := storage.NewBoltSettingStorage(filepath.Join(tmpDir, "setting.db"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	tokenSetting, err := settings.NewTokenSetting(boltSettingStorage)
-	if err != nil {
-		log.Fatal(err)
-	}
-	addressSetting := &settings.AddressSetting{}
-	exchangeSetting, err := settings.NewExchangeSetting(boltSettingStorage)
-	if err != nil {
-		log.Fatal(err)
-	}
+	addressSetting := &common.ContractAddressConfiguration{}
 
-	setting, err := settings.NewSetting(tokenSetting, addressSetting, exchangeSetting)
-	if err != nil {
-		log.Fatal(err)
-	}
 	return NewReserveCore(
 		testBlockchain{},
 		testActivityStorage{hasPendingDeposit},
-		setting,
+		addressSetting,
 	)
 }
 

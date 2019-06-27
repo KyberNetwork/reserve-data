@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/KyberNetwork/reserve-data/common"
-	"github.com/KyberNetwork/reserve-data/settings"
 	ethereum "github.com/ethereum/go-ethereum/common"
+
+	"github.com/KyberNetwork/reserve-data/common"
 )
 
 // maxActivityLifeTime is the longest time of an activity. If the
@@ -28,6 +28,7 @@ type Fetcher struct {
 	currentBlockUpdateTime uint64
 	simulationMode         bool
 	setting                Setting
+	contractAddressConf    *common.ContractAddressConfiguration
 }
 
 func NewFetcher(
@@ -35,16 +36,19 @@ func NewFetcher(
 	globalStorage GlobalStorage,
 	theworld TheWorld,
 	runner Runner,
-	simulationMode bool, setting Setting) *Fetcher {
+	simulationMode bool,
+	setting Setting,
+	contractAddressConf *common.ContractAddressConfiguration) *Fetcher {
 	return &Fetcher{
-		storage:        storage,
-		globalStorage:  globalStorage,
-		exchanges:      []Exchange{},
-		blockchain:     nil,
-		theworld:       theworld,
-		runner:         runner,
-		simulationMode: simulationMode,
-		setting:        setting,
+		storage:             storage,
+		globalStorage:       globalStorage,
+		exchanges:           []Exchange{},
+		blockchain:          nil,
+		theworld:            theworld,
+		runner:              runner,
+		simulationMode:      simulationMode,
+		setting:             setting,
+		contractAddressConf: contractAddressConf,
 	}
 }
 
@@ -304,11 +308,7 @@ func (f *Fetcher) FetchCurrentBlock(timepoint uint64) {
 }
 
 func (f *Fetcher) FetchBalanceFromBlockchain() (map[string]common.BalanceEntry, error) {
-	reserveAddr, err := f.setting.GetAddress(settings.Reserve)
-	if err != nil {
-		return nil, err
-	}
-	return f.blockchain.FetchBalanceData(reserveAddr, 0)
+	return f.blockchain.FetchBalanceData(f.contractAddressConf.Reserve, 0)
 }
 
 func (f *Fetcher) newNonceValidator() func(common.ActivityRecord) bool {

@@ -1,12 +1,11 @@
 package world
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"time"
-
-	"github.com/gin-gonic/gin/json"
 
 	"github.com/KyberNetwork/reserve-data/common"
 )
