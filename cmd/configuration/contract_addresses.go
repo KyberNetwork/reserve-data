@@ -92,6 +92,7 @@ func NewContractAddressConfigurationFromContext(c *cli.Context) (*common.Contrac
 			return nil, fmt.Errorf("invalid pricing contract address %s", pricingContractStr)
 		}
 		conf.Reserve = ethereum.HexToAddress(reserveContractStr)
+		conf.Wrapper = ethereum.HexToAddress(wrapperContractStr)
 		conf.Pricing = ethereum.HexToAddress(pricingContractStr)
 		return conf, nil
 	}
