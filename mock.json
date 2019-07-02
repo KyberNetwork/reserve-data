@@ -22,7 +22,7 @@
       "name": "Ethereum",
       "address": "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
       "decimals": 18,
-      "set_rate": "",
+      "set_rate": "not_set",
       "rebalance": true,
       "created": 1535021910205,
       "updated": 1535021910205,
@@ -117,7 +117,8 @@
           "exchange_id": 1,
           "orderbook": [
             {
-              "quote": 1
+              "quote": 1,
+              "base": 2
             }
           ]
         }
@@ -177,10 +178,12 @@
           "price_limit_max": 0,
           "min_notional": 0.01,
           "exchange_id": 2,
-          "orderbook": {
+          "orderbook": [
+            {
             "quote": 1,
             "base": 3
-          }
+            }
+          ]
         }
       ],
       "target": {
