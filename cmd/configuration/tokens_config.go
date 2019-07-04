@@ -196,6 +196,9 @@ var TokenConfigs = map[string]map[string]common.Token{
 		"MANA": common.NewToken("MANA", "MANA", "0xf5E314c435B3B2EE7c14eA96fCB3307C3a3Ef608", 18, false, false, common.GetTimepoint()),
 		"REQ":  common.NewToken("REQ", "Request", "0xa448cD1DB463ae738a171C483C56157d6B83B97f", 18, false, false, common.GetTimepoint()),
 	},
+	common.SimulationMode: {
+		"ETH": common.NewToken("ETH", "Ethereum", "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", 18, true, true, common.GetTimepoint()),
+	},
 }
 
 func mustGetTokenConfig(kyberEnv string) map[string]common.Token {
