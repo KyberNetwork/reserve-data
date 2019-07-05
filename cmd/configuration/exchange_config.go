@@ -1,8 +1,6 @@
 package configuration
 
 import (
-	"encoding/json"
-	"io/ioutil"
 	"log"
 
 	"github.com/KyberNetwork/reserve-data/common"
@@ -165,18 +163,19 @@ var ExchangeConfigs = map[string]map[common.ExchangeID]common.ExchangeAddresses{
 			"GTO":  ethereum.HexToAddress("0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90"),
 		},
 	},
+	common.SimulationMode: {
+		"binance": {
+			"ETH": ethereum.HexToAddress("0x06893dd6b2439237f5d484d6ae6380dc1052e2e8"),
+		},
+		"huobi": {
+			"ETH": ethereum.HexToAddress("0x89ed1840abf3968b6c72fc8832c5554178d16345"),
+		},
+	},
 }
 
 func mustGetExchangeConfig(kyberEnv string) map[common.ExchangeID]common.ExchangeAddresses {
 	result, avail := ExchangeConfigs[kyberEnv]
 	if avail {
-		return result
-	}
-	if kyberEnv == common.SimulationMode {
-		result, err := loadDepositAddressFromFile(simSettingPath)
-		if err != nil {
-			log.Panicf("cannot load data from pre-defined simluation setting file, err: %v", err)
-		}
 		return result
 	}
 	if kyberEnv == common.ProductionMode {
@@ -195,31 +194,4 @@ type exchangeDepositAddress map[string]string
 // it is used mainly to read addfress config from JSON file.
 type AddressDepositConfig struct {
 	Exchanges map[string]exchangeDepositAddress `json:"exchanges"`
-}
-
-func loadDepositAddressFromFile(path string) (map[common.ExchangeID]common.ExchangeAddresses, error) {
-	var (
-		result          = make(map[common.ExchangeID]common.ExchangeAddresses)
-		exAddressConfig AddressDepositConfig
-	)
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		return result, err
-	}
-	if err := json.Unmarshal(data, &exAddressConfig); err != nil {
-		return result, err
-	}
-	for exchangeID, addrs := range exAddressConfig.Exchanges {
-		exchangeAddresses := convertToAddressMap(addrs)
-		result[common.ExchangeID(exchangeID)] = exchangeAddresses
-	}
-	return result, nil
-}
-
-func convertToAddressMap(data exchangeDepositAddress) common.ExchangeAddresses {
-	result := make(common.ExchangeAddresses)
-	for token, addrStr := range data {
-		result[token] = ethereum.HexToAddress(addrStr)
-	}
-	return result
 }
