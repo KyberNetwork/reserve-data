@@ -7,11 +7,12 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/boltdb/bolt"
+	ethereum "github.com/ethereum/go-ethereum/common"
+
 	"github.com/KyberNetwork/reserve-data/boltutil"
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/settings"
-	"github.com/boltdb/bolt"
-	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
 const tokenVersion = "token_version"
@@ -35,11 +36,15 @@ func addTokenByID(tx *bolt.Tx, t common.Token) error {
 		return uErr
 	}
 	key := []byte(strings.ToLower(t.ID))
-	creationTime, uErr := getTokenCreationTime(b, key)
-	if uErr != nil {
-		return uErr
+
+	if t.CreationTime == 0 {
+		creationTime, uErr := getTokenCreationTime(b, key)
+		if uErr != nil {
+			return uErr
+		}
+		t.CreationTime = creationTime
 	}
-	t.CreationTime = creationTime
+
 	dataJSON, uErr := json.Marshal(t)
 	if uErr != nil {
 		return uErr

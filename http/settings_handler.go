@@ -269,7 +269,9 @@ func (s *Server) ConfirmTokenUpdate(c *gin.Context) {
 	preparedToken := []common.Token{}
 	for tokenID, tokenUpdate := range tokenUpdates {
 		token := tokenUpdate.Token
-		token.LastActivationChange = common.GetTimepoint()
+		if token.LastActivationChange == 0 {
+			token.LastActivationChange = common.GetTimepoint()
+		}
 		preparedToken = append(preparedToken, token)
 		if token.Internal {
 			//set metrics data for the token
