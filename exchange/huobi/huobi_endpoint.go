@@ -229,6 +229,7 @@ func (ep *Endpoint) DepositHistory(tokens []common.Token) (exchange.HuobiDeposit
 			err = fmt.Errorf("getting deposit history from Huobi failed: %s", result.Reason)
 		}
 	}
+	log.Printf("huobi deposit history: %v", result)
 	return result, err
 }
 
