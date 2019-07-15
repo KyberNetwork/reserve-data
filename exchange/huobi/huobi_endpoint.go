@@ -98,7 +98,6 @@ func (ep *Endpoint) getResponse(
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response: %v", err)
 	}
-	err = resp.Body.Close()
 	if err = resp.Body.Close(); err != nil {
 		log.Printf("Response body close error: %s", err)
 	}
