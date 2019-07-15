@@ -55,13 +55,13 @@ type HuobiDeposits struct {
 }
 
 type HuobiDeposit struct {
-	ID       uint64 `json:"id"`
-	TxID     uint64 `json:"transaction-id"`
-	Currency string `json:"currency"`
-	Amount   string `json:"amount"`
-	State    string `json:"state"`
-	TxHash   string `json:"tx-hash"`
-	Address  string `json:"address"`
+	ID       uint64  `json:"id"`
+	TxID     uint64  `json:"transaction-id"`
+	Currency string  `json:"currency"`
+	Amount   float64 `json:"amount"`
+	State    string  `json:"state"`
+	TxHash   string  `json:"tx-hash"`
+	Address  string  `json:"address"`
 }
 
 type HuobiWithdraws struct {
