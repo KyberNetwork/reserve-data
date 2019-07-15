@@ -744,6 +744,7 @@ func (h *Huobi) DepositStatus(id common.ActivityID, tx1Hash, currency string, se
 	return "", nil
 }
 
+//WithdrawStatus return withdraw status from huobi
 func (h *Huobi) WithdrawStatus(
 	id, currency string, amount float64, timepoint uint64) (string, string, error) {
 	withdrawID, _ := strconv.ParseUint(id, 10, 64)
@@ -760,6 +761,9 @@ func (h *Huobi) WithdrawStatus(
 		if withdraw.TxID == withdrawID {
 			if withdraw.State == "confirmed" {
 				return common.ExchangeStatusDone, withdraw.TxHash, nil
+			}
+			if withdraw.TxHash[0:2] != "0x" {
+				withdraw.TxHash = "0x" + withdraw.TxHash
 			}
 			return "", withdraw.TxHash, nil
 		}
