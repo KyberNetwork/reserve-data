@@ -757,7 +757,7 @@ func (h *Huobi) WithdrawStatus(
 	}
 	log.Printf("Huobi Withdrawal id: %d", withdrawID)
 	for _, withdraw := range withdraws.Data {
-		if withdraw.TxID == withdrawID {
+		if withdraw.ID == withdrawID {
 			if withdraw.State == "confirmed" {
 				if withdraw.TxHash[0:2] != "0x" {
 					withdraw.TxHash = "0x" + withdraw.TxHash
