@@ -250,14 +250,13 @@ func (h *Huobi) Trade(tradeType string, base common.Token, quote common.Token, r
 	return result.OrderID, done, remaining, finished, err
 }
 
+//Withdraw return withdraw id from huobi
 func (h *Huobi) Withdraw(token common.Token, amount *big.Int, address ethereum.Address, timepoint uint64) (string, error) {
 	withdrawID, err := h.interf.Withdraw(token, amount, address)
 	if err != nil {
 		return "", err
 	}
-	// this magical logic base on inspection on huobi website
-	result := withdrawID + "01"
-	return result, err
+	return withdrawID, err
 }
 
 func (h *Huobi) CancelOrder(id, base, quote string) error {
@@ -760,10 +759,10 @@ func (h *Huobi) WithdrawStatus(
 	for _, withdraw := range withdraws.Data {
 		if withdraw.TxID == withdrawID {
 			if withdraw.State == "confirmed" {
+				if withdraw.TxHash[0:2] != "0x" {
+					withdraw.TxHash = "0x" + withdraw.TxHash
+				}
 				return common.ExchangeStatusDone, withdraw.TxHash, nil
-			}
-			if withdraw.TxHash[0:2] != "0x" {
-				withdraw.TxHash = "0x" + withdraw.TxHash
 			}
 			return "", withdraw.TxHash, nil
 		}
