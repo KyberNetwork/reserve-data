@@ -753,7 +753,7 @@ func (h *Huobi) WithdrawStatus(
 	}
 	withdraws, err := h.interf.WithdrawHistory(tokens)
 	if err != nil {
-		return "", "", nil
+		return "", "", fmt.Errorf("can't get withdraw history from huobi: %s", err.Error())
 	}
 	log.Printf("Huobi Withdrawal id: %d", withdrawID)
 	for _, withdraw := range withdraws.Data {
