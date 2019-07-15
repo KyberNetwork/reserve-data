@@ -605,7 +605,10 @@ func (h *Huobi) exchangeDepositStatus(id common.ActivityID, tx2Entry common.TXEn
 	}
 	//check tx2 deposit status from Huobi
 	for _, deposit := range deposits.Data {
-		// log.Printf("deposit tx is %s, with token %s", deposit.TxHash, deposit.Currency)
+		log.Printf("deposit tx is %s, with token %s", deposit.TxHash, deposit.Currency)
+		if deposit.TxHash[0:2] != "0x" {
+			deposit.TxHash = "0x" + deposit.TxHash
+		}
 		if deposit.TxHash == tx2Entry.Hash {
 			if deposit.State == "safe" || deposit.State == "confirmed" {
 				data := common.NewTXEntry(tx2Entry.Hash,
