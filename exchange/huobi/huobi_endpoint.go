@@ -49,6 +49,7 @@ func (ep *Endpoint) fillRequest(req *http.Request, signNeeded bool) {
 	}
 }
 
+//GetResponse from huobi api
 func (ep *Endpoint) GetResponse(
 	method string, reqURL string,
 	params map[string]string, signNeeded bool) ([]byte, error) {
@@ -71,11 +72,12 @@ func (ep *Endpoint) GetResponse(
 
 	q := req.URL.Query()
 	if signNeeded {
-		timestamp := time.Now().Format("2006-01-02T15:04:05")
+		timestamp := time.Now().UTC().Format("2006-01-02T15:04:05")
 		params["SignatureMethod"] = "HmacSHA256"
 		params["SignatureVersion"] = "2"
 		params["AccessKeyId"] = ep.signer.GetKey()
 		params["Timestamp"] = timestamp
+		params["op"] = "auth"
 	}
 	var sortedParams []string
 	for k := range params {
@@ -181,16 +183,16 @@ func (ep *Endpoint) Trade(tradeType string, base, quote common.Token, rate, amou
 	return result, nil
 }
 
+//WithdrawHistory return withdraw history from huobi
 func (ep *Endpoint) WithdrawHistory(tokens []common.Token) (exchange.HuobiWithdraws, error) {
 	result := exchange.HuobiWithdraws{}
 	size := len(tokens) * 2
 	respBody, err := ep.GetResponse(
 		"GET",
-		ep.interf.AuthenticatedEndpoint()+"/v1/query/finances",
+		ep.interf.AuthenticatedEndpoint()+"/v1/query/deposit-withdraw",
 		map[string]string{
 			"size": strconv.Itoa(size),
-			// "size":  "10",
-			"types": "withdraw-virtual",
+			"type": "withdraw",
 		},
 		true,
 	)
@@ -205,16 +207,16 @@ func (ep *Endpoint) WithdrawHistory(tokens []common.Token) (exchange.HuobiWithdr
 	return result, err
 }
 
+//DepositHistory get deposit history from huobi
 func (ep *Endpoint) DepositHistory(tokens []common.Token) (exchange.HuobiDeposits, error) {
 	result := exchange.HuobiDeposits{}
 	size := len(tokens) * 2
 	respBody, err := ep.GetResponse(
 		"GET",
-		ep.interf.AuthenticatedEndpoint()+"/v1/query/finances",
+		ep.interf.AuthenticatedEndpoint()+"/v1/query/deposit-withdraw",
 		map[string]string{
 			"size": strconv.Itoa(size),
-			// "size":  "10",
-			"types": "deposit-virtual",
+			"type": "deposit",
 		},
 		true,
 	)
