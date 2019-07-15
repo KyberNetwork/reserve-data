@@ -215,8 +215,9 @@ func (ep *Endpoint) DepositHistory(tokens []common.Token) (exchange.HuobiDeposit
 		"GET",
 		ep.interf.AuthenticatedEndpoint()+"/v1/query/deposit-withdraw",
 		map[string]string{
-			"size": strconv.Itoa(size),
-			"type": "deposit",
+			"size":   strconv.Itoa(size),
+			"type":   "deposit",
+			"direct": "next",
 		},
 		true,
 	)

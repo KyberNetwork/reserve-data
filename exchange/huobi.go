@@ -698,7 +698,7 @@ func (h *Huobi) DepositStatus(id common.ActivityID, tx1Hash, currency string, se
 			sentAmount,
 			common.GetTimestamp())
 		if uErr := h.storage.StorePendingIntermediateTx(id, data); uErr != nil {
-			log.Printf("Huobi Trying to store intermediate tx to huobi storage, error: %s. Ignore it and try later", err.Error())
+			log.Printf("Huobi Trying to store intermediate tx to huobi storage, error: %s. Ignore it and try later", uErr.Error())
 			return "", nil
 		}
 		return h.exchangeDepositStatus(id, tx2Entry, currency, sentAmount)

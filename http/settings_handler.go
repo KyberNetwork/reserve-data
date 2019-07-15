@@ -603,9 +603,6 @@ func (s *Server) getAddressResponse() (*common.AddressesResponse, error) {
 	if _, ok := common.SupportedExchanges["huobi"]; ok {
 		addressSettings[intermediateOPAddressName] = s.blockchain.GetIntermediatorOPAddress().Hex()
 	}
-	if err != nil {
-		return nil, err
-	}
 	addressResponse := common.NewAddressResponse(addressSettings)
 	return addressResponse, nil
 }
