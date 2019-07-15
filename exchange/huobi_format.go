@@ -71,13 +71,13 @@ type HuobiWithdraws struct {
 }
 
 type HuobiWithdrawHistory struct {
-	ID       uint64 `json:"id"`
-	TxID     uint64 `json:"transaction-id"`
-	Currency string `json:"currency"`
+	ID       uint64  `json:"id"`
+	TxID     uint64  `json:"transaction-id"`
+	Currency string  `json:"currency"`
 	Amount   float64 `json:"amount"`
-	State    string `json:"state"`
-	TxHash   string `json:"tx-hash"`
-	Address  string `json:"address"`
+	State    string  `json:"state"`
+	TxHash   string  `json:"tx-hash"`
+	Address  string  `json:"address"`
 }
 
 type HuobiWithdraw struct {
