@@ -376,7 +376,7 @@ func (rc ReserveCore) GetSetRateResult(tokens []common.Token,
 	if len(tokens) != len(afpMids) {
 		return tx, fmt.Errorf("number of afpMids (%d) is not equal to number of tokens (%d)", len(afpMids), len(tokens))
 	}
-	if err = sanityCheck(buys, afpMids, sells); err != nil {
+	if err = sanityCheck(buys, sells); err != nil {
 		return tx, err
 	}
 	var tokenAddrs []ethereum.Address
@@ -490,7 +490,7 @@ func (rc ReserveCore) SetRates(
 	return uid, common.CombineActivityStorageErrs(err, sErr)
 }
 
-func sanityCheck(buys, afpMid, sells []*big.Int) error {
+func sanityCheck(buys, sells []*big.Int) error {
 	eth := big.NewFloat(0).SetInt(common.EthToWei(1))
 	for i, s := range sells {
 		check := checkZeroValue(buys[i], s)
@@ -500,10 +500,10 @@ func sanityCheck(buys, afpMid, sells []*big.Int) error {
 			sRate := calculateRate(sFloat, eth)
 			bFloat := big.NewFloat(0).SetInt(buys[i])
 			bRate := calculateRate(eth, bFloat)
-			aMFloat := big.NewFloat(0).SetInt(afpMid[i])
-			aMRate := calculateRate(aMFloat, eth)
-			if bRate.Cmp(sRate) <= 0 || bRate.Cmp(aMRate) <= 0 {
-				return errors.New("buy price must be bigger than sell price and afpMid price")
+			// aMFloat := big.NewFloat(0).SetInt(afpMid[i])
+			// aMRate := calculateRate(aMFloat, eth)
+			if bRate.Cmp(sRate) < 0 {
+				return errors.New("buy price must be bigger than sell price")
 			}
 		case 0: // both buy/sell rate is 0
 			return nil
