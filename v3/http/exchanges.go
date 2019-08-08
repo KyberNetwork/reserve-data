@@ -1,8 +1,6 @@
 package http
 
 import (
-	"log"
-
 	"github.com/gin-gonic/gin"
 
 	"github.com/KyberNetwork/reserve-data/http/httputil"
@@ -45,68 +43,10 @@ func (s *Server) createUpdateExchange(c *gin.Context) {
 		return
 	}
 	// TODO validate if the update request satisfy constraint
-	id, err := s.storage.CreateUpdateExchange(updateExchange)
+	id, err := s.storage.CreatePendingObject(updateExchange, common.PendingTypeUpdateExchange)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	httputil.ResponseSuccess(c, httputil.WithField("id", id))
-}
-
-func (s *Server) getUpdateExchanges(c *gin.Context) {
-	result, err := s.storage.GetUpdateExchanges()
-	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	httputil.ResponseSuccess(c, httputil.WithData(result))
-}
-
-func (s *Server) getUpdateExchange(c *gin.Context) {
-	var input struct {
-		ID uint64 `uri:"id" binding:"required"`
-	}
-	if err := c.ShouldBindUri(&input); err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	result, err := s.storage.GetUpdateExchange(input.ID)
-	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	httputil.ResponseSuccess(c, httputil.WithData(result))
-}
-
-func (s *Server) confirmUpdateExchange(c *gin.Context) {
-	var input struct {
-		ID uint64 `uri:"id" binding:"required"`
-	}
-	if err := c.ShouldBindUri(&input); err != nil {
-		log.Println(err)
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	err := s.storage.ConfirmUpdateExchange(input.ID)
-	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	httputil.ResponseSuccess(c)
-}
-
-func (s *Server) rejectUpdateExchange(c *gin.Context) {
-	var input struct {
-		ID uint64 `uri:"id" binding:"required"`
-	}
-	if err := c.ShouldBindUri(&input); err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	err := s.storage.RejectUpdateExchange(input.ID)
-	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	httputil.ResponseSuccess(c)
 }

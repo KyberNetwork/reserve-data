@@ -97,7 +97,7 @@ func TestHTTPServerAssetExchange(t *testing.T) {
 		},
 		{ // test confirm update asset exchange
 			msg:      "confirm pending update asset exchange",
-			endpoint: updateAssetExchange + "/1",
+			endpoint: updateAssetExchange + "/2",
 			method:   http.MethodPut,
 			data:     nil,
 			assert:   httputil.ExpectSuccess,

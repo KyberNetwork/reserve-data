@@ -1,8 +1,6 @@
 package http
 
 import (
-	"log"
-
 	"github.com/gin-gonic/gin"
 
 	"github.com/KyberNetwork/reserve-data/http/httputil"
@@ -26,7 +24,7 @@ func (s *Server) createCreateTradingBy(c *gin.Context) {
 		}
 	}
 
-	id, err := s.storage.CreateCreateTradingBy(createTradingBy)
+	id, err := s.storage.CreatePendingObject(createTradingBy, common.PendingTypeCreateTradingBy)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -43,62 +41,4 @@ func (s *Server) checkCreateTradingByEntry(createEntry common.CreateTradingByEnt
 		return common.ErrTradingByAssetIDInvalid
 	}
 	return nil
-}
-
-func (s *Server) getCreateTradingBys(c *gin.Context) {
-	result, err := s.storage.GetCreateTradingBys()
-	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	httputil.ResponseSuccess(c, httputil.WithData(result))
-}
-
-func (s *Server) getCreateTradingBy(c *gin.Context) {
-	var input struct {
-		ID uint64 `uri:"id" binding:"required"`
-	}
-	if err := c.ShouldBindUri(&input); err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	result, err := s.storage.GetCreateTradingBy(input.ID)
-	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	httputil.ResponseSuccess(c, httputil.WithData(result))
-}
-
-func (s *Server) confirmCreateTradingBy(c *gin.Context) {
-	var input struct {
-		ID uint64 `uri:"id" binding:"required"`
-	}
-	if err := c.ShouldBindUri(&input); err != nil {
-		log.Println(err)
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	err := s.storage.ConfirmCreateTradingBy(input.ID)
-	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	httputil.ResponseSuccess(c)
-}
-
-func (s *Server) rejectCreateTradingBy(c *gin.Context) {
-	var input struct {
-		ID uint64 `uri:"id" binding:"required"`
-	}
-	if err := c.ShouldBindUri(&input); err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	err := s.storage.RejectCreateTradingBy(input.ID)
-	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	httputil.ResponseSuccess(c)
 }

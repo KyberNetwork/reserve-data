@@ -2,15 +2,13 @@ package http
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 
+	v1common "github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/http/httputil"
 	"github.com/KyberNetwork/reserve-data/v3/common"
-
-	v1common "github.com/KyberNetwork/reserve-data/common"
 )
 
 func getAssetExchange(assets []common.Asset, assetID, exchangeID uint64) (common.AssetExchange, error) {
@@ -122,7 +120,7 @@ func (s *Server) createCreateAsset(c *gin.Context) {
 		return
 	}
 
-	id, err := s.storage.CreateCreateAsset(createAsset)
+	id, err := s.storage.CreatePendingObject(createAsset, common.PendingTypeCreateAsset)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -182,63 +180,4 @@ func (s *Server) checkCreateAssetEntry(createEntry common.CreateAssetEntry) erro
 	}
 
 	return nil
-}
-
-func (s *Server) getCreateAssets(c *gin.Context) {
-	result, err := s.storage.GetCreateAssets()
-	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	httputil.ResponseSuccess(c, httputil.WithData(result))
-}
-
-func (s *Server) getCreateAsset(c *gin.Context) {
-	var input struct {
-		ID uint64 `uri:"id" binding:"required"`
-	}
-	if err := c.ShouldBindUri(&input); err != nil {
-		log.Println(err)
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	result, err := s.storage.GetCreateAsset(input.ID)
-	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	httputil.ResponseSuccess(c, httputil.WithData(result))
-}
-
-func (s *Server) confirmCreateAsset(c *gin.Context) {
-	var input struct {
-		ID uint64 `uri:"id" binding:"required"`
-	}
-	if err := c.ShouldBindUri(&input); err != nil {
-		log.Println(err)
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	err := s.storage.ConfirmCreateAsset(input.ID)
-	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	httputil.ResponseSuccess(c)
-}
-
-func (s *Server) rejectCreateAsset(c *gin.Context) {
-	var input struct {
-		ID uint64 `uri:"id" binding:"required"`
-	}
-	if err := c.ShouldBindUri(&input); err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	err := s.storage.RejectCreateAsset(input.ID)
-	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	httputil.ResponseSuccess(c)
 }

@@ -199,6 +199,30 @@ CREATE TABLE IF NOT EXISTS create_trading_by
 	data 	JSON		NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS pending_object
+(
+	id		SERIAL PRIMARY KEY,
+	created	TIMESTAMP 	NOT NULL,
+	data 	JSON		NOT NULL,
+	data_type 	TEXT		NOT NULL
+);
+
+CREATE OR REPLACE FUNCTION new_pending_object(_data pending_object.data%TYPE,_type pending_object.data_type%TYPE)
+    RETURNS int AS
+$$
+
+DECLARE
+    _id pending_object.id%TYPE;
+
+BEGIN
+    DELETE FROM pending_object WHERE data_type=_type;
+    INSERT INTO pending_object(created, data, data_type) VALUES (now(), _data, _type) RETURNING id INTO _id;
+    RETURN _id;
+END
+
+$$ LANGUAGE PLPGSQL;
+
+
 CREATE OR REPLACE FUNCTION new_create_asset(_data create_assets.data%TYPE)
     RETURNS int AS
 $$
@@ -522,25 +546,19 @@ BEGIN
     RETURN _id;
 END
 $$ LANGUAGE PLPGSQL;
+
+
 `
 
 type preparedStmts struct {
-	getExchanges              *sqlx.Stmt
-	getExchange               *sqlx.Stmt
-	getExchangeByName         *sqlx.Stmt
-	updateExchange            *sqlx.NamedStmt
-	newAsset                  *sqlx.NamedStmt
-	newAssetExchange          *sqlx.NamedStmt
-	updateAssetExchange       *sqlx.NamedStmt
-	newCreateAssetExchange    *sqlx.Stmt
-	getCreateAssetExchanges   *sqlx.Stmt
-	deleteCreateAssetExchange *sqlx.Stmt
-
-	newUpdateAssetExchange    *sqlx.Stmt
-	getUpdateAssetExchanges   *sqlx.Stmt
-	deleteUpdateAssetExchange *sqlx.Stmt
-
-	newTradingPair *sqlx.NamedStmt
+	getExchanges        *sqlx.Stmt
+	getExchange         *sqlx.Stmt
+	getExchangeByName   *sqlx.Stmt
+	updateExchange      *sqlx.NamedStmt
+	newAsset            *sqlx.NamedStmt
+	newAssetExchange    *sqlx.NamedStmt
+	updateAssetExchange *sqlx.NamedStmt
+	newTradingPair      *sqlx.NamedStmt
 
 	getAsset                 *sqlx.Stmt
 	getAssetBySymbol         *sqlx.Stmt
@@ -556,37 +574,13 @@ type preparedStmts struct {
 	getTradingPairSymbols *sqlx.Stmt
 	getMinNotional        *sqlx.Stmt
 	// getTransferableAssets *sqlx.Stmt
-	getCreateAssets   *sqlx.Stmt
-	newCreateAsset    *sqlx.Stmt
-	deleteCreateAsset *sqlx.Stmt
-
-	newUpdateAsset    *sqlx.Stmt
-	getUpdateAssets   *sqlx.Stmt
-	deleteUpdateAsset *sqlx.Stmt
-
-	newChangeAssetAddress    *sqlx.Stmt
-	getChangeAssetAddresses  *sqlx.Stmt
-	deleteChangeAssetAddress *sqlx.Stmt
-
-	newUpdateExchange    *sqlx.Stmt
-	getUpdateExchanges   *sqlx.Stmt
-	deleteUpdateExchange *sqlx.Stmt
-
-	newCreateTradingPair    *sqlx.Stmt
-	getCreateTradingPairs   *sqlx.Stmt
-	deleteCreateTradingPair *sqlx.Stmt
-
-	newUpdateTradingPair    *sqlx.Stmt
-	getUpdateTradingPairs   *sqlx.Stmt
-	deleteUpdateTradingPair *sqlx.Stmt
-
 	newTradingBy    *sqlx.Stmt
 	getTradingBy    *sqlx.Stmt
 	deleteTradingBy *sqlx.Stmt
 
-	newCreateTradingBy    *sqlx.Stmt
-	getCreateTradingBy    *sqlx.Stmt
-	deleteCreateTradingBy *sqlx.Stmt
+	newPendingObject    *sqlx.Stmt
+	getPendingObject    *sqlx.Stmt
+	deletePendingObject *sqlx.Stmt
 }
 
 func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
@@ -601,36 +595,6 @@ func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
 	}
 
 	newAssetExchange, updateAssetExchange, getAssetExchange, getAssetExchangeBySymbol, err := assetExchangeStatements(db)
-	if err != nil {
-		return nil, err
-	}
-
-	newCreateAsset, deleteCreateAsset, getCreateAsset, err := createAssetStatements(db)
-	if err != nil {
-		return nil, err
-	}
-
-	newUpdateAsset, deleteUpdateAsset, listUpdateAsset, err := updateAssetStatements(db)
-	if err != nil {
-		return nil, err
-	}
-
-	newChangeAssetAddress, deleteChangeAssetAddress, getChangeAssetAddresses, err := changeAssetAddressStatements(db)
-	if err != nil {
-		return nil, err
-	}
-
-	newUpdateExchange, deleteUpdateExchange, listUpdateExchange, err := updateExchangeStatements(db)
-	if err != nil {
-		return nil, err
-	}
-
-	newCreateTradingPair, deleteCreateTradingPair, listCreateTradingPair, err := createTradingPairStatements(db)
-	if err != nil {
-		return nil, err
-	}
-
-	newUpdateTradingPair, deleteUpdateTradingPair, listUpdateTradingPair, err := updateTradingPairStatements(db)
 	if err != nil {
 		return nil, err
 	}
@@ -666,22 +630,12 @@ func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
 		return nil, err
 	}
 
-	newCreateAssetExchanges, getPendingAssetExchanges, deleteCreateAssetExchange, err := createAssetExchangeStatements(db)
-	if err != nil {
-		return nil, err
-	}
-
-	newUpdateAssetExchanges, getUpdateAssetExchanges, deleteUpdateAssetExchange, err := updateAssetExchangeStatements(db)
-	if err != nil {
-		return nil, err
-	}
-
 	newTradingBy, getTradingBy, deleteTradingBy, err := tradingByStatements(db)
 	if err != nil {
 		return nil, err
 	}
 
-	newCreateTradingBy, deleteCreateTradingBy, getCreateTradingBy, err := createTradingByStatements(db)
+	newPendingObj, deletePendingObj, getPendingObj, err := pendingObjectStatements(db)
 	if err != nil {
 		return nil, err
 	}
@@ -694,14 +648,6 @@ func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
 		newAsset:            newAsset,
 		newAssetExchange:    newAssetExchange,
 		updateAssetExchange: updateAssetExchange,
-
-		newCreateAssetExchange:    newCreateAssetExchanges,
-		getCreateAssetExchanges:   getPendingAssetExchanges,
-		deleteCreateAssetExchange: deleteCreateAssetExchange,
-
-		newUpdateAssetExchange:    newUpdateAssetExchanges,
-		getUpdateAssetExchanges:   getUpdateAssetExchanges,
-		deleteUpdateAssetExchange: deleteUpdateAssetExchange,
 
 		newTradingPair:  newTradingPair,
 		newTradingBy:    newTradingBy,
@@ -722,33 +668,9 @@ func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
 		getTradingPairSymbols: getTradingPairSymbols,
 		getMinNotional:        getMinNotional,
 
-		newCreateAsset:    newCreateAsset,
-		getCreateAssets:   getCreateAsset,
-		deleteCreateAsset: deleteCreateAsset,
-
-		newUpdateAsset:    newUpdateAsset,
-		getUpdateAssets:   listUpdateAsset,
-		deleteUpdateAsset: deleteUpdateAsset,
-
-		newChangeAssetAddress:    newChangeAssetAddress,
-		getChangeAssetAddresses:  getChangeAssetAddresses,
-		deleteChangeAssetAddress: deleteChangeAssetAddress,
-
-		newUpdateExchange:    newUpdateExchange,
-		getUpdateExchanges:   listUpdateExchange,
-		deleteUpdateExchange: deleteUpdateExchange,
-
-		newCreateTradingPair:    newCreateTradingPair,
-		getCreateTradingPairs:   listCreateTradingPair,
-		deleteCreateTradingPair: deleteCreateTradingPair,
-
-		newUpdateTradingPair:    newUpdateTradingPair,
-		getUpdateTradingPairs:   listUpdateTradingPair,
-		deleteUpdateTradingPair: deleteUpdateTradingPair,
-
-		newCreateTradingBy:    newCreateTradingBy,
-		getCreateTradingBy:    getCreateTradingBy,
-		deleteCreateTradingBy: deleteCreateTradingBy,
+		newPendingObject:    newPendingObj,
+		deletePendingObject: deletePendingObj,
+		getPendingObject:    getPendingObj,
 	}, nil
 }
 
@@ -1097,159 +1019,6 @@ func exchangeStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, *sqlx.
 	return getExchanges, getExchange, getExchangeByName, updateExchange, nil
 }
 
-func createAssetExchangeStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, error) {
-	const newCreateAssetExchangesQuery = `SELECT new_create_asset_exchange FROM new_create_asset_exchange ($1);`
-	newCreateAssetExchanges, err := db.Preparex(newCreateAssetExchangesQuery)
-	if err != nil {
-		return nil, nil, nil, errors.Wrap(err, "failed to prepare newCreateAssetExchanges")
-	}
-	const getCreateAssetExchangeQuery = `SELECT id,created,data FROM create_asset_exchanges WHERE id=COALESCE($1, create_asset_exchanges.id)`
-	getPendingAssetExchanges, err := db.Preparex(getCreateAssetExchangeQuery)
-	if err != nil {
-		return nil, nil, nil, errors.Wrap(err, "failed to prepare getPendingAssetExchanges")
-	}
-	const deleteCreateAssetExchangeQuery = `DELETE FROM create_asset_exchanges WHERE id=$1`
-	deleteCreateAssetExchange, err := db.Preparex(deleteCreateAssetExchangeQuery)
-	if err != nil {
-		return nil, nil, nil, errors.Wrap(err, "failed to prepare deleteCreateAssetExchange")
-	}
-	return newCreateAssetExchanges, getPendingAssetExchanges, deleteCreateAssetExchange, nil
-}
-
-func updateAssetExchangeStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, error) {
-	const newUpdateAssetExchangesQuery = `SELECT new_update_asset_exchange FROM new_update_asset_exchange ($1);`
-	newUpdateAssetExchanges, err := db.Preparex(newUpdateAssetExchangesQuery)
-	if err != nil {
-		return nil, nil, nil, errors.Wrap(err, "failed to prepare newUpdateAssetExchange")
-	}
-	const listUpdateAssetExchangeQuery = `SELECT id,created,data FROM update_asset_exchanges WHERE id=COALESCE($1, update_asset_exchanges.id)`
-	getUpdateAssetExchanges, err := db.Preparex(listUpdateAssetExchangeQuery)
-	if err != nil {
-		return nil, nil, nil, errors.Wrap(err, "failed to prepare getUpdateAssetExchanges")
-	}
-	const deleteUpdateAssetExchangeQuery = `DELETE FROM update_asset_exchanges WHERE id=$1`
-	deleteUpdateAssetExchange, err := db.Preparex(deleteUpdateAssetExchangeQuery)
-	if err != nil {
-		return nil, nil, nil, errors.Wrap(err, "failed to prepapre deletUpdateAssetExchange")
-	}
-	return newUpdateAssetExchanges, getUpdateAssetExchanges, deleteUpdateAssetExchange, nil
-}
-
-func updateTradingPairStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, error) {
-	const newUpdateTradingPairQuery = `SELECT new_update_trading_pair FROM new_update_trading_pair($1)`
-	newUpdateTradingPair, err := db.Preparex(newUpdateTradingPairQuery)
-	if err != nil {
-		return nil, nil, nil, errors.Wrap(err, "failed to prepapre newUpdateTradingPair")
-	}
-	const deleteUpdateTradingPairQuery = `DELETE FROM update_trading_pairs WHERE id=$1`
-	deleteUpdateTradingPair, err := db.Preparex(deleteUpdateTradingPairQuery)
-	if err != nil {
-		return nil, nil, nil, errors.Wrap(err, "failed to prepare deleteUpateTradingPair")
-	}
-	const listUpdateTradingPairQuery = `SELECT id,created,data FROM update_trading_pairs WHERE id=COALESCE($1, update_trading_pairs.id)`
-	listUpdateTradingPair, err := db.Preparex(listUpdateTradingPairQuery)
-	if err != nil {
-		return nil, nil, nil, errors.Wrap(err, "failed to listUpdateTradingPair")
-	}
-	return newUpdateTradingPair, deleteUpdateTradingPair, listUpdateTradingPair, nil
-}
-
-func createTradingPairStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, error) {
-	const newCreateTradingPairQuery = `SELECT new_create_trading_pair FROM new_create_trading_pair($1)`
-	newCreateTradingPair, err := db.Preparex(newCreateTradingPairQuery)
-	if err != nil {
-		return nil, nil, nil, errors.Wrap(err, "failed to prepare newCreateTradingPair")
-	}
-	const deleteCreateTradingPairQuery = `DELETE FROM create_trading_pairs WHERE id=$1`
-	deleteCreateTradingPair, err := db.Preparex(deleteCreateTradingPairQuery)
-	if err != nil {
-		return nil, nil, nil, errors.Wrap(err, "failed to prepapre deleteCreateTradingPair")
-	}
-	const listCreateTradingPairQuery = `SELECT id,created,data FROM create_trading_pairs WHERE id=COALESCE($1, create_trading_pairs.id)`
-	listCreateTradingPair, err := db.Preparex(listCreateTradingPairQuery)
-	if err != nil {
-		return nil, nil, nil, errors.Wrap(err, "failed to prepare listCreateTradingPair")
-	}
-	return newCreateTradingPair, deleteCreateTradingPair, listCreateTradingPair, nil
-}
-
-func updateExchangeStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, error) {
-	const newUpdateExchangeQuery = `SELECT new_update_exchange FROM new_update_exchange($1)`
-	newUpdateExchange, err := db.Preparex(newUpdateExchangeQuery)
-	if err != nil {
-		return nil, nil, nil, errors.Wrap(err, "failed to prepare newUpdateExchange")
-	}
-	const deleteUpdateExchangeQuery = `DELETE FROM update_exchanges WHERE id=$1`
-	deleteUpdateExchange, err := db.Preparex(deleteUpdateExchangeQuery)
-	if err != nil {
-		return nil, nil, nil, errors.Wrap(err, "failed to prepare deleteUpdateExchange")
-	}
-	const listUpdateExchangeQuery = `SELECT id,created,data FROM update_exchanges WHERE id=COALESCE($1, update_exchanges.id)`
-	listUpdateExchange, err := db.Preparex(listUpdateExchangeQuery)
-	if err != nil {
-		return nil, nil, nil, errors.Wrap(err, "failed to prepare listUpdateExchange")
-	}
-	return newUpdateExchange, deleteUpdateExchange, listUpdateExchange, nil
-}
-
-func updateAssetStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, error) {
-	const newUpdateAssetQuery = `SELECT new_update_asset FROM new_update_asset($1)`
-	newUpdateAsset, err := db.Preparex(newUpdateAssetQuery)
-	if err != nil {
-		return nil, nil, nil, errors.Wrap(err, "failed to prepare newUpdateAsset")
-	}
-	const deleteUpdateAssetQuery = `DELETE FROM update_assets WHERE id=$1`
-	deleteUpdateAsset, err := db.Preparex(deleteUpdateAssetQuery)
-	if err != nil {
-		return nil, nil, nil, errors.Wrap(err, "failed to prepare deleteUpdateAsset")
-	}
-	const listUpdateAssetQuery = `SELECT id,created,data FROM update_assets WHERE id=COALESCE($1, update_assets.id)`
-	listUpdateAsset, err := db.Preparex(listUpdateAssetQuery)
-	if err != nil {
-		return nil, nil, nil, errors.Wrap(err, "failed to prepare listUpdateAsset")
-	}
-	return newUpdateAsset, deleteUpdateAsset, listUpdateAsset, nil
-}
-
-func changeAssetAddressStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, error) {
-	const newChangeAssetAddressQuery = `SELECT new_change_asset_address FROM new_change_asset_address($1)`
-	newChangeAssetAddress, err := db.Preparex(newChangeAssetAddressQuery)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	const deleteChangeAssetAddressQuery = `DELETE FROM change_asset_addresses WHERE id=$1`
-	deleteChangeAssetAddress, err := db.Preparex(deleteChangeAssetAddressQuery)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	const getChangeAssetAddressesQuery = `SELECT id,created,data FROM change_asset_addresses WHERE id=COALESCE($1, change_asset_addresses.id)`
-	getChangeAssetAddresses, err := db.Preparex(getChangeAssetAddressesQuery)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	return newChangeAssetAddress, deleteChangeAssetAddress, getChangeAssetAddresses, nil
-}
-
-func createAssetStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, error) {
-	// we have at most one pending at a time, so we delete all exists one before insert new one.
-	const newCreateAssetQuery = `SELECT new_create_asset FROM new_create_asset ($1);`
-	newCreateAsset, err := db.Preparex(newCreateAssetQuery)
-	if err != nil {
-		return nil, nil, nil, errors.Wrap(err, "failed to create newCreateAsset")
-	}
-	const deleteCreateAssetQuery = `DELETE FROM create_assets WHERE id=$1`
-	deleteCreateAsset, err := db.Preparex(deleteCreateAssetQuery)
-	if err != nil {
-		return nil, nil, nil, errors.Wrap(err, "failed to prepare deleteCreateAsset query")
-	}
-	const listCreateAssetQuery = `SELECT id,created,data FROM create_assets WHERE id=COALESCE($1, create_assets.id)`
-	getCreateAsset, err := db.Preparex(listCreateAssetQuery)
-	if err != nil {
-		return nil, nil, nil, errors.Wrap(err, "failed to prepare getCreateAsset")
-	}
-	return newCreateAsset, deleteCreateAsset, getCreateAsset, nil
-}
-
 func tradingByStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, error) {
 	const createTradingByQuery = `SELECT new_trading_by FROM new_trading_by($1,$2);`
 	tradingBy, err := db.Preparex(createTradingByQuery)
@@ -1271,21 +1040,21 @@ func tradingByStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, error
 	return tradingBy, getTradingByPairs, deleteTradingByStmt, nil
 }
 
-func createTradingByStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, error) {
-	const newCreateTradingByQuery = `SELECT new_create_trading_by FROM new_create_trading_by($1)`
-	newCreateTradingBy, err := db.Preparex(newCreateTradingByQuery)
+func pendingObjectStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, error) {
+	const newPendingObjQuery = `SELECT new_pending_object FROM new_pending_object($1, $2)`
+	newPendingObjStmt, err := db.Preparex(newPendingObjQuery)
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	const deleteCreateTradingByQuery = `DELETE FROM create_trading_by WHERE id=$1`
-	deleteCreateTradingBy, err := db.Preparex(deleteCreateTradingByQuery)
+	const deletePendingObjQuery = `DELETE FROM pending_object WHERE id=$1 and data_type=COALESCE($2, pending_object.data_type) returning id`
+	deletePendingStmt, err := db.Preparex(deletePendingObjQuery)
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	const listCreateTradingByQuery = `SELECT id,created,data FROM create_trading_by WHERE id=COALESCE($1, create_trading_by.id)`
-	listCreateTradingBy, err := db.Preparex(listCreateTradingByQuery)
+	const listPendingObjQuery = `SELECT id,created,data FROM pending_object WHERE id=COALESCE($1, pending_object.id) and data_type=COALESCE($2, pending_object.data_type)`
+	listPendingObjStmt, err := db.Preparex(listPendingObjQuery)
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	return newCreateTradingBy, deleteCreateTradingBy, listCreateTradingBy, nil
+	return newPendingObjStmt, deletePendingStmt, listPendingObjStmt, nil
 }

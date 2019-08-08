@@ -135,7 +135,7 @@ func TestHTTPServerTradingPair(t *testing.T) {
 		},
 		{
 			msg:      "confirm asset exchange",
-			endpoint: createAssetExchange + "/1",
+			endpoint: createAssetExchange + "/3",
 			method:   http.MethodPut,
 			assert:   httputil.ExpectSuccess,
 		},
@@ -165,7 +165,7 @@ func TestHTTPServerTradingPair(t *testing.T) {
 		},
 		{
 			msg:      "confirm create trading pair",
-			endpoint: createTradingPair + "/1",
+			endpoint: createTradingPair + "/4",
 			method:   http.MethodPut,
 			assert:   httputil.ExpectSuccess, // will fail because we did not config assets on exchange id=1
 		},
@@ -191,7 +191,7 @@ func TestHTTPServerTradingPair(t *testing.T) {
 		},
 		{
 			msg:      "confirm update trading pair",
-			endpoint: updateTradingPair + "/1",
+			endpoint: updateTradingPair + "/5",
 			method:   http.MethodPut,
 			assert:   httputil.ExpectSuccess,
 		},

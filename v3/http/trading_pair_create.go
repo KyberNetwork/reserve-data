@@ -1,8 +1,6 @@
 package http
 
 import (
-	"log"
-
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 
@@ -77,7 +75,7 @@ func (s *Server) createCreateTradingPair(c *gin.Context) {
 		return
 	}
 
-	id, err := s.storage.CreateCreateTradingPair(createTradingPair)
+	id, err := s.storage.CreatePendingObject(createTradingPair, common.PendingTypeCreateTradingPair)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -122,62 +120,4 @@ func getAssetExchangeByExchangeID(asset common.Asset, exchangeID uint64) (common
 		}
 	}
 	return common.AssetExchange{}, false
-}
-
-func (s *Server) getCreateTradingPairs(c *gin.Context) {
-	result, err := s.storage.GetCreateTradingPairs()
-	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	httputil.ResponseSuccess(c, httputil.WithData(result))
-}
-
-func (s *Server) getCreateTradingPair(c *gin.Context) {
-	var input struct {
-		ID uint64 `uri:"id" binding:"required"`
-	}
-	if err := c.ShouldBindUri(&input); err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	result, err := s.storage.GetCreateTradingPair(input.ID)
-	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	httputil.ResponseSuccess(c, httputil.WithData(result))
-}
-
-func (s *Server) confirmCreateTradingPair(c *gin.Context) {
-	var input struct {
-		ID uint64 `uri:"id" binding:"required"`
-	}
-	if err := c.ShouldBindUri(&input); err != nil {
-		log.Println(err)
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	err := s.storage.ConfirmCreateTradingPair(input.ID)
-	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	httputil.ResponseSuccess(c)
-}
-
-func (s *Server) rejectCreateTradingPair(c *gin.Context) {
-	var input struct {
-		ID uint64 `uri:"id" binding:"required"`
-	}
-	if err := c.ShouldBindUri(&input); err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	err := s.storage.RejectCreateTradingPair(input.ID)
-	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	httputil.ResponseSuccess(c)
 }

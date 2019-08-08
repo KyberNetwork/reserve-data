@@ -89,11 +89,11 @@ func TestReCreateCreateAsset(t *testing.T) {
 	}()
 	s, err := postgres.NewStorage(db)
 	require.NoError(t, err)
-	_, err = s.CreateCreateAsset(createPEA)
+	_, err = s.CreatePendingObject(createPEA, common.PendingTypeCreateAsset)
 	require.NoError(t, err)
-	id2, err := s.CreateCreateAsset(createPEA)
+	id2, err := s.CreatePendingObject(createPEA, common.PendingTypeCreateAsset)
 	require.NoError(t, err)
-	pending, err := s.GetCreateAssets()
+	pending, err := s.GetPendingObjects(common.PendingTypeCreateAsset)
 	require.NoError(t, err)
 	if len(pending) != 1 || pending[0].ID != id2 {
 		t.Fatal("expect 1 element with latest create one")
@@ -192,6 +192,19 @@ func TestHTTPServerAsset(t *testing.T) {
 			method:   http.MethodPost,
 			assert:   httputil.ExpectSuccess,
 			data:     createPEAWithQuoteFalse,
+		},
+		{
+			msg:      "create pending asset",
+			endpoint: createAssetBase + "/2",
+			method:   http.MethodDelete,
+			assert:   httputil.ExpectSuccess,
+		},
+		{
+			msg:      "create pending asset",
+			endpoint: createAssetBase,
+			method:   http.MethodPost,
+			assert:   httputil.ExpectSuccess,
+			data:     createPEA,
 		},
 	}
 

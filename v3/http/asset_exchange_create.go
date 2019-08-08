@@ -1,8 +1,6 @@
 package http
 
 import (
-	"log"
-
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 
@@ -28,7 +26,7 @@ func (s *Server) createCreateAssetExchange(c *gin.Context) {
 		}
 	}
 
-	id, err := s.storage.CreateCreateAssetExchange(createAssetExchange)
+	id, err := s.storage.CreatePendingObject(createAssetExchange, common.PendingTypeCreateAssetExchange)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -56,62 +54,4 @@ func (s *Server) checkCreateAssetExchangeParams(createEntry common.CreateAssetEx
 		return common.ErrDepositAddressMissing
 	}
 	return nil
-}
-
-func (s *Server) getCreateAssetExchanges(c *gin.Context) {
-	result, err := s.storage.GetCreateAssetExchanges()
-	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	httputil.ResponseSuccess(c, httputil.WithData(result))
-}
-
-func (s *Server) getCreateAssetExchange(c *gin.Context) {
-	var input struct {
-		ID uint64 `uri:"id" binding:"required"`
-	}
-	if err := c.ShouldBindUri(&input); err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	result, err := s.storage.GetCreateAssetExchange(input.ID)
-	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	httputil.ResponseSuccess(c, httputil.WithData(result))
-}
-
-func (s *Server) confirmCreateAssetExchange(c *gin.Context) {
-	var input struct {
-		ID uint64 `uri:"id" binding:"required"`
-	}
-	if err := c.ShouldBindUri(&input); err != nil {
-		log.Println(err)
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	err := s.storage.ConfirmCreateAssetExchange(input.ID)
-	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	httputil.ResponseSuccess(c)
-}
-
-func (s *Server) rejectCreateAssetExchange(c *gin.Context) {
-	var input struct {
-		ID uint64 `uri:"id" binding:"required"`
-	}
-	if err := c.ShouldBindUri(&input); err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	err := s.storage.RejectCreateAssetExchange(input.ID)
-	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	httputil.ResponseSuccess(c)
 }

@@ -33,7 +33,7 @@ func (s *Server) createChangeAssetAddress(c *gin.Context) {
 		}
 	}
 
-	id, err := s.storage.CreateChangeAssetAddress(createChangeAssetAddress)
+	id, err := s.storage.CreatePendingObject(createChangeAssetAddress, common.PendingTypeChangeAssetAddr)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -50,64 +50,4 @@ func (s *Server) checkChangeAssetAddressParams(changeAssetAddressEntry common.Ch
 		return common.ErrAddressExists
 	}
 	return nil
-}
-
-func (s *Server) getChangeAssetAddress(c *gin.Context) {
-	var input struct {
-		ID uint64 `uri:"id" binding:"required"`
-	}
-	if err := c.ShouldBindUri(&input); err != nil {
-		log.Printf("cannot bind id of change_asset_addresses from request err=%s", err.Error())
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	result, err := s.storage.GetUpdateAsset(input.ID)
-	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	httputil.ResponseSuccess(c, httputil.WithData(result))
-}
-
-func (s *Server) getChangeAssetAddresses(c *gin.Context) {
-	result, err := s.storage.GetChangeAssetAddresses()
-	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	httputil.ResponseSuccess(c, httputil.WithData(result))
-}
-
-func (s *Server) confirmChangeAssetAddress(c *gin.Context) {
-	var input struct {
-		ID uint64 `uri:"id" binding:"required"`
-	}
-	if err := c.ShouldBindUri(&input); err != nil {
-		log.Printf("cannot bind id of change_asset_addresses from request err=%s", err.Error())
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	err := s.storage.ConfirmChangeAssetAddress(input.ID)
-	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	httputil.ResponseSuccess(c)
-}
-
-func (s *Server) rejectChangeAssetAddress(c *gin.Context) {
-	var input struct {
-		ID uint64 `uri:"id" binding:"required"`
-	}
-	if err := c.ShouldBindUri(&input); err != nil {
-		log.Printf("cannot bind id of change_asset_addresses from request err=%s", err.Error())
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	err := s.storage.RejectChangeAssetAddress(input.ID)
-	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	httputil.ResponseSuccess(c)
 }

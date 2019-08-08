@@ -1,6 +1,7 @@
 package http
 
 import (
+	"github.com/KyberNetwork/reserve-data/v3/common"
 	"github.com/gin-gonic/gin"
 
 	"github.com/KyberNetwork/reserve-data/v3/storage"
@@ -34,62 +35,68 @@ func NewServer(storage storage.Interface, r *gin.Engine) *Server {
 
 	// API for CreateAsset object
 	g.POST("/create-asset", server.createCreateAsset)
-	g.GET("/create-asset", server.getCreateAssets)
-	g.GET("/create-asset/:id", server.getCreateAsset)
-	g.PUT("/create-asset/:id", server.confirmCreateAsset)
-	g.DELETE("/create-asset/:id", server.rejectCreateAsset)
+	g.GET("/create-asset", server.getPendingObjects(common.PendingTypeCreateAsset))
+	g.GET("/create-asset/:id", server.getPendingObject(common.PendingTypeCreateAsset))
+	g.PUT("/create-asset/:id",
+		server.confirmPendingObject(common.PendingTypeCreateAsset, storage.ConfirmCreateAsset))
+	g.DELETE("/create-asset/:id", server.rejectPendingObject(common.PendingTypeCreateAsset))
 
 	// API for UpdateAsset object
 	g.POST("/update-asset", server.createUpdateAsset)
-	g.GET("/update-asset", server.getUpdateAssets)
-	g.GET("/update-asset/:id", server.getUpdateAsset)
-	g.PUT("/update-asset/:id", server.confirmUpdateAsset)
-	g.DELETE("/update-asset/:id", server.rejectUpdateAsset)
+	g.GET("/update-asset", server.getPendingObjects(common.PendingTypeUpdateAsset))
+	g.GET("/update-asset/:id", server.getPendingObject(common.PendingTypeUpdateAsset))
+	g.PUT("/update-asset/:id",
+		server.confirmPendingObject(common.PendingTypeUpdateAsset, storage.ConfirmUpdateAsset))
+	g.DELETE("/update-asset/:id", server.rejectPendingObject(common.PendingTypeUpdateAsset))
 
 	// API for ChangeAssetAddress object
 	g.POST("/change-asset-address", server.createChangeAssetAddress)
-	g.GET("/change-asset-address", server.getChangeAssetAddresses)
-	g.GET("/change-asset-address/:id", server.getChangeAssetAddress)
-	g.PUT("/change-asset-address/:id", server.confirmChangeAssetAddress)
-	g.DELETE("/change-asset-address/:id", server.rejectChangeAssetAddress)
+	g.GET("/change-asset-address", server.getPendingObjects(common.PendingTypeChangeAssetAddr))
+	g.GET("/change-asset-address/:id", server.getPendingObject(common.PendingTypeChangeAssetAddr))
+	g.PUT("/change-asset-address/:id", server.confirmPendingObject(common.PendingTypeChangeAssetAddr, storage.ConfirmChangeAssetAddress))
+	g.DELETE("/change-asset-address/:id", server.rejectPendingObject(common.PendingTypeChangeAssetAddr))
 
 	// API for CreateAssetExchange object
-	g.PUT("/create-asset-exchange/:id", server.confirmCreateAssetExchange)
-	g.GET("/create-asset-exchange", server.getCreateAssetExchanges)
-	g.GET("/create-asset-exchange/:id", server.getCreateAssetExchange)
 	g.POST("/create-asset-exchange", server.createCreateAssetExchange)
-	g.DELETE("/create-asset-exchange/:id", server.rejectCreateAssetExchange)
+	g.GET("/create-asset-exchange", server.getPendingObjects(common.PendingTypeCreateAssetExchange))
+	g.GET("/create-asset-exchange/:id", server.getPendingObject(common.PendingTypeCreateAssetExchange))
+	g.PUT("/create-asset-exchange/:id",
+		server.confirmPendingObject(common.PendingTypeCreateAssetExchange, storage.ConfirmCreateAssetExchange))
+	g.DELETE("/create-asset-exchange/:id", server.rejectPendingObject(common.PendingTypeCreateAssetExchange))
 
-	g.PUT("/update-asset-exchange/:id", server.confirmUpdateAssetExchange)
-	g.GET("/update-asset-exchange", server.getUpdateAssetExchanges)
-	g.GET("/update-asset-exchange/:id", server.getUpdateAssetExchange)
+	g.GET("/update-asset-exchange", server.getPendingObjects(common.PendingTypeUpdateAssetExchange))
+	g.GET("/update-asset-exchange/:id", server.getPendingObject(common.PendingTypeUpdateAssetExchange))
 	g.POST("/update-asset-exchange", server.createUpdateAssetExchange)
-	g.DELETE("/update-asset-exchange/:id", server.rejectUpdateAssetExchange)
+	g.PUT("/update-asset-exchange/:id",
+		server.confirmPendingObject(common.PendingTypeUpdateAssetExchange, storage.ConfirmUpdateAssetExchange))
+	g.DELETE("/update-asset-exchange/:id", server.rejectPendingObject(common.PendingTypeUpdateAssetExchange))
 
 	// API for UpdateExchange object
-	g.PUT("/update-exchange/:id", server.confirmUpdateExchange)
-	g.GET("/update-exchange", server.getUpdateExchanges)
-	g.GET("/update-exchange/:id", server.getUpdateExchange)
+	g.PUT("/update-exchange/:id",
+		server.confirmPendingObject(common.PendingTypeUpdateExchange, storage.ConfirmUpdateExchange))
+	g.GET("/update-exchange", server.getPendingObjects(common.PendingTypeUpdateExchange))
+	g.GET("/update-exchange/:id", server.getPendingObject(common.PendingTypeUpdateExchange))
 	g.POST("/update-exchange", server.createUpdateExchange)
-	g.DELETE("/update-exchange/:id", server.rejectUpdateExchange)
+	g.DELETE("/update-exchange/:id", server.rejectPendingObject(common.PendingTypeUpdateExchange))
 
-	g.PUT("/create-trading-pair/:id", server.confirmCreateTradingPair)
-	g.GET("/create-trading-pair", server.getCreateTradingPairs)
-	g.GET("/create-trading-pair/:id", server.getCreateTradingPair)
+	g.PUT("/create-trading-pair/:id", server.confirmPendingObject(common.PendingTypeCreateTradingPair, storage.ConfirmCreateTradingPair))
+	g.GET("/create-trading-pair", server.getPendingObjects(common.PendingTypeCreateTradingPair))
+	g.GET("/create-trading-pair/:id", server.getPendingObject(common.PendingTypeCreateTradingPair))
 	g.POST("/create-trading-pair", server.createCreateTradingPair)
-	g.DELETE("/create-trading-pair/:id", server.rejectCreateTradingPair)
+	g.DELETE("/create-trading-pair/:id", server.rejectPendingObject(common.PendingTypeCreateTradingPair))
 
-	g.PUT("/update-trading-pair/:id", server.confirmUpdateTradingPair)
-	g.GET("/update-trading-pair", server.getUpdateTradingPairs)
-	g.GET("/update-trading-pair/:id", server.getUpdateTradingPair)
+	g.PUT("/update-trading-pair/:id",
+		server.confirmPendingObject(common.PendingTypeUpdateTradingPair, storage.ConfirmUpdateTradingPair))
+	g.GET("/update-trading-pair", server.getPendingObjects(common.PendingTypeUpdateTradingPair))
+	g.GET("/update-trading-pair/:id", server.getPendingObject(common.PendingTypeUpdateTradingPair))
 	g.POST("/update-trading-pair", server.createUpdateTradingPair)
-	g.DELETE("/update-trading-pair/:id", server.rejectUpdateTradingPair)
+	g.DELETE("/update-trading-pair/:id", server.rejectPendingObject(common.PendingTypeUpdateTradingPair))
 
 	g.POST("/create-trading-by", server.createCreateTradingBy)
-	g.GET("/create-trading-by", server.getCreateTradingBy)
-	g.GET("/create-trading-by/:id", server.getCreateTradingBy)
-	g.PUT("/create-trading-by/:id", server.confirmCreateTradingBy)
-	g.DELETE("/create-trading-by/:id", server.rejectCreateTradingBy)
+	g.GET("/create-trading-by", server.getPendingObjects(common.PendingTypeCreateTradingBy))
+	g.GET("/create-trading-by/:id", server.getPendingObject(common.PendingTypeCreateTradingBy))
+	g.PUT("/create-trading-by/:id", server.confirmPendingObject(common.PendingTypeCreateTradingBy, storage.ConfirmCreateTradingBy))
+	g.DELETE("/create-trading-by/:id", server.rejectPendingObject(common.PendingTypeCreateTradingBy))
 
 	return server
 }

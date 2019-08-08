@@ -110,7 +110,7 @@ func TestServer_TradingBy(t *testing.T) {
 			assert: httputil.ExpectSuccess,
 		}, {
 			msg:      "confirm create trading by",
-			endpoint: createTradingBy + "/1",
+			endpoint: createTradingBy + "/2",
 			method:   http.MethodPut,
 			assert: func(t *testing.T, resp *httptest.ResponseRecorder) {
 				httputil.ExpectSuccess(t, resp)
@@ -122,7 +122,7 @@ func TestServer_TradingBy(t *testing.T) {
 			},
 		}, {
 			msg:      "failed to confirm create trading by (id invalid)",
-			endpoint: createTradingBy + "/2",
+			endpoint: createTradingBy + "/3",
 			method:   http.MethodPut,
 			assert:   httputil.ExpectFailureWithReason(common.ErrNotFound.Error()),
 		}, {
@@ -140,7 +140,7 @@ func TestServer_TradingBy(t *testing.T) {
 			assert: httputil.ExpectSuccess,
 		}, {
 			msg:      "test delete pending trading by",
-			endpoint: createTradingBy + "/2",
+			endpoint: createTradingBy + "/3",
 			method:   http.MethodDelete,
 			assert:   httputil.ExpectSuccess,
 		},
