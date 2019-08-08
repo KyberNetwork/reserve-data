@@ -38,7 +38,7 @@ func (s *Server) getUpdateTradingPairs(c *gin.Context) {
 
 func (s *Server) getUpdateTradingPair(c *gin.Context) {
 	var input struct {
-		ID uint64 `uri:"id" binding:"required"`
+		ID uint64 `uri:"id" binding:"exists"`
 	}
 	if err := c.ShouldBindUri(&input); err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
@@ -54,7 +54,7 @@ func (s *Server) getUpdateTradingPair(c *gin.Context) {
 
 func (s *Server) confirmUpdateTradingPair(c *gin.Context) {
 	var input struct {
-		ID uint64 `uri:"id" binding:"required"`
+		ID uint64 `uri:"id" binding:"exists"`
 	}
 	if err := c.ShouldBindUri(&input); err != nil {
 		log.Println(err)
@@ -71,7 +71,7 @@ func (s *Server) confirmUpdateTradingPair(c *gin.Context) {
 
 func (s *Server) rejectUpdateTradingPair(c *gin.Context) {
 	var input struct {
-		ID uint64 `uri:"id" binding:"required"`
+		ID uint64 `uri:"id" binding:"exists"`
 	}
 	if err := c.ShouldBindUri(&input); err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))

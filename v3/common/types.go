@@ -316,7 +316,7 @@ type ChangeAssetAddress pendingObject
 
 // ChangeAssetAddressEntry present data to create a change asset address
 type ChangeAssetAddressEntry struct {
-	ID      uint64 `json:"id" binding:"required"`
+	ID      uint64 `json:"id" binding:"exists"`
 	Address string `json:"address" binding:"required,isAddress"`
 }
 

@@ -8,7 +8,7 @@ import (
 
 func (s *Server) getTradingPair(c *gin.Context) {
 	var input struct {
-		ID uint64 `uri:"id" binding:"required"`
+		ID uint64 `uri:"id" binding:"exists"`
 	}
 	if err := c.ShouldBindUri(&input); err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))

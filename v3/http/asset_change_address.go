@@ -54,7 +54,7 @@ func (s *Server) checkChangeAssetAddressParams(changeAssetAddressEntry common.Ch
 
 func (s *Server) getChangeAssetAddress(c *gin.Context) {
 	var input struct {
-		ID uint64 `uri:"id" binding:"required"`
+		ID uint64 `uri:"id" binding:"exists"`
 	}
 	if err := c.ShouldBindUri(&input); err != nil {
 		log.Printf("cannot bind id of change_asset_addresses from request err=%s", err.Error())
@@ -80,7 +80,7 @@ func (s *Server) getChangeAssetAddresses(c *gin.Context) {
 
 func (s *Server) confirmChangeAssetAddress(c *gin.Context) {
 	var input struct {
-		ID uint64 `uri:"id" binding:"required"`
+		ID uint64 `uri:"id" binding:"exists"`
 	}
 	if err := c.ShouldBindUri(&input); err != nil {
 		log.Printf("cannot bind id of change_asset_addresses from request err=%s", err.Error())
@@ -97,7 +97,7 @@ func (s *Server) confirmChangeAssetAddress(c *gin.Context) {
 
 func (s *Server) rejectChangeAssetAddress(c *gin.Context) {
 	var input struct {
-		ID uint64 `uri:"id" binding:"required"`
+		ID uint64 `uri:"id" binding:"exists"`
 	}
 	if err := c.ShouldBindUri(&input); err != nil {
 		log.Printf("cannot bind id of change_asset_addresses from request err=%s", err.Error())
