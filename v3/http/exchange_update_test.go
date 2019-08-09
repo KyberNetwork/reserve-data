@@ -130,8 +130,8 @@ func TestUpdateExchange(t *testing.T) {
 			method:   http.MethodGet,
 			assert: func(t *testing.T, resp *httptest.ResponseRecorder) {
 				var idResponse struct {
-					Data    []common.UpdateExchange `json:"data"`
-					Success bool                    `json:"success"`
+					Data    []common.PendingObject `json:"data"`
+					Success bool                   `json:"success"`
 				}
 				err = readResponse(resp, &idResponse)
 				require.NoError(t, err)
@@ -159,8 +159,8 @@ func TestUpdateExchange(t *testing.T) {
 			method:   http.MethodGet,
 			assert: func(t *testing.T, resp *httptest.ResponseRecorder) {
 				var idResponse struct {
-					Data    []common.UpdateExchange `json:"data"`
-					Success bool                    `json:"success"`
+					Data    []common.PendingObject `json:"data"`
+					Success bool                   `json:"success"`
 				}
 				err = readResponse(resp, &idResponse)
 				require.NoError(t, err)
