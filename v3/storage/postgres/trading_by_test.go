@@ -136,9 +136,9 @@ func TestStorage_ConfirmCreateTradingBy(t *testing.T) {
 	}, common.PendingTypeCreateTradingBy)
 	require.NoError(t, err)
 
-	pendingObject, err := s.GetPendingObject(id, common.PendingTypeCreateTradingBy)
+	_, err = s.GetPendingObject(id, common.PendingTypeCreateTradingBy)
 	require.NoError(t, err)
 
-	err = s.ConfirmCreateTradingBy(pendingObject.Data)
+	err = s.ConfirmCreateTradingBy(id)
 	require.NoError(t, err)
 }

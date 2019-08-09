@@ -2,18 +2,24 @@ package postgres
 
 import (
 	"encoding/json"
+	"log"
 
 	"github.com/KyberNetwork/reserve-data/v3/common"
 )
 
 // GetCreateAsset execute a create asset
-func (s *Storage) ConfirmCreateAsset(msg []byte) error {
+func (s *Storage) ConfirmCreateAsset(id uint64) error {
 	var (
 		createCreateAsset common.CreateCreateAsset
+		pendingObj        common.PendingObject
 		err               error
 	)
+	pendingObj, err = s.GetPendingObject(id, common.PendingTypeCreateAsset)
+	if err != nil {
+		return err
+	}
 
-	err = json.Unmarshal(msg, &createCreateAsset)
+	err = json.Unmarshal(pendingObj.Data, &createCreateAsset)
 	if err != nil {
 		return err
 	}
@@ -30,9 +36,15 @@ func (s *Storage) ConfirmCreateAsset(msg []byte) error {
 			return err
 		}
 	}
+	_, err = tx.Stmtx(s.stmts.deletePendingObject).Exec(id, common.PendingTypeCreateAsset.String())
+	if err != nil {
+		return err
+	}
+
 	err = tx.Commit()
 	if err != nil {
 		return err
 	}
+	log.Printf("pending asset #%d has been confirm successfully\n", id)
 	return nil
 }

@@ -17,9 +17,9 @@ type Interface interface {
 		minDeposit, withdrawFee, targetRecommended, targetRatio float64) (uint64, error)
 	UpdateAssetExchange(id uint64, opts UpdateAssetExchangeOpts) error
 
-	ConfirmCreateAssetExchange(msg []byte) error
+	ConfirmCreateAssetExchange(id uint64) error
 
-	ConfirmUpdateAssetExchange(msg []byte) error
+	ConfirmUpdateAssetExchange(id uint64) error
 
 	CreateAsset(
 		symbol, name string,
@@ -46,19 +46,19 @@ type Interface interface {
 	// TODO method for batch update exchange configuration
 	// TODO meethod for batch update target
 
-	ConfirmCreateAsset(msg []byte) error
+	ConfirmCreateAsset(id uint64) error
 
-	ConfirmUpdateAsset(msg []byte) error
+	ConfirmUpdateAsset(id uint64) error
 
-	ConfirmUpdateExchange(msg []byte) error
+	ConfirmUpdateExchange(id uint64) error
 
-	ConfirmCreateTradingPair(msg []byte) error
+	ConfirmCreateTradingPair(id uint64) error
 
-	ConfirmUpdateTradingPair(msg []byte) error
+	ConfirmUpdateTradingPair(id uint64) error
 
-	ConfirmCreateTradingBy(msg []byte) error
+	ConfirmCreateTradingBy(id uint64) error
 
-	ConfirmChangeAssetAddress(msg []byte) error
+	ConfirmChangeAssetAddress(id uint64) error
 
 	CreatePendingObject(interface{}, v3.PendingObjectType) (uint64, error)
 	GetPendingObject(uint64, v3.PendingObjectType) (v3.PendingObject, error)

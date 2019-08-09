@@ -73,7 +73,7 @@ func (s *Server) rejectPendingObject(objectType common.PendingObjectType) func(c
 	}
 }
 
-func (s *Server) confirmPendingObject(objectType common.PendingObjectType, confirmFunc func(msg []byte) error) func(c *gin.Context) {
+func (s *Server) confirmPendingObject(confirmFunc func(id uint64) error) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		var input struct {
 			ID uint64 `uri:"id" binding:"required"`
@@ -83,24 +83,11 @@ func (s *Server) confirmPendingObject(objectType common.PendingObjectType, confi
 			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
 		}
-
-		pending, err := s.storage.GetPendingObject(input.ID, objectType)
+		err := confirmFunc(input.ID)
 		if err != nil {
 			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
 		}
-
-		err = confirmFunc(pending.Data)
-		if err != nil {
-			httputil.ResponseFailure(c, httputil.WithError(err))
-			return
-		}
-		// Delete pending object if success
-		if err = s.storage.RejectPendingObject(input.ID, objectType); err != nil {
-			httputil.ResponseFailure(c, httputil.WithError(err))
-			return
-		}
-		log.Printf("%v with id:%v has been confirmed successfully\n", objectType.String(), input.ID)
 		httputil.ResponseSuccess(c)
 	}
 }

@@ -53,6 +53,7 @@ func (s *Storage) GetPendingObject(id uint64, pendingObjectType common.PendingOb
 	err := s.stmts.getPendingObject.Get(&pendingObjs, id, pendingObjectType.String())
 	if err != nil {
 		if err == sql.ErrNoRows {
+			log.Printf("%v not found in database id=%d\n", pendingObjectType.String(), id)
 			return common.PendingObject{}, common.ErrNotFound
 		}
 		return common.PendingObject{}, err

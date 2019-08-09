@@ -2,16 +2,22 @@ package postgres
 
 import (
 	"encoding/json"
+	"log"
 
 	"github.com/KyberNetwork/reserve-data/v3/common"
 )
 
-func (s *Storage) ConfirmCreateTradingPair(msg []byte) error {
+func (s *Storage) ConfirmCreateTradingPair(id uint64) error {
 	var (
 		createCreateTradingPair common.CreateCreateTradingPair
 		err                     error
+		pendingObject           common.PendingObject
 	)
-	err = json.Unmarshal(msg, &createCreateTradingPair)
+	pendingObject, err = s.GetPendingObject(id, common.PendingTypeCreateTradingPair)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(pendingObject.Data, &createCreateTradingPair)
 	if err != nil {
 		return err
 	}
@@ -28,9 +34,15 @@ func (s *Storage) ConfirmCreateTradingPair(msg []byte) error {
 			return err
 		}
 	}
+	_, err = tx.Stmtx(s.stmts.deletePendingObject).Exec(id, common.PendingTypeCreateTradingPair.String())
+	if err != nil {
+		return err
+	}
+
 	err = tx.Commit()
 	if err != nil {
 		return err
 	}
+	log.Printf("pending trading pair #%d has been confirm successfully\n", id)
 	return nil
 }

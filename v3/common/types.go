@@ -54,7 +54,7 @@ const (
 	// PendingTypeUpdateExchange is used when update exchange
 	PendingTypeUpdateExchange // update_exchange
 	// PendingTypeChangeAssetAddr is used when update address of an asset
-	PendingTypeChangeAssetAddr // update_asset_addr
+	PendingTypeChangeAssetAddr // change_asset_addr
 )
 
 var validSetRateTypes = map[string]SetRate{

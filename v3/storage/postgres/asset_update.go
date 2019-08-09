@@ -2,17 +2,23 @@ package postgres
 
 import (
 	"encoding/json"
+	"log"
 
 	"github.com/KyberNetwork/reserve-data/v3/common"
 	"github.com/KyberNetwork/reserve-data/v3/storage"
 )
 
-func (s *Storage) ConfirmUpdateAsset(msg []byte) error {
+func (s *Storage) ConfirmUpdateAsset(id uint64) error {
 	var (
-		r   common.CreateUpdateAsset
-		err error
+		r          common.CreateUpdateAsset
+		err        error
+		pendingObj common.PendingObject
 	)
-	err = json.Unmarshal(msg, &r)
+	pendingObj, err = s.GetPendingObject(id, common.PendingTypeUpdateAsset)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(pendingObj.Data, &r)
 	if err != nil {
 		return err
 	}
@@ -40,9 +46,16 @@ func (s *Storage) ConfirmUpdateAsset(msg []byte) error {
 			return err
 		}
 	}
+
+	_, err = tx.Stmtx(s.stmts.deletePendingObject).Exec(id, common.PendingTypeUpdateAsset.String())
+	if err != nil {
+		return err
+	}
+
 	err = tx.Commit()
 	if err != nil {
 		return err
 	}
+	log.Printf("update asset #%d has been confirm successfully\n", id)
 	return nil
 }

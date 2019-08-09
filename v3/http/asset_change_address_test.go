@@ -1,7 +1,6 @@
 package http
 
 import (
-	"fmt"
 	"net/http"
 	"testing"
 
@@ -135,11 +134,10 @@ func TestChangeAssetAddress_Successfully(t *testing.T) {
 	require.NoError(t, err)
 	require.NotZero(t, id)
 
-	pendingObj, err := s.GetPendingObject(id, common.PendingTypeChangeAssetAddr)
+	_, err = s.GetPendingObject(id, common.PendingTypeChangeAssetAddr)
 	require.NoError(t, err)
 
-	fmt.Println(string(pendingObj.Data))
-	err = s.ConfirmChangeAssetAddress(pendingObj.Data)
+	err = s.ConfirmChangeAssetAddress(id)
 	require.NoError(t, err)
 
 	asset, err := s.GetAsset(assetID)
@@ -172,9 +170,9 @@ func TestChangeAssetAddress_FailedWithDuplicateAddress(t *testing.T) {
 	}, common.PendingTypeChangeAssetAddr)
 	require.NoError(t, err)
 
-	pendingObj, err := s.GetPendingObject(id, common.PendingTypeChangeAssetAddr)
+	_, err = s.GetPendingObject(id, common.PendingTypeChangeAssetAddr)
 	require.NoError(t, err)
 
-	err = s.ConfirmChangeAssetAddress(pendingObj.Data)
+	err = s.ConfirmChangeAssetAddress(id)
 	require.Equal(t, err, common.ErrAddressExists)
 }

@@ -17,12 +17,17 @@ const (
 )
 
 // ConfirmChangeAssetAddress confirm the pending change asset address.
-func (s *Storage) ConfirmChangeAssetAddress(msg []byte) error {
+func (s *Storage) ConfirmChangeAssetAddress(id uint64) error {
 	var (
 		createChangeAssetAddress common.CreateChangeAssetAddress
+		pendingObj               common.PendingObject
 		err                      error
 	)
-	if err = json.Unmarshal(msg, &createChangeAssetAddress); err != nil {
+	pendingObj, err = s.GetPendingObject(id, common.PendingTypeChangeAssetAddr)
+	if err != nil {
+		return err
+	}
+	if err = json.Unmarshal(pendingObj.Data, &createChangeAssetAddress); err != nil {
 		return err
 	}
 	tx, err := s.db.Beginx()
@@ -53,9 +58,14 @@ func (s *Storage) ConfirmChangeAssetAddress(msg []byte) error {
 			}
 		}
 	}
+	_, err = tx.Stmtx(s.stmts.deletePendingObject).Exec(id, common.PendingTypeChangeAssetAddr.String())
+	if err != nil {
+		return err
+	}
 	err = tx.Commit()
 	if err != nil {
 		return err
 	}
+	log.Printf("confirm ChangeAssetAddress success with id=%d\n", id)
 	return nil
 }

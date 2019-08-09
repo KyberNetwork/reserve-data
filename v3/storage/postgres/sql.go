@@ -199,12 +199,22 @@ CREATE TABLE IF NOT EXISTS create_trading_by
 	data 	JSON		NOT NULL
 );
 
+--create enum types if not exist
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'pending_object_type') THEN
+        CREATE TYPE pending_object_type AS ENUM ('create_asset', 'update_asset', 
+			'create_asset_exchange','update_asset_exchange', 'create_trading_pair', 'update_trading_pair',
+			'create_trading_by', 'update_exchange', 'change_asset_addr');
+    END IF;
+END$$;
+
 CREATE TABLE IF NOT EXISTS pending_object
 (
-	id		SERIAL PRIMARY KEY,
-	created	TIMESTAMP 	NOT NULL,
-	data 	JSON		NOT NULL,
-	data_type 	TEXT		NOT NULL
+	id			SERIAL 					PRIMARY KEY,
+	created		TIMESTAMP 				NOT NULL,
+	data 		JSON					NOT NULL,
+	data_type 	pending_object_type		NOT NULL
 );
 
 CREATE OR REPLACE FUNCTION new_pending_object(_data pending_object.data%TYPE,_type pending_object.data_type%TYPE)
@@ -220,125 +230,6 @@ BEGIN
     RETURN _id;
 END
 
-$$ LANGUAGE PLPGSQL;
-
-
-CREATE OR REPLACE FUNCTION new_create_asset(_data create_assets.data%TYPE)
-    RETURNS int AS
-$$
-
-DECLARE
-    _id create_assets.id%TYPE;
-
-BEGIN
-    DELETE FROM create_assets;
-    INSERT INTO create_assets(created, data) VALUES (now(), _data) RETURNING id INTO _id;
-    RETURN _id;
-END
-
-$$ LANGUAGE PLPGSQL;
-
-CREATE OR REPLACE FUNCTION new_update_asset(_data update_assets.data%TYPE)
-    RETURNS int AS
-$$
-DECLARE
-    _id update_assets.id%TYPE;
-BEGIN
-    DELETE FROM update_assets;
-    INSERT INTO update_assets(created, data) VALUES (now(), _data) RETURNING id into _id;
-    RETURN _id;
-END;
-$$ LANGUAGE PLPGSQL;
-
-CREATE OR REPLACE FUNCTION new_change_asset_address(_data change_asset_addresses.data%TYPE)
-    RETURNS int AS
-$$
-DECLARE
-    _id change_asset_addresses.id%TYPE;
-BEGIN
-    DELETE FROM change_asset_addresses;
-    INSERT INTO change_asset_addresses(created, data) VALUES (now(), _data) RETURNING id into _id;
-    RETURN _id;
-END;
-$$ LANGUAGE PLPGSQL;
-
-CREATE OR REPLACE FUNCTION new_update_exchange(_data update_exchanges.data%TYPE)
-    RETURNS int AS
-$$
-DECLARE
-    _id update_exchanges.id%TYPE;
-BEGIN
-    DELETE FROM update_exchanges;
-    INSERT INTO update_exchanges(created, data) VALUES (now(), _data) RETURNING id into _id;
-    RETURN _id;
-END;
-
-$$ LANGUAGE PLPGSQL;
-
-CREATE OR REPLACE FUNCTION new_create_asset_exchange(_data create_asset_exchanges.data%TYPE)
-    RETURNS int AS
-$$
-
-DECLARE
-    _id create_asset_exchanges.id%TYPE;
-
-BEGIN
-    DELETE FROM create_asset_exchanges;
-    INSERT INTO create_asset_exchanges(created, data) VALUES (now(), _data) RETURNING id INTO _id;
-    RETURN _id;
-END
-
-$$ LANGUAGE PLPGSQL;
-
-CREATE OR REPLACE FUNCTION new_update_asset_exchange(_data update_asset_exchanges.data%TYPE)
-    RETURNS int AS
-$$
-
-DECLARE
-    _id update_asset_exchanges.id%TYPE;
-
-BEGIN
-    DELETE FROM update_asset_exchanges;
-    INSERT INTO update_asset_exchanges(created, data) VALUES (now(), _data) RETURNING id INTO _id;
-    RETURN _id;
-END
-
-$$ LANGUAGE PLPGSQL;
-
-CREATE OR REPLACE FUNCTION new_create_trading_pair(_data create_trading_pairs.data%TYPE)
-    RETURNS int AS
-$$
-DECLARE
-    _id create_trading_pairs.id%TYPE;
-BEGIN
-    DELETE FROM create_trading_pairs;
-    INSERT INTO create_trading_pairs(created, data) VALUES (now(), _data) RETURNING id into _id;
-    RETURN _id;
-END;
-$$ LANGUAGE PLPGSQL;
-
-CREATE OR REPLACE FUNCTION new_update_trading_pair(_data update_trading_pairs.data%TYPE)
-    RETURNS int AS
-$$
-DECLARE
-    _id update_trading_pairs.id%TYPE;
-BEGIN
-    DELETE FROM update_trading_pairs;
-    INSERT INTO update_trading_pairs(created, data) VALUES (now(), _data) RETURNING id into _id;
-    RETURN _id;
-END;
-$$ LANGUAGE PLPGSQL;
-
-CREATE OR REPLACE FUNCTION new_create_trading_by(_data create_trading_by.data%TYPE)
-    RETURNS int AS
-$$
-DECLARE
-    _id create_trading_by.id%TYPE;
-BEGIN
-    DELETE FROM create_trading_by;
-    INSERT INTO create_trading_by(created, data) VALUES (now(), _data) RETURNING id into _id;
-    RETURN _id;
-END;
 $$ LANGUAGE PLPGSQL;
 
 CREATE OR REPLACE FUNCTION new_asset(_symbol assets.symbol%TYPE,

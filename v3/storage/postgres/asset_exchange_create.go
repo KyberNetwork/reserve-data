@@ -2,17 +2,23 @@ package postgres
 
 import (
 	"encoding/json"
+	"log"
 
 	"github.com/KyberNetwork/reserve-data/v3/common"
 )
 
 // ConfirmCreateAssetExchange confirm pending asset exchange, return err if any
-func (s *Storage) ConfirmCreateAssetExchange(msg []byte) error {
+func (s *Storage) ConfirmCreateAssetExchange(id uint64) error {
 	var (
 		ccAssetExchange common.CreateCreateAssetExchange
 		err             error
+		pendingObject   common.PendingObject
 	)
-	err = json.Unmarshal(msg, &ccAssetExchange)
+	pendingObject, err = s.GetPendingObject(id, common.PendingTypeCreateAssetExchange)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(pendingObject.Data, &ccAssetExchange)
 	if err != nil {
 		return err
 	}
@@ -28,9 +34,14 @@ func (s *Storage) ConfirmCreateAssetExchange(msg []byte) error {
 			return err
 		}
 	}
+	_, err = s.stmts.deletePendingObject.Exec(id, common.PendingTypeCreateAssetExchange.String())
+	if err != nil {
+		return err
+	}
 	err = tx.Commit()
 	if err != nil {
 		return err
 	}
+	log.Printf("pending asset exchange #%d has been confirm successfully\n", id)
 	return nil
 }

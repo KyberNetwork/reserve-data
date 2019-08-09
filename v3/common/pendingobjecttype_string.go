@@ -20,7 +20,7 @@ func _() {
 	_ = x[PendingTypeChangeAssetAddr-9]
 }
 
-const _PendingObjectType_name = "unknowncreate_assetupdate_assetcreate_asset_exchangeupdate_asset_exchangecreate_trading_pairupdate_trading_paircreate_trading_byupdate_exchangeupdate_asset_addr"
+const _PendingObjectType_name = "unknowncreate_assetupdate_assetcreate_asset_exchangeupdate_asset_exchangecreate_trading_pairupdate_trading_paircreate_trading_byupdate_exchangechange_asset_addr"
 
 var _PendingObjectType_index = [...]uint8{0, 7, 19, 31, 52, 73, 92, 111, 128, 143, 160}
 
