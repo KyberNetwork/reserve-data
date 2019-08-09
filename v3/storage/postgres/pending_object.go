@@ -48,6 +48,7 @@ func (objDB pendingObjectDB) ToCommon() common.PendingObject {
 	}
 }
 
+// GetPendingObject returns a pending object with a given id and type
 func (s *Storage) GetPendingObject(id uint64, pendingObjectType common.PendingObjectType) (common.PendingObject, error) {
 	var pendingObjs pendingObjectDB
 	err := s.stmts.getPendingObject.Get(&pendingObjs, id, pendingObjectType.String())
@@ -61,6 +62,7 @@ func (s *Storage) GetPendingObject(id uint64, pendingObjectType common.PendingOb
 	return pendingObjs.ToCommon(), nil
 }
 
+// GetPendingObjects return objs with a give type (currently limit 1 item)
 func (s *Storage) GetPendingObjects(pendingObjectType common.PendingObjectType) ([]common.PendingObject, error) {
 	var pendingObjs []pendingObjectDB
 	err := s.stmts.getPendingObject.Select(&pendingObjs, nil, pendingObjectType.String())
@@ -77,6 +79,7 @@ func (s *Storage) GetPendingObjects(pendingObjectType common.PendingObjectType) 
 	return result, nil
 }
 
+// RejectPendingObject delete pending obj with a given id and type
 func (s *Storage) RejectPendingObject(id uint64, pendingObjectType common.PendingObjectType) error {
 	var returnedID uint64
 	tx, err := s.db.Beginx()
