@@ -101,3 +101,29 @@ func (s *Storage) RejectPendingObject(id uint64, pendingObjectType common.Pendin
 	log.Printf("reject pending obj success with id=%d and type:%v\n", id, pendingObjectType.String())
 	return nil
 }
+
+// RejectPendingObject delete pending obj with a given id and type
+func (s *Storage) ConfirmPendingObject(id uint64, pendingObjectType common.PendingObjectType) error {
+	switch pendingObjectType {
+	case common.PendingTypeCreateAsset:
+		return s.ConfirmCreateAsset(id)
+	case common.PendingTypeUpdateAsset:
+		return s.ConfirmUpdateAsset(id)
+	case common.PendingTypeCreateAssetExchange:
+		return s.ConfirmCreateAssetExchange(id)
+	case common.PendingTypeUpdateAssetExchange:
+		return s.ConfirmUpdateAssetExchange(id)
+	case common.PendingTypeCreateTradingPair:
+		return s.ConfirmCreateTradingPair(id)
+	case common.PendingTypeUpdateTradingPair:
+		return s.ConfirmUpdateTradingPair(id)
+	case common.PendingTypeCreateTradingBy:
+		return s.ConfirmCreateTradingBy(id)
+	case common.PendingTypeChangeAssetAddr:
+		return s.ConfirmChangeAssetAddress(id)
+	case common.PendingTypeUpdateExchange:
+		return s.ConfirmUpdateExchange(id)
+	default:
+		return errors.Errorf("pending obj type:%v is not config", pendingObjectType.String())
+	}
+}

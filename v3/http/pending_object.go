@@ -73,7 +73,7 @@ func (s *Server) rejectPendingObject(objectType common.PendingObjectType) func(c
 	}
 }
 
-func (s *Server) confirmPendingObject(confirmFunc func(id uint64) error) func(c *gin.Context) {
+func (s *Server) confirmPendingObject(objectType common.PendingObjectType) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		var input struct {
 			ID uint64 `uri:"id" binding:"required"`
@@ -83,7 +83,7 @@ func (s *Server) confirmPendingObject(confirmFunc func(id uint64) error) func(c 
 			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
 		}
-		err := confirmFunc(input.ID)
+		err := s.storage.ConfirmPendingObject(input.ID, objectType)
 		if err != nil {
 			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
