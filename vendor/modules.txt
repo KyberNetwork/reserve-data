@@ -11,7 +11,7 @@ github.com/allegro/bigcache
 github.com/allegro/bigcache/queue
 # github.com/aristanetworks/goarista v0.0.0-20190625195245-f3b0eb5a88b2
 github.com/aristanetworks/goarista/monotime
-# github.com/asaskevich/govalidator v0.0.0-20180720115003-f9ffefc3facf
+# github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a
 github.com/asaskevich/govalidator
 # github.com/aws/aws-sdk-go v1.20.10
 github.com/aws/aws-sdk-go/aws
@@ -111,6 +111,8 @@ github.com/gin-contrib/httpsign/validator
 github.com/gin-contrib/sentry
 # github.com/gin-contrib/sse v0.1.0
 github.com/gin-contrib/sse
+# github.com/gin-contrib/zap v0.0.0-20190528085758-3cc18cd8fce3
+github.com/gin-contrib/zap
 # github.com/gin-gonic/gin v1.4.0
 github.com/gin-gonic/gin
 github.com/gin-gonic/gin/binding
@@ -165,6 +167,17 @@ github.com/stretchr/testify/require
 github.com/ugorji/go/codec
 # github.com/urfave/cli v1.20.0
 github.com/urfave/cli
+# go.uber.org/atomic v1.3.2
+go.uber.org/atomic
+# go.uber.org/multierr v1.1.0
+go.uber.org/multierr
+# go.uber.org/zap v1.10.0
+go.uber.org/zap
+go.uber.org/zap/internal/bufferpool
+go.uber.org/zap/zapcore
+go.uber.org/zap/buffer
+go.uber.org/zap/internal/color
+go.uber.org/zap/internal/exit
 # golang.org/x/crypto v0.0.0-20190621222207-cc06ce4a13d4
 golang.org/x/crypto/sha3
 golang.org/x/crypto/pbkdf2

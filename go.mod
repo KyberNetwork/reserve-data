@@ -27,7 +27,6 @@ require (
 	github.com/gin-gonic/gin v1.4.0
 	github.com/go-logfmt/logfmt v0.4.0 // indirect
 	github.com/go-ozzo/ozzo-validation v3.5.0+incompatible
-	github.com/golang/protobuf v1.3.2 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/uuid v1.1.1 // indirect
 	github.com/graph-gophers/graphql-go v0.0.0-20190610161739-8f92f34fc598 // indirect
@@ -35,7 +34,6 @@ require (
 	github.com/howeyc/fsnotify v0.9.0 // indirect
 	github.com/influxdata/influxdb v1.7.7 // indirect
 	github.com/jmoiron/sqlx v1.2.0
-	github.com/json-iterator/go v1.1.7 // indirect
 	github.com/julienschmidt/httprouter v1.2.0 // indirect
 	github.com/karalabe/usb v0.0.0-20190613070255-4d6ba34a8414 // indirect
 	github.com/lib/pq v1.1.1
@@ -52,20 +50,18 @@ require (
 	github.com/status-im/keycard-go v0.0.0-20190424133014-d95853db0f48 // indirect
 	github.com/steakknife/bloomfilter v0.0.0-20180922174646-6819c0d2a570 // indirect
 	github.com/steakknife/hamming v0.0.0-20180906055917-c99c65617cd3 // indirect
-	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/stretchr/testify v1.3.0
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	github.com/tyler-smith/go-bip39 v1.0.0 // indirect
-	github.com/ugorji/go v1.1.7 // indirect
+	github.com/ugorji/go v1.1.5-pre // indirect
 	github.com/urfave/cli v1.20.0
 	github.com/wsddn/go-ecdh v0.0.0-20161211032359-48726bab9208 // indirect
-	go.uber.org/atomic v1.4.0 // indirect
 	go.uber.org/zap v1.10.0
-	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4 // indirect
-	golang.org/x/net v0.0.0-20190724013045-ca1201d0de80 // indirect
-	golang.org/x/sys v0.0.0-20190812073006-9eafafc0a87e // indirect
+	golang.org/x/crypto v0.0.0-20190621222207-cc06ce4a13d4 // indirect
+	golang.org/x/net v0.0.0-20190620200207-3b0461eec859 // indirect
+	golang.org/x/sync v0.0.0-20190423024810-112230192c58 // indirect
+	golang.org/x/sys v0.0.0-20190626221950-04f50cda93cb // indirect
 	golang.org/x/text v0.3.2 // indirect
-	golang.org/x/tools v0.0.0-20190809145639-6d4652c779c4 // indirect
 	gopkg.in/go-playground/validator.v8 v8.18.2
 	gopkg.in/olebedev/go-duktape.v3 v3.0.0-20190213234257-ec84240a7772 // indirect
 )
