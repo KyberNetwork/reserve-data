@@ -11,6 +11,7 @@ import (
 	"github.com/getsentry/raven-go"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sentry"
+	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
@@ -595,7 +596,7 @@ func (s *Server) register() {
 		g.POST("/set-feed-configuration", s.UpdateFeedConfiguration)
 		g.GET("/get-feed-configuration", s.GetFeedConfiguration)
 
-		_ = v3http.NewServer(s.settingStorage, s.r) // ignore server object because we just use the route part
+		_ = v3http.NewServer(s.logger, s.settingStorage, s.r) // ignore server object because we just use the route part
 	}
 }
 
@@ -618,7 +619,9 @@ func NewHTTPServer(
 	bc Blockchain,
 	settingStorage storage.Interface,
 ) *Server {
-	r := gin.Default()
+	r := gin.New()
+	r.Use(ginzap.Ginzap(logger.Desugar(), time.RFC3339, true))
+	r.Use(ginzap.RecoveryWithZap(logger.Desugar(), true))
 	sentryCli, err := raven.NewWithTags(
 		"https://bf15053001464a5195a81bc41b644751:eff41ac715114b20b940010208271b13@sentry.io/228067",
 		map[string]string{
