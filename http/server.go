@@ -12,6 +12,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sentry"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 
 	"github.com/KyberNetwork/reserve-data"
 	"github.com/KyberNetwork/reserve-data/cmd/deployment"
@@ -35,6 +36,7 @@ var (
 
 // Server struct for http package
 type Server struct {
+	logger             *zap.SugaredLogger
 	app                reserve.Data
 	core               reserve.Core
 	priceFactorStorage pricefactor.Storage
@@ -607,6 +609,7 @@ func (s *Server) Run() {
 
 // NewHTTPServer return new server
 func NewHTTPServer(
+	logger *zap.SugaredLogger,
 	app reserve.Data,
 	core reserve.Core,
 	metric pricefactor.Storage,
@@ -636,6 +639,7 @@ func NewHTTPServer(
 	r.Use(cors.New(corsConfig))
 
 	return &Server{
+		logger:             logger,
 		app:                app,
 		core:               core,
 		priceFactorStorage: metric,

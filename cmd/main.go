@@ -8,6 +8,7 @@ import (
 
 	"github.com/KyberNetwork/reserve-data/cmd/configuration"
 	"github.com/KyberNetwork/reserve-data/cmd/deployment"
+	"github.com/KyberNetwork/reserve-data/cmd/mode"
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/http"
 )
@@ -34,7 +35,19 @@ func run(c *cli.Context) error {
 		return err
 	}
 
-	conf, err := configuration.NewConfigurationFromContext(c)
+	mod, err := mode.NewModeFromContext(c)
+	if err != nil {
+		return err
+	}
+
+	sugaredLogger, flush, err := configuration.NewSugaredLogger(mod)
+	if err != nil {
+		return err
+	}
+
+	defer flush()
+
+	conf, err := configuration.NewConfigurationFromContext(c, sugaredLogger)
 	if err != nil {
 		return err
 	}
@@ -67,6 +80,7 @@ func run(c *cli.Context) error {
 
 	host := configuration.NewHTTPAddressFromContext(c)
 	server := http.NewHTTPServer(
+		sugaredLogger,
 		rData, rCore,
 		conf.MetricStorage,
 		host,

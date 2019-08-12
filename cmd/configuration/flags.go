@@ -6,6 +6,7 @@ import (
 
 	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/urfave/cli"
+	"go.uber.org/zap"
 
 	"github.com/KyberNetwork/reserve-data/blockchain"
 	"github.com/KyberNetwork/reserve-data/cmd/deployment"
@@ -212,7 +213,7 @@ func CreateDataCore(config *Config, dpl deployment.Deployment, bc *blockchain.Bl
 }
 
 // NewConfigurationFromContext returns the Configuration object from cli context.
-func NewConfigurationFromContext(c *cli.Context) (*Config, error) {
+func NewConfigurationFromContext(c *cli.Context, logger *zap.SugaredLogger) (*Config, error) {
 	dpl, err := deployment.NewDeploymentFromContext(c)
 	if err != nil {
 		return nil, err
@@ -254,6 +255,7 @@ func NewConfigurationFromContext(c *cli.Context) (*Config, error) {
 	}
 
 	config, err := GetConfig(
+		logger,
 		dpl,
 		ethereumNodeConf,
 		bi,

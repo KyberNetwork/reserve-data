@@ -5,6 +5,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
+	"go.uber.org/zap"
 
 	"github.com/KyberNetwork/reserve-data/cmd/deployment"
 	"github.com/KyberNetwork/reserve-data/common"
@@ -41,6 +42,7 @@ func GetChainType(dpl deployment.Deployment) string {
 }
 
 func GetConfig(
+	logger *zap.SugaredLogger,
 	dpl deployment.Deployment,
 	nodeConf *EthereumNodeConfiguration,
 	bi binance.Interface,
@@ -51,7 +53,7 @@ func GetConfig(
 	enabledExchanges []common.ExchangeName,
 	settingStorage storage.Interface,
 ) (*Config, error) {
-	theWorld, err := world.NewTheWorld(dpl, secretConfigFile)
+	theWorld, err := world.NewTheWorld(logger, dpl, secretConfigFile)
 	if err != nil {
 		log.Printf("Can't init the world (which is used to get global data), err " + err.Error())
 		return nil, err
