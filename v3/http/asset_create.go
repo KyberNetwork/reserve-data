@@ -195,7 +195,7 @@ func (s *Server) getCreateAssets(c *gin.Context) {
 
 func (s *Server) getCreateAsset(c *gin.Context) {
 	var input struct {
-		ID uint64 `uri:"id" binding:"exists"`
+		ID uint64 `uri:"id" binding:"required"`
 	}
 	if err := c.ShouldBindUri(&input); err != nil {
 		log.Println(err)
@@ -212,7 +212,7 @@ func (s *Server) getCreateAsset(c *gin.Context) {
 
 func (s *Server) confirmCreateAsset(c *gin.Context) {
 	var input struct {
-		ID uint64 `uri:"id" binding:"exists"`
+		ID uint64 `uri:"id" binding:"required"`
 	}
 	if err := c.ShouldBindUri(&input); err != nil {
 		log.Println(err)
@@ -229,7 +229,7 @@ func (s *Server) confirmCreateAsset(c *gin.Context) {
 
 func (s *Server) rejectCreateAsset(c *gin.Context) {
 	var input struct {
-		ID uint64 `uri:"id" binding:"exists"`
+		ID uint64 `uri:"id" binding:"required"`
 	}
 	if err := c.ShouldBindUri(&input); err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))

@@ -69,7 +69,7 @@ func (s *Server) getCreateAssetExchanges(c *gin.Context) {
 
 func (s *Server) getCreateAssetExchange(c *gin.Context) {
 	var input struct {
-		ID uint64 `uri:"id" binding:"exists"`
+		ID uint64 `uri:"id" binding:"required"`
 	}
 	if err := c.ShouldBindUri(&input); err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
@@ -85,7 +85,7 @@ func (s *Server) getCreateAssetExchange(c *gin.Context) {
 
 func (s *Server) confirmCreateAssetExchange(c *gin.Context) {
 	var input struct {
-		ID uint64 `uri:"id" binding:"exists"`
+		ID uint64 `uri:"id" binding:"required"`
 	}
 	if err := c.ShouldBindUri(&input); err != nil {
 		log.Println(err)
@@ -102,7 +102,7 @@ func (s *Server) confirmCreateAssetExchange(c *gin.Context) {
 
 func (s *Server) rejectCreateAssetExchange(c *gin.Context) {
 	var input struct {
-		ID uint64 `uri:"id" binding:"exists"`
+		ID uint64 `uri:"id" binding:"required"`
 	}
 	if err := c.ShouldBindUri(&input); err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
