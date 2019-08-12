@@ -75,7 +75,7 @@ func (tw *TheWorld) getOneForgeGoldUSDInfo() common.OneForgeGoldData {
 func (tw *TheWorld) getOneForgeGoldETHInfo() common.OneForgeGoldData {
 	var (
 		url   = tw.endpoint.OneForgeGoldETHDataEndpoint()
-		sugar = tw.logger.With("url", url, "TheWorld.getOneForgeGoldETHInfo")
+		sugar = tw.logger.With("url", url, "func", "TheWorld.getOneForgeGoldETHInfo")
 	)
 	client := &http.Client{
 		Timeout: 30 * time.Second,
@@ -128,7 +128,7 @@ func (tw *TheWorld) getOneForgeGoldETHInfo() common.OneForgeGoldData {
 func (tw *TheWorld) getDGXGoldInfo() common.DGXGoldData {
 	var (
 		url   = tw.endpoint.GoldDataEndpoint()
-		sugar = tw.logger.With("url", url, "TheWorld.getDGXGoldInfo")
+		sugar = tw.logger.With("url", url, "func", "TheWorld.getDGXGoldInfo")
 	)
 	client := &http.Client{
 		Timeout: 30 * time.Second,
