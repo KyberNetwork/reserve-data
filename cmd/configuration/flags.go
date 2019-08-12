@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	httpAddressFlag  = "listen"
+	httpAddressFlag  = "http-address"
 	portDefaultValue = 8000
 
 	dryRunFlag = "dry-run"
@@ -109,8 +109,8 @@ func NewDryRunFromContext(c *cli.Context) bool {
 func NewHTTPAddressFlag() cli.Flag {
 	return cli.StringFlag{
 		Name:   httpAddressFlag,
-		Usage:  "http address",
-		EnvVar: "LISTEN",
+		Usage:  "bind address for http interface",
+		EnvVar: "HTTP_ADDRESS",
 		Value:  fmt.Sprintf("127.0.0.1:%d", portDefaultValue),
 	}
 }
