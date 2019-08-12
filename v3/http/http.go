@@ -1,12 +1,13 @@
 package http
 
 import (
-	"github.com/KyberNetwork/reserve-data/v3/common"
+	"time"
+
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	"time"
 
+	"github.com/KyberNetwork/reserve-data/v3/common"
 	"github.com/KyberNetwork/reserve-data/v3/storage"
 )
 
@@ -20,11 +21,13 @@ type Server struct {
 // NewServer creates new HTTP server for v3 APIs.
 func NewServer(logger *zap.SugaredLogger, storage storage.Interface, r *gin.Engine) *Server {
 	if r == nil {
-		r := gin.New()
+		r = gin.New()
 		r.Use(ginzap.Ginzap(logger.Desugar(), time.RFC3339, true))
 		r.Use(ginzap.RecoveryWithZap(logger.Desugar(), true))
 	}
+
 	server := &Server{
+		logger:  logger,
 		storage: storage,
 		r:       r,
 	}

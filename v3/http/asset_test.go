@@ -118,7 +118,8 @@ func TestHTTPServerAsset(t *testing.T) {
 	_, err = s.CreateAssetExchange(0, 1, "ETH", eth.HexToAddress("0x00"), 10,
 		0.2, 5.0, 0.3)
 	require.NoError(t, err)
-	server := NewServer(s, nil)
+	sugar := testutil.MustNewDevelopmentSugaredLogger()
+	server := NewServer(sugar, s, nil)
 
 	var createPEAWithQuoteFalse = getCreatePEAWithQuoteFalse()
 	createPEAWithQuoteFalse.AssetInputs[0].Exchanges[0].TradingPairs = []common.TradingPair{

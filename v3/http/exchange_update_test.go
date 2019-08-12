@@ -24,8 +24,8 @@ func TestUpdateExchange(t *testing.T) {
 
 	exchangeID := uint64(1)
 	// pre-insert exchange
-
-	server := NewServer(s, nil)
+	sugar := testutil.MustNewDevelopmentSugaredLogger()
+	server := NewServer(sugar, s, nil)
 	const updateExchange = "/v3/update-exchange"
 	var updateExchID uint64
 	var tests = []testCase{

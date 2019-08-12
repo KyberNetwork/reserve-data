@@ -46,7 +46,8 @@ func TestHTTPServerTradingPair(t *testing.T) {
 	_, err = s.CreateAssetExchange(0, 1, "ETH", eth.HexToAddress("0x00"), 10,
 		0.2, 5.0, 0.3)
 	require.NoError(t, err)
-	server := NewServer(s, nil)
+	sugar := testutil.MustNewDevelopmentSugaredLogger()
+	server := NewServer(sugar, s, nil)
 	huobiID := uint64(1)
 
 	var createPEAWithQuoteFalse = getCreatePEAWithQuoteFalse()

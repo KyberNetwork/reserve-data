@@ -11,6 +11,8 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/KyberNetwork/httpsign-utils/authenticator"
+	"github.com/KyberNetwork/reserve-data/cmd/configuration"
+	"github.com/KyberNetwork/reserve-data/cmd/mode"
 	"github.com/KyberNetwork/reserve-data/gateway/http"
 	"github.com/KyberNetwork/reserve-data/lib/httputil"
 )
@@ -86,6 +88,7 @@ func main() {
 	)
 
 	app.Flags = append(app.Flags, httputil.NewHTTPCliFlags(httputil.GatewayPort)...)
+	app.Flags = append(app.Flags, mode.NewCliFlag())
 
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
@@ -113,7 +116,19 @@ func run(c *cli.Context) error {
 	var (
 		keyPairs []authenticator.KeyPair
 	)
-	err := validation.Validate(c.String(v3EndpointFlag),
+
+	mod, err := mode.NewModeFromContext(c)
+	if err != nil {
+		return err
+	}
+
+	logger, flush, err := configuration.NewSugaredLogger(mod)
+	if err != nil {
+		return err
+	}
+	defer flush()
+
+	err = validation.Validate(c.String(v3EndpointFlag),
 		validation.Required,
 		is.URL)
 	if err != nil {
@@ -158,7 +173,9 @@ func run(c *cli.Context) error {
 		return errors.Wrap(err, "permission object creation error")
 	}
 
-	svr, err := http.NewServer(httputil.NewHTTPAddressFromContext(c),
+	svr, err := http.NewServer(
+		logger,
+		httputil.NewHTTPAddressFromContext(c),
 		auth,
 		perm,
 		http.WithV3Endpoint(c.String(v3EndpointFlag)),

@@ -3,9 +3,10 @@ package world
 import (
 	"testing"
 
-	"github.com/KyberNetwork/reserve-data/cmd/deployment"
-	"github.com/KyberNetwork/reserve-data/data/testutil"
 	"github.com/stretchr/testify/require"
+
+	"github.com/KyberNetwork/reserve-data/cmd/deployment"
+	"github.com/KyberNetwork/reserve-data/common/testutil"
 )
 
 //This test require external resources

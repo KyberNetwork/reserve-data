@@ -5,6 +5,9 @@ import (
 	"net/url"
 	"time"
 
+	ginzap "github.com/gin-contrib/zap"
+	"go.uber.org/zap"
+
 	libhttputil "github.com/KyberNetwork/reserve-stats/lib/httputil"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/httpsign"
@@ -13,8 +16,9 @@ import (
 
 // Server is HTTP server of gateway service.
 type Server struct {
-	r    *gin.Engine
-	addr string
+	logger *zap.SugaredLogger
+	r      *gin.Engine
+	addr   string
 }
 
 func newReverseProxyMW(target string) (gin.HandlerFunc, error) {
@@ -31,12 +35,16 @@ func newReverseProxyMW(target string) (gin.HandlerFunc, error) {
 
 // NewServer creates new instance of gateway HTTP server.
 // TODO: add logger
-func NewServer(addr string,
+func NewServer(
+	logger *zap.SugaredLogger,
+	addr string,
 	auth *httpsign.Authenticator,
 	perm gin.HandlerFunc,
 	options ...Option,
 ) (*Server, error) {
-	r := gin.Default()
+	r := gin.New()
+	r.Use(ginzap.Ginzap(logger.Desugar(), time.RFC3339, true))
+	r.Use(ginzap.RecoveryWithZap(logger.Desugar(), true))
 	r.Use(libhttputil.MiddlewareHandler)
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowAllOrigins = true
@@ -47,8 +55,9 @@ func NewServer(addr string,
 	r.Use(auth.Authenticated())
 
 	server := Server{
-		addr: addr,
-		r:    r,
+		logger: logger,
+		addr:   addr,
+		r:      r,
 	}
 
 	for _, opt := range options {
