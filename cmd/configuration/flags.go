@@ -1,6 +1,7 @@
 package configuration
 
 import (
+	"fmt"
 	"log"
 
 	ethereum "github.com/ethereum/go-ethereum/common"
@@ -20,7 +21,7 @@ import (
 )
 
 const (
-	portFlag         = "port"
+	httpAddressFlag  = "listen"
 	portDefaultValue = 8000
 
 	dryRunFlag = "dry-run"
@@ -104,22 +105,22 @@ func NewDryRunFromContext(c *cli.Context) bool {
 	return c.GlobalBool(dryRunFlag)
 }
 
-// NewPortCliFlag creates new cli flag for configure port of reserve core service.
-func NewPortCliFlag() cli.Flag {
-	return cli.IntFlag{
-		Name:   portFlag,
-		Usage:  "server port",
-		EnvVar: "PORT",
-		Value:  portDefaultValue,
+//NewHTTPAddressFlag new flag for http address
+func NewHTTPAddressFlag() cli.Flag {
+	return cli.StringFlag{
+		Name:   httpAddressFlag,
+		Usage:  "http address",
+		EnvVar: "LISTEN",
+		Value:  fmt.Sprintf("127.0.0.1:%d", portDefaultValue),
 	}
 }
 
-// NewPortFromContext returns the configured port.
-func NewPortFromContext(c *cli.Context) int {
-	return c.GlobalInt(portFlag)
+//NewHTTPAddressFromContext return http listen address from context
+func NewHTTPAddressFromContext(c *cli.Context) string {
+	return c.GlobalString(httpAddressFlag)
 }
 
-// NewCliFlag returns all cli flags of reserve core service.
+// NewCliFlags returns all cli flags of reserve core service.
 func NewCliFlags() []cli.Flag {
 	var flags []cli.Flag
 
@@ -127,13 +128,13 @@ func NewCliFlags() []cli.Flag {
 	flags = append(flags, NewBinanceCliFlags()...)
 	flags = append(flags, NewHuobiCliFlags()...)
 	flags = append(flags, NewDryRunCliFlag())
-	flags = append(flags, NewPortCliFlag())
 	flags = append(flags, NewContractAddressCliFlags()...)
 	flags = append(flags, NewEthereumNodesCliFlags()...)
 	flags = append(flags, NewDataFileCliFlags()...)
 	flags = append(flags, NewSecretConfigCliFlag())
 	flags = append(flags, NewExchangeCliFlag())
 	flags = append(flags, NewPostgreSQLFlags(defaultDB)...)
+	flags = append(flags, NewHTTPAddressFlag())
 
 	return flags
 }

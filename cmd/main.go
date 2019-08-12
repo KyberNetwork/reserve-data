@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -66,12 +65,11 @@ func run(c *cli.Context) error {
 		common.SupportedExchanges[ex.ID()] = ex
 	}
 
-	port := configuration.NewPortFromContext(c)
-	servPortStr := fmt.Sprintf(":%d", port)
+	host := configuration.NewHTTPAddressFromContext(c)
 	server := http.NewHTTPServer(
 		rData, rCore,
 		conf.MetricStorage,
-		servPortStr,
+		host,
 		dpl,
 		bc,
 		conf.SettingStorage,
