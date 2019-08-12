@@ -7,10 +7,13 @@
 
 package codec
 
-import "encoding"
+import (
+	"encoding"
+	"reflect"
+)
 
 // GenVersion is the current version of codecgen.
-const GenVersion = 16
+const GenVersion = 12
 
 // This file is used to generate helper code for codecgen.
 // The values here i.e. genHelper(En|De)coder are not to be used directly by
@@ -74,7 +77,7 @@ func (f genHelperEncoder) IsJSONHandle() bool {
 // FOR USE BY CODECGEN ONLY. IT *WILL* CHANGE WITHOUT NOTICE. *DO NOT USE*
 func (f genHelperEncoder) EncFallback(iv interface{}) {
 	// f.e.encodeI(iv, false, false)
-	f.e.encodeValue(rv4i(iv), nil)
+	f.e.encodeValue(reflect.ValueOf(iv), nil, false)
 }
 
 // FOR USE BY CODECGEN ONLY. IT *WILL* CHANGE WITHOUT NOTICE. *DO NOT USE*
@@ -105,12 +108,12 @@ func (f genHelperEncoder) I2Rtid(v interface{}) uintptr {
 
 // FOR USE BY CODECGEN ONLY. IT *WILL* CHANGE WITHOUT NOTICE. *DO NOT USE*
 func (f genHelperEncoder) Extension(rtid uintptr) (xfn *extTypeTagFn) {
-	return f.e.h.getExt(rtid, true)
+	return f.e.h.getExt(rtid)
 }
 
 // FOR USE BY CODECGEN ONLY. IT *WILL* CHANGE WITHOUT NOTICE. *DO NOT USE*
 func (f genHelperEncoder) EncExtension(v interface{}, xfFn *extTypeTagFn) {
-	f.e.e.EncodeExt(v, xfFn.tag, xfFn.ext)
+	f.e.e.EncodeExt(v, xfFn.tag, xfFn.ext, f.e)
 }
 
 // FOR USE BY CODECGEN ONLY. IT *WILL* CHANGE WITHOUT NOTICE. *DO NOT USE*
@@ -169,11 +172,11 @@ func (f genHelperDecoder) DecScratchArrayBuffer() *[decScratchByteArrayLen]byte 
 
 // FOR USE BY CODECGEN ONLY. IT *WILL* CHANGE WITHOUT NOTICE. *DO NOT USE*
 func (f genHelperDecoder) DecFallback(iv interface{}, chkPtr bool) {
-	rv := rv4i(iv)
+	rv := reflect.ValueOf(iv)
 	if chkPtr {
-		f.d.ensureDecodeable(rv)
+		rv = f.d.ensureDecodeable(rv)
 	}
-	f.d.decodeValue(rv, nil)
+	f.d.decodeValue(rv, nil, false)
 }
 
 // FOR USE BY CODECGEN ONLY. IT *WILL* CHANGE WITHOUT NOTICE. *DO NOT USE*
@@ -229,7 +232,7 @@ func (f genHelperDecoder) I2Rtid(v interface{}) uintptr {
 
 // FOR USE BY CODECGEN ONLY. IT *WILL* CHANGE WITHOUT NOTICE. *DO NOT USE*
 func (f genHelperDecoder) Extension(rtid uintptr) (xfn *extTypeTagFn) {
-	return f.d.h.getExt(rtid, true)
+	return f.d.h.getExt(rtid)
 }
 
 // FOR USE BY CODECGEN ONLY. IT *WILL* CHANGE WITHOUT NOTICE. *DO NOT USE*
@@ -267,7 +270,4 @@ func (f genHelperDecoder) DecReadMapElemKey() { f.d.mapElemKey() }
 func (f genHelperDecoder) DecReadMapElemValue() { f.d.mapElemValue() }
 
 // FOR USE BY CODECGEN ONLY. IT *WILL* CHANGE WITHOUT NOTICE. *DO NOT USE*
-func (f genHelperDecoder) DecDecodeFloat32() float32 { return f.d.decodeFloat32() }
-
-// FOR USE BY CODECGEN ONLY. IT *WILL* CHANGE WITHOUT NOTICE. *DO NOT USE*
-func (f genHelperDecoder) DecCheckBreak() bool { return f.d.checkBreak() }
+func (f genHelperDecoder) DecDecodeFloat32() float64 { return f.d.decodeFloat32() }

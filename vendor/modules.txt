@@ -11,7 +11,7 @@ github.com/allegro/bigcache
 github.com/allegro/bigcache/queue
 # github.com/aristanetworks/goarista v0.0.0-20190625195245-f3b0eb5a88b2
 github.com/aristanetworks/goarista/monotime
-# github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a
+# github.com/asaskevich/govalidator v0.0.0-20180720115003-f9ffefc3facf
 github.com/asaskevich/govalidator
 # github.com/aws/aws-sdk-go v1.20.10
 github.com/aws/aws-sdk-go/aws
@@ -111,8 +111,6 @@ github.com/gin-contrib/httpsign/validator
 github.com/gin-contrib/sentry
 # github.com/gin-contrib/sse v0.1.0
 github.com/gin-contrib/sse
-# github.com/gin-contrib/zap v0.0.0-20190528085758-3cc18cd8fce3
-github.com/gin-contrib/zap
 # github.com/gin-gonic/gin v1.4.0
 github.com/gin-gonic/gin
 github.com/gin-gonic/gin/binding
@@ -123,7 +121,7 @@ github.com/go-ozzo/ozzo-validation
 github.com/go-ozzo/ozzo-validation/is
 # github.com/go-stack/stack v1.8.0
 github.com/go-stack/stack
-# github.com/golang/protobuf v1.3.2
+# github.com/golang/protobuf v1.3.1
 github.com/golang/protobuf/proto
 # github.com/google/uuid v1.1.1
 github.com/google/uuid
@@ -132,7 +130,7 @@ github.com/jmespath/go-jmespath
 # github.com/jmoiron/sqlx v1.2.0
 github.com/jmoiron/sqlx
 github.com/jmoiron/sqlx/reflectx
-# github.com/json-iterator/go v1.1.7
+# github.com/json-iterator/go v1.1.6
 github.com/json-iterator/go
 # github.com/lib/pq v1.1.1
 github.com/lib/pq
@@ -163,28 +161,17 @@ github.com/steakknife/hamming
 # github.com/stretchr/testify v1.3.0
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
-# github.com/ugorji/go/codec v1.1.7
+# github.com/ugorji/go/codec v1.1.5-pre
 github.com/ugorji/go/codec
 # github.com/urfave/cli v1.20.0
 github.com/urfave/cli
-# go.uber.org/atomic v1.4.0
-go.uber.org/atomic
-# go.uber.org/multierr v1.1.0
-go.uber.org/multierr
-# go.uber.org/zap v1.10.0
-go.uber.org/zap
-go.uber.org/zap/internal/bufferpool
-go.uber.org/zap/zapcore
-go.uber.org/zap/buffer
-go.uber.org/zap/internal/color
-go.uber.org/zap/internal/exit
-# golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
+# golang.org/x/crypto v0.0.0-20190621222207-cc06ce4a13d4
 golang.org/x/crypto/sha3
 golang.org/x/crypto/pbkdf2
 golang.org/x/crypto/scrypt
-# golang.org/x/net v0.0.0-20190724013045-ca1201d0de80
+# golang.org/x/net v0.0.0-20190620200207-3b0461eec859
 golang.org/x/net/websocket
-# golang.org/x/sys v0.0.0-20190812073006-9eafafc0a87e
+# golang.org/x/sys v0.0.0-20190626221950-04f50cda93cb
 golang.org/x/sys/unix
 golang.org/x/sys/cpu
 golang.org/x/sys/windows
