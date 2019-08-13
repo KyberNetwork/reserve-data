@@ -12,16 +12,12 @@ import (
 	"github.com/KyberNetwork/reserve-data/v3/common"
 )
 
-func TestStorage_ObjectChangeCreate(t *testing.T) {
-	db, tearDown := testutil.MustNewDevelopmentDB()
-	defer func() {
-		assert.NoError(t, tearDown())
-	}()
+var (
+	binance = uint64(common2.Binance)
+	huobi   = uint64(common2.Huobi)
+)
 
-	binance := uint64(common2.Binance)
-	huobi := uint64(common2.Huobi)
-	s, err := NewStorage(db)
-	assert.NoError(t, err)
+func initData(t *testing.T, s *Storage) {
 	id, err := s.CreateSettingChange(common.SettingChange{ChangeList: []common.SettingChangeEntry{
 		{
 			Type: common.ChangeTypeUpdateExchange,
@@ -133,7 +129,7 @@ func TestStorage_ObjectChangeCreate(t *testing.T) {
 				Transferable: false,
 				SetRate:      common.ExchangeFeed,
 				Rebalance:    false,
-				IsQuote:      true,
+				IsQuote:      false,
 				PWI: &common.AssetPWI{
 					Ask: common.PWIEquation{
 						A:                   1,
@@ -181,4 +177,303 @@ func TestStorage_ObjectChangeCreate(t *testing.T) {
 	require.NoError(t, err)
 	err = s.ConfirmSettingChange(id, true)
 	require.NoError(t, err)
+}
+
+func TestStorage_ObjectChangeCreate(t *testing.T) {
+	db, tearDown := testutil.MustNewDevelopmentDB()
+	defer func() {
+		assert.NoError(t, tearDown())
+	}()
+
+	s, err := NewStorage(db)
+	assert.NoError(t, err)
+	initData(t, s)
+	var tests = []struct {
+		msg      string
+		data     common.SettingChange
+		assertFn func(*testing.T, uint64, error)
+	}{
+		{
+			msg: "test missing PWI",
+			data: common.SettingChange{
+				ChangeList: []common.SettingChangeEntry{
+					{
+						Type: common.ChangeTypeCreateAsset,
+						Data: common.CreateAssetEntry{
+							Symbol:       "DAI",
+							Name:         "DAI",
+							Address:      common3.HexToAddress("0x1199"),
+							Decimals:     18,
+							Transferable: true,
+							SetRate:      common.ExchangeFeed,
+							Rebalance:    false,
+							IsQuote:      false,
+							PWI:          nil,
+						},
+					},
+				},
+			},
+			assertFn: func(t *testing.T, u uint64, e error) {
+				assert.Equal(t, common.ErrPWIMissing, e)
+			},
+		},
+		{
+			msg: "test missing RebalanceQuadratic",
+			data: common.SettingChange{
+				ChangeList: []common.SettingChangeEntry{
+					{
+						Type: common.ChangeTypeCreateAsset,
+						Data: common.CreateAssetEntry{
+							Symbol:       "DAI",
+							Name:         "DAI",
+							Address:      common3.HexToAddress("0x1199"),
+							Decimals:     18,
+							Transferable: true,
+							SetRate:      common.SetRateNotSet,
+							Rebalance:    true,
+							IsQuote:      false,
+							PWI:          nil,
+							Exchanges: []common.AssetExchange{
+								{
+									ID:                0,
+									AssetID:           0,
+									ExchangeID:        binance,
+									Symbol:            "DAI",
+									DepositAddress:    common3.HexToAddress("0x1234"),
+									MinDeposit:        0,
+									WithdrawFee:       0,
+									TargetRecommended: 0,
+									TargetRatio:       0,
+								},
+							},
+							Target: &common.AssetTarget{
+								Total:              0,
+								Reserve:            0,
+								RebalanceThreshold: 0,
+								TransferThreshold:  0,
+							},
+						},
+					},
+				},
+			},
+			assertFn: func(t *testing.T, u uint64, e error) {
+				assert.Equal(t, common.ErrRebalanceQuadraticMissing, e)
+			},
+		},
+		{
+			msg: "test missing exchange",
+			data: common.SettingChange{
+				ChangeList: []common.SettingChangeEntry{
+					{
+						Type: common.ChangeTypeCreateAsset,
+						Data: common.CreateAssetEntry{
+							Symbol:       "DAI",
+							Name:         "DAI",
+							Address:      common3.HexToAddress("0x1199"),
+							Decimals:     18,
+							Transferable: true,
+							SetRate:      common.SetRateNotSet,
+							Rebalance:    true,
+							IsQuote:      false,
+							PWI:          nil,
+							RebalanceQuadratic: &common.RebalanceQuadratic{
+								A: 1,
+								B: 2,
+								C: 3,
+							},
+							Target: &common.AssetTarget{
+								Total:              0,
+								Reserve:            0,
+								RebalanceThreshold: 0,
+								TransferThreshold:  0,
+							},
+						},
+					},
+				},
+			},
+			assertFn: func(t *testing.T, u uint64, e error) {
+				assert.Equal(t, common.ErrAssetExchangeMissing, e)
+			},
+		},
+		{
+			msg: "test missing target",
+			data: common.SettingChange{
+				ChangeList: []common.SettingChangeEntry{
+					{
+						Type: common.ChangeTypeCreateAsset,
+						Data: common.CreateAssetEntry{
+							Symbol:       "DAI",
+							Name:         "DAI",
+							Address:      common3.HexToAddress("0x1199"),
+							Decimals:     18,
+							Transferable: true,
+							SetRate:      common.SetRateNotSet,
+							Rebalance:    true,
+							IsQuote:      false,
+							PWI:          nil,
+							Exchanges: []common.AssetExchange{
+								{
+									ID:                0,
+									AssetID:           0,
+									ExchangeID:        binance,
+									Symbol:            "DAI",
+									DepositAddress:    common3.HexToAddress("0x1234"),
+									MinDeposit:        0,
+									WithdrawFee:       0,
+									TargetRecommended: 0,
+									TargetRatio:       0,
+								},
+							},
+							RebalanceQuadratic: &common.RebalanceQuadratic{
+								A: 1,
+								B: 2,
+								C: 3,
+							},
+						},
+					},
+				},
+			},
+			assertFn: func(t *testing.T, u uint64, e error) {
+				assert.Equal(t, common.ErrAssetTargetMissing, e)
+			},
+		},
+		{
+			msg: "test missing address",
+			data: common.SettingChange{
+				ChangeList: []common.SettingChangeEntry{
+					{
+						Type: common.ChangeTypeCreateAsset,
+						Data: common.CreateAssetEntry{
+							Symbol: "DAI",
+							Name:   "DAI",
+							//Address:      common3.HexToAddress("0x00"),
+							Decimals:     18,
+							Transferable: true,
+							SetRate:      common.SetRateNotSet,
+							Rebalance:    true,
+							IsQuote:      false,
+							PWI:          nil,
+							Exchanges: []common.AssetExchange{
+								{
+									ExchangeID:        binance,
+									Symbol:            "DAI",
+									DepositAddress:    common3.HexToAddress("0x1234"),
+									MinDeposit:        0,
+									WithdrawFee:       0,
+									TargetRecommended: 0,
+									TargetRatio:       0,
+								},
+							},
+							RebalanceQuadratic: &common.RebalanceQuadratic{
+								A: 1,
+								B: 2,
+								C: 3,
+							},
+						},
+					},
+				},
+			},
+			assertFn: func(t *testing.T, u uint64, e error) {
+				assert.Equal(t, common.ErrAddressMissing, e)
+			},
+		},
+		{
+			msg: "test missing deposit address",
+			data: common.SettingChange{
+				ChangeList: []common.SettingChangeEntry{
+					{
+						Type: common.ChangeTypeCreateAsset,
+						Data: common.CreateAssetEntry{
+							Symbol:       "DAI",
+							Name:         "DAI",
+							Address:      common3.HexToAddress("0x12"),
+							Decimals:     18,
+							Transferable: true,
+							SetRate:      common.SetRateNotSet,
+							Rebalance:    true,
+							IsQuote:      false,
+							PWI:          nil,
+							Exchanges: []common.AssetExchange{
+								{
+									ExchangeID:        binance,
+									Symbol:            "DAI",
+									DepositAddress:    common3.HexToAddress("0x00"),
+									MinDeposit:        0,
+									WithdrawFee:       0,
+									TargetRecommended: 0,
+									TargetRatio:       0,
+								},
+							},
+							RebalanceQuadratic: &common.RebalanceQuadratic{
+								A: 1,
+								B: 2,
+								C: 3,
+							},
+						},
+					},
+				},
+			},
+			assertFn: func(t *testing.T, u uint64, e error) {
+				assert.Equal(t, common.ErrDepositAddressMissing, e)
+			},
+		},
+		{
+			msg: "test invalid trading pair",
+			data: common.SettingChange{
+				ChangeList: []common.SettingChangeEntry{
+					{
+						Type: common.ChangeTypeCreateAsset,
+						Data: common.CreateAssetEntry{
+							Symbol:       "DAI",
+							Name:         "DAI",
+							Address:      common3.HexToAddress("0x12"),
+							Decimals:     18,
+							Transferable: true,
+							SetRate:      common.SetRateNotSet,
+							Rebalance:    true,
+							IsQuote:      false,
+							PWI:          nil,
+							Target: &common.AssetTarget{
+								Total:              0,
+								Reserve:            0,
+								RebalanceThreshold: 0,
+								TransferThreshold:  0,
+							},
+							Exchanges: []common.AssetExchange{
+								{
+									ExchangeID:        binance,
+									Symbol:            "DAI",
+									DepositAddress:    common3.HexToAddress("0x3344"),
+									MinDeposit:        0,
+									WithdrawFee:       0,
+									TargetRecommended: 0,
+									TargetRatio:       0,
+									TradingPairs: []common.TradingPair{
+										{
+											Quote: 3,
+										},
+									},
+								},
+							},
+							RebalanceQuadratic: &common.RebalanceQuadratic{
+								A: 1,
+								B: 2,
+								C: 3,
+							},
+						},
+					},
+				},
+			},
+			assertFn: func(t *testing.T, u uint64, e error) {
+				assert.Equal(t, common.ErrQuoteAssetInvalid, e)
+			},
+		},
+	}
+	for _, tc := range tests {
+		t.Logf("running test case for: %s", tc.msg)
+		id, err := s.CreateSettingChange(tc.data)
+		assert.NoError(t, err)
+		err = s.ConfirmSettingChange(id, true)
+		tc.assertFn(t, id, err)
+	}
 }

@@ -331,27 +331,27 @@ BEGIN
     PERFORM id FROM asset_exchanges WHERE exchange_id = _exchange_id AND asset_id = _base_id;
     IF NOT FOUND THEN
         RAISE EXCEPTION 'base asset is not configured for exchange base_id=% exchange_id=%',
-            _base_id,_exchange_id USING ERRCODE = 'assert_failure';
+            _base_id,_exchange_id USING ERRCODE = 'KEBAS';
     END IF;
 
     PERFORM id FROM asset_exchanges WHERE exchange_id = _exchange_id AND asset_id = _quote_id;
     IF NOT FOUND THEN
         RAISE EXCEPTION 'quote asset is not configured for exchange quote_id=% exchange_id=%',
-            _quote_id,_exchange_id USING ERRCODE = 'assert_failure';
+            _quote_id,_exchange_id USING ERRCODE = 'KEQUO';
     END IF;
 
     PERFORM id FROM assets WHERE id = _base_id;
     IF NOT FOUND THEN
-        RAISE EXCEPTION 'base asset is not found base_id=%', _base_id USING ERRCODE = 'assert_failure';
+        RAISE EXCEPTION 'base asset is not found base_id=%', _base_id USING ERRCODE = 'KEBAS';
     END IF;
 
     SELECT is_quote FROM assets WHERE id = _quote_id INTO _quote_asset_is_quote;
     IF NOT FOUND THEN
-        RAISE EXCEPTION 'quote asset is not found quote_id=%', _quote_id USING ERRCODE = 'assert_failure';
+        RAISE EXCEPTION 'quote asset is not found quote_id=%', _quote_id USING ERRCODE = 'KEQUO';
     END IF;
 
     IF NOT _quote_asset_is_quote THEN
-        RAISE EXCEPTION 'quote asset is not configured as quote id=%', _quote_id USING ERRCODE = 'assert_failure';
+        RAISE EXCEPTION 'quote asset is not configured as quote id=%', _quote_id USING ERRCODE = 'KEQUO';
     END IF;
 
     INSERT INTO trading_pairs (exchange_id,

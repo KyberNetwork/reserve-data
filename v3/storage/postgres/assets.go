@@ -457,12 +457,24 @@ func (s *Storage) createAsset(
 				}
 
 				switch pErr.Code {
-				case errAssertFailure, errForeignKeyViolation:
+				case errForeignKeyViolation:
 					log.Printf("failed to create trading pair as assertion failed symbol=%s exchange_id=%d err=%s",
 						symbol,
 						exchange.ExchangeID,
 						pErr.Message)
 					return 0, common.ErrBadTradingPairConfiguration
+				case errBaseInvalid:
+					log.Printf("failed to create trading pair as check base failed symbol=%s exchange_id=%d err=%s",
+						symbol,
+						exchange.ExchangeID,
+						pErr.Message)
+					return 0, common.ErrBaseAssetInvalid
+				case errQuoteInvalid:
+					log.Printf("failed to create trading pair as check quote failed symbol=%s exchange_id=%d err=%s",
+						symbol,
+						exchange.ExchangeID,
+						pErr.Message)
+					return 0, common.ErrQuoteAssetInvalid
 				}
 
 				return 0, fmt.Errorf("failed to create trading pair symbol=%s exchange_id=%d err=%s",
