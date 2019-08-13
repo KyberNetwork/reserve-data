@@ -36,7 +36,7 @@ func (s *Storage) ConfirmChangeAssetAddress(id uint64) error {
 	defer rollbackUnlessCommitted(tx)
 
 	for _, a := range createChangeAssetAddress.Assets {
-		_, err = tx.Stmtx(s.stmts.changeAssetAddress).Exec(a.ID, a.Address)
+		_, err = tx.Stmtx(s.stmts.changeAssetAddress).Exec(a.ID, a.Address.String())
 		if err != nil {
 			pErr, ok := err.(*pq.Error)
 			if !ok {
