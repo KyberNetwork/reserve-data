@@ -349,7 +349,7 @@ func (o CreateTradingByEntry) Data() []byte {
 // ChangeAssetAddressEntry present data to create a change asset address
 type ChangeAssetAddressEntry struct {
 	ID      uint64           `json:"id" binding:"required"`
-	Address ethereum.Address `json:"address" binding:"required,isAddress"`
+	Address ethereum.Address `json:"address" binding:"required"`
 }
 
 func (o ChangeAssetAddressEntry) Data() []byte {

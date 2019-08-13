@@ -862,7 +862,7 @@ func TestStorage_GetTradingPairSymbols(t *testing.T) {
 		},
 		testAssetTarget,
 	)
-	require.Equal(t, commonv3.ErrBadTradingPairConfiguration, err)
+	require.Equal(t, commonv3.ErrQuoteAssetInvalid, err)
 
 	_, err = s.CreateAsset(
 		"DEF",
@@ -899,7 +899,7 @@ func TestStorage_GetTradingPairSymbols(t *testing.T) {
 		},
 		testAssetTarget,
 	)
-	require.Equal(t, commonv3.ErrBadTradingPairConfiguration, err)
+	require.Equal(t, commonv3.ErrQuoteAssetInvalid, err)
 
 	testAssetID, err := s.CreateAsset(
 		"DEF",

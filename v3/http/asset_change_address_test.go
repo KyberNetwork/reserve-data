@@ -42,7 +42,7 @@ func TestHTTPServerChangeAssetAddress(t *testing.T) {
 				Assets: []common.ChangeAssetAddressEntry{
 					{
 						ID:      assetID,
-						Address: ethereum.HexToAddress("0x4ddbda50ddbec0289a80de667a72d158819e381d"),
+						Address: ethereum.HexToAddress("0x4DDBdA50ddbeC0289A80De667a72d158819e381D"),
 					},
 				},
 			},
@@ -66,7 +66,7 @@ func TestHTTPServerChangeAssetAddress(t *testing.T) {
 			},
 			endpoint: changeAssetAddress,
 			method:   http.MethodPost,
-			assert:   httputil.ExpectFailureWithReason(common.ErrInvalidAddress.Error()),
+			assert:   httputil.ExpectFailure,
 		},
 		{
 			msg: "create invalid change asset address (with not exist asset)",

@@ -170,7 +170,7 @@ func (s *Storage) applyChange(tx *sqlx.Tx, i int, entry common.SettingChangeEntr
 		if err != nil {
 			msg := fmt.Sprintf("entry asset address %d, err=%v\n", i, err)
 			log.Println(msg)
-			return errors.Wrap(err, msg)
+			return err
 		}
 	case common.ChangeTypeCreateAsset:
 		a, ok := entry.Data.(*common.CreateAssetEntry)
@@ -184,7 +184,7 @@ func (s *Storage) applyChange(tx *sqlx.Tx, i int, entry common.SettingChangeEntr
 		if err != nil {
 			msg := fmt.Sprintf("create asset %d, err=%v\n", i, err)
 			log.Println(msg)
-			return errors.Wrap(err, msg)
+			return err
 		}
 	case common.ChangeTypeCreateAssetExchange:
 		a, ok := entry.Data.(*common.CreateAssetExchangeEntry)
@@ -198,7 +198,7 @@ func (s *Storage) applyChange(tx *sqlx.Tx, i int, entry common.SettingChangeEntr
 		if err != nil {
 			msg := fmt.Sprintf("create asset exchange %d, err=%v\n", i, err)
 			log.Println(msg)
-			return errors.Wrap(err, msg)
+			return err
 		}
 	case common.ChangeTypeCreateTradingBy:
 		a, ok := entry.Data.(*common.CreateTradingByEntry)
@@ -211,7 +211,7 @@ func (s *Storage) applyChange(tx *sqlx.Tx, i int, entry common.SettingChangeEntr
 		if err != nil {
 			msg := fmt.Sprintf("create trading by %d, err=%v\n", i, err)
 			log.Println(msg)
-			return errors.Wrap(err, msg)
+			return err
 		}
 	case common.ChangeTypeCreateTradingPair:
 		a, ok := entry.Data.(*common.CreateTradingPairEntry)
@@ -225,7 +225,7 @@ func (s *Storage) applyChange(tx *sqlx.Tx, i int, entry common.SettingChangeEntr
 		if err != nil {
 			msg := fmt.Sprintf("create trading pair %d, err=%v\n", i, err)
 			log.Println(msg)
-			return errors.Wrap(err, msg)
+			return err
 		}
 	case common.ChangeTypeUpdateAsset:
 		a, ok := entry.Data.(*common.UpdateAssetEntry)
@@ -250,7 +250,7 @@ func (s *Storage) applyChange(tx *sqlx.Tx, i int, entry common.SettingChangeEntr
 		if err != nil {
 			msg := fmt.Sprintf("update asset %d, err=%v\n", i, err)
 			log.Println(msg)
-			return errors.Wrap(err, msg)
+			return err
 		}
 	case common.ChangeTypeUpdateAssetExchange:
 		a, ok := entry.Data.(*common.UpdateAssetExchangeEntry)
@@ -270,7 +270,7 @@ func (s *Storage) applyChange(tx *sqlx.Tx, i int, entry common.SettingChangeEntr
 		if err != nil {
 			msg := fmt.Sprintf("bad cast at %d to %s\n", i, common.ChangeTypeUpdateAssetExchange)
 			log.Println(msg)
-			return errors.Wrap(err, msg)
+			return err
 		}
 	case common.ChangeTypeUpdateExchange:
 		a, ok := entry.Data.(*common.UpdateExchangeEntry)
@@ -287,7 +287,7 @@ func (s *Storage) applyChange(tx *sqlx.Tx, i int, entry common.SettingChangeEntr
 		if err != nil {
 			msg := fmt.Sprintf("update exchange %d, err=%v\n", i, err)
 			log.Println(msg)
-			return errors.Wrap(err, msg)
+			return err
 		}
 	case common.ChangeTypeDeleteAssetExchange:
 		// TODO: implement delete
