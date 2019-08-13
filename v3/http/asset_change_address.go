@@ -4,7 +4,6 @@ import (
 	"log"
 	"strings"
 
-	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/gin-gonic/gin"
 
 	"github.com/KyberNetwork/reserve-data/http/httputil"
@@ -46,7 +45,7 @@ func (s *Server) checkChangeAssetAddressParams(changeAssetAddressEntry common.Ch
 	if err != nil {
 		return err
 	}
-	if asset.Address == ethereum.HexToAddress(changeAssetAddressEntry.Address) {
+	if asset.Address == changeAssetAddressEntry.Address {
 		return common.ErrAddressExists
 	}
 	return nil

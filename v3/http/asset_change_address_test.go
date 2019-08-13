@@ -42,7 +42,7 @@ func TestHTTPServerChangeAssetAddress(t *testing.T) {
 				Assets: []common.ChangeAssetAddressEntry{
 					{
 						ID:      assetID,
-						Address: "0x4ddbda50ddbec0289a80de667a72d158819e381d",
+						Address: ethereum.HexToAddress("0x4ddbda50ddbec0289a80de667a72d158819e381d"),
 					},
 				},
 			},
@@ -60,7 +60,7 @@ func TestHTTPServerChangeAssetAddress(t *testing.T) {
 				Assets: []common.ChangeAssetAddressEntry{
 					{
 						ID:      assetID,
-						Address: "invalid address",
+						Address: ethereum.HexToAddress("invalid address"),
 					},
 				},
 			},
@@ -74,7 +74,7 @@ func TestHTTPServerChangeAssetAddress(t *testing.T) {
 				Assets: []common.ChangeAssetAddressEntry{
 					{
 						ID:      1234,
-						Address: "0x3f3150ea2b596f6bdb6c4af21b744019f29694c1",
+						Address: ethereum.HexToAddress("0x3f3150ea2b596f6bdb6c4af21b744019f29694c1"),
 					},
 				},
 			},
@@ -91,7 +91,7 @@ func TestHTTPServerChangeAssetAddress(t *testing.T) {
 				Assets: []common.ChangeAssetAddressEntry{
 					{
 						ID:      assetID,
-						Address: "0x5dbcb95364cbc5604bacbb8c6eb9aa788f347a17",
+						Address: ethereum.HexToAddress("0x5dbcb95364cbc5604bacbb8c6eb9aa788f347a17"),
 					},
 				},
 			},
@@ -127,7 +127,7 @@ func TestChangeAssetAddress_Successfully(t *testing.T) {
 		Assets: []common.ChangeAssetAddressEntry{
 			{
 				ID:      assetID,
-				Address: "0x5dbcb95364cbc5604bacbb8c6eb9aa788f347a17",
+				Address: ethereum.HexToAddress("0x5dbcb95364cbc5604bacbb8c6eb9aa788f347a17"),
 			},
 		},
 	}, common.PendingTypeChangeAssetAddr)
@@ -164,7 +164,7 @@ func TestChangeAssetAddress_FailedWithDuplicateAddress(t *testing.T) {
 		Assets: []common.ChangeAssetAddressEntry{
 			{
 				ID:      assetID,
-				Address: asset.Address.Hex(),
+				Address: asset.Address,
 			},
 		},
 	}, common.PendingTypeChangeAssetAddr)

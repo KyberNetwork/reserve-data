@@ -137,6 +137,26 @@ CREATE TABLE IF NOT EXISTS trading_by
     UNIQUE (asset_id, trading_pair_id)
 );
 
+CREATE TABLE IF NOT EXISTS setting_change (
+    id SERIAL PRIMARY KEY,
+    created TIMESTAMP NOT NULL,
+    data JSON NOT NULL
+);
+
+CREATE OR REPLACE FUNCTION new_setting_change(_data setting_change.data%TYPE)
+    RETURNS int AS
+$$
+
+DECLARE
+    _id setting_change.id%TYPE;
+
+BEGIN
+    DELETE FROM setting_change WHERE TRUE; -- delete whole table
+    INSERT INTO setting_change(created, data) VALUES (now(), _data) RETURNING id INTO _id;
+    RETURN _id;
+END
+
+$$ LANGUAGE PLPGSQL;
 
 --create enum types if not exist
 DO $$
@@ -411,6 +431,10 @@ type preparedStmts struct {
 	newPendingObject    *sqlx.Stmt
 	getPendingObject    *sqlx.Stmt
 	deletePendingObject *sqlx.Stmt
+
+	newSettingChange    *sqlx.Stmt
+	deleteSettingChange *sqlx.Stmt
+	getSettingChange    *sqlx.Stmt
 }
 
 func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
@@ -470,6 +494,11 @@ func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
 		return nil, err
 	}
 
+	newSettingChange, deleteSettingChange, getSettingChange, err := settingChangeStatements(db)
+	if err != nil {
+		return nil, err
+	}
+
 	return &preparedStmts{
 		getExchanges:        getExchanges,
 		getExchange:         getExchange,
@@ -501,6 +530,10 @@ func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
 		newPendingObject:    newPendingObj,
 		deletePendingObject: deletePendingObj,
 		getPendingObject:    getPendingObj,
+
+		newSettingChange:    newSettingChange,
+		deleteSettingChange: deleteSettingChange,
+		getSettingChange:    getSettingChange,
 	}, nil
 }
 
@@ -887,4 +920,23 @@ func pendingObjectStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, e
 		return nil, nil, nil, err
 	}
 	return newPendingObjStmt, deletePendingStmt, listPendingObjStmt, nil
+}
+
+func settingChangeStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, error) {
+	const newSettingChangeQuery = `SELECT new_setting_change FROM new_setting_change($1)`
+	newSettingChangeStmt, err := db.Preparex(newSettingChangeQuery)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	const deleteSettingChangeQuery = `DELETE FROM setting_change WHERE id=$1 returning id`
+	deleteSettingChangeStmt, err := db.Preparex(deleteSettingChangeQuery)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	const listSettingChangeQuery = `SELECT id,created,data FROM setting_change WHERE id=COALESCE($1, setting_change.id)`
+	listSettingChangeStmt, err := db.Preparex(listSettingChangeQuery)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	return newSettingChangeStmt, deleteSettingChangeStmt, listSettingChangeStmt, nil
 }

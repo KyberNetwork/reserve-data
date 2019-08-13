@@ -200,6 +200,10 @@ type CreateAssetExchangeEntry struct {
 	TargetRatio       float64          `json:"target_ratio"`
 }
 
+func (o CreateAssetExchangeEntry) Data() []byte {
+	return nil
+}
+
 type CreateCreateAssetExchange struct {
 	AssetExchanges []CreateAssetExchangeEntry `json:"asset_exchanges" binding:"required,dive"`
 }
@@ -213,6 +217,10 @@ type UpdateAssetExchangeEntry struct {
 	WithdrawFee       *float64          `json:"withdraw_fee"`
 	TargetRecommended *float64          `json:"target_recommended"`
 	TargetRatio       *float64          `json:"target_ratio"`
+}
+
+func (o UpdateAssetExchangeEntry) Data() []byte {
+	return nil
 }
 
 // CreateUpdateAssetExchange present for a UpdateAssetExchange(pending) request
@@ -235,6 +243,10 @@ type CreateAssetEntry struct {
 	RebalanceQuadratic *RebalanceQuadratic `json:"rebalance_quadratic"`
 	Exchanges          []AssetExchange     `json:"exchanges" binding:"dive"`
 	Target             *AssetTarget        `json:"target"`
+}
+
+func (o CreateAssetEntry) Data() []byte {
+	return nil
 }
 
 // CreateCreateAsset present for a CreateAsset(pending) request
@@ -263,11 +275,19 @@ type UpdateAssetEntry struct {
 	Target             *AssetTarget        `json:"target"`
 }
 
+func (o UpdateAssetEntry) Data() []byte {
+	return nil
+}
+
 type UpdateExchangeEntry struct {
 	ExchangeID      uint64   `json:"exchange_id"`
 	TradingFeeMaker *float64 `json:"trading_fee_maker"`
 	TradingFeeTaker *float64 `json:"trading_fee_taker"`
 	Disable         *bool    `json:"disable"`
+}
+
+func (o UpdateExchangeEntry) Data() []byte {
+	return nil
 }
 
 type CreateUpdateExchange struct {
@@ -279,6 +299,10 @@ type CreateUpdateExchange struct {
 type CreateTradingPairEntry struct {
 	TradingPair
 	ExchangeID uint64 `json:"exchange_id"`
+}
+
+func (o CreateTradingPairEntry) Data() []byte {
+	return nil
 }
 
 // CreateCreateTradingPair present for a CreateTradingPair(pending) request
@@ -298,6 +322,10 @@ type UpdateTradingPairEntry struct {
 	MinNotional     *float64 `json:"min_notional"`
 }
 
+func (o UpdateTradingPairEntry) Data() []byte {
+	return nil
+}
+
 // CreateUpdateTradingPair present for a UpdateTradingPair(pending) request
 type CreateUpdateTradingPair struct {
 	TradingPairs []UpdateTradingPairEntry `json:"trading_pairs" binding:"required,dive"`
@@ -314,13 +342,71 @@ type CreateTradingByEntry struct {
 	TradingPairID uint64 `json:"trading_pair_id"`
 }
 
+func (o CreateTradingByEntry) Data() []byte {
+	return nil
+}
+
 // ChangeAssetAddressEntry present data to create a change asset address
 type ChangeAssetAddressEntry struct {
-	ID      uint64 `json:"id" binding:"required"`
-	Address string `json:"address" binding:"required,isAddress"`
+	ID      uint64           `json:"id" binding:"required"`
+	Address ethereum.Address `json:"address" binding:"required,isAddress"`
+}
+
+func (o ChangeAssetAddressEntry) Data() []byte {
+	return nil
 }
 
 // CreateChangeAssetAddress present data to create a change asset address
 type CreateChangeAssetAddress struct {
 	Assets []ChangeAssetAddressEntry `json:"assets" binding:"dive"`
+}
+
+// ChangeType represent type of change type entry in list change
+//go:generate enumer -type=ChangeType -linecomment -json=true
+type ChangeType int
+
+const (
+	ChangeTypeUnknown ChangeType = iota // unknown
+	// ChangeTypeCreateAsset is used when create an asset
+	ChangeTypeCreateAsset // create_asset
+	// ChangeTypeUpdateAsset is used when update an asset
+	ChangeTypeUpdateAsset // update_asset
+	// ChangeTypeCreateAssetExchange is used when create an asset exchange
+	ChangeTypeCreateAssetExchange // create_asset_exchange
+	// ChangeTypeUpdateAssetExchange is used when update an asset exchange
+	ChangeTypeUpdateAssetExchange // update_asset_exchange
+	// ChangeTypeCreateTradingPair is used when create a trading pair
+	ChangeTypeCreateTradingPair // create_trading_pair
+	// ChangeTypeCreateTradingBy is used when create a trading by
+	ChangeTypeCreateTradingBy // create_trading_by
+	// ChangeTypeUpdateExchange is used when update exchange
+	ChangeTypeUpdateExchange // update_exchange
+	// ChangeTypeChangeAssetAddr is used when update address of an asset
+	ChangeTypeChangeAssetAddr // change_asset_addr
+	// ChangeTypeDeleteTradingPair is used to present delete trading pair
+	ChangeTypeDeleteTradingPair
+	// ChangeTypeDeleteAssetExchange is used in present delete asset exchange object.
+	ChangeTypeDeleteAssetExchange
+	// ChangeTypeDeleteTradingBy is used in present delete trading_by object.
+	ChangeTypeDeleteTradingBy
+)
+
+// SettingChangeType interface just make sure that only some of selected type can be put into SettingChange list
+type SettingChangeType interface {
+	Data() []byte
+}
+
+type SettingChangeEntry struct {
+	Type ChangeType        `json:"type"`
+	Data SettingChangeType `json:"data"`
+}
+
+type SettingChange struct {
+	ChangeList []SettingChangeEntry `json:"change_list"`
+}
+
+type SettingChangeResponse struct {
+	ID         uint64               `json:"id"`
+	Created    time.Time            `json:"created"`
+	ChangeList []SettingChangeEntry `json:"change_list"`
 }

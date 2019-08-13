@@ -1,6 +1,7 @@
 package common
 
 import (
+	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -39,4 +40,35 @@ func Uint64Pointer(i uint64) *uint64 {
 // SetRatePointer return SetRate pointer
 func SetRatePointer(i SetRate) *SetRate {
 	return &i
+}
+
+// SettingChangeFromType create an empty object for correspond type
+func SettingChangeFromType(t ChangeType) (SettingChangeType, error) {
+	var i SettingChangeType
+	switch t {
+	case ChangeTypeUnknown:
+		return nil, fmt.Errorf("got unknow change type")
+	case ChangeTypeCreateAsset:
+		i = &CreateAssetEntry{}
+	case ChangeTypeUpdateAsset:
+		i = &UpdateAssetEntry{}
+	case ChangeTypeCreateAssetExchange:
+		i = &CreateAssetExchangeEntry{}
+	case ChangeTypeUpdateAssetExchange:
+		i = &UpdateAssetExchangeEntry{}
+	case ChangeTypeCreateTradingPair:
+		i = &CreateTradingPairEntry{}
+	case ChangeTypeCreateTradingBy:
+		i = &CreateTradingByEntry{}
+	case ChangeTypeUpdateExchange:
+		i = &UpdateExchangeEntry{}
+	case ChangeTypeChangeAssetAddr:
+		i = &ChangeAssetAddressEntry{}
+	case ChangeTypeDeleteTradingPair:
+		// TODO: process delete entry
+	case ChangeTypeDeleteAssetExchange:
+
+	case ChangeTypeDeleteTradingBy:
+	}
+	return i, nil
 }

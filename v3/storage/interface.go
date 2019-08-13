@@ -22,6 +22,12 @@ type Interface interface {
 	GetPendingObjects(v3.PendingObjectType) ([]v3.PendingObject, error)
 	RejectPendingObject(uint64, v3.PendingObjectType) error
 	ConfirmPendingObject(uint64, v3.PendingObjectType) error
+
+	CreateSettingChange(v3.SettingChange) (uint64, error)
+	GetSettingChange(uint64) (v3.SettingChangeResponse, error)
+	GetSettingChanges() ([]v3.SettingChangeResponse, error)
+	RejectSettingChange(uint64) error
+	ConfirmSettingChange(uint64, bool) error
 }
 
 // SettingReader is the common interface for reading exchanges, assets configuration.
@@ -48,27 +54,11 @@ type SettingReader interface {
 // in case they did not later, we need to redefine the structure here, or review this again.
 type UpdateAssetExchangeOpts = v3.UpdateAssetExchangeEntry
 
-//UpdateExchangeOpts options
-type UpdateExchangeOpts struct {
-	TradingFeeMaker *float64 `json:"trading_fee_maker"`
-	TradingFeeTaker *float64 `json:"trading_fee_taker"`
-	Disable         *bool    `json:"disable"`
-}
+// UpdateExchangeOpts options
+type UpdateExchangeOpts = v3.UpdateExchangeEntry
 
-//UpdateAssetOpts update asset options
-type UpdateAssetOpts struct {
-	Symbol             *string                `json:"symbol"`
-	Name               *string                `json:"name"`
-	Address            *ethereum.Address      `json:"address"`
-	Decimals           *uint64                `json:"decimals"`
-	Transferable       *bool                  `json:"transferable"`
-	SetRate            *v3.SetRate            `json:"set_rate"`
-	Rebalance          *bool                  `json:"rebalance"`
-	IsQuote            *bool                  `json:"is_quote"`
-	PWI                *v3.AssetPWI           `json:"pwi"`
-	RebalanceQuadratic *v3.RebalanceQuadratic `json:"rebalance_quadratic"`
-	Target             *v3.AssetTarget        `json:"target"`
-}
+// UpdateAssetOpts update asset options
+type UpdateAssetOpts = v3.UpdateAssetEntry
 
 // UpdateTradingPairOpts ...
 type UpdateTradingPairOpts = v3.UpdateTradingPairEntry

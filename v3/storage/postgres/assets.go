@@ -983,9 +983,23 @@ func (s *Storage) updateAsset(tx *sqlx.Tx, id uint64, uo storage.UpdateAssetOpts
 
 // ChangeAssetAddress change address of an asset
 func (s *Storage) ChangeAssetAddress(id uint64, address ethereum.Address) error {
-	log.Printf("changing address of asset id=%d new_address=%s", id, address.String())
 
-	_, err := s.stmts.changeAssetAddress.Exec(id, address.String())
+	err := s.changeAssetAddress(nil, id, address)
+	if err != nil {
+		log.Printf("change address error, err=%v\n", err)
+		return err
+	}
+	log.Printf("change asset address successfully id=%d\n", id)
+	return nil
+}
+
+func (s *Storage) changeAssetAddress(tx *sqlx.Tx, id uint64, address ethereum.Address) error {
+	log.Printf("changing address of asset id=%d new_address=%s", id, address.String())
+	sts := s.stmts.changeAssetAddress
+	if tx != nil {
+		sts = tx.Stmtx(sts)
+	}
+	_, err := sts.Exec(id, address.String())
 	if err != nil {
 		pErr, ok := err.(*pq.Error)
 		if !ok {

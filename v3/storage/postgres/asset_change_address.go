@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 
-	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/lib/pq"
 
 	"github.com/KyberNetwork/reserve-data/v3/common"
@@ -37,7 +36,7 @@ func (s *Storage) ConfirmChangeAssetAddress(id uint64) error {
 	defer rollbackUnlessCommitted(tx)
 
 	for _, a := range createChangeAssetAddress.Assets {
-		_, err = tx.Stmtx(s.stmts.changeAssetAddress).Exec(a.ID, ethereum.HexToAddress(a.Address).Hex())
+		_, err = tx.Stmtx(s.stmts.changeAssetAddress).Exec(a.ID, a.Address)
 		if err != nil {
 			pErr, ok := err.(*pq.Error)
 			if !ok {
