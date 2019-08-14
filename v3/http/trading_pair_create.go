@@ -55,7 +55,7 @@ func (s *Server) createCreateTradingPair(c *gin.Context) {
 			baseSymbol  string
 			quoteSymbol string
 		)
-		if baseSymbol, quoteSymbol, err = s.checkCreateTradingPairEntry(entry); err != nil {
+		if baseSymbol, quoteSymbol, err = s.checkCreateTradingPairParams(entry); err != nil {
 			httputil.ResponseFailure(c, httputil.WithError(err), httputil.WithField("index", index),
 				httputil.WithField("quote", entry.Quote), httputil.WithField("base", entry.Base))
 			return
@@ -83,7 +83,7 @@ func (s *Server) createCreateTradingPair(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithField("id", id))
 }
 
-func (s *Server) checkCreateTradingPairEntry(createEntry common.CreateTradingPairEntry) (string, string, error) {
+func (s *Server) checkCreateTradingPairParams(createEntry common.CreateTradingPairEntry) (string, string, error) {
 	var (
 		ok           bool
 		quoteAssetEx common.AssetExchange

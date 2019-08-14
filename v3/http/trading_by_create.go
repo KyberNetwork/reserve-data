@@ -17,7 +17,7 @@ func (s *Server) createCreateTradingBy(c *gin.Context) {
 	}
 
 	for index, entry := range createTradingBy.TradingBys {
-		if err = s.checkCreateTradingByEntry(entry); err != nil {
+		if err = s.checkCreateTradingByParams(entry); err != nil {
 			httputil.ResponseFailure(c, httputil.WithError(err), httputil.WithField("index", index),
 				httputil.WithField("asset_id", entry.AssetID), httputil.WithField("trading_pair", entry.TradingPairID))
 			return
@@ -32,7 +32,7 @@ func (s *Server) createCreateTradingBy(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithField("id", id))
 }
 
-func (s *Server) checkCreateTradingByEntry(createEntry common.CreateTradingByEntry) error {
+func (s *Server) checkCreateTradingByParams(createEntry common.CreateTradingByEntry) error {
 	tpSymBol, err := s.storage.GetTradingPair(createEntry.TradingPairID)
 	if err != nil {
 		return err

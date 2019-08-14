@@ -396,6 +396,7 @@ type SettingChangeType interface {
 	Data() []byte
 }
 
+// TODO: write a custom unmarshalJSON
 type SettingChangeEntry struct {
 	Type ChangeType        `json:"type"`
 	Data SettingChangeType `json:"data"`

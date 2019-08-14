@@ -108,7 +108,7 @@ func (s *Server) createCreateAsset(c *gin.Context) {
 	}
 
 	for id, entry := range createAsset.AssetInputs {
-		if err = s.checkCreateAssetEntry(entry); err != nil {
+		if err = s.checkCreateAssetParams(entry); err != nil {
 			httputil.ResponseFailure(c, httputil.WithError(err), httputil.WithField("index", id))
 			return
 		}
@@ -128,7 +128,7 @@ func (s *Server) createCreateAsset(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithField("id", id))
 }
 
-func (s *Server) checkCreateAssetEntry(createEntry common.CreateAssetEntry) error {
+func (s *Server) checkCreateAssetParams(createEntry common.CreateAssetEntry) error {
 	if createEntry.Rebalance && createEntry.RebalanceQuadratic == nil {
 		return common.ErrRebalanceQuadraticMissing
 	}

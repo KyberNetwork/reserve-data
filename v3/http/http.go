@@ -92,5 +92,11 @@ func NewServer(storage storage.Interface, r *gin.Engine) *Server {
 	g.PUT("/create-trading-by/:id", server.confirmPendingObject(common.PendingTypeCreateTradingBy))
 	g.DELETE("/create-trading-by/:id", server.rejectPendingObject(common.PendingTypeCreateTradingBy))
 
+	g.POST("/setting-change", server.createSettingChange)
+	g.GET("/setting-change", server.getSettingChanges)
+	g.GET("/setting-change/:id", server.getSettingChange)
+	g.PUT("/setting-change/:id", server.confirmSettingChange)
+	g.DELETE("/setting-change/:id", server.rejectSettingChange)
+
 	return server
 }
