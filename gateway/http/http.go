@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"time"
 
-	libhttputil "github.com/KyberNetwork/reserve-stats/lib/httputil"
+	libhttputil "github.com/KyberNetwork/reserve-data/lib/httputil"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/httpsign"
 	"github.com/gin-gonic/gin"
