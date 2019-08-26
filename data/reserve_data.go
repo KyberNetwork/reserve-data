@@ -93,14 +93,23 @@ func (rd ReserveData) GetAllPrices(timepoint uint64) (common.AllPriceResponse, e
 }
 
 // GetOnePrice return price of one pair tokens
-func (rd ReserveData) GetOnePrice(pairID uint64, timepoint uint64) (common.OnePriceResponse, error) {
+func (rd ReserveData) GetOnePrice(pairIDs []uint64, timepoint uint64) (common.OnePriceResponse, error) {
 	timestamp := common.GetTimestamp()
 	version, err := rd.storage.CurrentPriceVersion(timepoint)
 	if err != nil {
 		return common.OnePriceResponse{}, err
 	}
 	result := common.OnePriceResponse{}
-	data, err := rd.storage.GetOnePrice(pairID, version)
+	data := make(common.OnePrice)
+	for _, pairID := range pairIDs {
+		r, err := rd.storage.GetOnePrice(pairID, version)
+		if err != nil {
+			return common.OnePriceResponse{}, errors.Wrapf(err, "failed to get one price of pair %d", pairID)
+		}
+		for k, v := range r {
+			data[k] = v
+		}
+	}
 	returnTime := common.GetTimestamp()
 	result.Version = version
 	result.Timestamp = timestamp

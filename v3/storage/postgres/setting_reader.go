@@ -38,13 +38,48 @@ func (s *Storage) GetTradingPair(id uint64) (common.TradingPairSymbols, error) {
 	return result, nil
 }
 
+type tpCondition struct {
+	ExchangeID *uint64 `db:"exchange_id"`
+	BaseID     *uint64 `db:"base_id"`
+	QuoteID    *uint64 `db:"quote_id"`
+}
+
 // GetTradingPairs return list of trading pairs by exchangeID
-func (s *Storage) GetTradingPairs(id uint64) ([]common.TradingPairSymbols, error) {
+func (s *Storage) GetTradingPairs(exchangeID uint64) ([]common.TradingPairSymbols, error) {
 	var (
 		tradingPairs []tradingPairDB
 		result       []common.TradingPairSymbols
 	)
-	if err := s.stmts.getTradingPairSymbols.Select(&tradingPairs, id); err != nil {
+	if err := s.stmts.getTradingPairSymbols.Select(&tradingPairs, tpCondition{
+		ExchangeID: &exchangeID,
+		BaseID:     nil,
+		QuoteID:    nil,
+	}); err != nil {
+		return nil, err
+	}
+	for _, pair := range tradingPairs {
+		result = append(result, common.TradingPairSymbols{
+			TradingPair: pair.ToCommon(),
+			BaseSymbol:  pair.BaseSymbol,
+			QuoteSymbol: pair.QuoteSymbol,
+		})
+	}
+	return result, nil
+}
+
+func (s *Storage) GetTradingPairsFromBaseQuote(baseID uint64, quoteID uint64) ([]common.TradingPairSymbols, error) {
+	var (
+		tradingPairs []tradingPairDB
+		result       []common.TradingPairSymbols
+	)
+	if err := s.stmts.getTradingPairSymbols.Select(&tradingPairs, tpCondition{
+		ExchangeID: nil,
+		BaseID:     &baseID,
+		QuoteID:    &quoteID,
+	}); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, common.ErrNotFound
+		}
 		return nil, err
 	}
 	for _, pair := range tradingPairs {

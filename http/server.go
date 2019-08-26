@@ -95,9 +95,9 @@ func (s *Server) AllPrices(c *gin.Context) {
 			return
 		}
 		for exchangeName, exchangePrice := range onePrice {
-			exchange, err := common.GetExchange(string(exchangeName))
-			if err != nil {
-				httputil.ResponseFailure(c, httputil.WithError(err))
+			exchange, ok := common.SupportedExchanges[exchangeName]
+			if !ok {
+				httputil.ResponseFailure(c, httputil.WithError(err), httputil.WithField("msg", "failed to get exchange"))
 				return
 			}
 			// TODO: should we check exchangeID.Name() match pair.ExchangeID?
@@ -125,22 +125,35 @@ func (s *Server) Price(c *gin.Context) {
 	base := c.Param("base")
 	quote := c.Param("quote")
 	log.Printf("Getting price for %s - %s \n", base, quote)
-	// TODO: change getting price to accept asset id
-	//pair, err := s.setting.NewTokenPairFromID(base, quote)
-	//if err != nil {
-	//	httputil.ResponseFailure(c, httputil.WithReason("Token pair is not supported"))
-	//} else {
-	//	data, err := s.app.GetOnePrice(pair.PairID(), getTimePoint(c, true))
-	//	if err != nil {
-	//		httputil.ResponseFailure(c, httputil.WithError(err))
-	//	} else {
-	//		httputil.ResponseSuccess(c, httputil.WithMultipleFields(gin.H{
-	//			"version":   data.Version,
-	//			"timestamp": data.Timestamp,
-	//			"exchanges": data.Data,
-	//		}))
-	//	}
-	//}
+	baseID, err := strconv.ParseUint(base, 10, 64)
+	if err != nil {
+		httputil.ResponseFailure(c, httputil.WithReason("Base is NaN"))
+		return
+	}
+	quoteID, err := strconv.ParseUint(quote, 10, 64)
+	if err != nil {
+		httputil.ResponseFailure(c, httputil.WithReason("Quote is NaN"))
+		return
+	}
+	pairs, err := s.settingStorage.GetTradingPairsFromBaseQuote(baseID, quoteID)
+	var pairIDs []uint64
+	for _, pair := range pairs {
+		pairIDs = append(pairIDs, pair.ID)
+	}
+	if err != nil {
+		httputil.ResponseFailure(c, httputil.WithReason("Token pair is not supported"))
+	} else {
+		data, err := s.app.GetOnePrice(pairIDs, getTimePoint(c, true))
+		if err != nil {
+			httputil.ResponseFailure(c, httputil.WithError(err))
+		} else {
+			httputil.ResponseSuccess(c, httputil.WithMultipleFields(gin.H{
+				"version":   data.Version,
+				"timestamp": data.Timestamp,
+				"exchanges": data.Data,
+			}))
+		}
+	}
 }
 
 // AuthDataVersion return current version of auth data

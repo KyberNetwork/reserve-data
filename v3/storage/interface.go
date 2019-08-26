@@ -39,6 +39,7 @@ type SettingReader interface {
 	GetExchanges() ([]v3.Exchange, error)
 	GetTradingPair(id uint64) (v3.TradingPairSymbols, error)
 	GetTradingPairs(exchangeID uint64) ([]v3.TradingPairSymbols, error)
+	GetTradingPairsFromBaseQuote(baseID uint64, quoteID uint64) ([]v3.TradingPairSymbols, error)
 	GetTradingBy(tradingByID uint64) (v3.TradingBy, error)
 	// TODO: check usages of this method to see if it should be replaced with GetDepositAddress(exchangeID, tokenID)
 	GetDepositAddresses(exchangeID uint64) (map[string]ethereum.Address, error)

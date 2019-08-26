@@ -34,7 +34,7 @@ type preparedStmts struct {
 
 	deleteTradingPair     *sqlx.Stmt
 	getTradingPairByID    *sqlx.Stmt
-	getTradingPairSymbols *sqlx.Stmt
+	getTradingPairSymbols *sqlx.NamedStmt
 	getMinNotional        *sqlx.Stmt
 	// getTransferableAssets *sqlx.Stmt
 	newTradingBy    *sqlx.Stmt
@@ -181,7 +181,7 @@ type tradingPairStmts struct {
 	getStmt         *sqlx.Stmt
 	updateStmt      *sqlx.NamedStmt
 	getByIDStmt     *sqlx.Stmt
-	getBySymbolStmt *sqlx.Stmt
+	getBySymbolStmt *sqlx.NamedStmt
 	deleteStmt      *sqlx.Stmt
 }
 
@@ -276,8 +276,11 @@ func tradingPairStatements(db *sqlx.DB) (*tradingPairStmts, error) {
 									         INNER JOIN asset_exchanges AS bae ON ba.id = bae.asset_id
 									         INNER JOIN assets AS qa ON tp.quote_id = qa.id
 									         INNER JOIN asset_exchanges AS qae ON qa.id = qae.asset_id
-									WHERE tp.exchange_id = $1 AND bae.exchange_id=tp.exchange_id and qae.exchange_id=tp.exchange_id;`
-	getTradingPairSymbols, err := db.Preparex(getTradingPairSymbolsQuery)
+									WHERE bae.exchange_id=tp.exchange_id and qae.exchange_id=tp.exchange_id
+									  	AND tp.exchange_id = coalesce(:exchange_id, tp.exchange_id)
+										AND tp.base_id = coalesce(:base_id, tp.base_id)
+										AND tp.quote_id = coalesce(:quote_id, tp.quote_id);`
+	getTradingPairSymbols, err := db.PrepareNamed(getTradingPairSymbolsQuery)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to prepare getTradingPairSymbols")
 	}

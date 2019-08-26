@@ -12,7 +12,7 @@ import (
 type Data interface {
 	CurrentPriceVersion(timestamp uint64) (common.Version, error)
 	GetAllPrices(timestamp uint64) (common.AllPriceResponse, error)
-	GetOnePrice(id uint64, timestamp uint64) (common.OnePriceResponse, error)
+	GetOnePrice(ids []uint64, timestamp uint64) (common.OnePriceResponse, error)
 
 	CurrentAuthDataVersion(timestamp uint64) (common.Version, error)
 	GetAuthData(timestamp uint64) (common.AuthDataResponseV3, error)
