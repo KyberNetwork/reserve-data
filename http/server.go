@@ -95,8 +95,8 @@ func (s *Server) AllPrices(c *gin.Context) {
 			return
 		}
 		for exchangeName, exchangePrice := range onePrice {
-			exchange, err := common.GetExchange(string(exchangeName))
-			if err != nil {
+			exchange, ok := common.SupportedExchanges[exchangeName]
+			if !ok {
 				httputil.ResponseFailure(c, httputil.WithError(err))
 				return
 			}
