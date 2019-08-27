@@ -95,16 +95,10 @@ func (s *Server) AllPrices(c *gin.Context) {
 			return
 		}
 		for exchangeID, exchangePrice := range onePrice {
-			exchange, ok := common.SupportedExchanges[exchangeID]
-			if !ok {
-				httputil.ResponseFailure(c, httputil.WithError(err))
-				return
-			}
-			// TODO: should we check exchangeID.Name() match pair.ExchangeID?
 			responseData = append(responseData, price{
 				Base:     pair.Base,
 				Quote:    pair.Quote,
-				Exchange: uint64(exchange.ID()),
+				Exchange: uint64(exchangeID),
 				Bids:     exchangePrice.Bids,
 				Asks:     exchangePrice.Asks,
 			})
