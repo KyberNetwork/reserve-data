@@ -3,7 +3,6 @@ package world
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
@@ -17,45 +16,47 @@ type TheWorld struct {
 	endpoint Endpoint
 }
 
-func (tw *TheWorld) getOneForgeGoldUSDInfo() common.OneForgeGoldData {
-	client := &http.Client{
-		Timeout: 30 * time.Second,
+func (tw *TheWorld) getPublic(url string, dst interface{}) error {
+	var (
+		client = &http.Client{Timeout: 30 * time.Second}
+	)
+	caller := common.GetCallerFunctionName()
+
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return err
 	}
-	url := tw.endpoint.OneForgeGoldUSDDataEndpoint()
-	req, _ := http.NewRequest("GET", url, nil)
+
+	log.Printf("%s fetch %s", caller, url)
+
 	req.Header.Add("Accept", "application/json")
-	var err error
-	var respBody []byte
-	log.Printf("request to gold feed endpoint: %s", req.URL)
 	resp, err := client.Do(req)
 	if err != nil {
-		return common.OneForgeGoldData{
-			Error:   true,
-			Message: err.Error(),
-		}
+		log.Printf("request on %s failed, %v\n", caller, err)
+		return err
 	}
 	defer func() {
 		if cErr := resp.Body.Close(); cErr != nil {
-			log.Printf("Close http body error: %s", cErr.Error())
+			log.Printf("failed to close response body: %s", cErr.Error())
 		}
 	}()
-	if resp.StatusCode != 200 {
-		err = fmt.Errorf("gold feed returned with code: %d", resp.StatusCode)
-		return common.OneForgeGoldData{
-			Error:   true,
-			Message: err.Error(),
-		}
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected return code: %d", resp.StatusCode)
 	}
-	respBody, err = ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return common.OneForgeGoldData{
-			Error:   true,
-			Message: err.Error(),
-		}
+
+	if err = json.NewDecoder(resp.Body).Decode(dst); err != nil {
+		log.Printf("%s decode failed, %v\n", caller, err)
+		return err
 	}
-	log.Printf("request to %s, got response from gold feed %s", req.URL, respBody)
+
+	return nil
+}
+
+func (tw *TheWorld) getOneForgeGoldUSDInfo() common.OneForgeGoldData {
+	url := tw.endpoint.OneForgeGoldUSDDataEndpoint()
 	result := common.OneForgeGoldData{}
-	err = json.Unmarshal(respBody, &result)
+	err := tw.getPublic(url, &result)
 	if err != nil {
 		result.Error = true
 		result.Message = err.Error()
@@ -64,44 +65,9 @@ func (tw *TheWorld) getOneForgeGoldUSDInfo() common.OneForgeGoldData {
 }
 
 func (tw *TheWorld) getOneForgeGoldETHInfo() common.OneForgeGoldData {
-	client := &http.Client{
-		Timeout: 30 * time.Second,
-	}
 	url := tw.endpoint.OneForgeGoldETHDataEndpoint()
-	req, _ := http.NewRequest("GET", url, nil)
-	req.Header.Add("Accept", "application/json")
-	var err error
-	var respBody []byte
-	log.Printf("request to gold feed endpoint: %s", req.URL)
-	resp, err := client.Do(req)
-	if err != nil {
-		return common.OneForgeGoldData{
-			Error:   true,
-			Message: err.Error(),
-		}
-	}
-	defer func() {
-		if cErr := resp.Body.Close(); cErr != nil {
-			log.Printf("Response body close error: %s", cErr.Error())
-		}
-	}()
-	if resp.StatusCode != 200 {
-		err = fmt.Errorf("gold feed returned with code: %d", resp.StatusCode)
-		return common.OneForgeGoldData{
-			Error:   true,
-			Message: err.Error(),
-		}
-	}
-	respBody, err = ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return common.OneForgeGoldData{
-			Error:   true,
-			Message: err.Error(),
-		}
-	}
-	log.Printf("request to %s, got response from gold feed %s", req.URL, respBody)
 	result := common.OneForgeGoldData{}
-	err = json.Unmarshal(respBody, &result)
+	err := tw.getPublic(url, &result)
 	if err != nil {
 		result.Error = true
 		result.Message = err.Error()
@@ -110,46 +76,11 @@ func (tw *TheWorld) getOneForgeGoldETHInfo() common.OneForgeGoldData {
 }
 
 func (tw *TheWorld) getDGXGoldInfo() common.DGXGoldData {
-	client := &http.Client{
-		Timeout: 30 * time.Second,
-	}
 	url := tw.endpoint.GoldDataEndpoint()
-	req, _ := http.NewRequest("GET", url, nil)
-	req.Header.Add("Accept", "application/json")
-	var err error
-	var respBody []byte
-	log.Printf("request to gold feed endpoint: %s", req.URL)
-	resp, err := client.Do(req)
-	if err != nil {
-		return common.DGXGoldData{
-			Valid: false,
-			Error: err.Error(),
-		}
-	}
-	defer func() {
-		if cErr := resp.Body.Close(); cErr != nil {
-			log.Printf("Close reponse body error: %s", cErr.Error())
-		}
-	}()
-	if resp.StatusCode != 200 {
-		err = fmt.Errorf("gold feed returned with code: %d", resp.StatusCode)
-		return common.DGXGoldData{
-			Valid: false,
-			Error: err.Error(),
-		}
-	}
-	respBody, err = ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return common.DGXGoldData{
-			Valid: false,
-			Error: err.Error(),
-		}
-	}
-	log.Printf("request to %s, got response from gold feed %s", req.URL, respBody)
 	result := common.DGXGoldData{
 		Valid: true,
 	}
-	err = json.Unmarshal(respBody, &result)
+	err := tw.getPublic(url, &result)
 	if err != nil {
 		result.Valid = false
 		result.Error = err.Error()
@@ -158,46 +89,11 @@ func (tw *TheWorld) getDGXGoldInfo() common.DGXGoldData {
 }
 
 func (tw *TheWorld) getGDAXGoldInfo() common.GDAXGoldData {
-	client := &http.Client{
-		Timeout: 30 * time.Second,
-	}
 	url := tw.endpoint.GDAXDataEndpoint()
-	req, _ := http.NewRequest("GET", url, nil)
-	req.Header.Add("Accept", "application/json")
-	var err error
-	var respBody []byte
-	log.Printf("request to gold feed endpoint: %s", req.URL)
-	resp, err := client.Do(req)
-	if err != nil {
-		return common.GDAXGoldData{
-			Valid: false,
-			Error: err.Error(),
-		}
-	}
-	defer func() {
-		if cErr := resp.Body.Close(); cErr != nil {
-			log.Printf("Response body close error: %s", cErr.Error())
-		}
-	}()
-	if resp.StatusCode != 200 {
-		err = fmt.Errorf("gold feed returned with code: %d", resp.StatusCode)
-		return common.GDAXGoldData{
-			Valid: false,
-			Error: err.Error(),
-		}
-	}
-	respBody, err = ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return common.GDAXGoldData{
-			Valid: false,
-			Error: err.Error(),
-		}
-	}
-	log.Printf("request to %s, got response from gold feed %s", req.URL, respBody)
 	result := common.GDAXGoldData{
 		Valid: true,
 	}
-	err = json.Unmarshal(respBody, &result)
+	err := tw.getPublic(url, &result)
 	if err != nil {
 		result.Valid = false
 		result.Error = err.Error()
@@ -206,46 +102,11 @@ func (tw *TheWorld) getGDAXGoldInfo() common.GDAXGoldData {
 }
 
 func (tw *TheWorld) getKrakenGoldInfo() common.KrakenGoldData {
-	client := &http.Client{
-		Timeout: 30 * time.Second,
-	}
 	url := tw.endpoint.KrakenDataEndpoint()
-	req, _ := http.NewRequest("GET", url, nil)
-	req.Header.Add("Accept", "application/json")
-	var err error
-	var respBody []byte
-	log.Printf("request to gold feed endpoint: %s", req.URL)
-	resp, err := client.Do(req)
-	if err != nil {
-		return common.KrakenGoldData{
-			Valid: false,
-			Error: err.Error(),
-		}
-	}
-	defer func() {
-		if cErr := resp.Body.Close(); cErr != nil {
-			log.Printf("Response body close error: %s", cErr.Error())
-		}
-	}()
-	if resp.StatusCode != 200 {
-		err = fmt.Errorf("gold feed returned with code: %d", resp.StatusCode)
-		return common.KrakenGoldData{
-			Valid: false,
-			Error: err.Error(),
-		}
-	}
-	respBody, err = ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return common.KrakenGoldData{
-			Valid: false,
-			Error: err.Error(),
-		}
-	}
-	log.Printf("request to %s, got response from gold feed %s", req.URL, respBody)
 	result := common.KrakenGoldData{
 		Valid: true,
 	}
-	err = json.Unmarshal(respBody, &result)
+	err := tw.getPublic(url, &result)
 	if err != nil {
 		result.Valid = false
 		result.Error = err.Error()
@@ -254,46 +115,12 @@ func (tw *TheWorld) getKrakenGoldInfo() common.KrakenGoldData {
 }
 
 func (tw *TheWorld) getGeminiGoldInfo() common.GeminiGoldData {
-	client := &http.Client{
-		Timeout: 30 * time.Second,
-	}
+
 	url := tw.endpoint.GeminiDataEndpoint()
-	req, _ := http.NewRequest("GET", url, nil)
-	req.Header.Add("Accept", "application/json")
-	var err error
-	var respBody []byte
-	log.Printf("request to gold feed endpoint: %s", req.URL)
-	resp, err := client.Do(req)
-	if err != nil {
-		return common.GeminiGoldData{
-			Valid: false,
-			Error: err.Error(),
-		}
-	}
-	defer func() {
-		if cErr := resp.Body.Close(); cErr != nil {
-			log.Printf("Response body close error: %s", cErr.Error())
-		}
-	}()
-	if resp.StatusCode != 200 {
-		err = fmt.Errorf("gold feed returned with code: %d", resp.StatusCode)
-		return common.GeminiGoldData{
-			Valid: false,
-			Error: err.Error(),
-		}
-	}
-	respBody, err = ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return common.GeminiGoldData{
-			Valid: false,
-			Error: err.Error(),
-		}
-	}
-	log.Printf("request to %s, got response from gold feed %s", req.URL, respBody)
 	result := common.GeminiGoldData{
 		Valid: true,
 	}
-	err = json.Unmarshal(respBody, &result)
+	err := tw.getPublic(url, &result)
 	if err != nil {
 		result.Valid = false
 		result.Error = err.Error()
