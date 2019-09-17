@@ -467,20 +467,6 @@ func NewHTTPServer(
 	settingStorage storage.Interface,
 ) *Server {
 	r := gin.Default()
-	sentryCli, err := raven.NewWithTags(
-		"https://bf15053001464a5195a81bc41b644751:eff41ac715114b20b940010208271b13@sentry.io/228067",
-		map[string]string{
-			"env": dpl.String(),
-		},
-	)
-	if err != nil {
-		panic(err)
-	}
-	r.Use(sentry.Recovery(
-		sentryCli,
-		false,
-	))
-
 	return &Server{
 		app:            app,
 		core:           core,
