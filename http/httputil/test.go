@@ -1,7 +1,9 @@
 package httputil
 
 import (
+	"bytes"
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -45,9 +47,48 @@ func ExpectFailure(t *testing.T, resp *httptest.ResponseRecorder) {
 	expectStatus(t, resp, false, "")
 }
 
+// ExpectFailureWithReason func check response code and its reason
 func ExpectFailureWithReason(reason string) func(t *testing.T, resp *httptest.ResponseRecorder) {
 	return func(t *testing.T, resp *httptest.ResponseRecorder) {
 		t.Helper()
 		expectStatus(t, resp, false, reason)
 	}
+}
+
+type assertFn func(t *testing.T, resp *httptest.ResponseRecorder)
+
+// TestCase is a http test case
+type TestCase struct {
+	Msg         string
+	Endpoint    string
+	EndpointExp func() string
+	Method      string
+	Data        interface{}
+	Assert      assertFn
+}
+
+// TestHTTPRequest run a test http handler
+func TestHTTPRequest(t *testing.T, tc TestCase, handler http.Handler) {
+	t.Helper()
+	if tc.Endpoint == "" && tc.EndpointExp != nil {
+		tc.Endpoint = tc.EndpointExp()
+	}
+	req, tErr := http.NewRequest(tc.Method, tc.Endpoint, nil)
+	if tErr != nil {
+		t.Fatal(tErr)
+	}
+
+	data, err := json.Marshal(tc.Data)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if tc.Data != nil {
+		req.Body = ioutil.NopCloser(bytes.NewReader(data))
+		req.Header.Add("Content-Type", "application/json")
+	}
+
+	resp := httptest.NewRecorder()
+	handler.ServeHTTP(resp, req)
+	tc.Assert(t, resp)
 }

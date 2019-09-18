@@ -6,14 +6,11 @@ import (
 	"math/big"
 	"strconv"
 
-	"github.com/getsentry/raven-go"
 	"github.com/gin-contrib/pprof"
-	"github.com/gin-contrib/sentry"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 
 	"github.com/KyberNetwork/reserve-data"
-	"github.com/KyberNetwork/reserve-data/cmd/deployment"
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/http/httputil"
 	v3common "github.com/KyberNetwork/reserve-data/reservesetting/common"
@@ -462,7 +459,6 @@ func NewHTTPServer(
 	app reserve.Data,
 	core reserve.Core,
 	host string,
-	dpl deployment.Deployment,
 	bc Blockchain,
 	settingStorage storage.Interface,
 ) *Server {

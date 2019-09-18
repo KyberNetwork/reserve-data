@@ -71,7 +71,6 @@ func run(c *cli.Context) error {
 	server := http.NewHTTPServer(
 		rData, rCore,
 		host,
-		dpl,
 		bc,
 		conf.SettingStorage,
 	)
