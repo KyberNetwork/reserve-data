@@ -109,10 +109,10 @@ func TestRate(t *testing.T) {
 				Assert:   httputil.ExpectFailure,
 			},
 			{
-				Msg:      "test get all rates failure",
+				Msg:      "test get all rates success",
 				Endpoint: getAllRatesEndpoint,
 				Method:   http.MethodGet,
-				Assert:   httputil.ExpectFailure,
+				Assert:   httputil.ExpectSuccess,
 			},
 			// TODO: test success case
 		}
@@ -146,16 +146,16 @@ func TestAuthdata(t *testing.T) {
 				Assert:   httputil.ExpectFailure,
 			},
 			{
-				Msg:      "test get activities failure",
+				Msg:      "test get activities success",
 				Endpoint: activitiesEndpoint,
 				Method:   http.MethodGet,
-				Assert:   httputil.ExpectFailure,
+				Assert:   httputil.ExpectSuccess,
 			},
 			{
-				Msg:      "test get immediate pending activities failure",
+				Msg:      "test get immediate pending activities success",
 				Endpoint: immediatePendingActivitiesEndpoint,
 				Method:   http.MethodGet,
-				Assert:   httputil.ExpectFailure,
+				Assert:   httputil.ExpectSuccess,
 			},
 		}
 	)
