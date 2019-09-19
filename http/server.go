@@ -78,7 +78,6 @@ func (s *Server) AllPrices(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
-
 	var responseData []price
 	for tp, onePrice := range data.Data {
 		pair, err := s.settingStorage.GetTradingPair(tp)

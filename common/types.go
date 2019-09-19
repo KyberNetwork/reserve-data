@@ -355,6 +355,7 @@ func NewActivityStatus(exchangeStatus, tx string, blockNumber uint64, miningStat
 	}
 }
 
+// PriceEntry is a price entry
 type PriceEntry struct {
 	Quantity float64 `json:"quantity"`
 	Rate     float64 `json:"rate"`
@@ -368,11 +369,14 @@ func NewPriceEntry(quantity, rate float64) PriceEntry {
 	}
 }
 
+// AllPriceEntry price of all asset
 type AllPriceEntry struct {
 	Block uint64
-	Data  map[uint64]OnePrice
+	// map tokenPairID and its price
+	Data map[uint64]OnePrice
 }
 
+// AllPriceResponse all price response
 type AllPriceResponse struct {
 	Version    Version
 	Timestamp  Timestamp
@@ -381,6 +385,7 @@ type AllPriceResponse struct {
 	Block      uint64
 }
 
+// OnePriceResponse is one price
 type OnePriceResponse struct {
 	Version    Version
 	Timestamp  Timestamp
@@ -389,8 +394,10 @@ type OnePriceResponse struct {
 	Block      uint64
 }
 
+// OnePrice is price of a token
 type OnePrice map[ExchangeID]ExchangePrice
 
+// ExchangePrice is price exchange
 type ExchangePrice struct {
 	Valid      bool
 	Error      string
@@ -416,6 +423,7 @@ func (rb *RawBalance) UnmarshalJSON(text []byte) error {
 	return selfInt.UnmarshalJSON(text)
 }
 
+// BalanceEntry object
 type BalanceEntry struct {
 	Valid      bool
 	Error      string
@@ -654,16 +662,13 @@ func NewTradeHistory(id string, price, qty float64, typ string, timestamp uint64
 
 type ExchangeTradeHistory map[uint64][]TradeHistory
 
+// AllTradeHistory all trade history
 type AllTradeHistory struct {
 	Timestamp Timestamp
 	Data      map[ExchangeID]ExchangeTradeHistory
 }
 
-type ExStatus struct {
-	Timestamp uint64 `json:"timestamp"`
-	Status    bool   `json:"status"`
-}
-
+// AddressesResponse response to get all addresses
 type AddressesResponse struct {
 	Addresses map[string]ethereum.Address `json:"addresses"`
 }
