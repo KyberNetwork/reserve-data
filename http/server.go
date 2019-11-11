@@ -272,12 +272,14 @@ func (s *Server) checkTokenDelisted(tokens []common.Token, bigBuys, bigSells, bi
 		// error might be from node, return just for warning
 		return tokens, bigBuys, bigSells, bigAfpMid, err
 	}
+	s.l.Infow("listed token", "length", len(listedTokens), "tokens", listedTokens)
 	if len(listedTokens) <= len(tokens) {
 		return tokens, bigBuys, bigSells, bigAfpMid, nil
 	}
 
 	for _, tokenAddr := range listedTokens {
 		if !tokenExisted(tokenAddr, tokens) {
+			s.l.Infow("token delisted", "token", tokenAddr.Hex())
 			tokens = append(tokens, common.Token{
 				Address: tokenAddr.Hex(),
 			})

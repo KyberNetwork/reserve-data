@@ -188,6 +188,11 @@ func (b *Blockchain) SetRates(
 		compactSell, overflow1 := BigIntToCompactRate(sells[i], baseSells[i])
 		compactBuy, overflow2 := BigIntToCompactRate(buys[i], baseBuys[i])
 		if overflow1 || overflow2 {
+			b.l.Infow("over flow token", "token", token.Hex())
+			b.l.Infow("old base buy", "value", baseBuys[i])
+			b.l.Infow("new base buy", "value", buys[i])
+			b.l.Infow("old base sell", "value", baseSells[i])
+			b.l.Infow("new base sell", "value", sells[i])
 			baseTokens = append(baseTokens, token)
 			newBSells = append(newBSells, sells[i])
 			newBBuys = append(newBBuys, buys[i])
@@ -216,7 +221,12 @@ func (b *Blockchain) SetRates(
 			bbuys, bsells, block, indices)
 		if tx != nil {
 			b.l.Infof(
-				"broadcasting setbase tx %s, target buys(%s), target sells(%s), old base buy(%s) || old base sell(%s) || new base buy(%s) || new base sell(%s) || new compact buy(%s) || new compact sell(%s) || new buy bulk(%v) || new sell bulk(%v) || indices(%v)",
+				`broadcasting setbase tx %s, 
+				target buys(%s), 
+				target sells(%s), 
+				old base buy(%s) || 
+				old base sell(%s) || 
+				new base buy(%s) || new base sell(%s) || new compact buy(%s) || new compact sell(%s) || new buy bulk(%v) || new sell bulk(%v) || indices(%v)`,
 				tx.Hash().Hex(),
 				buys, sells,
 				baseBuys, baseSells,
