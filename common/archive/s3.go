@@ -1,13 +1,13 @@
 package archive
 
 import (
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
-	"go.uber.org/zap"
 
 	// "github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -19,20 +19,19 @@ type S3Archive struct {
 	uploader *s3manager.Uploader
 	svc      *s3.S3
 	awsConf  AWSConfig
-	l        *zap.SugaredLogger
 }
 
-func (s *S3Archive) UploadFile(bucketName string, awsfolderPath string, filePath string) error {
+func (archive *S3Archive) UploadFile(bucketName string, awsfolderPath string, filePath string) error {
 	file, err := os.Open(filePath)
 	defer func() {
 		if cErr := file.Close(); cErr != nil {
-			s.l.Warnf("File close error: %+v", cErr)
+			log.Printf("File close error: %s", cErr.Error())
 		}
 	}()
 	if err != nil {
 		return err
 	}
-	_, err = s.uploader.Upload(&s3manager.UploadInput{
+	_, err = archive.uploader.Upload(&s3manager.UploadInput{
 		Bucket: aws.String(bucketName),
 		Key:    aws.String(filepath.Join(awsfolderPath, getFileNameFromFilePath(filePath))),
 		Body:   file,
@@ -40,12 +39,12 @@ func (s *S3Archive) UploadFile(bucketName string, awsfolderPath string, filePath
 	return err
 }
 
-func (s *S3Archive) RemoveFile(bucketName string, awsfolderPath string, filePath string) error {
+func (archive *S3Archive) RemoveFile(bucketName string, awsfolderPath string, filePath string) error {
 	input := &s3.DeleteObjectInput{
 		Bucket: aws.String(bucketName),
 		Key:    aws.String(filepath.Join(awsfolderPath, getFileNameFromFilePath(filePath))),
 	}
-	_, err := s.svc.DeleteObject(input)
+	_, err := archive.svc.DeleteObject(input)
 	return err
 }
 
@@ -58,12 +57,12 @@ func getFileNameFromFilePath(filePath string) string {
 	return fileName
 }
 
-func (s *S3Archive) CheckFileIntergrity(bucketName string, awsfolderPath string, filePath string) (bool, error) {
+func (archive *S3Archive) CheckFileIntergrity(bucketName string, awsfolderPath string, filePath string) (bool, error) {
 	//get File info
 	file, err := os.Open(filePath)
 	defer func() {
 		if cErr := file.Close(); cErr != nil {
-			s.l.Warnf("File close error: %+v", cErr)
+			log.Printf("File close error: %s", cErr.Error())
 		}
 	}()
 	if err != nil {
@@ -79,7 +78,7 @@ func (s *S3Archive) CheckFileIntergrity(bucketName string, awsfolderPath string,
 		Bucket: aws.String(bucketName),
 		Prefix: aws.String(filepath.Join(awsfolderPath, getFileNameFromFilePath(filePath))),
 	}
-	resp, err := s.svc.ListObjects(&x)
+	resp, err := archive.svc.ListObjects(&x)
 	if err != nil {
 		return false, err
 	}
@@ -94,12 +93,12 @@ func (s *S3Archive) CheckFileIntergrity(bucketName string, awsfolderPath string,
 	return false, nil
 }
 
-func (s *S3Archive) GetReserveDataBucketName() string {
-	return s.awsConf.ExpiredReserveDataBucketName
+func (archive *S3Archive) GetReserveDataBucketName() string {
+	return archive.awsConf.ExpiredReserveDataBucketName
 }
 
-func (s *S3Archive) GetLogBucketName() string {
-	return s.awsConf.LogBucketName
+func (archive *S3Archive) GetLogBucketName() string {
+	return archive.awsConf.LogBucketName
 }
 
 func NewS3Archive(conf AWSConfig) *S3Archive {
@@ -110,10 +109,9 @@ func NewS3Archive(conf AWSConfig) *S3Archive {
 	}))
 	uploader := s3manager.NewUploader(sess)
 	svc := s3.New(sess)
-	archive := S3Archive{uploader: uploader,
-		svc:     svc,
-		awsConf: conf,
-		l:       zap.S(),
+	archive := S3Archive{uploader,
+		svc,
+		conf,
 	}
 
 	return &archive

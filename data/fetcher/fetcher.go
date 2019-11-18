@@ -2,12 +2,12 @@ package fetcher
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"sync"
 	"time"
 
 	ethereum "github.com/ethereum/go-ethereum/common"
-	"go.uber.org/zap"
 
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/settings"
@@ -29,7 +29,6 @@ type Fetcher struct {
 	currentBlockUpdateTime uint64
 	simulationMode         bool
 	setting                Setting
-	l                      *zap.SugaredLogger
 }
 
 func NewFetcher(
@@ -47,7 +46,6 @@ func NewFetcher(
 		runner:         runner,
 		simulationMode: simulationMode,
 		setting:        setting,
-		l:              zap.S(),
 	}
 }
 
@@ -72,7 +70,7 @@ func (f *Fetcher) AddExchange(exchange Exchange) {
 		}
 	}
 	if err := f.setting.UpdateExchangeStatus(exchangeStatus); err != nil {
-		f.l.Warnf("Update exchange status error: %+v", err)
+		log.Printf("Update exchange status error: %s", err.Error())
 	}
 }
 
@@ -81,7 +79,7 @@ func (f *Fetcher) Stop() error {
 }
 
 func (f *Fetcher) Run() error {
-	f.l.Infof("Fetcher runner is starting...")
+	log.Printf("Fetcher runner is starting...")
 	if err := f.runner.Start(); err != nil {
 		return err
 	}
@@ -90,68 +88,68 @@ func (f *Fetcher) Run() error {
 	go f.RunRateFetcher()
 	go f.RunBlockFetcher()
 	go f.RunGlobalDataFetcher()
-	f.l.Infof("Fetcher runner is running...")
+	log.Printf("Fetcher runner is running...")
 	return nil
 }
 
 func (f *Fetcher) RunGlobalDataFetcher() {
 	for {
-		f.l.Infof("waiting for signal from global data channel")
+		log.Printf("waiting for signal from global data channel")
 		t := <-f.runner.GetGlobalDataTicker()
-		f.l.Infof("got signal in global data channel with timestamp %d", common.TimeToTimepoint(t))
+		log.Printf("got signal in global data channel with timestamp %d", common.TimeToTimepoint(t))
 		timepoint := common.TimeToTimepoint(t)
 		f.FetchGlobalData(timepoint)
-		f.l.Infof("fetched block from blockchain")
+		log.Printf("fetched block from blockchain")
 	}
 }
 
 func (f *Fetcher) FetchGlobalData(timepoint uint64) {
 	if goldData, err := f.theworld.GetGoldInfo(); err != nil {
-		f.l.Warnf("failed to fetch Gold Info: %+v", err)
+		log.Printf("failed to fetch Gold Info: %s\n", err.Error())
 	} else {
 		goldData.Timestamp = common.GetTimepoint()
 		if err = f.globalStorage.StoreGoldInfo(goldData); err != nil {
-			f.l.Warnf("Storing gold info failed: %+v", err)
+			log.Printf("Storing gold info failed: %s\n", err.Error())
 		}
 	}
 
 	if btcData, err := f.theworld.GetBTCInfo(); err != nil {
-		f.l.Warnf("failed to fetch BTC Info: %+v", err)
+		log.Printf("failed to fetch BTC Info: %s\n", err.Error())
 	} else {
 		btcData.Timestamp = common.GetTimepoint()
 		if err = f.globalStorage.StoreBTCInfo(btcData); err != nil {
-			f.l.Warnf("Storing BTC info failed: %+v", err)
+			log.Printf("Storing BTC info failed: %s\n", err.Error())
 		}
 	}
 
 	if usdData, err := f.theworld.GetUSDInfo(); err != nil {
-		f.l.Warnf("failed to fetch USD info, %+v", err)
+		log.Printf("failed to fetch USD info, %v\n", err)
 	} else {
 		usdData.Timestamp = common.GetTimepoint()
 		if err = f.globalStorage.StoreUSDInfo(usdData); err != nil {
-			f.l.Warnf("Store USD info failed, %v", err)
+			log.Printf("Store USD info failed, %v\n", err)
 		}
 	}
 }
 
 func (f *Fetcher) RunBlockFetcher() {
 	for {
-		f.l.Infof("waiting for signal from block channel")
+		log.Printf("waiting for signal from block channel")
 		t := <-f.runner.GetBlockTicker()
-		f.l.Infof("got signal in block channel with timestamp %d", common.TimeToTimepoint(t))
+		log.Printf("got signal in block channel with timestamp %d", common.TimeToTimepoint(t))
 		timepoint := common.TimeToTimepoint(t)
 		f.FetchCurrentBlock(timepoint)
-		f.l.Infof("fetched block from blockchain")
+		log.Printf("fetched block from blockchain")
 	}
 }
 
 func (f *Fetcher) RunRateFetcher() {
 	for {
-		f.l.Infof("waiting for signal from runner rate channel")
+		log.Printf("waiting for signal from runner rate channel")
 		t := <-f.runner.GetRateTicker()
-		f.l.Infof("got signal in rate channel with timestamp %d", common.TimeToTimepoint(t))
+		log.Printf("got signal in rate channel with timestamp %d", common.TimeToTimepoint(t))
 		f.FetchRate(common.TimeToTimepoint(t))
-		f.l.Infof("fetched rates from blockchain")
+		log.Printf("fetched rates from blockchain")
 	}
 }
 
@@ -173,28 +171,28 @@ func (f *Fetcher) FetchRate(timepoint uint64) {
 
 	data, err = f.blockchain.FetchRates(atBlock, f.currentBlock)
 	if err != nil {
-		f.l.Warnf("Fetching rates from blockchain failed: %+v. Will not store it to storage.", err)
+		log.Printf("Fetching rates from blockchain failed: %s. Will not store it to storage.", err.Error())
 		return
 	}
 
-	f.l.Infof("Got rates from blockchain: %+v", data)
+	log.Printf("Got rates from blockchain: %+v", data)
 	if err = f.storage.StoreRate(data, timepoint); err != nil {
-		f.l.Warnf("Storing rates failed: %+v", err)
+		log.Printf("Storing rates failed: %s", err.Error())
 	}
 }
 
 func (f *Fetcher) RunAuthDataFetcher() {
 	for {
-		f.l.Infof("waiting for signal from runner auth data channel")
+		log.Printf("waiting for signal from runner auth data channel")
 		t := <-f.runner.GetAuthDataTicker()
-		f.l.Infof("got signal in auth data channel with timestamp %d", common.TimeToTimepoint(t))
+		log.Printf("got signal in auth data channel with timestamp %d", common.TimeToTimepoint(t))
 		f.FetchAllAuthData(common.TimeToTimepoint(t))
-		f.l.Infof("fetched data from exchanges")
+		log.Printf("fetched data from exchanges")
 	}
 }
 
 func (f *Fetcher) FetchAllAuthData(timepoint uint64) {
-	f.l.Infof("start to fetch auth data")
+	log.Println("start to fetch auth data")
 	snapshot := common.AuthDataSnapshot{
 		Valid:             true,
 		Timestamp:         common.GetTimestamp(),
@@ -209,7 +207,7 @@ func (f *Fetcher) FetchAllAuthData(timepoint uint64) {
 	bstatuses := sync.Map{}
 	pendings, err := f.storage.GetPendingActivities()
 	if err != nil {
-		f.l.Warnf("Getting pending activities failed: %+v", err)
+		log.Printf("Getting pending activites failed: %s\n", err)
 		return
 	}
 	wait := sync.WaitGroup{}
@@ -232,13 +230,13 @@ func (f *Fetcher) FetchAllAuthData(timepoint uint64) {
 		if found {
 			activityStatus, ok := status.(common.ActivityStatus)
 			if !ok {
-				f.l.Warnf("status from cexs cannot be asserted to common.ActivityStatus")
+				log.Print("WARNING: status from cexs cannot be asserted to common.ActivityStatus")
 				continue
 			}
 			//Set activity result tx to tx from cexs if currently result tx is not nil an is an empty string
 			resultTx, ok := activity.Result["tx"].(string)
 			if !ok {
-				f.l.Warnf("Activity Result Tx (value %v) cannot be asserted to string", activity.Result["tx"])
+				log.Printf("WARNING: Activity Result Tx (value %v) cannot be asserted to string", activity.Result["tx"])
 				continue
 			}
 			if resultTx == "" {
@@ -250,7 +248,7 @@ func (f *Fetcher) FetchAllAuthData(timepoint uint64) {
 	if err = f.FetchAuthDataFromBlockchain(bbalances, &bstatuses, pendings); err != nil {
 		snapshot.Error = err.Error()
 		snapshot.Valid = false
-		f.l.Warnf("FetchAuthDataFromBlockchain failed with error %+v", err)
+		log.Printf("FetchAuthDataFromBlockchain failed with error %v\n", err)
 	}
 	snapshot.Block = f.currentBlock
 	snapshot.ReturnTime = common.GetTimestamp()
@@ -258,7 +256,7 @@ func (f *Fetcher) FetchAllAuthData(timepoint uint64) {
 		&ebalances, bbalances, &estatuses, &bstatuses,
 		pendings, &snapshot, timepoint)
 	if err != nil {
-		f.l.Warnf("Storing auth data failed: %+v", err)
+		log.Printf("Storing auth data failed: %s\n", err)
 		return
 	}
 }
@@ -278,16 +276,16 @@ func (f *Fetcher) FetchAuthDataFromBlockchain(
 	for {
 		preStatuses, err = f.FetchStatusFromBlockchain(pendings)
 		if err != nil {
-			f.l.Warnf("Fetching blockchain pre statuses failed:  %+v, retrying", err)
+			log.Printf("Fetching blockchain pre statuses failed:  %v, retrying", err)
 		}
 		balances, err = f.FetchBalanceFromBlockchain()
 		if err != nil {
-			f.l.Warnf("Fetching blockchain balances failed: %+v", err)
+			log.Printf("Fetching blockchain balances failed: %v", err)
 			return err
 		}
 		statuses, err = f.FetchStatusFromBlockchain(pendings)
 		if err != nil {
-			f.l.Warnf("Fetching blockchain statuses failed:  %+v, retrying", err)
+			log.Printf("Fetching blockchain statuses failed:  %v, retrying", err)
 		}
 		if unchanged(preStatuses, statuses) {
 			break
@@ -305,7 +303,7 @@ func (f *Fetcher) FetchAuthDataFromBlockchain(
 func (f *Fetcher) FetchCurrentBlock(timepoint uint64) {
 	block, err := f.blockchain.CurrentBlock()
 	if err != nil {
-		f.l.Warnf("Fetching current block failed: %+v. Ignored.", err)
+		log.Printf("Fetching current block failed: %v. Ignored.", err)
 	} else {
 		// update currentBlockUpdateTime first to avoid race condition
 		// where fetcher is trying to fetch new rate
@@ -326,7 +324,7 @@ func (f *Fetcher) newNonceValidator() func(common.ActivityRecord) bool {
 	// SetRateMinedNonce might be slow, use closure to not invoke it every time
 	minedNonce, err := f.blockchain.SetRateMinedNonce()
 	if err != nil {
-		f.l.Warnf("Getting mined nonce failed: %+v", err)
+		log.Printf("Getting mined nonce failed: %s", err)
 	}
 
 	return func(act common.ActivityRecord) bool {
@@ -344,7 +342,7 @@ func (f *Fetcher) newNonceValidator() func(common.ActivityRecord) bool {
 		}
 		nonce, err := strconv.ParseUint(actNonce, 10, 64)
 		if err != nil {
-			f.l.Warnf("convert act.Result[nonce] to Uint64 failed %+v", err)
+			log.Printf("ERROR convert act.Result[nonce] to Uint64 failed %s", err.Error())
 			return false
 		}
 		return nonce < minedNonce
@@ -362,7 +360,7 @@ func (f *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord) (m
 			var err error
 			txStr, ok := activity.Result["tx"].(string)
 			if !ok {
-				f.l.Warnf("TX_STATUS:cannot convert activity.Result[tx] (value %v) to string type", activity.Result["tx"])
+				log.Printf("TX_STATUS: WARNING cannot convert activity.Result[tx] (value %v) to string type", activity.Result["tx"])
 				continue
 			}
 			tx := ethereum.HexToHash(txStr)
@@ -376,10 +374,10 @@ func (f *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord) (m
 
 			switch status {
 			case common.MiningStatusPending:
-				f.l.Infof("TX_STATUS: tx (%s) status is pending", tx)
+				log.Printf("TX_STATUS: tx (%s) status is pending", tx)
 			case common.MiningStatusMined:
 				if activity.Action == common.ActionSetRate {
-					f.l.Infof("TX_STATUS set rate transaction is mined, id: %s", activity.ID.EID)
+					log.Printf("TX_STATUS set rate transaction is mined, id: %s", activity.ID.EID)
 				}
 				result[activity.ID] = common.NewActivityStatus(
 					activity.ExchangeStatus,
@@ -408,7 +406,7 @@ func (f *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord) (m
 				} else {
 					elapsed := common.GetTimepoint() - activity.Timestamp.MustToUint64()
 					if elapsed > uint64(expiredDuration) {
-						f.l.Infof("TX_STATUS: tx(%s) is lost, elapsed time: %d", txStr, elapsed)
+						log.Printf("TX_STATUS: tx(%s) is lost, elapsed time: %d", txStr, elapsed)
 						txFailed = true
 					}
 				}
@@ -423,7 +421,7 @@ func (f *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord) (m
 					)
 				}
 			default:
-				f.l.Infof("TX_STATUS: tx (%s) status is not available. Wait till next try", tx)
+				log.Printf("TX_STATUS: tx (%s) status is not available. Wait till next try", tx)
 			}
 		}
 	}
@@ -448,19 +446,19 @@ func unchanged(pre, post map[common.ActivityID]common.ActivityStatus) bool {
 	return true
 }
 
-func (f *Fetcher) updateActivitywithBlockchainStatus(activity *common.ActivityRecord, bstatuses *sync.Map, snapshot *common.AuthDataSnapshot) {
+func updateActivitywithBlockchainStatus(activity *common.ActivityRecord, bstatuses *sync.Map, snapshot *common.AuthDataSnapshot) {
 	status, ok := bstatuses.Load(activity.ID)
 	if !ok || status == nil {
-		f.l.Infof("block chain status for %s is nil or not existed ", activity.ID.String())
+		log.Printf("block chain status for %s is nil or not existed ", activity.ID.String())
 		return
 	}
 
 	activityStatus, ok := status.(common.ActivityStatus)
 	if !ok {
-		f.l.Warnf("ERROR: status (%v) cannot be asserted to common.ActivityStatus", status)
+		log.Printf("ERROR: status (%v) cannot be asserted to common.ActivityStatus", status)
 		return
 	}
-	f.l.Infof("In PersistSnapshot: blockchain activity status for %+v: %+v", activity.ID, activityStatus)
+	log.Printf("In PersistSnapshot: blockchain activity status for %+v: %+v", activity.ID, activityStatus)
 	if activity.IsBlockchainPending() {
 		activity.MiningStatus = activityStatus.MiningStatus
 	}
@@ -479,18 +477,18 @@ func (f *Fetcher) updateActivitywithBlockchainStatus(activity *common.ActivityRe
 	activity.Result["blockNumber"] = activityStatus.BlockNumber
 }
 
-func (f *Fetcher) updateActivitywithExchangeStatus(activity *common.ActivityRecord, estatuses *sync.Map, snapshot *common.AuthDataSnapshot) {
+func updateActivitywithExchangeStatus(activity *common.ActivityRecord, estatuses *sync.Map, snapshot *common.AuthDataSnapshot) {
 	status, ok := estatuses.Load(activity.ID)
 	if !ok || status == nil {
-		f.l.Infof("exchange status for %s is nil or not existed ", activity.ID.String())
+		log.Printf("exchange status for %s is nil or not existed ", activity.ID.String())
 		return
 	}
 	activityStatus, ok := status.(common.ActivityStatus)
 	if !ok {
-		f.l.Warnf("status (%v) cannot be asserted to common.ActivityStatus", status)
+		log.Printf("ERROR: status (%v) cannot be asserted to common.ActivityStatus", status)
 		return
 	}
-	f.l.Infof("In PersistSnapshot: exchange activity status for %+v: %+v", activity.ID, activityStatus)
+	log.Printf("In PersistSnapshot: exchange activity status for %+v: %+v", activity.ID, activityStatus)
 	if activity.IsExchangePending() {
 		activity.ExchangeStatus = activityStatus.ExchangeStatus
 	} else if activityStatus.ExchangeStatus == common.ExchangeStatusFailed {
@@ -499,7 +497,7 @@ func (f *Fetcher) updateActivitywithExchangeStatus(activity *common.ActivityReco
 
 	resultTx, ok := activity.Result["tx"].(string)
 	if !ok {
-		f.l.Warnf("activity.Result[tx] (value %v) cannot be asserted to string type", activity.Result["tx"])
+		log.Printf("WARNING: activity.Result[tx] (value %v) cannot be asserted to string type", activity.Result["tx"])
 	} else if ok && resultTx == "" {
 		activity.Result["tx"] = activityStatus.Tx
 	}
@@ -527,12 +525,12 @@ func (f *Fetcher) PersistSnapshot(
 		//if type conversion went wrong, continue to the next record
 		v, ok := value.(common.EBalanceEntry)
 		if !ok {
-			f.l.Warnf("value (%v) cannot be asserted to common.EbalanceEntry", v)
+			log.Printf("ERROR: value (%v) cannot be asserted to common.EbalanceEntry", v)
 			return true
 		}
 		exID, ok := key.(common.ExchangeID)
 		if !ok {
-			f.l.Warnf("key (%v) cannot be asserted to common.ExchangeID", key)
+			log.Printf("ERROR: key (%v) cannot be asserted to common.ExchangeID", key)
 			return true
 		}
 		allEBalances[exID] = v
@@ -563,9 +561,9 @@ func (f *Fetcher) PersistSnapshot(
 	pendingActivities := []common.ActivityRecord{}
 	for _, activity := range pendings {
 		activity := activity
-		f.updateActivitywithExchangeStatus(&activity, estatuses, snapshot)
-		f.updateActivitywithBlockchainStatus(&activity, bstatuses, snapshot)
-		f.l.Infof("Aggregate statuses, final activity: %+v", activity)
+		updateActivitywithExchangeStatus(&activity, estatuses, snapshot)
+		updateActivitywithBlockchainStatus(&activity, bstatuses, snapshot)
+		log.Printf("Aggregate statuses, final activity: %+v", activity)
 		if activity.IsPending() {
 			pendingActivities = append(pendingActivities, activity)
 		}
@@ -595,7 +593,7 @@ func (f *Fetcher) PersistSnapshot(
 	// persist blockchain balances
 	snapshot.ReserveBalances = bbalances
 	snapshot.PendingActivities = pendingActivities
-	f.l.Infof("save auth data with timepoint %d", timepoint)
+	log.Printf("save auth data with timepoint %d\n", timepoint)
 	return f.storage.StoreAuthSnapshot(snapshot, timepoint)
 }
 
@@ -618,13 +616,13 @@ func (f *Fetcher) FetchAuthDataFromExchange(
 		preStatuses := f.FetchStatusFromExchange(exchange, pendings, timepoint)
 		balances, err = exchange.FetchEBalanceData(timepoint)
 		if err != nil {
-			f.l.Warnf("Fetching exchange balances from %s failed: %+v", exchange.Name(), err)
+			log.Printf("Fetching exchange balances from %s failed: %v\n", exchange.Name(), err)
 			break
 		}
 		//Remove all token which is not in this exchange's token addresses
 		tokenAddress, err = exchange.TokenAddresses()
 		if err != nil {
-			f.l.Warnf("getting token address from %s failed: %+v", exchange.Name(), err)
+			log.Printf("getting token address from %s failed: %v\n", exchange.Name(), err)
 			break
 		}
 		for tokenID := range balances.AvailableBalance {
@@ -675,12 +673,12 @@ func (f *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []common.A
 				orderID := id.EID
 				base, ok := activity.Params["base"].(string)
 				if !ok {
-					f.l.Warnf("activity Params base (%v) can't be converted to type string", activity.Params["base"])
+					log.Printf("WARNING: activity Params base (%v) can't be converted to type string", activity.Params["base"])
 					continue
 				}
 				quote, ok := activity.Params["quote"].(string)
 				if !ok {
-					f.l.Warnf("activity Params quote (%v) can't be converted to type string", activity.Params["quote"])
+					log.Printf("WARNING: activity Params quote (%v) can't be converted to type string", activity.Params["quote"])
 					continue
 				}
 				// we ignore error of order status because it doesn't affect
@@ -689,49 +687,49 @@ func (f *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []common.A
 			case common.ActionDeposit:
 				txHash, ok := activity.Result["tx"].(string)
 				if !ok {
-					f.l.Warnf("activity Result tx (%v) can't be converted to type string", activity.Result["tx"])
+					log.Printf("WARNING: activity Result tx (%v) can't be converted to type string", activity.Result["tx"])
 					continue
 				}
 				amountStr, ok := activity.Params["amount"].(string)
 				if !ok {
-					f.l.Warnf("activity Params amount (%v) can't be converted to type string", activity.Params["amount"])
+					log.Printf("WARNING: activity Params amount (%v) can't be converted to type string", activity.Params["amount"])
 					continue
 				}
 				amount, uErr := strconv.ParseFloat(amountStr, 64)
 				if uErr != nil {
-					f.l.Warnf("can't parse activity Params amount %s to float64", amountStr)
+					log.Printf("WARNING: can't parse activity Params amount %s to float64", amountStr)
 					continue
 				}
 				currency, ok := activity.Params["token"].(string)
 				if !ok {
-					f.l.Warnf("activity Params token (%v) can't be converted to type string", activity.Params["token"])
+					log.Printf("WARNING: activity Params token (%v) can't be converted to type string", activity.Params["token"])
 					continue
 				}
 				status, err = exchange.DepositStatus(id, txHash, currency, amount, timepoint)
-				f.l.Infof("Got deposit status for %v: (%s), error(%s)", activity, status, common.ErrorToString(err))
+				log.Printf("Got deposit status for %v: (%s), error(%s)", activity, status, common.ErrorToString(err))
 			case common.ActionWithdraw:
 				amountStr, ok := activity.Params["amount"].(string)
 				if !ok {
-					f.l.Warnf("activity Params amount (%v) can't be converted to type string", activity.Params["amount"])
+					log.Printf("WARNING: activity Params amount (%v) can't be converted to type string", activity.Params["amount"])
 					continue
 				}
 				amount, uErr := strconv.ParseFloat(amountStr, 64)
 				if uErr != nil {
-					f.l.Warnf("can't parse activity Params amount %s to float64", amountStr)
+					log.Printf("WARNING: can't parse activity Params amount %s to float64", amountStr)
 					continue
 				}
 				currency, ok := activity.Params["token"].(string)
 				if !ok {
-					f.l.Warnf("activity Params token (%v) can't be converted to type string", activity.Params["token"])
+					log.Printf("WARNING: activity Params token (%v) can't be converted to type string", activity.Params["token"])
 					continue
 				}
 				_, ok = activity.Result["tx"].(string)
 				if !ok {
-					f.l.Warnf("activity Result tx (%v) can't be converted to type string", activity.Result["tx"])
+					log.Printf("WARNING: activity Result tx (%v) can't be converted to type string", activity.Result["tx"])
 					continue
 				}
 				status, tx, err = exchange.WithdrawStatus(id.EID, currency, amount, timepoint)
-				f.l.Infof("Got withdraw status for %v: (%s), error(%s)", activity, status, common.ErrorToString(err))
+				log.Printf("Got withdraw status for %v: (%s), error(%s)", activity, status, common.ErrorToString(err))
 			default:
 				continue
 			}
@@ -740,7 +738,7 @@ func (f *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []common.A
 			// long time. We will just consider it as a failed activity.
 			timepoint, err1 := strconv.ParseUint(string(activity.Timestamp), 10, 64)
 			if err1 != nil {
-				f.l.Warnf("Activity %v has invalid timestamp. Just ignore it.", activity)
+				log.Printf("Activity %v has invalid timestamp. Just ignore it.", activity)
 			} else {
 				if common.GetTimepoint()-timepoint > maxActivityLifeTime*uint64(time.Hour)/uint64(time.Millisecond) {
 					result[id] = common.NewActivityStatus(common.ExchangeStatusFailed, tx, blockNum, activity.MiningStatus, err)
@@ -751,7 +749,7 @@ func (f *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []common.A
 		} else {
 			timepoint, err1 := strconv.ParseUint(string(activity.Timestamp), 10, 64)
 			if err1 != nil {
-				f.l.Warnf("Activity %v has invalid timestamp. Just ignore it.", activity)
+				log.Printf("Activity %v has invalid timestamp. Just ignore it.", activity)
 			} else if activity.Destination == string(exchange.ID()) &&
 				activity.ExchangeStatus == common.ExchangeStatusDone &&
 				common.GetTimepoint()-timepoint > maxActivityLifeTime*uint64(time.Hour)/uint64(time.Millisecond) {
@@ -766,11 +764,11 @@ func (f *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []common.A
 
 func (f *Fetcher) RunOrderbookFetcher() {
 	for {
-		f.l.Infof("waiting for signal from runner orderbook channel")
+		log.Printf("waiting for signal from runner orderbook channel")
 		t := <-f.runner.GetOrderbookTicker()
-		f.l.Infof("got signal in orderbook channel with timestamp %d", common.TimeToTimepoint(t))
+		log.Printf("got signal in orderbook channel with timestamp %d", common.TimeToTimepoint(t))
 		f.FetchOrderbook(common.TimeToTimepoint(t))
-		f.l.Infof("fetched data from exchanges")
+		log.Printf("fetched data from exchanges")
 	}
 }
 
@@ -786,7 +784,7 @@ func (f *Fetcher) FetchOrderbook(timepoint uint64) {
 	data.SetBlockNumber(f.currentBlock)
 	err := f.storage.StorePrice(data.GetData(), timepoint)
 	if err != nil {
-		f.l.Warnf("Storing data failed: %", err)
+		log.Printf("Storing data failed: %s\n", err)
 	}
 }
 
@@ -794,13 +792,11 @@ func (f *Fetcher) fetchPriceFromExchange(wg *sync.WaitGroup, exchange Exchange, 
 	defer wg.Done()
 	fetchConfig, err := f.globalStorage.GetAllFetcherConfiguration()
 	if err != nil {
-		f.l.Warnf("cannot get btc fetcher configuration err=%+v", err)
-		return
+		log.Fatal("cannot get btc fetcher configuration")
 	}
 	exdata, err := exchange.FetchPriceData(timepoint, fetchConfig.BTC)
 	if err != nil {
-		f.l.Warnf("Fetching data from %s failed: %+v", exchange.Name(), err)
-		return
+		log.Printf("Fetching data from %s failed: %v\n", exchange.Name(), err)
 	}
 	for pair, exchangeData := range exdata {
 		data.SetOnePrice(exchange.ID(), pair, exchangeData)

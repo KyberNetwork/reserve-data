@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strconv"
-
-	"github.com/boltdb/bolt"
-	"go.uber.org/zap"
+	"sync"
 
 	"github.com/KyberNetwork/reserve-data/common"
+	"github.com/boltdb/bolt"
 )
 
 const (
@@ -20,8 +20,8 @@ const (
 //Storage storage binance information
 //including trade history
 type Storage struct {
+	mu sync.RWMutex
 	db *bolt.DB
-	l  *zap.SugaredLogger
 }
 
 //NewBoltStorage create database and related bucket for binance storage
@@ -44,7 +44,7 @@ func NewBoltStorage(path string) (*Storage, error) {
 	if err != nil {
 		return nil, err
 	}
-	storage := &Storage{db: db, l: zap.S()}
+	storage := &Storage{sync.RWMutex{}, db}
 	return storage, nil
 }
 
@@ -95,7 +95,7 @@ func (bs *Storage) GetTradeHistory(fromTime, toTime uint64) (common.ExchangeTrad
 				pairHistory := common.TradeHistory{}
 				err = json.Unmarshal(history, &pairHistory)
 				if err != nil {
-					bs.l.Warnf("Cannot unmarshal history: %+v", err)
+					log.Printf("Cannot unmarshal history: %s", err.Error())
 					return err
 				}
 				pairsHistory = append(pairsHistory, pairHistory)
@@ -116,14 +116,14 @@ func (bs *Storage) GetLastIDTradeHistory(pair string) (string, error) {
 		b := tx.Bucket([]byte(tradeHistory))
 		pairBk, err := b.CreateBucketIfNotExists([]byte(pair))
 		if err != nil {
-			bs.l.Warnf("Cannot get pair bucket: %s", err)
+			log.Printf("Cannot get pair bucket: %s", err.Error())
 			return err
 		}
 		k, v := pairBk.Cursor().Last()
 		if k != nil {
 			err = json.Unmarshal(v, &history)
 			if err != nil {
-				bs.l.Warnf("Cannot unmarshal history: %s", err)
+				log.Printf("Cannot unmarshal history: %s", err.Error())
 				return err
 			}
 		}

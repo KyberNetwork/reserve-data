@@ -1,11 +1,11 @@
 package configuration
 
 import (
+	"log"
 	"path/filepath"
 
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
-	"go.uber.org/zap"
 
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/archive"
@@ -68,7 +68,7 @@ func GetConfigPaths(kyberENV string) SettingPaths {
 	if sp, ok := ConfigPaths[kyberENV]; ok {
 		return sp
 	}
-	zap.S().Infof("Environment setting paths is not found, using dev")
+	log.Println("Environment setting paths is not found, using dev...")
 	return ConfigPaths[common.DevMode]
 }
 
@@ -97,23 +97,22 @@ func GetSetting(kyberENV string, addressSetting *settings.AddressSetting) (*sett
 	return setting, err
 }
 
-func GetConfig(kyberENV string, authEnbl bool, endpointOW string, cliAddress common.AddressConfig, runnerConfig common.RunnerConfig) *Config {
-	l := zap.S()
+func GetConfig(kyberENV string, authEnbl bool, endpointOW string, cliAddress common.AddressConfig) *Config {
 	setPath := GetConfigPaths(kyberENV)
 
 	theWorld, err := world.NewTheWorld(kyberENV, setPath.secretPath)
 	if err != nil {
-		l.Panicf("Can't init the world (which is used to get global data), err=%+v", err)
+		panic("Can't init the world (which is used to get global data), err " + err.Error())
 	}
 
 	hmac512auth := http.NewKNAuthenticationFromFile(setPath.secretPath)
 	addressSetting, err := settings.NewAddressSetting(mustGetAddressesConfig(kyberENV, cliAddress))
 	if err != nil {
-		l.Panicf("cannot init address setting %s", err)
+		log.Panicf("cannot init address setting %s", err)
 	}
 	var endpoint string
 	if endpointOW != "" {
-		l.Infof("overwriting Endpoint with %s\n", endpointOW)
+		log.Printf("overwriting Endpoint with %s\n", endpointOW)
 		endpoint = endpointOW
 	} else {
 		endpoint = setPath.endPoint
@@ -137,29 +136,27 @@ func GetConfig(kyberENV string, authEnbl bool, endpointOW string, cliAddress com
 	mainClient := ethclient.NewClient(client)
 	bkClients := map[string]*ethclient.Client{}
 
-	var callClients []*common.EthClient
+	var callClients []*ethclient.Client
 	for _, ep := range bkEndpoints {
-		client, err := common.NewEthClient(ep)
+		var bkClient *ethclient.Client
+		bkClient, err = ethclient.Dial(ep)
 		if err != nil {
-			l.Warnf("Cannot connect to %s, err %s, ignore it.", ep, err)
-			continue
+			log.Printf("Cannot connect to %s, err %s. Ignore it.", ep, err)
+		} else {
+			bkClients[ep] = bkClient
+			callClients = append(callClients, bkClient)
 		}
-		callClients = append(callClients, client)
-		bkClients[ep] = client.Client
-	}
-	if len(callClients) == 0 {
-		l.Warn("no backup client available")
 	}
 
 	bc := blockchain.NewBaseBlockchain(
 		client, mainClient, map[string]*blockchain.Operator{},
 		blockchain.NewBroadcaster(bkClients),
 		chainType,
-		blockchain.NewContractCaller(callClients),
+		blockchain.NewContractCaller(callClients, bkEndpoints),
 	)
 
 	if !authEnbl {
-		l.Warnf("\nWARNING: No authentication mode\n")
+		log.Printf("\nWARNING: No authentication mode\n")
 	}
 	awsConf, err := archive.GetAWSconfigFromFile(setPath.secretPath)
 	if err != nil {
@@ -178,8 +175,8 @@ func GetConfig(kyberENV string, authEnbl bool, endpointOW string, cliAddress com
 		AddressSetting:          addressSetting,
 	}
 
-	l.Infof("configured endpoint: %s, backup: %v", config.EthereumEndpoint, config.BackupEthereumEndpoints)
+	log.Printf("configured endpoint: %s, backup: %v", config.EthereumEndpoint, config.BackupEthereumEndpoints)
 
-	config.AddCoreConfig(setPath, kyberENV, runnerConfig)
+	config.AddCoreConfig(setPath, kyberENV)
 	return config
 }

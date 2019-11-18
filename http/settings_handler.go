@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"reflect"
 	"strconv"
 
 	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/gin-gonic/gin"
-	pe "github.com/pkg/errors"
 
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/http/httputil"
@@ -59,7 +59,7 @@ func (s *Server) getExchangeSetting(exName settings.ExchangeName) (*common.Excha
 		if err != settings.ErrExchangeRecordNotFound {
 			return nil, err
 		}
-		s.l.Infof("the current exchange fee for %s hasn't existed yet.", exName.String())
+		log.Printf("the current exchange fee for %s hasn't existed yet.", exName.String())
 		fundingFee := common.NewFundingFee(make(map[string]float64), make(map[string]float64))
 		exFee = common.NewExchangeFee(make(common.TradingFee), fundingFee)
 	}
@@ -68,7 +68,7 @@ func (s *Server) getExchangeSetting(exName settings.ExchangeName) (*common.Excha
 		if err != settings.ErrExchangeRecordNotFound {
 			return nil, err
 		}
-		s.l.Infof("the current exchange MinDeposit for %s hasn't existed yet.", exName.String())
+		log.Printf("the current exchange MinDeposit for %s hasn't existed yet.", exName.String())
 		exMinDep = make(common.ExchangesMinDeposit)
 	}
 	exInfos, err := s.setting.GetExchangeInfo(exName)
@@ -76,7 +76,7 @@ func (s *Server) getExchangeSetting(exName settings.ExchangeName) (*common.Excha
 		if err != settings.ErrExchangeRecordNotFound {
 			return nil, err
 		}
-		s.l.Infof("the current exchange Info for %s hasn't existed yet.", exName.String())
+		log.Printf("the current exchange Info for %s hasn't existed yet.", exName.String())
 		exInfos = make(common.ExchangeInfo)
 	}
 	depAddrs, err := s.setting.GetDepositAddresses(exName)
@@ -84,7 +84,7 @@ func (s *Server) getExchangeSetting(exName settings.ExchangeName) (*common.Excha
 		if err != settings.ErrExchangeRecordNotFound {
 			return nil, err
 		}
-		s.l.Infof("the current exchange deposit addresses  for %s hasn't existed yet.", exName.String())
+		log.Printf("the current exchange deposit addresses  for %s hasn't existed yet.", exName.String())
 		depAddrs = make(common.ExchangeAddresses)
 	}
 	return common.NewExchangeSetting(depAddrs, exMinDep, exFee, exInfos), nil
@@ -135,7 +135,7 @@ func (s *Server) SetTokenUpdate(c *gin.Context) {
 	data := []byte(postForm.Get("data"))
 	tokenUpdates := make(map[string]common.TokenUpdate)
 	if err := json.Unmarshal(data, &tokenUpdates); err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("cant not unmarshall token request (%+v)", err)))
+		httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("cant not unmarshall token request (%s)", err.Error())))
 		return
 	}
 
@@ -171,7 +171,7 @@ func (s *Server) SetTokenUpdate(c *gin.Context) {
 		// if the token is internal, it must come with PWIEq, targetQty and QuadraticEquation and exchange setting
 		if token.Internal {
 			if uErr := s.ensureInternalSetting(tokenUpdate); uErr != nil {
-				httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("Token %s is internal, required more setting (%+v)", token.ID, uErr)))
+				httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("Token %s is internal, required more setting (%s)", token.ID, uErr.Error())))
 				return
 			}
 			//skip ETH for fill pair ETH-ETH
@@ -246,17 +246,17 @@ func (s *Server) ConfirmTokenUpdate(c *gin.Context) {
 	if hasInternal {
 		pws, err = s.metric.GetPWIEquationV2()
 		if err != nil {
-			s.l.Warnf("There is no current PWS equation in database, creating new instance...")
+			log.Printf("WARNING: There is no current PWS equation in database, creating new instance...")
 			pws = make(common.PWIEquationRequestV2)
 		}
 		tarQty, err = s.metric.GetTargetQtyV2()
 		if err != nil {
-			s.l.Warnf("There is no current target quantity in database, creating new instance...")
+			log.Printf("WARNING: There is no current target quantity in database, creating new instance...")
 			tarQty = make(common.TokenTargetQtyV2)
 		}
 		quadEq, err = s.metric.GetRebalanceQuadratic()
 		if err != nil {
-			s.l.Warnf("WARNING: There is no current quadratic equation in database, creating new instance...")
+			log.Printf("WARNING: There is no current quadratic equation in database, creating new instance...")
 			quadEq = make(common.RebalanceQuadraticRequest)
 		}
 		if s.hasMetricPending() {
@@ -266,7 +266,7 @@ func (s *Server) ConfirmTokenUpdate(c *gin.Context) {
 	}
 	pendingTLS, err := s.setting.GetPendingTokenUpdates()
 	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("Can not get pending token listing (%+v)", err)))
+		httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("Can not get pending token listing (%s)", err.Error())))
 		return
 	}
 
@@ -303,17 +303,17 @@ func (s *Server) ConfirmTokenUpdate(c *gin.Context) {
 	//reload token indices and apply metric changes if the token is Internal
 	if hasInternal {
 		if err = s.updateInternalTokensIndices(tokenUpdates); err != nil {
-			httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("Can not update internal token indices (%+v)", err)))
+			httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("Can not update internal token indices (%s)", err.Error())))
 			return
 		}
 		if err = s.metric.ConfirmTokenUpdateInfo(tarQty, pws, quadEq); err != nil {
-			httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("Can not update metric data (%+v)", err)))
+			httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("Can not update metric data (%s)", err.Error())))
 			return
 		}
 	}
 	// Apply the change into setting database
 	if err = s.setting.ApplyTokenWithExchangeSetting(preparedToken, preparedExchangeSetting, timestamp); err != nil {
-		httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("Can not apply token and exchange setting for token listing (%+v). Metric data and token indices changes has to be manually revert", err)))
+		httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("Can not apply token and exchange setting for token listing (%s). Metric data and token indices changes has to be manually revert", err.Error())))
 		return
 	}
 
@@ -408,16 +408,8 @@ func (s *Server) ensureInternalSetting(tokenUpdate common.TokenUpdate) error {
 	token := tokenUpdate.Token
 	if !token.IsETH() { // TokenIndices doesn't contains ETH
 		if uErr := s.blockchain.CheckTokenIndices(ethereum.HexToAddress(token.Address)); uErr != nil {
-			return pe.Wrap(uErr, "cannot get token indice from smart contract (%+v) ")
+			return fmt.Errorf("cannot get token indice from smart contract (%s) ", uErr.Error())
 		}
-
-		// update listed token for server
-		listedTokens, err := s.blockchain.GetListedTokens()
-		if err != nil {
-			s.l.Errorw("failed to get listed token from blockchain", "error", err)
-			return err
-		}
-		s.listedTokens = listedTokens
 	}
 	if tokenUpdate.Exchanges == nil {
 		return errors.New("there is no exchange setting")
@@ -429,7 +421,6 @@ func (s *Server) ensureInternalSetting(tokenUpdate common.TokenUpdate) error {
 	if reflect.DeepEqual(emptyTarget, tokenUpdate.TargetQty) {
 		return errors.New("there is no target quantity setting or its values are all 0")
 	}
-
 	return nil
 }
 
@@ -522,8 +513,9 @@ func (s *Server) UpdateDepositAddress(c *gin.Context) {
 	}
 	exDepositAddress := make(common.ExchangeAddresses)
 	for tokenID, addrStr := range exDepositAddressStr {
-		s.l.Infof("addrstr is %s - addr %s", addrStr, ethereum.HexToAddress(addrStr).String())
+		log.Printf("addrstr is %s", addrStr)
 		exDepositAddress[tokenID] = ethereum.HexToAddress(addrStr)
+		log.Print(exDepositAddress[tokenID].Hex())
 	}
 	if err := s.setting.UpdateDepositAddress(exName, exDepositAddress, timestamp); err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))

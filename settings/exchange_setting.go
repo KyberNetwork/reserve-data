@@ -3,10 +3,9 @@ package settings
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"strings"
-
-	"go.uber.org/zap"
 
 	"github.com/KyberNetwork/reserve-data/common"
 )
@@ -43,7 +42,7 @@ var exchangeNameValue = map[string]ExchangeName{
 func RunningExchanges() []string {
 	exchangesStr, ok := os.LookupEnv(exchangeEnv)
 	if (!ok) || (len(exchangesStr) == 0) {
-		zap.S().Warnf("WARNING: core is running without exchange")
+		log.Print("WARNING: core is running without exchange")
 		return nil
 	}
 	exchanges := strings.Split(exchangesStr, ",")
@@ -65,7 +64,7 @@ func NewExchangeSetting(exchangeStorage ExchangeStorage) (*ExchangeSetting, erro
 	return &ExchangeSetting{exchangeStorage}, nil
 }
 
-func (s *Settings) savePreconfigFee(exFeeConfig map[string]common.ExchangeFees) error {
+func (setting *Settings) savePreconfigFee(exFeeConfig map[string]common.ExchangeFees) error {
 	runningExs := RunningExchanges()
 
 	for _, ex := range runningExs {
@@ -75,12 +74,12 @@ func (s *Settings) savePreconfigFee(exFeeConfig map[string]common.ExchangeFees) 
 			return fmt.Errorf("exchange %s is in KYBER_EXCHANGES, but not avail in current deployment", ex)
 		}
 		//Check if the current database has a record for such exchange
-		if _, err := s.Exchange.Storage.GetFee(exName); err != nil {
-			s.l.Warnf("Exchange %s is in KYBER_EXCHANGES but can't load fee in Database (%+v). atempt to load it from config file", exName.String(), err)
+		if _, err := setting.Exchange.Storage.GetFee(exName); err != nil {
+			log.Printf("Exchange %s is in KYBER_EXCHANGES but can't load fee in Database (%s). atempt to load it from config file", exName.String(), err.Error())
 			//Check if the config file has config for such exchange
 			exFee, ok := exFeeConfig[ex]
 			if !ok {
-				s.l.Warnf("Warning: Exchange %s is in KYBER_EXCHANGES, but not avail in Fee config file.", ex)
+				log.Printf("Warning: Exchange %s is in KYBER_EXCHANGES, but not avail in Fee config file.", ex)
 				continue
 			}
 			//multiply all Funding fee by 2 to avoid fee increasing from exchanges
@@ -91,7 +90,7 @@ func (s *Settings) savePreconfigFee(exFeeConfig map[string]common.ExchangeFees) 
 				exFee.Funding.Withdraw[tokenID] = value * 2
 			}
 			//version =1 means it is init from config file
-			if err = s.Exchange.Storage.StoreFee(exName, exFee, 1); err != nil {
+			if err = setting.Exchange.Storage.StoreFee(exName, exFee, 1); err != nil {
 				return err
 			}
 		}
@@ -99,7 +98,7 @@ func (s *Settings) savePreconfigFee(exFeeConfig map[string]common.ExchangeFees) 
 	return nil
 }
 
-func (s *Settings) savePrecofigMinDeposit(exMinDepositConfig map[string]common.ExchangesMinDeposit) error {
+func (setting *Settings) savePrecofigMinDeposit(exMinDepositConfig map[string]common.ExchangesMinDeposit) error {
 
 	runningExs := RunningExchanges()
 	for _, ex := range runningExs {
@@ -109,13 +108,12 @@ func (s *Settings) savePrecofigMinDeposit(exMinDepositConfig map[string]common.E
 			return fmt.Errorf("exchange %s is in KYBER_EXCHANGES, but not avail in current deployment", ex)
 		}
 		//Check if the current database has a record for such exchange
-		if _, err := s.Exchange.Storage.GetMinDeposit(exName); err != nil {
-			s.l.Warnf("Exchange %s is in KYBER_EXCHANGES but can't load MinDeposit in Database (%s). "+
-				"atempt to load it from config file", exName.String(), err)
+		if _, err := setting.Exchange.Storage.GetMinDeposit(exName); err != nil {
+			log.Printf("Exchange %s is in KYBER_EXCHANGES but can't load MinDeposit in Database (%s). atempt to load it from config file", exName.String(), err.Error())
 			//Check if the config file has config for such exchange
 			minDepo, ok := exMinDepositConfig[ex]
 			if !ok {
-				s.l.Warnf("Warning: Exchange %s is in KYBER_EXCHANGES, but not avail in MinDepositconfig file", exName.String())
+				log.Printf("Warning: Exchange %s is in KYBER_EXCHANGES, but not avail in MinDepositconfig file", exName.String())
 				continue
 			}
 			//multiply all minimum deposit by 2 to avoid min deposit increasing from Exchange
@@ -123,7 +121,7 @@ func (s *Settings) savePrecofigMinDeposit(exMinDepositConfig map[string]common.E
 				minDepo[token] = value * 2
 			}
 			//version =1 means it is init from config file
-			if err = s.Exchange.Storage.StoreMinDeposit(exName, minDepo, 1); err != nil {
+			if err = setting.Exchange.Storage.StoreMinDeposit(exName, minDepo, 1); err != nil {
 				return err
 			}
 		}
@@ -131,7 +129,7 @@ func (s *Settings) savePrecofigMinDeposit(exMinDepositConfig map[string]common.E
 	return nil
 }
 
-func (s *Settings) savePreconfigExchangeDepositAddress(data map[common.ExchangeID]common.ExchangeAddresses) error {
+func (setting *Settings) savePreconfigExchangeDepositAddress(data map[common.ExchangeID]common.ExchangeAddresses) error {
 	const (
 		version = 1
 	)
@@ -143,17 +141,16 @@ func (s *Settings) savePreconfigExchangeDepositAddress(data map[common.ExchangeI
 			return fmt.Errorf("exchange %s is in KYBER_EXCHANGES, but not avail in current deployment", ex)
 		}
 		//Check if the current database has a record for such exchange
-		if _, err := s.Exchange.Storage.GetDepositAddresses(exName); err != nil {
-			s.l.Warnf("Exchange %s is in KYBER_EXCHANGES but can't load DepositAddress in Database (%s). "+
-				"attempt to load it from config file", exName.String(), err)
+		if _, err := setting.Exchange.Storage.GetDepositAddresses(exName); err != nil {
+			log.Printf("Exchange %s is in KYBER_EXCHANGES but can't load DepositAddress in Database (%s). atempt to load it from config file", exName.String(), err.Error())
 			//Check if the config file has config for such exchange
 			exchangeAddress, ok := data[common.ExchangeID(ex)]
 			if !ok {
-				s.l.Warnf("Exchange %s is in KYBER_EXCHANGES, but not avail in preconfig data", ex)
+				log.Printf("Warning: Exchange %s is in KYBER_EXCHANGES, but not avail in preconfig data", ex)
 				continue
 			}
 			//version =1 means it is init from config file
-			if err = s.Exchange.Storage.StoreDepositAddress(exName, exchangeAddress, version); err != nil {
+			if err = setting.Exchange.Storage.StoreDepositAddress(exName, exchangeAddress, version); err != nil {
 				return err
 			}
 		}
@@ -161,22 +158,21 @@ func (s *Settings) savePreconfigExchangeDepositAddress(data map[common.ExchangeI
 	return nil
 }
 
-func (s *Settings) handleEmptyExchangeInfo() error {
+func (setting *Settings) handleEmptyExchangeInfo() error {
 	runningExs := RunningExchanges()
 	for _, ex := range runningExs {
 		exName, ok := exchangeNameValue[ex]
 		if !ok {
 			return fmt.Errorf("exchange %s is in KYBER_EXCHANGES, but not avail in current deployment", ex)
 		}
-		if _, err := s.Exchange.Storage.GetExchangeInfo(exName); err != nil {
-			s.l.Warnf("Exchange %s is in KYBER_EXCHANGES but can't load its exchangeInfo in Database (%s). "+
-				"attempt to init it", exName.String(), err)
-			exInfo, err := s.NewExchangeInfo(exName)
+		if _, err := setting.Exchange.Storage.GetExchangeInfo(exName); err != nil {
+			log.Printf("Exchange %s is in KYBER_EXCHANGES but can't load its exchangeInfo in Database (%s). attempt to init it", exName.String(), err.Error())
+			exInfo, err := setting.NewExchangeInfo(exName)
 			if err != nil {
 				return err
 			}
 			//version =1 means it is init from config file
-			if err = s.Exchange.Storage.StoreExchangeInfo(exName, exInfo, 1); err != nil {
+			if err = setting.Exchange.Storage.StoreExchangeInfo(exName, exInfo, 1); err != nil {
 				return err
 			}
 		}
@@ -185,21 +181,21 @@ func (s *Settings) handleEmptyExchangeInfo() error {
 }
 
 //NewExchangeInfo return an an ExchangeInfo
-func (s *Settings) NewExchangeInfo(exName ExchangeName) (common.ExchangeInfo, error) {
+func (setting *Settings) NewExchangeInfo(exName ExchangeName) (common.ExchangeInfo, error) {
 	result := common.NewExchangeInfo()
-	addrs, err := s.GetDepositAddresses(exName)
+	addrs, err := setting.GetDepositAddresses(exName)
 	if err != nil {
 		return result, err
 	}
 	for tokenID := range addrs {
 		if tokenID != "ETH" {
-			token, err := s.GetTokenByID(tokenID)
+			token, err := setting.GetTokenByID(tokenID)
 			if err != nil {
-				s.l.Warnf("can not find token %s (%s). This will skip preparing its exchange info", tokenID, err)
+				log.Printf("WARNING: can not find token %s (%s). This will skip preparing its exchange info", tokenID, err)
 				continue
 			}
 			if !token.Internal {
-				s.l.Warnf("INFO: Token %s is external. This will skip preparing its exchange info", tokenID)
+				log.Printf("INFO: Token %s is external. This will skip preparing its exchange info", tokenID)
 				continue
 			}
 			pairID := common.NewTokenPairID(tokenID, "ETH")

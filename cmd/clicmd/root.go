@@ -51,15 +51,6 @@ Allow overwriting some parameter`,
 	startServer.Flags().StringVar(&cliAddress.Network, "network-addr", defaultValue.Network, "network contract address")
 	startServer.Flags().StringVar(&cliAddress.InternalNetwork, "internal-network-addr", defaultValue.InternalNetwork, "internal network contract address")
 	startServer.Flags().StringVar(&profilerPrefix, "profiler-prefix", "", "set prefix for pprof http handler, eg: \"/debug/pprof\", profiler will be disabled if this flag value is empty. A secure token can be put into profiler-prefix to limit access")
-	startServer.Flags().StringVar(&sentryDSN, "sentry-dsn", "", "sentry-dsn address")
-	startServer.Flags().StringVar(&sentryLevel, "sentry-level", "warn", "sentry level [info,warn,error,fatal]")
-	startServer.Flags().StringVar(&zapMode, "zap-mode", "dev", "mode for zap log [dev,prod]")
-	startServer.Flags().DurationVar(&runnerConfig.OrderBookFetchingInterval, "order-book-fetching-interval", defaultOrderBookFetchingInterval, "time interval fetch order book")
-	startServer.Flags().DurationVar(&runnerConfig.AuthDataFetchingInterval, "auth-data-fetching-interval", defaultAuthDataFetchingInterval, "time interval fetch auth data")
-	startServer.Flags().DurationVar(&runnerConfig.RateFetchingInterval, "rate-fetching-interval", defaultRateFetchingInterval, "time interval fetch rate")
-	startServer.Flags().DurationVar(&runnerConfig.BlockFetchingInterval, "block-fetching-interval", defaultBlockFetchingInterval, "time interval fetch block")
-	startServer.Flags().DurationVar(&runnerConfig.GlobalDataFetchingInterval, "global-data-fetching-interval", defaultGlobalDataFetchingInterval, "time interval fetch global data")
-
 	RootCmd.AddCommand(startServer)
 
 	var versionCmd = &cobra.Command{

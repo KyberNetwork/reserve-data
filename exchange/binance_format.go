@@ -206,28 +206,22 @@ type BinaServerTime struct {
 	ServerTime uint64 `json:"serverTime"`
 }
 
-// BinanceTradeHistory recent trade history
 type BinanceTradeHistory []struct {
-	ID           uint64 `json:"id"`
-	Price        string `json:"price"`
-	Qty          string `json:"qty"`
-	Time         uint64 `json:"time"`
-	IsBuyerMaker bool   `json:"isBuyerMaker"`
-	IsBestMatch  bool   `json:"isBestMatch"`
+	ID          uint64 `json:"id"`
+	Price       string `json:"price"`
+	Qty         string `json:"qty"`
+	Time        uint64 `json:"time"`
+	IsBuyer     bool   `json:"isBuyer"`
+	IsMaker     bool   `json:"isMaker"`
+	IsBestMatch bool   `json:"isBestMatch"`
 }
 
-// BinaAccountTradeHistory object for a trade
 type BinaAccountTradeHistory []struct {
-	Symbol          string `json:"symbol"`
-	ID              uint64 `json:"id"`
-	OrderID         uint64 `json:"orderId"`
-	Price           string `json:"price"`
-	Qty             string `json:"qty"`
-	QuoteQty        string `json:"quoteQty"`
-	Commission      string `json:"commission"`
-	CommissionAsset string `json:"commissionAsset"`
-	Time            uint64 `json:"time"`
-	IsBuyer         bool   `json:"isBuyer"`
-	IsMaker         bool   `json:"isMaker"`
-	IsBestMatch     bool   `json:"isBestMatch"`
+	ID      uint64 `json:"id"`
+	OrderID uint64 `json:"orderId"`
+	Price   string `json:"price"`
+	Qty     string `json:"qty"`
+	Time    uint64 `json:"time"`
+	IsBuyer bool   `json:"isBuyer"`
+	IsMaker bool   `json:"isMaker"`
 }

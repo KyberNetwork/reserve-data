@@ -3,10 +3,9 @@ package httprunner
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
-
-	"go.uber.org/zap"
 )
 
 // HTTPRunner is an implementation of FetcherRunner
@@ -21,43 +20,42 @@ type HTTPRunner struct {
 	globalDataTicker chan time.Time
 
 	server *Server
-	l      *zap.SugaredLogger
 }
 
 // GetGlobalDataTicker returns the global data ticker.
-func (h *HTTPRunner) GetGlobalDataTicker() <-chan time.Time {
-	return h.globalDataTicker
+func (hr *HTTPRunner) GetGlobalDataTicker() <-chan time.Time {
+	return hr.globalDataTicker
 }
 
 // GetBlockTicker returns the block ticker.
-func (h *HTTPRunner) GetBlockTicker() <-chan time.Time {
-	return h.bticker
+func (hr *HTTPRunner) GetBlockTicker() <-chan time.Time {
+	return hr.bticker
 }
 
 // GetOrderbookTicker returns the order book ticker.
-func (h *HTTPRunner) GetOrderbookTicker() <-chan time.Time {
-	return h.oticker
+func (hr *HTTPRunner) GetOrderbookTicker() <-chan time.Time {
+	return hr.oticker
 }
 
 // GetAuthDataTicker returns the auth data ticker.
-func (h *HTTPRunner) GetAuthDataTicker() <-chan time.Time {
-	return h.aticker
+func (hr *HTTPRunner) GetAuthDataTicker() <-chan time.Time {
+	return hr.aticker
 }
 
 // GetRateTicker returns the rate ticker.
-func (h *HTTPRunner) GetRateTicker() <-chan time.Time {
-	return h.rticker
+func (hr *HTTPRunner) GetRateTicker() <-chan time.Time {
+	return hr.rticker
 }
 
 // waitPingResponse waits until HTTP ticker server responses to request.
-func (h *HTTPRunner) waitPingResponse() error {
+func (hr *HTTPRunner) waitPingResponse() error {
 	var (
 		tickCh   = time.NewTicker(time.Second / 2).C
 		expireCh = time.NewTicker(time.Second * 5).C
 		client   = http.Client{Timeout: time.Second}
 	)
 
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://127.0.0.1:%d/%s", h.port, "ping"), nil)
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://127.0.0.1:%d/%s", hr.port, "ping"), nil)
 	if err != nil {
 		return err
 	}
@@ -69,11 +67,11 @@ func (h *HTTPRunner) waitPingResponse() error {
 		case <-tickCh:
 			rsp, dErr := client.Do(req)
 			if dErr != nil {
-				h.l.Warnf("HTTP server is returning an error: %+v, retrying", dErr)
+				log.Printf("HTTP server is returning an error: %s, retrying", dErr.Error())
 				break
 			}
 			if rsp.StatusCode == http.StatusOK {
-				h.l.Infof("HTTP ticker server is ready")
+				log.Print("HTTP ticker server is ready")
 				return nil
 			}
 		}
@@ -85,31 +83,31 @@ func (h *HTTPRunner) waitPingResponse() error {
 // It is guaranteed that the HTTP server is ready to serve request after
 // this method is returned.
 // The HTTP server is listened on all network interfaces.
-func (h *HTTPRunner) Start() error {
-	if h.server != nil {
+func (hr *HTTPRunner) Start() error {
+	if hr.server != nil {
 		return errors.New("runner start already")
 	}
 	var addr string
-	if h.port != 0 {
-		addr = fmt.Sprintf(":%d", h.port)
+	if hr.port != 0 {
+		addr = fmt.Sprintf(":%d", hr.port)
 	}
-	h.server = NewServer(h, addr)
+	hr.server = NewServer(hr, addr)
 	go func() {
-		if err := h.server.Start(); err != nil {
-			h.l.Fatalf("Http server for runner couldn't start or get stopped. Error: %s", err)
+		if err := hr.server.Start(); err != nil {
+			log.Printf("Http server for runner couldn't start or get stopped. Error: %s", err)
 		}
 	}()
 
 	// wait until the HTTP server is ready
-	<-h.server.notifyCh
-	return h.waitPingResponse()
+	<-hr.server.notifyCh
+	return hr.waitPingResponse()
 }
 
 // Stop stops the HTTP server. It returns an error if the server is already stopped.
-func (h *HTTPRunner) Stop() error {
-	if h.server != nil {
-		err := h.server.Stop()
-		h.server = nil
+func (hr *HTTPRunner) Stop() error {
+	if hr.server != nil {
+		err := hr.server.Stop()
+		hr.server = nil
 		return err
 	}
 	return errors.New("runner stop already")
@@ -141,7 +139,6 @@ func NewHTTPRunner(options ...Option) (*HTTPRunner, error) {
 		bticker:          bchan,
 		globalDataTicker: globalDataChan,
 		server:           nil,
-		l:                zap.S(),
 	}
 
 	for _, option := range options {

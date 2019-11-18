@@ -40,7 +40,7 @@ func (s *Server) Run() {
 	}
 
 	if err := s.r.Run(s.host); err != nil {
-		log.Fatalf("Http server run error: %+v", err)
+		log.Fatalf("Http server run error: %s", err.Error())
 	}
 }
 

@@ -5,9 +5,9 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"io/ioutil"
+	"log"
 
 	ethereum "github.com/ethereum/go-ethereum/common"
-	"go.uber.org/zap"
 )
 
 type Signer struct {
@@ -22,7 +22,7 @@ func (s Signer) GetKey() string {
 func (s Signer) Sign(msg string) string {
 	mac := hmac.New(sha256.New, []byte(s.Secret))
 	if _, err := mac.Write([]byte(msg)); err != nil {
-		zap.S().Panic(err)
+		log.Printf("Encode message error: %s", err.Error())
 	}
 	result := ethereum.Bytes2Hex(mac.Sum(nil))
 	return result
