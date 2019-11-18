@@ -3,9 +3,7 @@ package storage
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"log"
 	"math"
 	"os"
 	"reflect"
@@ -14,6 +12,8 @@ import (
 	"sync"
 
 	"github.com/boltdb/bolt"
+	"github.com/pkg/errors"
+	"go.uber.org/zap"
 
 	"github.com/KyberNetwork/reserve-data/boltutil"
 	"github.com/KyberNetwork/reserve-data/common"
@@ -68,6 +68,7 @@ const (
 type BoltStorage struct {
 	mu sync.RWMutex
 	db *bolt.DB
+	l  *zap.SugaredLogger
 }
 
 // NewBoltStorage creates a new BoltStorage instance with the database
@@ -124,6 +125,7 @@ func NewBoltStorage(path string) (*BoltStorage, error) {
 	storage := &BoltStorage{
 		mu: sync.RWMutex{},
 		db: db,
+		l:  zap.S(),
 	}
 	return storage, nil
 }
@@ -363,7 +365,7 @@ func (bs *BoltStorage) ExportExpiredAuthData(currentTime uint64, fileName string
 	}
 	defer func() {
 		if cErr := outFile.Close(); cErr != nil {
-			log.Printf("Close file error: %s", cErr.Error())
+			bs.l.Warnf("Close file error: %+v", cErr)
 		}
 	}()
 
@@ -514,9 +516,9 @@ func (bs *BoltStorage) StorePrice(data common.AllPriceEntry, timepoint uint64) e
 		b := tx.Bucket([]byte(priceBucket))
 
 		// remove outdated data from bucket
-		log.Printf("Version number: %d\n", bs.GetNumberOfVersion(tx, priceBucket))
+		bs.l.Infof("Version number: %d", bs.GetNumberOfVersion(tx, priceBucket))
 		if uErr = bs.PruneOutdatedData(tx, priceBucket); uErr != nil {
-			log.Printf("Prune out data: %s", uErr.Error())
+			bs.l.Warnf("Prune out data: %+v", uErr)
 			return uErr
 		}
 
@@ -628,7 +630,7 @@ func (bs *BoltStorage) StoreAuthSnapshot(
 
 //StoreRate store rate history
 func (bs *BoltStorage) StoreRate(data common.AllRateEntry, timepoint uint64) error {
-	log.Printf("Storing rate data to bolt: data(%v), timespoint(%v)", data, timepoint)
+	bs.l.Infof("Storing rate data to bolt: data(%v), timespoint(%v)", data, timepoint)
 	err := bs.db.Update(func(tx *bolt.Tx) error {
 		var (
 			uErr      error
@@ -640,7 +642,7 @@ func (bs *BoltStorage) StoreRate(data common.AllRateEntry, timepoint uint64) err
 		c := b.Cursor()
 		lastKey, lastValue := c.Last()
 		if lastKey == nil {
-			log.Printf("Bucket %s is empty", rateBucket)
+			bs.l.Infof("Bucket %s is empty", rateBucket)
 		} else if uErr = json.Unmarshal(lastValue, &lastEntry); uErr != nil {
 			return uErr
 		}
@@ -654,9 +656,15 @@ func (bs *BoltStorage) StoreRate(data common.AllRateEntry, timepoint uint64) err
 			}
 			return b.Put(boltutil.Uint64ToBytes(timepoint), dataJSON)
 		}
-		return fmt.Errorf("rejected storing rates with smaller block number: %d, stored: %d",
-			data.BlockNumber,
-			lastEntry.BlockNumber)
+
+		// It is common that two nodes return different block number
+		// But if the gap is too big we should log it
+		if lastEntry.BlockNumber >= data.BlockNumber+2 {
+			return errors.Errorf("rejected storing rates with smaller block number: %d, stored: %d",
+				data.BlockNumber,
+				lastEntry.BlockNumber)
+		}
+		return nil
 	})
 	return err
 }
@@ -780,39 +788,39 @@ func (bs *BoltStorage) GetAllRecords(fromTime, toTime uint64) ([]common.Activity
 
 // interfaceConverstionToUint64 will assert the interface as string
 // and parse it to uint64. Return 0 if anything goes wrong)
-func interfaceConverstionToUint64(intf interface{}) uint64 {
+func interfaceConverstionToUint64(l *zap.SugaredLogger, intf interface{}) uint64 {
 	numString, ok := intf.(string)
 	if !ok {
-		log.Printf("(%v) can't be converted to type string", intf)
+		l.Warnf("(%v) can't be converted to type string", intf)
 		return 0
 	}
 	num, err := strconv.ParseUint(numString, 10, 64)
 	if err != nil {
-		log.Printf("ERROR: parsing error %s, inteface conversion to uint64 will set to 0", err)
+		l.Warnf("ERROR: parsing error %s, inteface conversion to uint64 will set to 0", err)
 		return 0
 	}
 	return num
 }
 
-func getFirstAndCountPendingSetrate(pendings []common.ActivityRecord, minedNonce uint64) (*common.ActivityRecord, uint64, error) {
+func getFirstAndCountPendingSetrate(l *zap.SugaredLogger, pendings []common.ActivityRecord, minedNonce uint64) (*common.ActivityRecord, uint64, error) {
 	var minNonce uint64 = math.MaxUint64
 	var minPrice uint64 = math.MaxUint64
 	var result *common.ActivityRecord
 	var count uint64
 	for i, act := range pendings {
 		if act.Action == common.ActionSetRate {
-			log.Printf("looking for pending set_rates: %+v", act)
-			nonce := interfaceConverstionToUint64(act.Result["nonce"])
+			l.Infof("looking for pending set_rates: %+v", act)
+			nonce := interfaceConverstionToUint64(l, act.Result["nonce"])
 			if nonce < minedNonce {
-				log.Printf("NONCE_ISSUE: stalled pending set rate transaction, pending: %d, mined: %d",
+				l.Infof("NONCE_ISSUE: stalled pending set rate transaction, pending: %d, mined: %d",
 					nonce, minedNonce)
 				continue
 			} else if nonce-minedNonce > 1 {
-				log.Printf("NONCE_ISSUE: pending set rate transaction for inconsecutive nonce, mined nonce: %d, request nonce: %d",
+				l.Infof("NONCE_ISSUE: pending set rate transaction for inconsecutive nonce, mined nonce: %d, request nonce: %d",
 					minedNonce, nonce)
 			}
 
-			gasPrice := interfaceConverstionToUint64(act.Result["gasPrice"])
+			gasPrice := interfaceConverstionToUint64(l, act.Result["gasPrice"])
 			if nonce == minNonce {
 				if gasPrice < minPrice {
 					minNonce = nonce
@@ -830,11 +838,11 @@ func getFirstAndCountPendingSetrate(pendings []common.ActivityRecord, minedNonce
 	}
 
 	if result == nil {
-		log.Printf("NONCE_ISSUE: found no pending set rate transaction with nonce newer than equal to mined nonce: %d",
+		l.Infof("NONCE_ISSUE: found no pending set rate transaction with nonce newer than equal to mined nonce: %d",
 			minedNonce)
 	} else {
-		log.Printf("NONCE_ISSUE: unmined pending set rate, nonce: %d, count: %d, mined nonce: %d",
-			interfaceConverstionToUint64(result.Result["nonce"]), count, minedNonce)
+		l.Infof("NONCE_ISSUE: unmined pending set rate, nonce: %d, count: %d, mined nonce: %d",
+			interfaceConverstionToUint64(l, result.Result["nonce"]), count, minedNonce)
 	}
 
 	return result, count, nil
@@ -858,7 +866,7 @@ func (bs *BoltStorage) PendingSetRate(minedNonce uint64) (*common.ActivityRecord
 	if err != nil {
 		return nil, 0, err
 	}
-	return getFirstAndCountPendingSetrate(pendings, minedNonce)
+	return getFirstAndCountPendingSetrate(bs.l, pendings, minedNonce)
 }
 
 //GetPendingActivities return pending activities
@@ -929,7 +937,7 @@ func (bs *BoltStorage) HasPendingDeposit(token common.Token, exchange common.Exc
 			if record.Action == common.ActionDeposit {
 				tokenID, ok := record.Params["token"].(string)
 				if !ok {
-					log.Printf("ERROR: record Params token (%v) can not be converted to string", record.Params["token"])
+					bs.l.Warnf("record Params token (%v) can not be converted to string", record.Params["token"])
 					continue
 				}
 				if tokenID == token.ID && record.Destination == string(exchange.ID()) {
@@ -1341,7 +1349,7 @@ func (bs *BoltStorage) StorePendingTargetQtyV2(value []byte) error {
 	)
 
 	if err = json.Unmarshal(value, &pendingData); err != nil {
-		return fmt.Errorf("rejected: Data could not be unmarshalled to defined format: %s", err.Error())
+		return fmt.Errorf("rejected: Data could not be unmarshalled to defined format: %v", err)
 	}
 	err = bs.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(pendingTargetQuantityV2))
@@ -1615,7 +1623,7 @@ func (bs *BoltStorage) GetPWIEquationV2() (common.PWIEquationRequestV2, error) {
 		c := b.Cursor()
 		_, v := c.Last()
 		if v == nil {
-			log.Println("there no equation in pwiEquationV2, getting from pwiEquation")
+			bs.l.Infof("there no equation in pwiEquationV2, getting from pwiEquation")
 			result, vErr = pwiEquationV1toV2(tx)
 			return vErr
 		}

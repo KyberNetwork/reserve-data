@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/boltdb/bolt"
@@ -25,16 +24,15 @@ func updateExchangeVersion(tx *bolt.Tx, timestamp uint64) error {
 }
 
 // GetFee returns a map[tokenID]exchangeFees and error if occur
-func (boltSettingStorage *BoltSettingStorage) GetFee(ex settings.ExchangeName) (common.ExchangeFees, error) {
+func (s *BoltSettingStorage) GetFee(ex settings.ExchangeName) (common.ExchangeFees, error) {
 	var result common.ExchangeFees
-	err := boltSettingStorage.db.View(func(tx *bolt.Tx) error {
+	err := s.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(ExchangeFeeBucket))
 		if b == nil {
 			return fmt.Errorf("bucket %s hasn't existed yet", ExchangeFeeBucket)
 		}
 		data := b.Get(boltutil.Uint64ToBytes(uint64(ex)))
 		if data == nil {
-			log.Printf("key %s hasn't existed yet", ex.String())
 			return settings.ErrExchangeRecordNotFound
 		}
 		uErr := json.Unmarshal(data, &result)
@@ -47,8 +45,8 @@ func (boltSettingStorage *BoltSettingStorage) GetFee(ex settings.ExchangeName) (
 }
 
 // StoreFee stores the fee with exchangeName as key into database and return error if occur
-func (boltSettingStorage *BoltSettingStorage) StoreFee(ex settings.ExchangeName, data common.ExchangeFees, timestamp uint64) error {
-	err := boltSettingStorage.db.Update(func(tx *bolt.Tx) error {
+func (s *BoltSettingStorage) StoreFee(ex settings.ExchangeName, data common.ExchangeFees, timestamp uint64) error {
+	err := s.db.Update(func(tx *bolt.Tx) error {
 		if uErr := updateExchangeVersion(tx, timestamp); uErr != nil {
 			return uErr
 		}
@@ -64,7 +62,6 @@ func delFee(tx *bolt.Tx, ex settings.ExchangeName, tokens []string) error {
 	}
 	data := b.Get(boltutil.Uint64ToBytes(uint64(ex)))
 	if data == nil {
-		log.Printf("key %s hasn't existed yet", ex.String())
 		return settings.ErrExchangeRecordNotFound
 	}
 
@@ -94,16 +91,15 @@ func putFee(tx *bolt.Tx, ex settings.ExchangeName, fee common.ExchangeFees) erro
 }
 
 // GetMinDeposit returns a map[tokenID]MinDeposit and error if occur
-func (boltSettingStorage *BoltSettingStorage) GetMinDeposit(ex settings.ExchangeName) (common.ExchangesMinDeposit, error) {
+func (s *BoltSettingStorage) GetMinDeposit(ex settings.ExchangeName) (common.ExchangesMinDeposit, error) {
 	result := make(common.ExchangesMinDeposit)
-	err := boltSettingStorage.db.View(func(tx *bolt.Tx) error {
+	err := s.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(ExchangeMinDepositBucket))
 		if b == nil {
 			return fmt.Errorf("bucket %s hasn't existed yet", ExchangeMinDepositBucket)
 		}
 		data := b.Get(boltutil.Uint64ToBytes(uint64(ex)))
 		if data == nil {
-			log.Printf("key %s hasn't existed yet", ex.String())
 			return settings.ErrExchangeRecordNotFound
 		}
 		uErr := json.Unmarshal(data, &result)
@@ -116,8 +112,8 @@ func (boltSettingStorage *BoltSettingStorage) GetMinDeposit(ex settings.Exchange
 }
 
 // StoreMinDeposit stores the minDeposit with exchangeName as key into database and return error if occur
-func (boltSettingStorage *BoltSettingStorage) StoreMinDeposit(ex settings.ExchangeName, data common.ExchangesMinDeposit, timestamp uint64) error {
-	err := boltSettingStorage.db.Update(func(tx *bolt.Tx) error {
+func (s *BoltSettingStorage) StoreMinDeposit(ex settings.ExchangeName, data common.ExchangesMinDeposit, timestamp uint64) error {
+	err := s.db.Update(func(tx *bolt.Tx) error {
 		if uErr := updateExchangeVersion(tx, timestamp); uErr != nil {
 			return uErr
 		}
@@ -134,7 +130,6 @@ func delMinDeposit(tx *bolt.Tx, ex settings.ExchangeName, tokens []string) error
 	}
 	data := b.Get(boltutil.Uint64ToBytes(uint64(ex)))
 	if data == nil {
-		log.Printf("key %s hasn't existed yet", ex.String())
 		return settings.ErrExchangeRecordNotFound
 	}
 	uErr := json.Unmarshal(data, &currMinDeposit)
@@ -161,16 +156,15 @@ func putMinDeposit(tx *bolt.Tx, ex settings.ExchangeName, minDeposit common.Exch
 }
 
 // GetDepositAddresses returns a map[tokenID]DepositAddress and error if occur
-func (boltSettingStorage *BoltSettingStorage) GetDepositAddresses(ex settings.ExchangeName) (common.ExchangeAddresses, error) {
+func (s *BoltSettingStorage) GetDepositAddresses(ex settings.ExchangeName) (common.ExchangeAddresses, error) {
 	result := make(common.ExchangeAddresses)
-	err := boltSettingStorage.db.View(func(tx *bolt.Tx) error {
+	err := s.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(ExchangeDepositAddress))
 		if b == nil {
 			return fmt.Errorf("bucket %s hasn't existed yet", ExchangeDepositAddress)
 		}
 		data := b.Get(boltutil.Uint64ToBytes(uint64(ex)))
 		if data == nil {
-			log.Printf("key %s hasn't existed yet", ex.String())
 			return settings.ErrExchangeRecordNotFound
 		}
 		uErr := json.Unmarshal(data, &result)
@@ -193,6 +187,9 @@ func removeTokensFromExchanges(tx *bolt.Tx, tokens []string, availExs []settings
 		if dErr := delMinDeposit(tx, ex, tokens); dErr != nil {
 			return fmt.Errorf("cannot remove mindeposit of tokens %v from exchange %s, error: %s", tokens, ex.String(), dErr)
 		}
+		if dErr := delExchangeInfo(tx, ex, tokens); dErr != nil {
+			return fmt.Errorf("cannot remove exchange info of tokens %v-ETH from exchange %s, error: %s", tokens, ex.String(), dErr)
+		}
 	}
 	return nil
 }
@@ -207,7 +204,6 @@ func delDepositAddress(tx *bolt.Tx, ex settings.ExchangeName, tokens []string) e
 	//Get Curren exchange's Addresses
 	data := b.Get(boltutil.Uint64ToBytes(uint64(ex)))
 	if data == nil {
-		log.Printf("key %s hasn't existed yet", ex.String())
 		return settings.ErrExchangeRecordNotFound
 	}
 	uErr := json.Unmarshal(data, &exAddresses)
@@ -238,8 +234,8 @@ func putDepositAddress(tx *bolt.Tx, ex settings.ExchangeName, addrs common.Excha
 
 // StoreDepositAddress stores the depositAddress with exchangeName as key into database and
 // return error if occur
-func (boltSettingStorage *BoltSettingStorage) StoreDepositAddress(ex settings.ExchangeName, addrs common.ExchangeAddresses, timestamp uint64) error {
-	err := boltSettingStorage.db.Update(func(tx *bolt.Tx) error {
+func (s *BoltSettingStorage) StoreDepositAddress(ex settings.ExchangeName, addrs common.ExchangeAddresses, timestamp uint64) error {
+	err := s.db.Update(func(tx *bolt.Tx) error {
 		if uErr := updateExchangeVersion(tx, timestamp); uErr != nil {
 			return uErr
 		}
@@ -250,16 +246,15 @@ func (boltSettingStorage *BoltSettingStorage) StoreDepositAddress(ex settings.Ex
 
 // GetTokenPairs returns a list of TokenPairs available at current exchange
 // return error if occur
-func (boltSettingStorage *BoltSettingStorage) GetTokenPairs(ex settings.ExchangeName) ([]common.TokenPair, error) {
+func (s *BoltSettingStorage) GetTokenPairs(ex settings.ExchangeName) ([]common.TokenPair, error) {
 	var result []common.TokenPair
-	err := boltSettingStorage.db.View(func(tx *bolt.Tx) error {
+	err := s.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(ExchangeTokenPairs))
 		if b == nil {
 			return fmt.Errorf("bucket %s hasn't existed yet", ExchangeTokenPairs)
 		}
 		data := b.Get(boltutil.Uint64ToBytes(uint64(ex)))
 		if data == nil {
-			log.Printf("key %s hasn't existed yet", ex.String())
 			return settings.ErrExchangeRecordNotFound
 		}
 		if uErr := json.Unmarshal(data, &result); uErr != nil {
@@ -272,8 +267,8 @@ func (boltSettingStorage *BoltSettingStorage) GetTokenPairs(ex settings.Exchange
 
 // StoreTokenPairs store the list of TokenPairs with exchangeName as key into database and
 // return error if occur
-func (boltSettingStorage *BoltSettingStorage) StoreTokenPairs(ex settings.ExchangeName, data []common.TokenPair, timestamp uint64) error {
-	err := boltSettingStorage.db.Update(func(tx *bolt.Tx) error {
+func (s *BoltSettingStorage) StoreTokenPairs(ex settings.ExchangeName, data []common.TokenPair, timestamp uint64) error {
+	err := s.db.Update(func(tx *bolt.Tx) error {
 		b, uErr := tx.CreateBucketIfNotExists([]byte(ExchangeTokenPairs))
 		if uErr != nil {
 			return uErr
@@ -290,16 +285,15 @@ func (boltSettingStorage *BoltSettingStorage) StoreTokenPairs(ex settings.Exchan
 	return err
 }
 
-func (boltSettingStorage *BoltSettingStorage) GetExchangeInfo(ex settings.ExchangeName) (common.ExchangeInfo, error) {
+func (s *BoltSettingStorage) GetExchangeInfo(ex settings.ExchangeName) (common.ExchangeInfo, error) {
 	var result common.ExchangeInfo
-	err := boltSettingStorage.db.View(func(tx *bolt.Tx) error {
+	err := s.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(ExchangeInfo))
 		if b == nil {
 			return fmt.Errorf("bucket %s hasn't existed yet", ExchangeInfo)
 		}
 		data := b.Get(boltutil.Uint64ToBytes(uint64(ex)))
 		if data == nil {
-			log.Printf("key %s hasn't existed yet", ex.String())
 			return settings.ErrExchangeRecordNotFound
 		}
 		return json.Unmarshal(data, &result)
@@ -319,8 +313,28 @@ func putExchangeInfo(tx *bolt.Tx, ex settings.ExchangeName, exInfo common.Exchan
 	return b.Put(boltutil.Uint64ToBytes(uint64(ex)), dataJSON)
 }
 
-func (boltSettingStorage *BoltSettingStorage) StoreExchangeInfo(ex settings.ExchangeName, exInfo common.ExchangeInfo, timestamp uint64) error {
-	err := boltSettingStorage.db.Update(func(tx *bolt.Tx) error {
+func delExchangeInfo(tx *bolt.Tx, ex settings.ExchangeName, tokens []string) error {
+	b := tx.Bucket([]byte(ExchangeInfo))
+	if b == nil {
+		return fmt.Errorf("bucket %s hasn't existed yet", ExchangeInfo)
+	}
+	data := b.Get(boltutil.Uint64ToBytes(uint64(ex)))
+	if data == nil {
+		return settings.ErrExchangeRecordNotFound
+	}
+	var currExInfo common.ExchangeInfo
+	if err := json.Unmarshal(data, &currExInfo); err != nil {
+		return err
+	}
+	for _, tokenID := range tokens {
+		ethPair := common.NewTokenPairID(tokenID, "ETH")
+		delete(currExInfo, ethPair)
+	}
+	return putExchangeInfo(tx, ex, currExInfo)
+}
+
+func (s *BoltSettingStorage) StoreExchangeInfo(ex settings.ExchangeName, exInfo common.ExchangeInfo, timestamp uint64) error {
+	err := s.db.Update(func(tx *bolt.Tx) error {
 		if uErr := updateExchangeVersion(tx, timestamp); uErr != nil {
 			return uErr
 		}
@@ -330,9 +344,9 @@ func (boltSettingStorage *BoltSettingStorage) StoreExchangeInfo(ex settings.Exch
 }
 
 // GetExchangeStatus get exchange status to dashboard and analytics
-func (boltSettingStorage *BoltSettingStorage) GetExchangeStatus() (common.ExchangesStatus, error) {
+func (s *BoltSettingStorage) GetExchangeStatus() (common.ExchangesStatus, error) {
 	result := make(common.ExchangesStatus)
-	err := boltSettingStorage.db.View(func(tx *bolt.Tx) error {
+	err := s.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(ExchangeStatus))
 		if b == nil {
 			return fmt.Errorf("bucket %s hasn't existed yet", ExchangeStatus)
@@ -353,8 +367,8 @@ func (boltSettingStorage *BoltSettingStorage) GetExchangeStatus() (common.Exchan
 	return result, err
 }
 
-func (boltSettingStorage *BoltSettingStorage) StoreExchangeStatus(data common.ExchangesStatus) error {
-	err := boltSettingStorage.db.Update(func(tx *bolt.Tx) error {
+func (s *BoltSettingStorage) StoreExchangeStatus(data common.ExchangesStatus) error {
+	err := s.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(ExchangeStatus))
 		if b == nil {
 			return fmt.Errorf("bucket %s hasn't existed yet", ExchangeStatus)
@@ -373,9 +387,9 @@ func (boltSettingStorage *BoltSettingStorage) StoreExchangeStatus(data common.Ex
 	return err
 }
 
-func (boltSettingStorage *BoltSettingStorage) StoreExchangeNotification(
+func (s *BoltSettingStorage) StoreExchangeNotification(
 	exchange, action, token string, fromTime, toTime uint64, isWarning bool, msg string) error {
-	err := boltSettingStorage.db.Update(func(tx *bolt.Tx) error {
+	err := s.db.Update(func(tx *bolt.Tx) error {
 		exchangeBk := tx.Bucket([]byte(ExchangeNotifications))
 		b, uErr := exchangeBk.CreateBucketIfNotExists([]byte(exchange))
 		if uErr != nil {
@@ -398,9 +412,9 @@ func (boltSettingStorage *BoltSettingStorage) StoreExchangeNotification(
 	return err
 }
 
-func (boltSettingStorage *BoltSettingStorage) GetExchangeNotifications() (common.ExchangeNotifications, error) {
+func (s *BoltSettingStorage) GetExchangeNotifications() (common.ExchangeNotifications, error) {
 	result := common.ExchangeNotifications{}
-	err := boltSettingStorage.db.View(func(tx *bolt.Tx) error {
+	err := s.db.View(func(tx *bolt.Tx) error {
 		exchangeBks := tx.Bucket([]byte(ExchangeNotifications))
 		c := exchangeBks.Cursor()
 		for name, bucket := c.First(); name != nil; name, bucket = c.Next() {
@@ -432,9 +446,9 @@ func (boltSettingStorage *BoltSettingStorage) GetExchangeNotifications() (common
 	return result, err
 }
 
-func (boltSettingStorage *BoltSettingStorage) GetExchangeVersion() (uint64, error) {
+func (s *BoltSettingStorage) GetExchangeVersion() (uint64, error) {
 	var result uint64
-	err := boltSettingStorage.db.View(func(tx *bolt.Tx) error {
+	err := s.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(exchangeVersion))
 		data := b.Get([]byte(exchangeVersion))
 		if data == nil {

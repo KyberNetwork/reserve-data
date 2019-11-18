@@ -3,37 +3,35 @@ package blockchain
 import (
 	"context"
 	"errors"
-	"log"
 	"math/big"
 	"time"
 
 	ether "github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/ethclient"
+	"go.uber.org/zap"
+
+	"github.com/KyberNetwork/reserve-data/common"
 )
 
 type ContractCaller struct {
-	clients []*ethclient.Client
-	urls    []string
+	clients []*common.EthClient
+	l       *zap.SugaredLogger
 }
 
-func NewContractCaller(clients []*ethclient.Client, urls []string) *ContractCaller {
+func NewContractCaller(clients []*common.EthClient) *ContractCaller {
 	return &ContractCaller{
 		clients: clients,
-		urls:    urls,
+		l:       zap.S(),
 	}
 }
 
 func (c ContractCaller) CallContract(msg ether.CallMsg, blockNo *big.Int, timeOut time.Duration) ([]byte, error) {
-	for i, client := range c.clients {
-		url := c.urls[i]
-
-		output, err := func() ([]byte, error) {
-			ctx, cancel := context.WithTimeout(context.Background(), timeOut)
-			defer cancel()
-			return client.CallContract(ctx, msg, blockNo)
-		}()
+	for _, client := range c.clients {
+		ctx, cancel := context.WithTimeout(context.Background(), timeOut)
+		output, err := client.CallContract(ctx, msg, blockNo)
+		cancel()
 		if err != nil {
-			log.Printf("FALLBACK: Ether client %s done, getting err %v, trying next one...", url, err)
+			c.l.Infow("contract call failed, fallback to next node",
+				"current_client", client.URL, "err", err)
 			continue
 		}
 		return output, nil

@@ -16,12 +16,12 @@ func NewTokenSetting(tokenStorage TokenStorage) (*TokenSetting, error) {
 
 }
 
-func (setting *Settings) savePreconfigToken(data map[string]common.Token) error {
+func (s *Settings) savePreconfigToken(data map[string]common.Token) error {
 	const (
 		version = 1
 	)
 	for _, t := range data {
-		if err := setting.UpdateToken(t, version); err != nil {
+		if err := s.UpdateToken(t, version); err != nil {
 			return err
 		}
 	}

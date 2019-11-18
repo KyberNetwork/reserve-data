@@ -1,5 +1,6 @@
 package exchange
 
+// HuobiDepth get its orderbook
 type HuobiDepth struct {
 	Status    string `json:"status"`
 	Timestamp uint64 `json:"ts"`
@@ -10,6 +11,7 @@ type HuobiDepth struct {
 	Reason string `json:"err-msg"`
 }
 
+// HuobiExchangeInfo exchange info on huobi
 type HuobiExchangeInfo struct {
 	Status string `json:"status"`
 	Data   []struct {
@@ -21,6 +23,7 @@ type HuobiExchangeInfo struct {
 	Reason string `json:"err-msg"`
 }
 
+// HuobiInfo exchange info
 type HuobiInfo struct {
 	Status string `json:"status"`
 	Data   struct {
@@ -36,24 +39,28 @@ type HuobiInfo struct {
 	Reason string `json:"err-msg"`
 }
 
+// HuobiTrade trade on huobi
 type HuobiTrade struct {
 	Status  string `json:"status"`
 	OrderID string `json:"data"`
 	Reason  string `json:"err-msg"`
 }
 
+// HuobiCancel cancel order on huobi
 type HuobiCancel struct {
 	Status  string `json:"status"`
 	OrderID string `json:"data"`
 	Reason  string `json:"err-msg"`
 }
 
+// HuobiDeposits deposit on huobi
 type HuobiDeposits struct {
 	Status string         `json:"status"`
 	Data   []HuobiDeposit `json:"data"`
 	Reason string         `json:"err-msg"`
 }
 
+// HuobiDeposit deposit record on huobi
 type HuobiDeposit struct {
 	ID       uint64  `json:"id"`
 	TxID     uint64  `json:"transaction-id"`
@@ -64,12 +71,14 @@ type HuobiDeposit struct {
 	Address  string  `json:"address"`
 }
 
+// HuobiWithdraws record
 type HuobiWithdraws struct {
 	Status string                 `json:"status"`
 	Data   []HuobiWithdrawHistory `json:"data"`
 	Reason string                 `json:"err-msg"`
 }
 
+// HuobiWithdrawHistory from huobi
 type HuobiWithdrawHistory struct {
 	ID       uint64  `json:"id"`
 	TxID     uint64  `json:"transaction-id"`
@@ -80,6 +89,7 @@ type HuobiWithdrawHistory struct {
 	Address  string  `json:"address"`
 }
 
+// HuobiWithdraw withdraw result from huobi
 type HuobiWithdraw struct {
 	Status  string `json:"status"`
 	ErrCode string `json:"err-code"`
@@ -87,6 +97,7 @@ type HuobiWithdraw struct {
 	ID      uint64 `json:"data"`
 }
 
+// HuobiOrder orderon huobi
 type HuobiOrder struct {
 	Status string `json:"status"`
 	Data   struct {
@@ -102,15 +113,19 @@ type HuobiOrder struct {
 	Reason string `json:"err-msg"`
 }
 
+// HuobiDepositAddress response from huobi
 type HuobiDepositAddress struct {
-	Msg        string `json:"msg"`
-	Address    string `json:"address"`
-	Success    bool   `json:"success"`
-	AddressTag string `json:"addressTag"`
-	Asset      string `json:"asset"`
-	Reason     string `json:"err-msg"`
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Data    []struct {
+		Currency   string `json:"currency"`
+		Address    string `json:"address"`
+		AddressTag string `json:"addressTag"`
+		Chain      string `json:"chain"`
+	} `json:"data"`
 }
 
+// HuobiAccounts get huobi account info
 type HuobiAccounts struct {
 	Status string `json:"status"`
 	Data   []struct {
@@ -122,6 +137,7 @@ type HuobiAccounts struct {
 	Reason string `json:"err-msg"`
 }
 
+// HuobiTradeHistory trade history record on huobi
 type HuobiTradeHistory struct {
 	Status string `json:"status"`
 	Data   []struct {

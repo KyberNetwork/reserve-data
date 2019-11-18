@@ -15,6 +15,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/settings"
 	settingsstorage "github.com/KyberNetwork/reserve-data/settings/storage"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 const (
@@ -113,6 +114,7 @@ func TestHTTPUpdateExchange(t *testing.T) {
 		r:           gin.Default(),
 		blockchain:  testHTTPBlockchain{},
 		setting:     setting,
+		l:           zap.S(),
 	}
 	testServer.register()
 

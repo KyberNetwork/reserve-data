@@ -3,18 +3,19 @@ package httprunner
 import (
 	"context"
 	"errors"
-	"log"
 	"math"
 	"net"
 	"net/http"
 	"strconv"
 	"time"
 
-	"github.com/KyberNetwork/reserve-data/common"
-	"github.com/KyberNetwork/reserve-data/http/httputil"
 	raven "github.com/getsentry/raven-go"
 	"github.com/gin-contrib/sentry"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
+
+	"github.com/KyberNetwork/reserve-data/common"
+	"github.com/KyberNetwork/reserve-data/http/httputil"
 )
 
 // maxTimeSpot is the default time point to return in case the
@@ -37,11 +38,12 @@ type Server struct {
 func getTimePoint(c *gin.Context) uint64 {
 	timestamp := c.DefaultQuery("timestamp", "")
 	timepoint, err := strconv.ParseUint(timestamp, 10, 64)
+	l := zap.S()
 	if err != nil {
-		log.Printf("Interpreted timestamp(%s) to default - %d\n", timestamp, maxTimeSpot)
+		l.Debugf("Interpreted timestamp(%s) to default - %d\n", timestamp, maxTimeSpot)
 		return maxTimeSpot
 	}
-	log.Printf("Interpreted timestamp(%s) to %d\n", timestamp, timepoint)
+	l.Debugf("Interpreted timestamp(%s) to %d\n", timestamp, timepoint)
 	return timepoint
 }
 

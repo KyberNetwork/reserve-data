@@ -2,16 +2,16 @@ package http
 
 import (
 	"encoding/json"
-	"log"
 
 	"github.com/KyberNetwork/reserve-data/common"
 
-	"github.com/KyberNetwork/reserve-data/http/httputil"
 	"github.com/gin-gonic/gin"
+
+	"github.com/KyberNetwork/reserve-data/http/httputil"
 )
 
 func (s *Server) GetGoldData(c *gin.Context) {
-	log.Printf("Getting gold data")
+	s.l.Infof("Getting gold data")
 
 	data, err := s.app.GetGoldData(getTimePoint(c, true))
 	if err != nil {

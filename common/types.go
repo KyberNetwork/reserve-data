@@ -737,3 +737,12 @@ type AddressConfig struct {
 	Network         string `json:"network"`
 	InternalNetwork string `json:"internal network"`
 }
+
+// RunnerConfig list configs for runner
+type RunnerConfig struct {
+	OrderBookFetchingInterval  time.Duration
+	AuthDataFetchingInterval   time.Duration
+	RateFetchingInterval       time.Duration
+	BlockFetchingInterval      time.Duration
+	GlobalDataFetchingInterval time.Duration
+}

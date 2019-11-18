@@ -28,7 +28,13 @@ after_success:
   - docker build -f Dockerfile.next -t kybernetwork/reserve-data:$TRAVIS_COMMIT .
 
 deploy:
-  provider: script
-  script: bash .travis/docker_push
-  on:
-    all_branches: true
+  - provider: script
+    script: bash .travis/docker_push
+    on:
+      all_branches: true
+      condition: $TRAVIS_BRANCH =~ ^v3-develop|develop|v3-staging|staging|master$
+
+  - provider: script
+    script: bash .travis/awx_job_launch.sh $TRAVIS_BRANCH
+    on:
+      all_branches: true

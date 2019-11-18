@@ -3,9 +3,10 @@ package httprunner
 import (
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
+
+	"go.uber.org/zap"
 )
 
 // HTTPRunner is an implementation of FetcherRunner
@@ -20,42 +21,43 @@ type HTTPRunner struct {
 	globalDataTicker chan time.Time
 
 	server *Server
+	l      *zap.SugaredLogger
 }
 
 // GetGlobalDataTicker returns the global data ticker.
-func (hr *HTTPRunner) GetGlobalDataTicker() <-chan time.Time {
-	return hr.globalDataTicker
+func (h *HTTPRunner) GetGlobalDataTicker() <-chan time.Time {
+	return h.globalDataTicker
 }
 
 // GetBlockTicker returns the block ticker.
-func (hr *HTTPRunner) GetBlockTicker() <-chan time.Time {
-	return hr.bticker
+func (h *HTTPRunner) GetBlockTicker() <-chan time.Time {
+	return h.bticker
 }
 
 // GetOrderbookTicker returns the order book ticker.
-func (hr *HTTPRunner) GetOrderbookTicker() <-chan time.Time {
-	return hr.oticker
+func (h *HTTPRunner) GetOrderbookTicker() <-chan time.Time {
+	return h.oticker
 }
 
 // GetAuthDataTicker returns the auth data ticker.
-func (hr *HTTPRunner) GetAuthDataTicker() <-chan time.Time {
-	return hr.aticker
+func (h *HTTPRunner) GetAuthDataTicker() <-chan time.Time {
+	return h.aticker
 }
 
 // GetRateTicker returns the rate ticker.
-func (hr *HTTPRunner) GetRateTicker() <-chan time.Time {
-	return hr.rticker
+func (h *HTTPRunner) GetRateTicker() <-chan time.Time {
+	return h.rticker
 }
 
 // waitPingResponse waits until HTTP ticker server responses to request.
-func (hr *HTTPRunner) waitPingResponse() error {
+func (h *HTTPRunner) waitPingResponse() error {
 	var (
 		tickCh   = time.NewTicker(time.Second / 2).C
 		expireCh = time.NewTicker(time.Second * 5).C
 		client   = http.Client{Timeout: time.Second}
 	)
 
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://127.0.0.1:%d/%s", hr.port, "ping"), nil)
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://127.0.0.1:%d/%s", h.port, "ping"), nil)
 	if err != nil {
 		return err
 	}
@@ -67,11 +69,11 @@ func (hr *HTTPRunner) waitPingResponse() error {
 		case <-tickCh:
 			rsp, dErr := client.Do(req)
 			if dErr != nil {
-				log.Printf("HTTP server is returning an error: %s, retrying", dErr.Error())
+				h.l.Warnf("HTTP server is returning an error: %+v, retrying", dErr)
 				break
 			}
 			if rsp.StatusCode == http.StatusOK {
-				log.Print("HTTP ticker server is ready")
+				h.l.Infof("HTTP ticker server is ready")
 				return nil
 			}
 		}
@@ -83,31 +85,31 @@ func (hr *HTTPRunner) waitPingResponse() error {
 // It is guaranteed that the HTTP server is ready to serve request after
 // this method is returned.
 // The HTTP server is listened on all network interfaces.
-func (hr *HTTPRunner) Start() error {
-	if hr.server != nil {
+func (h *HTTPRunner) Start() error {
+	if h.server != nil {
 		return errors.New("runner start already")
 	}
 	var addr string
-	if hr.port != 0 {
-		addr = fmt.Sprintf(":%d", hr.port)
+	if h.port != 0 {
+		addr = fmt.Sprintf(":%d", h.port)
 	}
-	hr.server = NewServer(hr, addr)
+	h.server = NewServer(h, addr)
 	go func() {
-		if err := hr.server.Start(); err != nil {
-			log.Printf("Http server for runner couldn't start or get stopped. Error: %s", err)
+		if err := h.server.Start(); err != nil {
+			h.l.Fatalf("Http server for runner couldn't start or get stopped. Error: %s", err)
 		}
 	}()
 
 	// wait until the HTTP server is ready
-	<-hr.server.notifyCh
-	return hr.waitPingResponse()
+	<-h.server.notifyCh
+	return h.waitPingResponse()
 }
 
 // Stop stops the HTTP server. It returns an error if the server is already stopped.
-func (hr *HTTPRunner) Stop() error {
-	if hr.server != nil {
-		err := hr.server.Stop()
-		hr.server = nil
+func (h *HTTPRunner) Stop() error {
+	if h.server != nil {
+		err := h.server.Stop()
+		h.server = nil
 		return err
 	}
 	return errors.New("runner stop already")
@@ -139,6 +141,7 @@ func NewHTTPRunner(options ...Option) (*HTTPRunner, error) {
 		bticker:          bchan,
 		globalDataTicker: globalDataChan,
 		server:           nil,
+		l:                zap.S(),
 	}
 
 	for _, option := range options {

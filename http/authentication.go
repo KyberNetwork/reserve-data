@@ -5,9 +5,9 @@ import (
 	"crypto/sha512"
 	"encoding/json"
 	"io/ioutil"
-	"log"
 
 	ethereum "github.com/ethereum/go-ethereum/common"
+	"go.uber.org/zap"
 )
 
 // Authentication is the authentication layer of HTTP APIs.
@@ -37,7 +37,7 @@ func NewKNAuthenticationFromFile(path string) KNAuthentication {
 func (auth KNAuthentication) KNSign(msg string) string {
 	mac := hmac.New(sha512.New, []byte(auth.KNSecret))
 	if _, err := mac.Write([]byte(msg)); err != nil {
-		log.Printf("Encode message error: %s", err.Error())
+		zap.S().Panic(err)
 	}
 	return ethereum.Bytes2Hex(mac.Sum(nil))
 }
@@ -45,7 +45,7 @@ func (auth KNAuthentication) KNSign(msg string) string {
 func (auth KNAuthentication) knReadonlySign(msg string) string {
 	mac := hmac.New(sha512.New, []byte(auth.KNReadOnly))
 	if _, err := mac.Write([]byte(msg)); err != nil {
-		log.Printf("Encode message error: %s", err.Error())
+		zap.S().Panic(err)
 	}
 	return ethereum.Bytes2Hex(mac.Sum(nil))
 }
@@ -53,7 +53,7 @@ func (auth KNAuthentication) knReadonlySign(msg string) string {
 func (auth KNAuthentication) knConfigurationSign(msg string) string {
 	mac := hmac.New(sha512.New, []byte(auth.KNConfiguration))
 	if _, err := mac.Write([]byte(msg)); err != nil {
-		log.Printf("Encode message error: %s", err.Error())
+		zap.S().Panic(err)
 	}
 	return ethereum.Bytes2Hex(mac.Sum(nil))
 }
@@ -61,7 +61,7 @@ func (auth KNAuthentication) knConfigurationSign(msg string) string {
 func (auth KNAuthentication) knConfirmConfSign(msg string) string {
 	mac := hmac.New(sha512.New, []byte(auth.KNConfirmConf))
 	if _, err := mac.Write([]byte(msg)); err != nil {
-		log.Printf("Encode message error: %s", err.Error())
+		zap.S().Panic(err)
 	}
 	return ethereum.Bytes2Hex(mac.Sum(nil))
 }

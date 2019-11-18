@@ -108,7 +108,7 @@ func testGetActiveToken(setting *settings.Settings, testToken common.Token, t *t
 	}
 	token, err = setting.GetActiveTokenByAddress(testAddress)
 	if err != nil {
-		t.Fatalf("cannot get active token by Address %s", err.Error())
+		t.Fatalf("cannot get active token by Address %+v", err)
 	}
 	// CreationTime shall be ignore since it's not from UserInput
 	token.CreationTime, testToken.CreationTime = 0, 0
@@ -129,7 +129,7 @@ func testGetToken(t *testing.T, setting *settings.Settings, testToken common.Tok
 	testAddress := ethereum.HexToAddress(testToken.Address)
 	token, err := setting.GetTokenByID(testToken.ID)
 	if err != nil {
-		t.Fatalf("cannot  get token by ID %s", err.Error())
+		t.Fatalf("cannot  get token by ID %+v", err)
 	}
 	// CreationTime shall be ignore since it's not from UserInput
 	token.CreationTime, testToken.CreationTime = 0, 0
@@ -138,7 +138,7 @@ func testGetToken(t *testing.T, setting *settings.Settings, testToken common.Tok
 	}
 	token, err = setting.GetTokenByAddress(testAddress)
 	if err != nil {
-		t.Fatalf("cannot get token by ID %s", err.Error())
+		t.Fatalf("cannot get token by ID %+v", err)
 	}
 	// CreationTime shall be ignore since it's not from UserInput
 	token.CreationTime, testToken.CreationTime = 0, 0

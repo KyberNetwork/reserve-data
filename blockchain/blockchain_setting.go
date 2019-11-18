@@ -6,6 +6,7 @@ import (
 	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
+// Setting interface for blockchain package
 type Setting interface {
 	GetInternalTokens() ([]common.Token, error)
 	ETHToken() common.Token

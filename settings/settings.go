@@ -1,7 +1,7 @@
 package settings
 
 import (
-	"log"
+	"go.uber.org/zap"
 
 	"github.com/KyberNetwork/reserve-data/common"
 )
@@ -11,21 +11,23 @@ type Settings struct {
 	Tokens   *TokenSetting
 	Address  *AddressSetting
 	Exchange *ExchangeSetting
+	l        *zap.SugaredLogger
 }
 
 // WithHandleEmptyToken will load the token settings from default file if the
 // database is empty.
 func WithHandleEmptyToken(data map[string]common.Token) SettingOption {
 	return func(setting *Settings) {
+		l := zap.S()
 		allToks, err := setting.GetAllTokens()
 		if err != nil || len(allToks) < 1 {
 			if err != nil {
-				log.Printf("Setting Init: Token DB is faulty (%s), attempt to load token from file", err.Error())
+				l.Warnf("Setting Init: Token DB is faulty (%s), attempt to load token from file", err)
 			} else {
-				log.Printf("Setting Init: Token DB is empty, attempt to load token from file")
+				l.Infof("Setting Init: Token DB is empty, attempt to load token from file")
 			}
 			if err = setting.savePreconfigToken(data); err != nil {
-				log.Printf("Setting Init: Can not load Token from file: %s, Token DB is needed to be updated manually", err.Error())
+				l.Warnf("Setting Init: Can not load Token from file: %s, Token DB is needed to be updated manually", err)
 			}
 		}
 	}
@@ -35,8 +37,9 @@ func WithHandleEmptyToken(data map[string]common.Token) SettingOption {
 // if the fee database is empty. It will mutiply the Funding fee value by 2
 func WithHandleEmptyFee(feeConfig map[string]common.ExchangeFees) SettingOption {
 	return func(setting *Settings) {
+		l := zap.S()
 		if err := setting.savePreconfigFee(feeConfig); err != nil {
-			log.Printf("WARNING: Setting Init: cannot load Fee from file: %s, Fee is needed to be updated manually", err.Error())
+			l.Warnf("WARNING: Setting Init: cannot load Fee from file: %s, Fee is needed to be updated manually", err)
 		}
 	}
 }
@@ -45,8 +48,9 @@ func WithHandleEmptyFee(feeConfig map[string]common.ExchangeFees) SettingOption 
 // if the Mindeposit database is empty. It will mutiply the MinDeposit value by 2
 func WithHandleEmptyMinDeposit(data map[string]common.ExchangesMinDeposit) SettingOption {
 	return func(setting *Settings) {
+		l := zap.S()
 		if err := setting.savePrecofigMinDeposit(data); err != nil {
-			log.Printf("WARNING: Setting Init: cannot load MinDeposit from file: %s, Fee is needed to be updated manually", err.Error())
+			l.Warnf("WARNING: Setting Init: cannot load MinDeposit from file: %s, Fee is needed to be updated manually", err)
 		}
 	}
 }
@@ -55,8 +59,9 @@ func WithHandleEmptyMinDeposit(data map[string]common.ExchangesMinDeposit) Setti
 // if the DepositAddress database is empty
 func WithHandleEmptyDepositAddress(data map[common.ExchangeID]common.ExchangeAddresses) SettingOption {
 	return func(setting *Settings) {
+		l := zap.S()
 		if err := setting.savePreconfigExchangeDepositAddress(data); err != nil {
-			log.Printf("WARNING: Setting Init: cannot load DepositAddress from file: %s, Fee is needed to be updated manually", err.Error())
+			l.Warnf("Setting Init: cannot load DepositAddress from file: %s, Fee is needed to be updated manually", err)
 		}
 	}
 }
@@ -65,8 +70,9 @@ func WithHandleEmptyDepositAddress(data map[common.ExchangeID]common.ExchangeAdd
 // it will return error if occur
 func WithHandleEmptyExchangeInfo() SettingOption {
 	return func(setting *Settings) {
+		l := zap.S()
 		if err := setting.handleEmptyExchangeInfo(); err != nil {
-			log.Panicf("Setting Init: cannot init Exchange info %s, this will stop the core function", err.Error())
+			l.Panicf("Setting Init: cannot init Exchange info %s, this will stop the core function", err)
 		}
 	}
 }
@@ -81,6 +87,7 @@ func NewSetting(token *TokenSetting, address *AddressSetting, exchange *Exchange
 		Tokens:   token,
 		Address:  address,
 		Exchange: exchange,
+		l:        zap.S(),
 	}
 	for _, option := range options {
 		option(setting)

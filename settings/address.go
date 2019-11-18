@@ -8,8 +8,8 @@ import (
 
 var ErrNoAddr = errors.New("cannot find the address")
 
-func (setting *Settings) GetAddress(name AddressName) (ethereum.Address, error) {
-	return setting.Address.GetAddress(name)
+func (s *Settings) GetAddress(name AddressName) (ethereum.Address, error) {
+	return s.Address.GetAddress(name)
 }
 
 func (addrsetting *AddressSetting) GetAddress(name AddressName) (ethereum.Address, error) {
@@ -21,9 +21,9 @@ func (addrsetting *AddressSetting) GetAddress(name AddressName) (ethereum.Addres
 }
 
 // GetAllAddresses return all the address setting in cores.
-func (setting *Settings) GetAllAddresses() (map[string]interface{}, error) {
+func (s *Settings) GetAllAddresses() (map[string]interface{}, error) {
 	allAddress := make(map[string]interface{})
-	for name, addr := range setting.Address.Addresses {
+	for name, addr := range s.Address.Addresses {
 		allAddress[name.String()] = addr
 	}
 	return allAddress, nil
