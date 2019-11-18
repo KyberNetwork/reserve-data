@@ -3,14 +3,13 @@ package exchange
 import (
 	"errors"
 	"fmt"
+	"log"
 	"math/big"
 	"strings"
 
-	ethereum "github.com/ethereum/go-ethereum/common"
-	"go.uber.org/zap"
-
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/settings"
+	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
 type StableEx struct {
@@ -48,7 +47,7 @@ func (se *StableEx) GetInfo() (common.ExchangeInfo, error) {
 }
 
 func (se *StableEx) GetLiveExchangeInfos(tokenPairIDs []common.TokenPairID) (common.ExchangeInfo, error) {
-	zap.S().Warnf("stable_exchange shouldn't come with live exchange info. Return an all 0 result...")
+	log.Print("WARNING stabel_exchange shouldn't come with live exchange info. Return an all 0 result...")
 	result := make(common.ExchangeInfo)
 	for _, tokenPairID := range tokenPairIDs {
 		result[tokenPairID] = common.ExchangePrecisionLimit{

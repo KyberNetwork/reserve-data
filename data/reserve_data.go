@@ -3,11 +3,10 @@ package data
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"time"
-
-	"go.uber.org/zap"
 
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/archive"
@@ -22,7 +21,6 @@ type ReserveData struct {
 	globalStorage     GlobalStorage
 	exchanges         []common.Exchange
 	setting           Setting
-	l                 *zap.SugaredLogger
 }
 
 func (rd ReserveData) CurrentGoldInfoVersion(timepoint uint64) (common.Version, error) {
@@ -309,38 +307,38 @@ func (rd ReserveData) ControlAuthDataSize() error {
 
 	defer func() {
 		if rErr := os.RemoveAll(tmpDir); rErr != nil {
-			rd.l.Warnf("failed to cleanup temp dir: %s, err : %+v", tmpDir, rErr)
+			log.Printf("failed to cleanup temp dir: %s, err : %s", tmpDir, rErr.Error())
 		}
 	}()
 
 	for {
-		rd.l.Infof("DataPruner: waiting for signal from runner AuthData controller channel")
+		log.Printf("DataPruner: waiting for signal from runner AuthData controller channel")
 		t := <-rd.storageController.Runner.GetAuthBucketTicker()
 		timepoint := common.TimeToTimepoint(t)
-		rd.l.Infof("DataPruner: got signal in AuthData controller channel with timestamp %d", common.TimeToTimepoint(t))
+		log.Printf("DataPruner: got signal in AuthData controller channel with timestamp %d", common.TimeToTimepoint(t))
 		fileName := filepath.Join(tmpDir, fmt.Sprintf("ExpiredAuthData_at_%s", time.Unix(int64(timepoint/1000), 0).UTC()))
 		nRecord, err := rd.storage.ExportExpiredAuthData(common.TimeToTimepoint(t), fileName)
 		if err != nil {
-			rd.l.Warnf("DataPruner export AuthData operation failed: %+v", err)
+			log.Printf("ERROR: DataPruner export AuthData operation failed: %s", err)
 		} else {
 			var integrity bool
 			if nRecord > 0 {
 				err = rd.storageController.Arch.UploadFile(rd.storageController.Arch.GetReserveDataBucketName(), rd.storageController.ExpiredAuthDataPath, fileName)
 				if err != nil {
-					rd.l.Warnf("DataPruner: Upload file failed: %+v", err)
+					log.Printf("DataPruner: Upload file failed: %s", err)
 				} else {
 					integrity, err = rd.storageController.Arch.CheckFileIntergrity(rd.storageController.Arch.GetReserveDataBucketName(), rd.storageController.ExpiredAuthDataPath, fileName)
 					if err != nil {
-						rd.l.Warnf("DataPruner: error in file integrity check (%+v):", err)
+						log.Printf("ERROR: DataPruner: error in file integrity check (%s):", err)
 					} else if !integrity {
-						rd.l.Warnf("DataPruner: file upload corrupted")
+						log.Printf("ERROR: DataPruner: file upload corrupted")
 
 					}
 					if err != nil || !integrity {
 						//if the intergrity check failed, remove the remote file.
 						removalErr := rd.storageController.Arch.RemoveFile(rd.storageController.Arch.GetReserveDataBucketName(), rd.storageController.ExpiredAuthDataPath, fileName)
 						if removalErr != nil {
-							rd.l.Warnf("DataPruner: cannot remove remote file %+v", removalErr)
+							log.Printf("ERROR: DataPruner: cannot remove remote file :(%s)", removalErr)
 							return err
 						}
 					}
@@ -350,12 +348,12 @@ func (rd ReserveData) ControlAuthDataSize() error {
 				nPrunedRecords, err := rd.storage.PruneExpiredAuthData(common.TimeToTimepoint(t))
 				switch {
 				case err != nil:
-					rd.l.Warnf("DataPruner: Can not prune Auth Data %+v", err)
+					log.Printf("DataPruner: Can not prune Auth Data (%s)", err)
 					return err
 				case nPrunedRecords != nRecord:
-					rd.l.Warnf("DataPruner: Number of Exported Data is %d, which is different from number of pruned data %d", nRecord, nPrunedRecords)
+					log.Printf("DataPruner: Number of Exported Data is %d, which is different from number of pruned data %d", nRecord, nPrunedRecords)
 				default:
-					rd.l.Warnf("DataPruner: exported and pruned %d expired records from AuthData", nRecord)
+					log.Printf("DataPruner: exported and pruned %d expired records from AuthData", nRecord)
 				}
 			}
 		}
@@ -392,11 +390,11 @@ func (rd ReserveData) GetAllFetcherConfiguration() (common.FetcherConfiguration,
 
 func (rd ReserveData) RunStorageController() error {
 	if err := rd.storageController.Runner.Start(); err != nil {
-		rd.l.Warnf("Storage controller runner error: %+v", err)
+		log.Fatalf("Storage controller runner error: %s", err.Error())
 	}
 	go func() {
 		if err := rd.ControlAuthDataSize(); err != nil {
-			rd.l.Warnf("Control auth data size error: %s", err)
+			log.Printf("Control auth data size error: %s", err.Error())
 		}
 	}()
 	return nil
@@ -412,12 +410,10 @@ func NewReserveData(storage Storage,
 		panic(err)
 	}
 	return &ReserveData{
-		storage:           storage,
-		fetcher:           fetcher,
-		storageController: storageController,
-		globalStorage:     globalStorage,
-		exchanges:         exchanges,
-		setting:           setting,
-		l:                 zap.S(),
-	}
+		storage,
+		fetcher,
+		storageController,
+		globalStorage,
+		exchanges,
+		setting}
 }

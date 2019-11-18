@@ -1,9 +1,8 @@
 package storage
 
 import (
-	"github.com/boltdb/bolt"
-
 	"github.com/KyberNetwork/reserve-data/common"
+	"github.com/boltdb/bolt"
 )
 
 const (
@@ -90,6 +89,6 @@ func NewBoltSettingStorage(dbPath string) (*BoltSettingStorage, error) {
 	if err != nil {
 		return nil, err
 	}
-	storage := BoltSettingStorage{db: db}
+	storage := BoltSettingStorage{db}
 	return &storage, nil
 }

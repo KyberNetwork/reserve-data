@@ -3,12 +3,12 @@ package blockchain
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"math/big"
 
 	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
-	"go.uber.org/zap"
 )
 
 type RPCTransaction struct {
@@ -35,7 +35,7 @@ func (tx *RPCTransaction) BlockNumber() *big.Int {
 	}
 	blockno, err := hexutil.DecodeBig(*tx.txExtraInfo.BlockNumber)
 	if err != nil {
-		zap.S().Warnf("Error decoding block number: %v", err)
+		log.Printf("Error decoding block number: %v", err)
 		return big.NewInt(0)
 	}
 	return blockno
@@ -54,7 +54,7 @@ var errNotCached = errors.New("sender not cached")
 func setSenderFromServer(tx *types.Transaction, addr ethereum.Address, block ethereum.Hash) {
 	// Use types.Sender for side-effect to store our signer into the cache.
 	if _, err := types.Sender(&senderFromServer{addr, block}, tx); err != nil {
-		zap.S().Warnf("Type sender error: %+v", err)
+		log.Printf("Type sender error: %s", err.Error())
 	}
 }
 
@@ -73,13 +73,11 @@ func (s *senderFromServer) Sender(tx *types.Transaction) (ethereum.Address, erro
 // Hash implementation is only for satisfy the interface definition. senderFromServer shouldn't be signing anything.
 func (s *senderFromServer) Hash(tx *types.Transaction) ethereum.Hash {
 	// This should never happen
-	zap.S().Panic("can't sign with senderFromServer")
-	return ethereum.Hash{}
+	panic("can't sign with senderFromServer")
 }
 
 // SignatureValues implementation is only for satisfy the interface definition. senderFromServer shouldn't be signing anything.
 func (s *senderFromServer) SignatureValues(tx *types.Transaction, sig []byte) (_, _, _ *big.Int, err error) {
 	// This should never happen
-	zap.S().Panic("can't sign with senderFromServer")
-	return &big.Int{}, &big.Int{}, &big.Int{}, nil
+	panic("can't sign with senderFromServer")
 }

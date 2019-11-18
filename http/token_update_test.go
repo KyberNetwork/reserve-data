@@ -11,7 +11,6 @@ import (
 
 	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 
 	"github.com/KyberNetwork/reserve-data/core"
 	"github.com/KyberNetwork/reserve-data/data"
@@ -351,7 +350,6 @@ func TestHTTPServerUpdateToken(t *testing.T) {
 		r:           gin.Default(),
 		blockchain:  testHTTPBlockchain{},
 		setting:     setting,
-		l:           zap.S(),
 	}
 	testServer.register()
 
@@ -468,8 +466,4 @@ func (tbc testHTTPBlockchain) GetDepositOPAddress() ethereum.Address {
 
 func (tbc testHTTPBlockchain) GetIntermediatorOPAddress() ethereum.Address {
 	return ethereum.Address{}
-}
-
-func (tbc testHTTPBlockchain) GetListedTokens() ([]ethereum.Address, error) {
-	return nil, nil
 }

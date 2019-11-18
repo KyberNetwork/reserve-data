@@ -6,8 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"io/ioutil"
-
-	"go.uber.org/zap"
+	"log"
 )
 
 type Signer struct {
@@ -18,7 +17,7 @@ type Signer struct {
 func (s Signer) Sign(msg string) string {
 	mac := hmac.New(sha256.New, []byte(s.Secret))
 	if _, err := mac.Write([]byte(msg)); err != nil {
-		zap.S().Panic(err)
+		log.Printf("Encode message error: %s", err.Error())
 	}
 	result := base64.StdEncoding.EncodeToString(mac.Sum(nil))
 	return result

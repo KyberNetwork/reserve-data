@@ -97,10 +97,10 @@ type Config struct {
 	AddressSetting *settings.AddressSetting
 }
 
-func (c *Config) AddCoreConfig(settingPath SettingPaths, kyberENV string, runnerConfig common.RunnerConfig) {
+func (c *Config) AddCoreConfig(settingPath SettingPaths, kyberENV string) {
 	setting, err := GetSetting(kyberENV, c.AddressSetting)
 	if err != nil {
-		log.Panicf("Failed to create setting: %+v", err)
+		log.Panicf("Failed to create setting: %s", err.Error())
 	}
 	c.Setting = setting
 	dataStorage, err := storage.NewBoltStorage(settingPath.dataStoragePath)
@@ -112,15 +112,15 @@ func (c *Config) AddCoreConfig(settingPath SettingPaths, kyberENV string, runner
 	var dataControllerRunner datapruner.StorageControllerRunner
 	if common.RunningMode() == common.SimulationMode {
 		if fetcherRunner, err = httprunner.NewHTTPRunner(httprunner.WithPort(8001)); err != nil {
-			log.Fatalf("failed to create HTTP runner: %+v", err)
+			log.Fatalf("failed to create HTTP runner: %s", err.Error())
 		}
 	} else {
 		fetcherRunner = fetcher.NewTickerRunner(
-			runnerConfig.OrderBookFetchingInterval,
-			runnerConfig.AuthDataFetchingInterval,
-			runnerConfig.RateFetchingInterval,
-			runnerConfig.BlockFetchingInterval,
-			runnerConfig.GlobalDataFetchingInterval,
+			7*time.Second,  // orderbook fetching interval
+			5*time.Second,  // authdata fetching interval
+			3*time.Second,  // rate fetching interval
+			5*time.Second,  // block fetching interval
+			10*time.Second, // global data fetching interval
 		)
 		dataControllerRunner = datapruner.NewStorageControllerTickerRunner(24 * time.Hour)
 	}
@@ -147,16 +147,16 @@ func (c *Config) AddCoreConfig(settingPath SettingPaths, kyberENV string, runner
 		c.Setting,
 	)
 	if err != nil {
-		log.Panicf("Can not create exchangePool: %+v", err)
+		log.Panicf("Can not create exchangePool: %s", err.Error())
 	}
 	fetcherExchanges, err := exchangePool.FetcherExchanges()
 	if err != nil {
-		log.Panicf("cannot Create fetcher exchanges : (%+v)", err)
+		log.Panicf("cannot Create fetcher exchanges : (%s)", err.Error())
 	}
 	c.FetcherExchanges = fetcherExchanges
 	coreExchanges, err := exchangePool.CoreExchanges()
 	if err != nil {
-		log.Panicf("cannot Create core exchanges : (%+v)", err)
+		log.Panicf("cannot Create core exchanges : (%s)", err.Error())
 	}
 	c.Exchanges = coreExchanges
 }
