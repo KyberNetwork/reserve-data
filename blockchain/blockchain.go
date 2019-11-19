@@ -96,23 +96,12 @@ func (b *Blockchain) CheckTokenIndices(tokenAddr ethereum.Address) error {
 	}
 	tokenAddrs := []ethereum.Address{}
 	tokenAddrs = append(tokenAddrs, tokenAddr)
-	bulkIndices, indicesInBulk, err := b.GeneratedGetTokenIndicies(
+	_, _, err = b.GeneratedGetTokenIndicies(
 		opts,
 		pricingAddr,
 		tokenAddrs,
 	)
-	if err != nil {
-		return err
-	}
-	for i, tok := range tokenAddrs {
-		b.tokenIndices[tok.Hex()] = newTBIndex(
-			bulkIndices[i].Uint64(),
-			indicesInBulk[i].Uint64(),
-		)
-	}
-
-	b.l.Infof("Token indices: %+v", b.tokenIndices)
-	return nil
+	return err
 }
 
 // LoadAndSetTokenIndices load and set token indices

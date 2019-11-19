@@ -189,6 +189,7 @@ func GetConfigFromENV(kyberENV string) *configuration.Config {
 	return config
 }
 
+// CreateBlockchain create new blockchain instance
 func CreateBlockchain(config *configuration.Config) (bc *blockchain.Blockchain, err error) {
 	bc, err = blockchain.NewBlockchain(
 		config.Blockchain,
@@ -199,13 +200,6 @@ func CreateBlockchain(config *configuration.Config) (bc *blockchain.Blockchain, 
 		panic(err)
 	}
 
-	// old contract addresses are used for events fetcher
-
-	tokens, err := config.Setting.GetInternalTokens()
-	if err != nil {
-		log.Panicf("Can't get the list of Internal Tokens for indices: %s", err)
-	}
-
 	listedTokens, err := bc.GetListedTokens()
 	if err != nil {
 		log.Panicf("cannot initiate listed token: %s", err)
@@ -213,7 +207,7 @@ func CreateBlockchain(config *configuration.Config) (bc *blockchain.Blockchain, 
 	bc.SetListedTokens(listedTokens)
 
 	// load all listed token indices instead of only configs tokens
-	err = bc.LoadAndSetTokenIndices(common.GetTokenAddressesList(tokens))
+	err = bc.LoadAndSetTokenIndices(listedTokens)
 	if err != nil {
 		log.Panicf("Can't load and set token indices: %s", err)
 	}
