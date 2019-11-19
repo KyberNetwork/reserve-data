@@ -66,11 +66,6 @@ type Blockchain struct {
 	l                     *zap.SugaredLogger
 }
 
-// SetListedTokens init listed tokens
-func (b *Blockchain) SetListedTokens(listedTokens []ethereum.Address) {
-	b.listedTokens = listedTokens
-}
-
 //ListedTokens return listed tokens
 func (b *Blockchain) ListedTokens() []ethereum.Address {
 	return b.listedTokens
@@ -116,11 +111,11 @@ func (b *Blockchain) LoadAndSetTokenIndices() error {
 	if err != nil {
 		return err
 	}
-	tokenAddrs, err := b.GetListedTokens()
+	tokenAddrs, err := b.GetListedTokensFromPricingContract()
 	if err != nil {
 		return err
 	}
-	b.SetListedTokens(tokenAddrs)
+	b.listedTokens = tokenAddrs
 
 	bulkIndices, indicesInBulk, err := b.GeneratedGetTokenIndicies(
 		opts,
@@ -488,8 +483,8 @@ func (b *Blockchain) GetIntermediatorOPAddress() ethereum.Address {
 	return b.MustGetOperator(huobiblockchain.HuobiOP).Address
 }
 
-// GetListedTokens return listed token in reserve contract
-func (b *Blockchain) GetListedTokens() ([]ethereum.Address, error) {
+// GetListedTokensFromPricingContract return listed token in reserve contract
+func (b *Blockchain) GetListedTokensFromPricingContract() ([]ethereum.Address, error) {
 	opts := b.GetCallOpts(0)
 	return b.GeneratedGetListedTokens(opts)
 }
