@@ -285,6 +285,7 @@ func (s *Server) ConfirmTokenUpdate(c *gin.Context) {
 	//reload token indices and apply metric changes if the token is Internal
 	if hasInternal {
 		if err = s.blockchain.LoadAndSetTokenIndices(); err != nil {
+			s.l.Errorw("failed to reload token indices", "err", err)
 			httputil.ResponseFailure(c, httputil.WithReason(fmt.Sprintf("Can not update internal token indices (%+v)", err)))
 			return
 		}
