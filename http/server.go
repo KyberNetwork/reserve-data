@@ -1282,5 +1282,9 @@ func NewHTTPServer(
 	}
 	s.listedTokens = listedTokens
 
+	if err := s.blockchain.LoadAndSetTokenIndices(listedTokens); err != nil {
+		s.l.Errorw("cannot get tokens indices for all listed tokens", "error", err)
+	}
+
 	return s
 }
