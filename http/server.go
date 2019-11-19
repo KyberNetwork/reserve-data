@@ -49,10 +49,6 @@ type Server struct {
 	blockchain     Blockchain
 	setting        Setting
 	l              *zap.SugaredLogger
-	// listedTokens store all tokens already listed on our reserve
-	// in case any token have been delisted from dashboard, but not yet delisted from reserve
-	// we use this list and set its base rate to 0
-	listedTokens []ethereum.Address
 }
 
 func getTimePoint(c *gin.Context, useDefault bool) uint64 {
@@ -282,11 +278,12 @@ func tokenExisted(tokenAddr ethereum.Address, tokens []common.Token) bool {
 }
 
 func (s *Server) checkTokenDelisted(tokens []common.Token, bigBuys, bigSells, bigAfpMid []*big.Int) ([]common.Token, []*big.Int, []*big.Int, []*big.Int, error) {
-	if len(s.listedTokens) <= len(tokens) {
+	listedTokens := s.blockchain.ListedTokens()
+	if len(listedTokens) <= len(tokens) {
 		return tokens, bigBuys, bigSells, bigAfpMid, nil
 	}
 
-	for _, tokenAddr := range s.listedTokens {
+	for _, tokenAddr := range listedTokens {
 		if !tokenExisted(tokenAddr, tokens) {
 			tokens = append(tokens, common.Token{
 				Address: tokenAddr.Hex(),
@@ -1272,18 +1269,6 @@ func NewHTTPServer(
 		blockchain:     bc,
 		setting:        setting,
 		l:              zap.S(),
-	}
-
-	// initiate listedTokens
-
-	listedTokens, err := s.blockchain.GetListedTokens()
-	if err != nil {
-		s.l.Errorw("cannot initiate listed token", "listed token", err)
-	}
-	s.listedTokens = listedTokens
-
-	if err := s.blockchain.LoadAndSetTokenIndices(listedTokens); err != nil {
-		s.l.Errorw("cannot get tokens indices for all listed tokens", "error", err)
 	}
 
 	return s

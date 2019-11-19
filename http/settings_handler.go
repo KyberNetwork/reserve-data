@@ -417,7 +417,7 @@ func (s *Server) ensureInternalSetting(tokenUpdate common.TokenUpdate) error {
 			s.l.Errorw("failed to get listed token from blockchain", "error", err)
 			return err
 		}
-		s.listedTokens = listedTokens
+		s.blockchain.SetListedTokens(listedTokens)
 	}
 	if tokenUpdate.Exchanges == nil {
 		return errors.New("there is no exchange setting")

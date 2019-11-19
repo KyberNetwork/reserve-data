@@ -119,7 +119,7 @@ func TestBuildCompactBulk(t *testing.T) {
 		addr2: newTBIndex(9, 5),
 		addr3: newTBIndex(9, 6),
 	}
-	buyBulk, sellBulk, indices := BuildCompactBulk(
+	buyBulk, sellBulk, indices, _ := BuildCompactBulk(
 		buysInput, sellsInput, indicesInput)
 	expectedBuys := [][14]byte{
 		{0, 0, 0, 0, 0, 0, 0, 0, 0, 23, 0, 0, 0, 0},

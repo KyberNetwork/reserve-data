@@ -205,6 +205,14 @@ func CreateBlockchain(config *configuration.Config) (bc *blockchain.Blockchain, 
 	if err != nil {
 		log.Panicf("Can't get the list of Internal Tokens for indices: %s", err)
 	}
+
+	listedTokens, err := bc.GetListedTokens()
+	if err != nil {
+		log.Panicf("cannot initiate listed token: %s", err)
+	}
+	bc.SetListedTokens(listedTokens)
+
+	// load all listed token indices instead of only configs tokens
 	err = bc.LoadAndSetTokenIndices(common.GetTokenAddressesList(tokens))
 	if err != nil {
 		log.Panicf("Can't load and set token indices: %s", err)

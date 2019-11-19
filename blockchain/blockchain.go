@@ -55,12 +55,25 @@ type Blockchain struct {
 	pricing      *blockchain.Contract
 	reserve      *blockchain.Contract
 	tokenIndices map[string]tbindex
+	// ListedTokens is for check fill zero as delisted token
+	// should have zero rate
+	listedTokens []ethereum.Address
 	mu           sync.RWMutex
 
 	localSetRateNonce     uint64
 	setRateNonceTimestamp uint64
 	setting               Setting
 	l                     *zap.SugaredLogger
+}
+
+// SetListedTokens init listed tokens
+func (b *Blockchain) SetListedTokens(listedTokens []ethereum.Address) {
+	b.listedTokens = listedTokens
+}
+
+//ListedTokens return listed tokens
+func (b *Blockchain) ListedTokens() []ethereum.Address {
+	return b.listedTokens
 }
 
 // StandardGasPrice return standard gas price
@@ -83,7 +96,7 @@ func (b *Blockchain) CheckTokenIndices(tokenAddr ethereum.Address) error {
 	}
 	tokenAddrs := []ethereum.Address{}
 	tokenAddrs = append(tokenAddrs, tokenAddr)
-	_, _, err = b.GeneratedGetTokenIndicies(
+	bulkIndices, indicesInBulk, err := b.GeneratedGetTokenIndicies(
 		opts,
 		pricingAddr,
 		tokenAddrs,
@@ -91,6 +104,14 @@ func (b *Blockchain) CheckTokenIndices(tokenAddr ethereum.Address) error {
 	if err != nil {
 		return err
 	}
+	for i, tok := range tokenAddrs {
+		b.tokenIndices[tok.Hex()] = newTBIndex(
+			bulkIndices[i].Uint64(),
+			indicesInBulk[i].Uint64(),
+		)
+	}
+
+	b.l.Infof("Token indices: %+v", b.tokenIndices)
 	return nil
 }
 
@@ -198,11 +219,15 @@ func (b *Blockchain) SetRates(
 			newCBuys[token] = compactBuy.Compact
 		}
 	}
-	bbuys, bsells, indices := BuildCompactBulk(
+	bbuys, bsells, indices, err := BuildCompactBulk(
 		newCBuys,
 		newCSells,
 		b.tokenIndices,
 	)
+	if err != nil {
+		b.l.Warnf("failed to build compact bulk, err: %s", err)
+		return nil, err
+	}
 	opts, err := b.GetTxOpts(pricingOP, nonce, gasPrice, nil)
 	if err != nil {
 		b.l.Warnf("Getting transaction opts failed, err: %s", err)

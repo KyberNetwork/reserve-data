@@ -63,6 +63,12 @@ func (te testExchange) GetLiveExchangeInfos(pairIDs []common.TokenPairID) (commo
 type testBlockchain struct {
 }
 
+func (tbc testBlockchain) SetListedToken(listedTokens []ethereum.Address) {}
+
+func (tbc testBlockchain) ListedTokens() []ethereum.Address {
+	return nil
+}
+
 func (tbc testBlockchain) Send(
 	token common.Token,
 	amount *big.Int,

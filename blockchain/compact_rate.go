@@ -1,6 +1,7 @@
 package blockchain
 
 import (
+	"fmt"
 	"math/big"
 	"strconv"
 
@@ -53,14 +54,18 @@ type bulk struct {
 	data [14]byte
 }
 
-func BuildCompactBulk(newBuys, newSells map[ethereum.Address]byte, indices map[string]tbindex) ([][14]byte, [][14]byte, []*big.Int) {
+// BuildCompactBulk build bulk compact rate
+func BuildCompactBulk(newBuys, newSells map[ethereum.Address]byte, indices map[string]tbindex) ([][14]byte, [][14]byte, []*big.Int, error) {
 	buyResults := [][14]byte{}
 	sellResults := [][14]byte{}
 	indexResults := []*big.Int{}
 	buyBulks := map[uint64]*bulk{}
 	sellBulks := map[uint64]*bulk{}
 	for addr, buyCompact := range newBuys {
-		index := indices[addr.Hex()]
+		index, ok := indices[addr.Hex()]
+		if !ok {
+			return nil, nil, nil, fmt.Errorf("cannot find token index, token: %s", addr.Hex())
+		}
 		_, exist := buyBulks[index.BulkIndex]
 		if !exist {
 			buyBulks[index.BulkIndex] = &bulk{}
@@ -76,5 +81,5 @@ func BuildCompactBulk(newBuys, newSells map[ethereum.Address]byte, indices map[s
 		sellResults = append(sellResults, sellBulks[index].data)
 		indexResults = append(indexResults, big.NewInt(int64(index)))
 	}
-	return buyResults, sellResults, indexResults
+	return buyResults, sellResults, indexResults, nil
 }
