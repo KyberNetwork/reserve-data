@@ -473,7 +473,3 @@ func (tbc testHTTPBlockchain) GetDepositOPAddress() ethereum.Address {
 func (tbc testHTTPBlockchain) GetIntermediatorOPAddress() ethereum.Address {
 	return ethereum.Address{}
 }
-
-func (tbc testHTTPBlockchain) GetListedTokensFromPricingContract() ([]ethereum.Address, error) {
-	return nil, nil
-}

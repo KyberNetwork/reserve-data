@@ -111,7 +111,11 @@ func (b *Blockchain) LoadAndSetTokenIndices() error {
 	if err != nil {
 		return err
 	}
-	tokenAddrs, err := b.GetListedTokensFromPricingContract()
+
+	// we used to load token indices for only internal token
+	// in setting database, but as we need to set rate for delisted token
+	// to 0 also, then we decided load all listed tokens
+	tokenAddrs, err := b.getListedTokensFromPricingContract()
 	if err != nil {
 		return err
 	}
@@ -483,8 +487,8 @@ func (b *Blockchain) GetIntermediatorOPAddress() ethereum.Address {
 	return b.MustGetOperator(huobiblockchain.HuobiOP).Address
 }
 
-// GetListedTokensFromPricingContract return listed token in reserve contract
-func (b *Blockchain) GetListedTokensFromPricingContract() ([]ethereum.Address, error) {
+// getListedTokensFromPricingContract return listed token in reserve contract
+func (b *Blockchain) getListedTokensFromPricingContract() ([]ethereum.Address, error) {
 	opts := b.GetCallOpts(0)
 	return b.GeneratedGetListedTokens(opts)
 }
