@@ -200,14 +200,8 @@ func CreateBlockchain(config *configuration.Config) (bc *blockchain.Blockchain, 
 		panic(err)
 	}
 
-	listedTokens, err := bc.GetListedTokens()
-	if err != nil {
-		log.Panicf("cannot initiate listed token: %s", err)
-	}
-	bc.SetListedTokens(listedTokens)
-
 	// load all listed token indices instead of only configs tokens
-	err = bc.LoadAndSetTokenIndices(listedTokens)
+	err = bc.LoadAndSetTokenIndices()
 	if err != nil {
 		log.Panicf("Can't load and set token indices: %s", err)
 	}

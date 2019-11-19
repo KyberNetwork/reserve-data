@@ -105,7 +105,7 @@ func (b *Blockchain) CheckTokenIndices(tokenAddr ethereum.Address) error {
 }
 
 // LoadAndSetTokenIndices load and set token indices
-func (b *Blockchain) LoadAndSetTokenIndices(tokenAddrs []ethereum.Address) error {
+func (b *Blockchain) LoadAndSetTokenIndices() error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	b.tokenIndices = map[string]tbindex{}
@@ -116,6 +116,12 @@ func (b *Blockchain) LoadAndSetTokenIndices(tokenAddrs []ethereum.Address) error
 	if err != nil {
 		return err
 	}
+	tokenAddrs, err := b.GetListedTokens()
+	if err != nil {
+		return err
+	}
+	b.SetListedTokens(tokenAddrs)
+
 	bulkIndices, indicesInBulk, err := b.GeneratedGetTokenIndicies(
 		opts,
 		pricingAddr,
