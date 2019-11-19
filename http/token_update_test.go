@@ -460,7 +460,7 @@ func (tbc testHTTPBlockchain) CheckTokenIndices(addr ethereum.Address) error {
 	return errors.New("wrong address")
 }
 
-func (tbc testHTTPBlockchain) LoadAndSetTokenIndices(addrs []ethereum.Address) error {
+func (tbc testHTTPBlockchain) LoadAndSetTokenIndices() error {
 	return nil
 }
 
