@@ -4,14 +4,12 @@ import (
 	"fmt"
 	"time"
 
-	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/urfave/cli"
 	"go.uber.org/zap"
 
 	"github.com/KyberNetwork/reserve-data/blockchain"
 	"github.com/KyberNetwork/reserve-data/cmd/deployment"
 	"github.com/KyberNetwork/reserve-data/cmd/mode"
-	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/blockchain/nonce"
 	"github.com/KyberNetwork/reserve-data/core"
 	"github.com/KyberNetwork/reserve-data/data"
@@ -228,22 +226,7 @@ func CreateBlockchain(config *Config) (*blockchain.Blockchain, error) {
 		return nil, err
 	}
 
-	// old contract addresses are used for events fetcher
-
-	assets, err := config.SettingStorage.GetTransferableAssets()
-	if err != nil {
-		l.Errorw("Can't get the list of Internal Tokens for indices", "err", err)
-		return nil, err
-	}
-
-	var assetAddrs []ethereum.Address
-	for _, asset := range assets {
-		if !common.IsEthereumAddress(asset.Address) {
-			assetAddrs = append(assetAddrs, asset.Address)
-		}
-	}
-
-	err = bc.LoadAndSetTokenIndices(assetAddrs)
+	err = bc.LoadAndSetTokenIndices()
 	if err != nil {
 		l.Errorw("Can't load and set token indices", "err", err)
 		return nil, err

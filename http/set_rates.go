@@ -36,11 +36,7 @@ func tokenExisted(tokenAddr ethereum.Address, assets []v3common.Asset) bool {
 }
 
 func (s *Server) checkDelistedTokens(assets []v3common.Asset, bigBuys, bigSells, bigAfpMid []*big.Int) ([]v3common.Asset, []*big.Int, []*big.Int, []*big.Int, error) {
-	listedToken, err := s.blockchain.GetListedTokens()
-	if err != nil {
-		// return for warning as it might be error from node
-		return assets, bigBuys, bigSells, bigAfpMid, err
-	}
+	listedToken := s.blockchain.ListedTokens()
 	for _, tokenAddr := range listedToken {
 		if !tokenExisted(tokenAddr, assets) {
 			assets = append(assets, v3common.Asset{

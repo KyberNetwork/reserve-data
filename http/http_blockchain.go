@@ -7,12 +7,17 @@ import (
 // Blockchain is used in http server as the caller to blockchain for information.
 // Currently it is used for smart contract token's indice query.
 type Blockchain interface {
-	LoadAndSetTokenIndices([]ethereum.Address) error
+	LoadAndSetTokenIndices() error
 	CheckTokenIndices(ethereum.Address) error
 	GetPricingOPAddress() ethereum.Address
 	GetDepositOPAddress() ethereum.Address
 	GetIntermediatorOPAddress() ethereum.Address
 	GetWrapperAddress() ethereum.Address
+
 	GetProxyAddress() ethereum.Address
 	GetListedTokens() ([]ethereum.Address, error)
+
+	GetInternalNetworkAddress() ethereum.Address
+	GetNetworkAddress() ethereum.Address
+	ListedTokens() []ethereum.Address
 }

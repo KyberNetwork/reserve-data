@@ -56,6 +56,9 @@ type Blockchain struct {
 	pricing      *blockchain.Contract
 	reserve      *blockchain.Contract
 	tokenIndices map[string]tbindex
+	// listed tokens is all listed tokens on
+	// our pricing contract
+	listedTokens []ethereum.Address
 	mu           sync.RWMutex
 
 	localSetRateNonce     uint64
@@ -76,6 +79,11 @@ func (bc *Blockchain) StandardGasPrice() float64 {
 	return common.BigToFloat(price, 9)
 }
 
+// ListedTokens return listed tokens from pricing contract
+func (bc *Blockchain) ListedTokens() []ethereum.Address {
+	return bc.listedTokens
+}
+
 // CheckTokenIndices check if token is listed
 func (bc *Blockchain) CheckTokenIndices(tokenAddr ethereum.Address) error {
 	opts := bc.GetCallOpts(0)
@@ -94,12 +102,19 @@ func (bc *Blockchain) CheckTokenIndices(tokenAddr ethereum.Address) error {
 }
 
 // LoadAndSetTokenIndices load and set token indices
-func (bc *Blockchain) LoadAndSetTokenIndices(tokenAddrs []ethereum.Address) error {
+func (bc *Blockchain) LoadAndSetTokenIndices() error {
 	bc.mu.Lock()
 	defer bc.mu.Unlock()
 	bc.tokenIndices = map[string]tbindex{}
 	opts := bc.GetCallOpts(0)
 	pricingAddr := bc.contractAddress.Pricing
+
+	tokenAddrs, err := bc.GetListedTokens()
+	if err != nil {
+		return err
+	}
+	bc.listedTokens = tokenAddrs
+
 	bulkIndices, indicesInBulk, err := bc.GeneratedGetTokenIndicies(
 		opts,
 		pricingAddr,
