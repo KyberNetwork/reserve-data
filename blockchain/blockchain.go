@@ -265,7 +265,7 @@ func (bc *Blockchain) Send(
 func (bc *Blockchain) FetchBalanceData(reserve ethereum.Address, atBlock uint64) (map[string]common.BalanceEntry, error) {
 	result := map[string]common.BalanceEntry{}
 	tokens := []ethereum.Address{}
-	assets, err := bc.sr.GetTransferableAssets()
+	assets, err := bc.sr.GetAssetsHaveAddress()
 	if err != nil {
 		return result, err
 	}

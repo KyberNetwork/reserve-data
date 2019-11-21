@@ -38,6 +38,7 @@ type SettingReader interface {
 	// TODO: check usages of this method to see if it should be replaced with GetDepositAddress(exchangeID, tokenID)
 	GetDepositAddresses(exchangeID uint64) (map[string]ethereum.Address, error)
 	GetAssets() ([]v3.Asset, error)
+	GetAssetsHaveAddress() ([]v3.Asset, error)
 	// GetTransferableAssets returns all assets that the set rate strategy is not not_set.
 	GetTransferableAssets() ([]v3.Asset, error)
 	GetMinNotional(exchangeID, baseID, quoteID uint64) (float64, error)
