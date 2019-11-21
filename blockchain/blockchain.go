@@ -109,7 +109,7 @@ func (bc *Blockchain) LoadAndSetTokenIndices() error {
 	opts := bc.GetCallOpts(0)
 	pricingAddr := bc.contractAddress.Pricing
 
-	tokenAddrs, err := bc.GetListedTokens()
+	tokenAddrs, err := bc.getListedTokens()
 	if err != nil {
 		return err
 	}
@@ -484,8 +484,7 @@ func (bc *Blockchain) GetProxyAddress() ethereum.Address {
 	return bc.contractAddress.Proxy
 }
 
-// GetListedTokens return listed tokens on reserve
-func (bc *Blockchain) GetListedTokens() ([]ethereum.Address, error) {
+func (bc *Blockchain) getListedTokens() ([]ethereum.Address, error) {
 	opts := bc.GetCallOpts(0)
 	return bc.GeneratedGetListedTokens(opts)
 }

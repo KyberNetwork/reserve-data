@@ -298,7 +298,8 @@ func NewConfigurationFromContext(c *cli.Context, s *zap.SugaredLogger) (*Config,
 		return nil, err
 	}
 
-	sr, err := postgres.NewStorage(db)
+	// as this is core connect to setting db, the core endpoint is not needed
+	sr, err := postgres.NewStorage(db, "")
 	if err != nil {
 		return nil, err
 	}

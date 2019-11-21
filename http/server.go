@@ -425,6 +425,13 @@ func (s *Server) ValidateTimeInput(c *gin.Context) (uint64, uint64, bool) {
 	return fromTime, toTime, true
 }
 
+func (s *Server) updateTokenIndice(c *gin.Context) {
+	if err := s.blockchain.LoadAndSetTokenIndices(); err != nil {
+		httputil.ResponseFailure(c, httputil.WithError(err))
+	}
+	httputil.ResponseSuccess(c)
+}
+
 func (s *Server) register() {
 	if s.core != nil && s.app != nil {
 		g := s.r.Group("/v3")
@@ -457,6 +464,7 @@ func (s *Server) register() {
 
 		g.GET("/addresses", s.GetAddresses)
 
+		g.PUT("/update-token-indice", s.updateTokenIndice)
 	}
 }
 

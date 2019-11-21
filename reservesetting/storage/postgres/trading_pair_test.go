@@ -16,7 +16,7 @@ func TestStorage_UpdateTradingPair(t *testing.T) {
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()
-	s, err := NewStorage(db)
+	s, err := NewStorage(db, "")
 	require.NoError(t, err)
 
 	initData(t, s)

@@ -20,7 +20,7 @@ func TestPriceFactor(t *testing.T) {
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()
-	s, err := postgres.NewStorage(db)
+	s, err := postgres.NewStorage(db, "")
 	require.NoError(t, err)
 	server := NewServer(s, "", nil, nil, "")
 	const priceFactor = "/v3/price-factor"
@@ -128,7 +128,7 @@ func TestServer_SetRateStatus(t *testing.T) {
 		assert.NoError(t, tearDown())
 	}()
 
-	s, err := postgres.NewStorage(db)
+	s, err := postgres.NewStorage(db, "")
 	require.NoError(t, err)
 	server := NewServer(s, "", nil, nil, "")
 
@@ -190,7 +190,7 @@ func TestServer_RebalanceStatus(t *testing.T) {
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()
-	s, err := postgres.NewStorage(db)
+	s, err := postgres.NewStorage(db, "")
 	require.NoError(t, err)
 	server := NewServer(s, "", nil, nil, "")
 

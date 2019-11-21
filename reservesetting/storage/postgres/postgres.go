@@ -14,9 +14,10 @@ import (
 
 // Storage is an implementation of storage.Interface that use PostgreSQL as database system.
 type Storage struct {
-	db    *sqlx.DB
-	l     *zap.SugaredLogger
-	stmts *preparedStmts
+	db           *sqlx.DB
+	l            *zap.SugaredLogger
+	stmts        *preparedStmts
+	coreEndpoint string
 }
 
 func (s *Storage) initExchanges() error {
@@ -67,7 +68,7 @@ func (s *Storage) initAssets() error {
 }
 
 // NewStorage creates a new Storage instance from given configuration.
-func NewStorage(db *sqlx.DB) (*Storage, error) {
+func NewStorage(db *sqlx.DB, coreEndpoint string) (*Storage, error) {
 	l := zap.S()
 	if _, err := db.Exec(schema); err != nil {
 		return nil, fmt.Errorf("failed to intialize database schema err=%s", err.Error())
@@ -84,7 +85,7 @@ func NewStorage(db *sqlx.DB) (*Storage, error) {
 		return nil, fmt.Errorf("failed to preprare statements err=%s", err.Error())
 	}
 
-	s := &Storage{db: db, stmts: stmts, l: l}
+	s := &Storage{db: db, stmts: stmts, l: l, coreEndpoint: coreEndpoint}
 
 	exchanges, err := s.GetExchanges()
 	if err != nil {

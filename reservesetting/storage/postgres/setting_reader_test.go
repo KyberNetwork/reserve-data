@@ -16,7 +16,7 @@ func TestStorage_GetAssetBySymbol(t *testing.T) {
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()
-	s, err := NewStorage(db)
+	s, err := NewStorage(db, "")
 	require.NoError(t, err)
 
 	initData(t, s)
@@ -34,7 +34,7 @@ func TestStorage_GetTransferableAssets(t *testing.T) {
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()
-	s, err := NewStorage(db)
+	s, err := NewStorage(db, "")
 	require.NoError(t, err)
 
 	initData(t, s)
@@ -52,7 +52,7 @@ func TestStorage_GetTradingPair(t *testing.T) {
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()
-	s, err := NewStorage(db)
+	s, err := NewStorage(db, "")
 	require.NoError(t, err)
 
 	initData(t, s)
@@ -65,7 +65,7 @@ func TestStorage_GetTradingPairs(t *testing.T) {
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()
-	s, err := NewStorage(db)
+	s, err := NewStorage(db, "")
 	require.NoError(t, err)
 
 	initData(t, s)
@@ -79,7 +79,7 @@ func TestStorage_GetMinNotional(t *testing.T) {
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()
-	s, err := NewStorage(db)
+	s, err := NewStorage(db, "")
 	require.NoError(t, err)
 
 	initData(t, s)

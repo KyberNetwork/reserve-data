@@ -135,7 +135,7 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 		assert.NoError(t, tearDown())
 	}()
 
-	s, err := postgres.NewStorage(db)
+	s, err := postgres.NewStorage(db, "")
 	require.NoError(t, err)
 
 	assetID, err := createSampleAsset(s)
@@ -577,7 +577,7 @@ func TestHTTPServerAssetExchangeWithOptionalTradingPair(t *testing.T) {
 		assert.NoError(t, tearDown())
 	}()
 
-	s, err := postgres.NewStorage(db)
+	s, err := postgres.NewStorage(db, "")
 	require.NoError(t, err)
 
 	assetID, err := createSampleAsset(s)
@@ -868,7 +868,7 @@ func TestHTTPServer_SettingChangeUpdateExchange(t *testing.T) {
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()
-	s, err := postgres.NewStorage(db)
+	s, err := postgres.NewStorage(db, "")
 	require.NoError(t, err)
 
 	exchangeID := uint64(1)
@@ -999,7 +999,7 @@ func TestHTTPServer_ChangeAssetAddress(t *testing.T) {
 		supportedExchanges[exchangeID] = exchange
 	}
 
-	s, err := postgres.NewStorage(db)
+	s, err := postgres.NewStorage(db, "")
 	require.NoError(t, err)
 	t.Log(s)
 	server := NewServer(s, "", supportedExchanges, nil, "")
@@ -1093,7 +1093,7 @@ func TestHTTPServer_DeleteTradingPair(t *testing.T) {
 		supportedExchanges[exchangeID] = exchange
 	}
 
-	s, err := postgres.NewStorage(db)
+	s, err := postgres.NewStorage(db, "")
 	require.NoError(t, err)
 	t.Log(s)
 	server := NewServer(s, "", supportedExchanges, nil, "")
@@ -1174,7 +1174,7 @@ func TestHTTPServer_DeleteAssetExchange(t *testing.T) {
 		exchange := v1common.TestExchange{}
 		supportedExchanges[exchangeID] = exchange
 	}
-	s, err := postgres.NewStorage(db)
+	s, err := postgres.NewStorage(db, "")
 	require.NoError(t, err)
 	server := NewServer(s, "", supportedExchanges, nil, "")
 	_, err = createSampleAsset(s)
@@ -1260,7 +1260,7 @@ func TestCreateTradingPair(t *testing.T) {
 		assert.NoError(t, tearDown())
 	}()
 
-	s, err := postgres.NewStorage(db)
+	s, err := postgres.NewStorage(db, "")
 	require.NoError(t, err)
 	id, err := createSampleAsset(s)
 	require.NoError(t, err)

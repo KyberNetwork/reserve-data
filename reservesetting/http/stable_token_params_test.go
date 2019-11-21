@@ -37,7 +37,7 @@ func TestServer_StableTokenParams(t *testing.T) {
 		assert.NoError(t, tearDown())
 	}()
 
-	s, err := postgres.NewStorage(db)
+	s, err := postgres.NewStorage(db, "")
 	require.NoError(t, err)
 
 	server := NewServer(s, "", supportedExchanges, nil, "")

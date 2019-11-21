@@ -19,7 +19,7 @@ func TestStorage_GetStableTokenParams(t *testing.T) {
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()
-	s, err := NewStorage(db)
+	s, err := NewStorage(db, "")
 	assert.NoError(t, err)
 
 	id, err := s.CreateSettingChange(common.ChangeCatalogStableToken, common.SettingChange{

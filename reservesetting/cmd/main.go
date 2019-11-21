@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -24,7 +25,8 @@ import (
 )
 
 const (
-	defaultDB = "reserve_data"
+	defaultDB        = "reserve_data"
+	coreEndpointFlag = "core-endpoint"
 )
 
 func main() {
@@ -42,6 +44,11 @@ func main() {
 	app.Flags = append(app.Flags, blockchain.NewWrapperAddressFlag()...)
 	app.Flags = append(app.Flags, blockchain.NewEthereumNodeFlags())
 	app.Flags = append(app.Flags, libapp.NewSentryFlags()...)
+	app.Flags = append(app.Flags, cli.StringFlag{
+		Name:   coreEndpointFlag,
+		Usage:  "core endpoint URL",
+		EnvVar: "CORE_ENDPOINT",
+	})
 
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
@@ -89,7 +96,12 @@ func run(c *cli.Context) error {
 		return fmt.Errorf("failed to initiate live exchanges: %s", err)
 	}
 
-	sr, err := postgres.NewStorage(db)
+	coreEndpoint := c.String(coreEndpointFlag)
+	if coreEndpoint == "" {
+		sugar.Error("core endpoint is not provided, if you create new asset, you cannot update token indice, please provide.")
+		return errors.New("core endpoint is required")
+	}
+	sr, err := postgres.NewStorage(db, coreEndpoint)
 	if err != nil {
 		return err
 	}

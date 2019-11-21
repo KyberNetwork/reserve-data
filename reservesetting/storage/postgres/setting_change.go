@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -154,6 +155,15 @@ func (s *Storage) applyChange(tx *sqlx.Tx, i int, entry common.SettingChangeEntr
 		if err != nil {
 			s.l.Infow("create asset", "index", i, "err", err)
 			return err
+		}
+		// update token indice in core
+		endpoint := fmt.Sprintf("%s/update-token-indice", s.coreEndpoint)
+		resp, err := http.Post(endpoint, "application/json", nil)
+		if err != nil {
+			return fmt.Errorf("failed to update token indice: %s", err)
+		}
+		if resp.StatusCode != http.StatusOK {
+			return fmt.Errorf("update token endpoint failed, status code: %d", resp.StatusCode)
 		}
 	case *common.CreateAssetExchangeEntry:
 		_, err = s.createAssetExchange(tx, e.ExchangeID, e.AssetID, e.Symbol, e.DepositAddress, e.MinDeposit,

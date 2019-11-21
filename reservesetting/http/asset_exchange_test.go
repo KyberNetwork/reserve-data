@@ -29,7 +29,7 @@ func TestServer_UpdateAssetExchange(t *testing.T) {
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()
-	s, err := postgres.NewStorage(db)
+	s, err := postgres.NewStorage(db, "")
 	require.NoError(t, err)
 
 	assetID, err := createSampleAsset(s)
