@@ -265,10 +265,11 @@ func (bc *Blockchain) Send(
 func (bc *Blockchain) FetchBalanceData(reserve ethereum.Address, atBlock uint64) (map[string]common.BalanceEntry, error) {
 	result := map[string]common.BalanceEntry{}
 	tokens := []ethereum.Address{}
-	assets, err := bc.sr.GetAssetsHaveAddress()
+	allAssets, err := bc.sr.GetAssets()
 	if err != nil {
 		return result, err
 	}
+	assets := commonv3.AssetsHaveAddress(allAssets)
 	for _, tok := range assets {
 		tokens = append(tokens, tok.Address)
 	}
@@ -320,10 +321,11 @@ func (bc *Blockchain) FetchRates(atBlock uint64, currentBlock uint64) (common.Al
 	result := common.AllRateEntry{}
 	tokenAddrs := []ethereum.Address{}
 	validTokens := []commonv3.Asset{}
-	assets, err := bc.sr.GetTransferableAssets()
+	allAssets, err := bc.sr.GetAssets()
 	if err != nil {
 		return result, err
 	}
+	assets := commonv3.AssetsHaveSetRate(allAssets)
 	for _, s := range assets {
 		// TODO: add a isETH method
 		if s.Symbol != "ETH" {

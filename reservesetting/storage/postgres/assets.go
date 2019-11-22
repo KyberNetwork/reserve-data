@@ -683,22 +683,6 @@ func (s *Storage) GetAssets() ([]common.Asset, error) {
 	return s.getAssets(nil)
 }
 
-// GetAssetsHaveAddress return all assets listed and have address
-func (s *Storage) GetAssetsHaveAddress() ([]common.Asset, error) {
-	var assetsHaveAddress []common.Asset
-	allAssets, err := s.getAssets(nil)
-	if err != nil {
-		return nil, err
-	}
-	for _, asset := range allAssets {
-		if common.IsZeroAddress(asset.Address) {
-			continue
-		}
-		assetsHaveAddress = append(assetsHaveAddress, asset)
-	}
-	return assetsHaveAddress, nil
-}
-
 type tradingByDB struct {
 	ID            uint64 `db:"id"`
 	AssetID       uint64 `db:"asset_id"`

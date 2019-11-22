@@ -16,6 +16,7 @@ type Exchange struct {
 	Disable         bool    `json:"disable"`
 }
 
+// SetRate ..
 //go:generate stringer -type=SetRate -linecomment
 type SetRate int
 
