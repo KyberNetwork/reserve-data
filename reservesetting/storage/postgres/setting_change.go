@@ -17,6 +17,7 @@ import (
 
 const (
 	settingChangeCatUnique = "setting_change_cat_key"
+	defaultTimeout         = 5 * time.Second
 )
 
 // CreateSettingChange creates an setting change in database and return id
@@ -159,7 +160,14 @@ func (s *Storage) applyChange(tx *sqlx.Tx, i int, entry common.SettingChangeEntr
 		if s.coreEndpoint != "" { // check to by pass test as local test does not need this
 			// update token indice in core
 			endpoint := fmt.Sprintf("%s/update-token-indice", s.coreEndpoint)
-			resp, err := http.Post(endpoint, "application/json", nil)
+			req, err := http.NewRequest(http.MethodPut, endpoint, nil)
+			if err != nil {
+				return fmt.Errorf("failed to create new update token indices request: %s", err)
+			}
+			client := http.Client{
+				Timeout: defaultTimeout,
+			}
+			resp, err := client.Do(req)
 			if err != nil {
 				return fmt.Errorf("failed to update token indice: %s", err)
 			}
