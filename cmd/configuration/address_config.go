@@ -29,7 +29,7 @@ var AddressConfigs = map[string]common.AddressConfig{
 		Wrapper:         "0x6172AFC8c00c46E0D07ce3AF203828198194620a",
 		Pricing:         "0x798AbDA6Cc246D0EDbA912092A2a3dBd3d11191B",
 		Network:         "0x818E6FECD516Ecc3849DAf6845e3EC868087B755",
-		InternalNetwork: "0x91a502C678605fbCe581eae053319747482276b9",
+		InternalNetwork: "0x65bF64Ff5f51272f729BDcD7AcFB00677ced86Cd",
 	},
 	common.RopstenMode: {
 		Reserve: "0x0FC1CF3e7DD049F7B42e6823164A64F76fC06Be0",
