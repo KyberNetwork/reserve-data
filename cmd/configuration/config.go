@@ -48,13 +48,14 @@ type SettingPaths struct {
 	secretPath            string
 	endPoint              string
 	bkendpoints           []string
+	worldEndpointFile     string
 }
 
 // NewSettingPaths creates new SettingPaths instance from given parameters.
 func NewSettingPaths(
 	settingPath, feePath, dataStoragePath, analyticStoragePath,
 	feeSetRateStoragePath, secretPath, endPoint string,
-	bkendpoints []string) SettingPaths {
+	bkendpoints []string, worldEndpoints string) SettingPaths {
 	cmdDir := common.CmdDirLocation()
 	return SettingPaths{
 		settingPath:           filepath.Join(cmdDir, settingPath),
@@ -65,6 +66,7 @@ func NewSettingPaths(
 		secretPath:            filepath.Join(cmdDir, secretPath),
 		endPoint:              endPoint,
 		bkendpoints:           bkendpoints,
+		worldEndpointFile:     worldEndpoints,
 	}
 }
 
@@ -176,6 +178,7 @@ var ConfigPaths = map[string]SettingPaths{
 			myCryptoAPIEndpoint,
 			myEtherAPIMainnetEndpoint,
 		},
+		"world_endpoints.json",
 	),
 	common.KovanMode: NewSettingPaths(
 		"kovan_setting.json",
@@ -186,6 +189,7 @@ var ConfigPaths = map[string]SettingPaths{
 		"config.json",
 		infuraKovanEndpoint,
 		[]string{},
+		"world_endpoints.json",
 	),
 	common.ProductionMode: NewSettingPaths(
 		"mainnet_setting.json",
@@ -203,6 +207,7 @@ var ConfigPaths = map[string]SettingPaths{
 			myEtherAPIMainnetEndpoint,
 			mewGivethAPIEndpoint,
 		},
+		"world_endpoints.json",
 	),
 	common.MainnetMode: NewSettingPaths(
 		"mainnet_setting.json",
@@ -220,6 +225,7 @@ var ConfigPaths = map[string]SettingPaths{
 			myEtherAPIMainnetEndpoint,
 			mewGivethAPIEndpoint,
 		},
+		"world_endpoints.json",
 	),
 	common.StagingMode: NewSettingPaths(
 		"staging_setting.json",
@@ -237,6 +243,7 @@ var ConfigPaths = map[string]SettingPaths{
 			myEtherAPIMainnetEndpoint,
 			mewGivethAPIEndpoint,
 		},
+		"world_endpoints.json",
 	),
 	common.SimulationMode: NewSettingPaths(
 		"shared/deployment_dev.json",
@@ -249,6 +256,7 @@ var ConfigPaths = map[string]SettingPaths{
 		[]string{
 			localDevChainEndpoint,
 		},
+		"world_endpoints.json",
 	),
 	common.RopstenMode: NewSettingPaths(
 		"ropsten_setting.json",
@@ -261,6 +269,7 @@ var ConfigPaths = map[string]SettingPaths{
 		[]string{
 			myEtherAPIRopstenEndpoint,
 		},
+		"world_endpoints.json",
 	),
 	common.AnalyticDevMode: NewSettingPaths(
 		"shared/deployment_dev.json",
@@ -273,6 +282,7 @@ var ConfigPaths = map[string]SettingPaths{
 		[]string{
 			localDevChainEndpoint,
 		},
+		"world_endpoints.json",
 	),
 }
 

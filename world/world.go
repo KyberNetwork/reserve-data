@@ -13,10 +13,18 @@ import (
 	"github.com/KyberNetwork/reserve-data/common"
 )
 
-//TheWorld is the concrete implementation of fetcher.TheWorld interface.
+// TheWorld is the concrete implementation of fetcher.TheWorld interface.
 type TheWorld struct {
 	endpoint Endpoint
 	l        *zap.SugaredLogger
+}
+
+// NewTheWorld ...
+func NewTheWorld(ep Endpoint, l *zap.SugaredLogger) *TheWorld {
+	return &TheWorld{
+		endpoint: ep,
+		l:        l,
+	}
 }
 
 func (tw *TheWorld) getPublic(url string, dst interface{}) error {
@@ -165,19 +173,4 @@ func (tw *TheWorld) GetGoldInfo() (common.GoldData, error) {
 		Kraken:      tw.getKrakenGoldInfo(),
 		Gemini:      tw.getGeminiGoldInfo(),
 	}, nil
-}
-
-//NewTheWorld return new world instance
-func NewTheWorld(env string, keyfile string) (*TheWorld, error) {
-	switch env {
-	case common.DevMode, common.KovanMode, common.MainnetMode, common.ProductionMode, common.StagingMode, common.RopstenMode, common.AnalyticDevMode:
-		endpoint, err := NewRealEndpointFromFile(keyfile)
-		if err != nil {
-			return nil, err
-		}
-		return &TheWorld{endpoint: endpoint, l: zap.S()}, nil
-	case common.SimulationMode:
-		return &TheWorld{endpoint: SimulatedEndpoint{}, l: zap.S()}, nil
-	}
-	panic("unsupported environment")
 }

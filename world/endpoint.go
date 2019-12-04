@@ -63,6 +63,34 @@ type Endpoint interface {
 	BinanceTUSDEndpoint() string
 }
 
+type siteConfig struct {
+	URL string `json:"url"`
+}
+
+// EndpointConfig hold detail information to fetch feed(url,header, api key...)
+type EndpointConfig struct {
+	GoldData        siteConfig `json:"gold_data"`
+	OneForgeGoldETH siteConfig `json:"one_forge_gold_eth"`
+	OneForgeGoldUSD siteConfig `json:"one_forge_gold_usd"`
+	GDAXData        siteConfig `json:"gdax_data"`
+	KrakenData      siteConfig `json:"kraken_data"`
+	GeminiData      siteConfig `json:"gemini_data"`
+
+	CoinbaseBTC siteConfig `json:"coinbase_btc"`
+	GeminiBTC   siteConfig `json:"gemini_btc"`
+
+	CoinbaseUSDC siteConfig `json:"coinbase_usdc"`
+	BinanceUSDC  siteConfig `json:"binance_usdc"`
+	CoinbaseUSD  siteConfig `json:"coinbase_usd"`
+	CoinbaseDAI  siteConfig `json:"coinbase_dai"`
+	HitDai       siteConfig `json:"hit_dai"`
+
+	BitFinexUSDT siteConfig `json:"bit_finex_usdt"`
+	BinanceUSDT  siteConfig `json:"binance_usdt"`
+	BinancePAX   siteConfig `json:"binance_pax"`
+	BinanceTUSD  siteConfig `json:"binance_tusd"`
+}
+
 type RealEndpoint struct {
 	OneForgeKey string `json:"oneforge"`
 }
@@ -145,74 +173,95 @@ func NewRealEndpointFromFile(path string) (*RealEndpoint, error) {
 	return &result, err
 }
 
+// SimulatedEndpoint implement endpoint for testing in simulate.
 type SimulatedEndpoint struct {
+	eps EndpointConfig
+}
+
+// NewSimulationEndpoint ...
+func NewSimulationEndpoint(eps EndpointConfig) *SimulatedEndpoint {
+	return &SimulatedEndpoint{eps: eps}
+}
+
+// NewSimulationEndpointFromFile create new simulation with config endpoints from file
+func NewSimulationEndpointFromFile(file string) (*SimulatedEndpoint, error) {
+	data, err := ioutil.ReadFile(file)
+	if err != nil {
+		return nil, err
+	}
+	result := EndpointConfig{}
+	err = json.Unmarshal(data, &result)
+	if err != nil {
+		return nil, err
+	}
+	return NewSimulationEndpoint(result), nil
 }
 
 func (se SimulatedEndpoint) BitFinexUSDTEndpoint() string {
-	panic("implement me")
+	return se.eps.BitFinexUSDT.URL
 }
 
 func (se SimulatedEndpoint) BinanceUSDTEndpoint() string {
-	panic("implement me")
+	return se.eps.BinanceUSDT.URL
 }
 
 func (se SimulatedEndpoint) BinancePAXEndpoint() string {
-	panic("implement me")
+	return se.eps.BinancePAX.URL
 }
 
 func (se SimulatedEndpoint) BinanceTUSDEndpoint() string {
-	panic("implement me")
+	return se.eps.BinanceTUSD.URL
 }
 
 func (se SimulatedEndpoint) CoinbaseDAIEndpoint() string {
-	panic("implement me")
+	return se.eps.CoinbaseDAI.URL
 }
 
 func (se SimulatedEndpoint) HitDaiEndpoint() string {
-	panic("implement me")
+	return se.eps.HitDai.URL
 }
 
 func (se SimulatedEndpoint) CoinbaseUSDEndpoint() string {
-	panic("implement me")
+	return se.eps.CoinbaseUSD.URL
 }
 
 // TODO: support simulation
 func (se SimulatedEndpoint) CoinbaseUSDCEndpoint() string {
-	panic("implement me")
+	return se.eps.CoinbaseUSDC.URL
 }
 
 func (se SimulatedEndpoint) BinanceUSDCEndpoint() string {
-	panic("implement me")
+	return se.eps.BinanceUSDC.URL
 }
 
 func (se SimulatedEndpoint) GoldDataEndpoint() string {
-	return "http://simulator:5400/tick"
+	return se.eps.GoldData.URL
 }
 
 func (se SimulatedEndpoint) OneForgeGoldETHDataEndpoint() string {
-	return "http://simulator:5500/1.0.3/convert?from=XAU&to=ETH&quantity=1&api_key="
+	return se.eps.OneForgeGoldETH.URL
 }
 
 func (se SimulatedEndpoint) OneForgeGoldUSDDataEndpoint() string {
-	return "http://simulator:5500/1.0.3/convert?from=XAU&to=USD&quantity=1&api_key="
+	return se.eps.OneForgeGoldUSD.URL
 }
 
 func (se SimulatedEndpoint) GDAXDataEndpoint() string {
-	return "http://simulator:5600/products/eth-usd/ticker"
+	return se.eps.GDAXData.URL
 }
 
 func (se SimulatedEndpoint) KrakenDataEndpoint() string {
-	return "http://simulator:5700/0/public/Ticker?pair=ETHUSD"
+	return se.eps.KrakenData.URL
 }
 
 func (se SimulatedEndpoint) GeminiDataEndpoint() string {
-	return "http://simulator:5800/v1/pubticker/ethusd"
+	return se.eps.GeminiData.URL
 }
 
 func (se SimulatedEndpoint) CoinbaseBTCEndpoint() string {
-	return "http://simulator:5600/products/eth-btc/ticker"
+	return se.eps.CoinbaseBTC.URL
 }
 
 func (se SimulatedEndpoint) GeminiBTCEndpoint() string {
-	return "http://simulator:5800/v1/pubticker/ethbtc"
+	return se.eps.GeminiBTC.URL
 }

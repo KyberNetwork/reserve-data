@@ -97,11 +97,29 @@ func GetSetting(kyberENV string, addressSetting *settings.AddressSetting) (*sett
 	return setting, err
 }
 
+func newTheWorld(env string, sp SettingPaths) (*world.TheWorld, error) {
+	switch env {
+	case common.DevMode, common.KovanMode, common.MainnetMode, common.ProductionMode, common.StagingMode, common.RopstenMode, common.AnalyticDevMode:
+		endpoint, err := world.NewRealEndpointFromFile(sp.secretPath)
+		if err != nil {
+			return nil, err
+		}
+		return world.NewTheWorld(endpoint, zap.S()), nil
+	case common.SimulationMode:
+		endpoint, err := world.NewSimulationEndpointFromFile(sp.worldEndpointFile)
+		if err != nil {
+			return nil, err
+		}
+		return world.NewTheWorld(endpoint, zap.S()), nil
+	}
+	panic("unsupported environment")
+}
+
 func GetConfig(kyberENV string, authEnbl bool, endpointOW string, cliAddress common.AddressConfig, runnerConfig common.RunnerConfig) *Config {
 	l := zap.S()
 	setPath := GetConfigPaths(kyberENV)
 
-	theWorld, err := world.NewTheWorld(kyberENV, setPath.secretPath)
+	theWorld, err := newTheWorld(kyberENV, setPath)
 	if err != nil {
 		l.Panicf("Can't init the world (which is used to get global data), err=%+v", err)
 	}
