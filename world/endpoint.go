@@ -3,6 +3,8 @@ package world
 import (
 	"encoding/json"
 	"io/ioutil"
+
+	"github.com/KyberNetwork/reserve-data/common/config"
 )
 
 var (
@@ -61,34 +63,6 @@ type Endpoint interface {
 	BinanceUSDTEndpoint() string
 	BinancePAXEndpoint() string
 	BinanceTUSDEndpoint() string
-}
-
-type siteConfig struct {
-	URL string `json:"url"`
-}
-
-// EndpointConfig hold detail information to fetch feed(url,header, api key...)
-type EndpointConfig struct {
-	GoldData        siteConfig `json:"gold_data"`
-	OneForgeGoldETH siteConfig `json:"one_forge_gold_eth"`
-	OneForgeGoldUSD siteConfig `json:"one_forge_gold_usd"`
-	GDAXData        siteConfig `json:"gdax_data"`
-	KrakenData      siteConfig `json:"kraken_data"`
-	GeminiData      siteConfig `json:"gemini_data"`
-
-	CoinbaseBTC siteConfig `json:"coinbase_btc"`
-	GeminiBTC   siteConfig `json:"gemini_btc"`
-
-	CoinbaseUSDC siteConfig `json:"coinbase_usdc"`
-	BinanceUSDC  siteConfig `json:"binance_usdc"`
-	CoinbaseUSD  siteConfig `json:"coinbase_usd"`
-	CoinbaseDAI  siteConfig `json:"coinbase_dai"`
-	HitDai       siteConfig `json:"hit_dai"`
-
-	BitFinexUSDT siteConfig `json:"bit_finex_usdt"`
-	BinanceUSDT  siteConfig `json:"binance_usdt"`
-	BinancePAX   siteConfig `json:"binance_pax"`
-	BinanceTUSD  siteConfig `json:"binance_tusd"`
 }
 
 type RealEndpoint struct {
@@ -175,11 +149,11 @@ func NewRealEndpointFromFile(path string) (*RealEndpoint, error) {
 
 // SimulatedEndpoint implement endpoint for testing in simulate.
 type SimulatedEndpoint struct {
-	eps EndpointConfig
+	eps config.WorldEndpoints
 }
 
 // NewSimulationEndpoint ...
-func NewSimulationEndpoint(eps EndpointConfig) *SimulatedEndpoint {
+func NewSimulationEndpoint(eps config.WorldEndpoints) *SimulatedEndpoint {
 	return &SimulatedEndpoint{eps: eps}
 }
 
@@ -189,7 +163,7 @@ func NewSimulationEndpointFromFile(file string) (*SimulatedEndpoint, error) {
 	if err != nil {
 		return nil, err
 	}
-	result := EndpointConfig{}
+	result := config.WorldEndpoints{}
 	err = json.Unmarshal(data, &result)
 	if err != nil {
 		return nil, err

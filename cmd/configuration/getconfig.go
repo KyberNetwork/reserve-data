@@ -10,6 +10,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/archive"
 	"github.com/KyberNetwork/reserve-data/common/blockchain"
+	config2 "github.com/KyberNetwork/reserve-data/common/config"
 	"github.com/KyberNetwork/reserve-data/http"
 	"github.com/KyberNetwork/reserve-data/settings"
 	settingstorage "github.com/KyberNetwork/reserve-data/settings/storage"
@@ -119,7 +120,12 @@ func GetConfig(kyberENV string, authEnbl bool, endpointOW string, cliAddress com
 	l := zap.S()
 	setPath := GetConfigPaths(kyberENV)
 
-	theWorld, err := newTheWorld(kyberENV, setPath)
+	ac, err := config2.LoadConfig(setPath.secretPath)
+	if err != nil {
+		l.Panicw("failed to load config file", "err", err)
+	}
+
+	theWorld, err := newTheWorld(kyberENV, ac.WorldEndpoints)
 	if err != nil {
 		l.Panicf("Can't init the world (which is used to get global data), err=%+v", err)
 	}
