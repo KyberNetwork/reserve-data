@@ -3,8 +3,6 @@ package http
 import (
 	"crypto/hmac"
 	"crypto/sha512"
-	"encoding/json"
-	"io/ioutil"
 
 	ethereum "github.com/ethereum/go-ethereum/common"
 	"go.uber.org/zap"
@@ -22,16 +20,14 @@ type KNAuthentication struct {
 	KNConfirmConf   string `json:"kn_confirm_configuration"`
 }
 
-func NewKNAuthenticationFromFile(path string) KNAuthentication {
-	raw, err := ioutil.ReadFile(path)
-	if err != nil {
-		panic(err)
+// NewKNAuthentication ...
+func NewKNAuthentication(secret, readOnly, configuration, confirm string) KNAuthentication {
+	return KNAuthentication{
+		KNSecret:        secret,
+		KNReadOnly:      readOnly,
+		KNConfiguration: configuration,
+		KNConfirmConf:   confirm,
 	}
-	result := KNAuthentication{}
-	if err = json.Unmarshal(raw, &result); err != nil {
-		panic(err)
-	}
-	return result
 }
 
 func (auth KNAuthentication) KNSign(msg string) string {

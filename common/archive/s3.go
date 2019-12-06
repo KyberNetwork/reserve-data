@@ -13,12 +13,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+
+	"github.com/KyberNetwork/reserve-data/common/config"
 )
 
 type S3Archive struct {
 	uploader *s3manager.Uploader
 	svc      *s3.S3
-	awsConf  AWSConfig
+	awsConf  config.AWSConfig
 	l        *zap.SugaredLogger
 }
 
@@ -102,7 +104,7 @@ func (s *S3Archive) GetLogBucketName() string {
 	return s.awsConf.LogBucketName
 }
 
-func NewS3Archive(conf AWSConfig) *S3Archive {
+func NewS3Archive(conf config.AWSConfig) *S3Archive {
 	crdtl := credentials.NewStaticCredentials(conf.AccessKeyID, conf.SecretKey, conf.Token)
 	sess := session.Must(session.NewSession(&aws.Config{
 		Region:      aws.String(conf.Region),

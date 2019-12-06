@@ -468,14 +468,9 @@ func (ep *Endpoint) UpdateTimeDelta() error {
 //NewBinanceEndpoint return new endpoint instance for using binance
 func NewBinanceEndpoint(signer Signer, interf Interface) *Endpoint {
 	endpoint := &Endpoint{signer: signer, interf: interf, l: zap.S()}
-	switch interf.(type) {
-	case *SimulatedInterface:
-		endpoint.l.Infof("Simulate environment, no updateTime called...")
-	default:
-		err := endpoint.UpdateTimeDelta()
-		if err != nil {
-			endpoint.l.Panic(err)
-		}
+	err := endpoint.UpdateTimeDelta()
+	if err != nil {
+		endpoint.l.Panic(err)
 	}
 	return endpoint
 }

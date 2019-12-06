@@ -2,75 +2,25 @@ package configuration
 
 import (
 	"log"
-	"path/filepath"
 	"time"
 
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/archive"
 	"github.com/KyberNetwork/reserve-data/common/blockchain"
+	"github.com/KyberNetwork/reserve-data/common/config"
 	"github.com/KyberNetwork/reserve-data/core"
 	"github.com/KyberNetwork/reserve-data/data"
 	"github.com/KyberNetwork/reserve-data/data/datapruner"
 	"github.com/KyberNetwork/reserve-data/data/fetcher"
 	"github.com/KyberNetwork/reserve-data/data/fetcher/httprunner"
 	"github.com/KyberNetwork/reserve-data/data/storage"
-	"github.com/KyberNetwork/reserve-data/exchange/binance"
-	"github.com/KyberNetwork/reserve-data/exchange/huobi"
 	"github.com/KyberNetwork/reserve-data/http"
 	"github.com/KyberNetwork/reserve-data/metric"
 	"github.com/KyberNetwork/reserve-data/settings"
 	"github.com/KyberNetwork/reserve-data/world"
 )
 
-const (
-	infuraProjectID = "/v3/59d9e06a1abe487e8e74664c06b337f9"
-
-	alchemyapiMainnetEndpoint = "https://eth-mainnet.alchemyapi.io/jsonrpc/V1GjKybGLx6rzSu517KSWpSrTSIIXmV7"
-	infuraMainnetEndpoint     = "https://mainnet.infura.io" + infuraProjectID
-	infuraKovanEndpoint       = "https://kovan.infura.io" + infuraProjectID
-	infuraRopstenEndpoint     = "https://ropsten.infura.io" + infuraProjectID
-	myEtherAPIMainnetEndpoint = "https://api.myetherwallet.com/eth"
-	myEtherAPIRopstenEndpoint = "https://api.myetherwallet.com/rop"
-	semidNodeKyberEndpoint    = "https://semi-node.kyber.network"
-	myCryptoAPIEndpoint       = "https://api.mycryptoapi.com/eth"
-	mewGivethAPIEndpoint      = "https://mew.giveth.io/"
-
-	localDevChainEndpoint = "http://blockchain:8545"
-)
-
-// SettingPaths contains path of all setting files.
-type SettingPaths struct {
-	settingPath           string
-	feePath               string
-	dataStoragePath       string
-	analyticStoragePath   string
-	feeSetRateStoragePath string
-	secretPath            string
-	endPoint              string
-	bkendpoints           []string
-	worldEndpointFile     string
-}
-
-// NewSettingPaths creates new SettingPaths instance from given parameters.
-func NewSettingPaths(
-	settingPath, feePath, dataStoragePath, analyticStoragePath,
-	feeSetRateStoragePath, secretPath, endPoint string,
-	bkendpoints []string, worldEndpoints string) SettingPaths {
-	cmdDir := common.CmdDirLocation()
-	return SettingPaths{
-		settingPath:           filepath.Join(cmdDir, settingPath),
-		feePath:               filepath.Join(cmdDir, feePath),
-		dataStoragePath:       filepath.Join(cmdDir, dataStoragePath),
-		analyticStoragePath:   filepath.Join(cmdDir, analyticStoragePath),
-		feeSetRateStoragePath: filepath.Join(cmdDir, feeSetRateStoragePath),
-		secretPath:            filepath.Join(cmdDir, secretPath),
-		endPoint:              endPoint,
-		bkendpoints:           bkendpoints,
-		worldEndpointFile:     worldEndpoints,
-	}
-}
-
-type Config struct {
+type AppState struct {
 	ActivityStorage      core.ActivityStorage
 	DataStorage          data.Storage
 	DataGlobalStorage    data.GlobalStorage
@@ -94,18 +44,18 @@ type Config struct {
 	BackupEthereumEndpoints []string
 	Blockchain              *blockchain.BaseBlockchain
 
-	ChainType      string
 	Setting        *settings.Settings
 	AddressSetting *settings.AddressSetting
+	AppConfig      config.AppConfig
 }
 
-func (c *Config) AddCoreConfig(settingPath SettingPaths, kyberENV string, runnerConfig common.RunnerConfig) {
-	setting, err := GetSetting(kyberENV, c.AddressSetting)
+func (c *AppState) AddCoreConfig(appc config.AppConfig, runnerConfig common.RunnerConfig) {
+	setting, err := GetSetting(appc, c.AddressSetting)
 	if err != nil {
 		log.Panicf("Failed to create setting: %+v", err)
 	}
 	c.Setting = setting
-	dataStorage, err := storage.NewBoltStorage(settingPath.dataStoragePath)
+	dataStorage, err := storage.NewBoltStorage(appc.SettingDB)
 	if err != nil {
 		panic(err)
 	}
@@ -127,8 +77,8 @@ func (c *Config) AddCoreConfig(settingPath SettingPaths, kyberENV string, runner
 		dataControllerRunner = datapruner.NewStorageControllerTickerRunner(24 * time.Hour)
 	}
 
-	pricingSigner := PricingSignerFromConfigFile(settingPath.secretPath)
-	depositSigner := DepositSignerFromConfigFile(settingPath.secretPath)
+	pricingSigner := PricingSignerFromConfigFile(appc.KeyStorePath, appc.Passphrase)
+	depositSigner := DepositSignerFromConfigFile(appc.KeyStoreDepositPath, appc.PassphraseDeposit)
 
 	c.ActivityStorage = dataStorage
 	c.DataStorage = dataStorage
@@ -142,10 +92,8 @@ func (c *Config) AddCoreConfig(settingPath SettingPaths, kyberENV string, runner
 	c.DepositSigner = depositSigner
 
 	// create Exchange pool
-	exchangePool, err := NewExchangePool(
-		settingPath,
+	exchangePool, err := NewExchangePool(appc,
 		c.Blockchain,
-		kyberENV,
 		c.Setting,
 	)
 	if err != nil {
@@ -161,148 +109,4 @@ func (c *Config) AddCoreConfig(settingPath SettingPaths, kyberENV string, runner
 		log.Panicf("cannot Create core exchanges : (%+v)", err)
 	}
 	c.Exchanges = coreExchanges
-}
-
-var ConfigPaths = map[string]SettingPaths{
-	common.DevMode: NewSettingPaths(
-		"dev_setting.json",
-		"fee.json",
-		"dev.db",
-		"dev_analytics.db",
-		"dev_fee_setrate.db",
-		"config.json",
-		infuraMainnetEndpoint,
-		[]string{
-			semidNodeKyberEndpoint,
-			infuraMainnetEndpoint,
-			myCryptoAPIEndpoint,
-			myEtherAPIMainnetEndpoint,
-		},
-		"world_endpoints.json",
-	),
-	common.KovanMode: NewSettingPaths(
-		"kovan_setting.json",
-		"fee.json",
-		"kovan.db",
-		"kovan_analytics.db",
-		"kovan_fee_setrate.db",
-		"config.json",
-		infuraKovanEndpoint,
-		[]string{},
-		"world_endpoints.json",
-	),
-	common.ProductionMode: NewSettingPaths(
-		"mainnet_setting.json",
-		"fee.json",
-		"mainnet.db",
-		"mainnet_analytics.db",
-		"mainnet_fee_setrate.db",
-		"mainnet_config.json",
-		alchemyapiMainnetEndpoint,
-		[]string{
-			alchemyapiMainnetEndpoint,
-			infuraMainnetEndpoint,
-			semidNodeKyberEndpoint,
-			myCryptoAPIEndpoint,
-			myEtherAPIMainnetEndpoint,
-			mewGivethAPIEndpoint,
-		},
-		"world_endpoints.json",
-	),
-	common.MainnetMode: NewSettingPaths(
-		"mainnet_setting.json",
-		"fee.json",
-		"mainnet.db",
-		"mainnet_analytics.db",
-		"mainnet_fee_setrate.db",
-		"mainnet_config.json",
-		alchemyapiMainnetEndpoint,
-		[]string{
-			alchemyapiMainnetEndpoint,
-			infuraMainnetEndpoint,
-			semidNodeKyberEndpoint,
-			myCryptoAPIEndpoint,
-			myEtherAPIMainnetEndpoint,
-			mewGivethAPIEndpoint,
-		},
-		"world_endpoints.json",
-	),
-	common.StagingMode: NewSettingPaths(
-		"staging_setting.json",
-		"fee.json",
-		"staging.db",
-		"staging_analytics.db",
-		"staging_fee_setrate.db",
-		"staging_config.json",
-		alchemyapiMainnetEndpoint,
-		[]string{
-			alchemyapiMainnetEndpoint,
-			infuraMainnetEndpoint,
-			semidNodeKyberEndpoint,
-			myCryptoAPIEndpoint,
-			myEtherAPIMainnetEndpoint,
-			mewGivethAPIEndpoint,
-		},
-		"world_endpoints.json",
-	),
-	common.SimulationMode: NewSettingPaths(
-		"shared/deployment_dev.json",
-		"fee.json",
-		"core.db",
-		"core_analytics.db",
-		"core_fee_setrate.db",
-		"config.json",
-		localDevChainEndpoint,
-		[]string{
-			localDevChainEndpoint,
-		},
-		"world_endpoints.json",
-	),
-	common.RopstenMode: NewSettingPaths(
-		"ropsten_setting.json",
-		"fee.json",
-		"ropsten.db",
-		"ropsten_analytics.db",
-		"ropsten_fee_setrate.db",
-		"config.json",
-		infuraRopstenEndpoint,
-		[]string{
-			myEtherAPIRopstenEndpoint,
-		},
-		"world_endpoints.json",
-	),
-	common.AnalyticDevMode: NewSettingPaths(
-		"shared/deployment_dev.json",
-		"fee.json",
-		"core.db",
-		"core_analytics.db",
-		"core_fee_setrate.db",
-		"config.json",
-		localDevChainEndpoint,
-		[]string{
-			localDevChainEndpoint,
-		},
-		"world_endpoints.json",
-	),
-}
-
-var BinanceInterfaces = make(map[string]binance.Interface)
-var HuobiInterfaces = make(map[string]huobi.Interface)
-
-func SetInterface(baseURL string) {
-	HuobiInterfaces[common.DevMode] = huobi.NewDevInterface()
-	HuobiInterfaces[common.KovanMode] = huobi.NewKovanInterface(baseURL)
-	HuobiInterfaces[common.MainnetMode] = huobi.NewRealInterface()
-	HuobiInterfaces[common.StagingMode] = huobi.NewRealInterface()
-	HuobiInterfaces[common.SimulationMode] = huobi.NewSimulatedInterface(baseURL)
-	HuobiInterfaces[common.RopstenMode] = huobi.NewRopstenInterface(baseURL)
-	HuobiInterfaces[common.AnalyticDevMode] = huobi.NewRopstenInterface(baseURL)
-
-	BinanceInterfaces[common.DevMode] = binance.NewDevInterface()
-	BinanceInterfaces[common.KovanMode] = binance.NewKovanInterface(baseURL)
-	BinanceInterfaces[common.MainnetMode] = binance.NewRealInterface()
-	BinanceInterfaces[common.StagingMode] = binance.NewRealInterface()
-	BinanceInterfaces[common.SimulationMode] = binance.NewSimulatedInterface(baseURL)
-	BinanceInterfaces[common.RopstenMode] = binance.NewRopstenInterface(baseURL)
-	BinanceInterfaces[common.AnalyticDevMode] = binance.NewRopstenInterface(baseURL)
 }

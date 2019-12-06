@@ -1,10 +1,6 @@
 package configuration
 
 import (
-	"encoding/json"
-	"io/ioutil"
-	"log"
-
 	"github.com/KyberNetwork/reserve-data/common"
 )
 
@@ -34,33 +30,4 @@ var AddressConfigs = map[string]common.AddressConfig{
 		Pricing: "0x535DE1F5a982c2a896da62790a42723A71c0c12B",
 		Proxy:   "0x0a56d8a49E71da8d7F9C65F95063dB48A3C9560B",
 	},
-}
-
-func mustGetAddressesConfig(kyberEnv string, cliAddresses common.AddressConfig) common.AddressConfig {
-
-	if cliAddresses.Proxy != "" && cliAddresses.Pricing != "" && cliAddresses.Wrapper != "" && cliAddresses.Reserve != "" {
-		return cliAddresses
-	}
-
-	if kyberEnv == common.SimulationMode {
-		resultFromFile, err := loadAddressFromFile(simSettingPath)
-		if err != nil {
-			log.Panicf("cannot load address from file, err: %v", err)
-		}
-		return resultFromFile
-	}
-
-	log.Panicf("cannot get address config for mode %s", kyberEnv)
-	return common.AddressConfig{}
-}
-
-func loadAddressFromFile(path string) (common.AddressConfig, error) {
-	data, err := ioutil.ReadFile(path)
-	addrs := common.AddressConfig{}
-
-	if err != nil {
-		return addrs, err
-	}
-	err = json.Unmarshal(data, &addrs)
-	return addrs, err
 }

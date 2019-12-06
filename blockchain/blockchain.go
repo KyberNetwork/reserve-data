@@ -9,6 +9,7 @@ import (
 
 	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
 	"github.com/KyberNetwork/reserve-data/common"
@@ -117,7 +118,7 @@ func (b *Blockchain) LoadAndSetTokenIndices() error {
 	// to 0 also, then we decided load all listed tokens
 	tokenAddrs, err := b.getListedTokensFromPricingContract()
 	if err != nil {
-		return err
+		return errors.Wrap(err, fmt.Sprintf("failed to load token list using contract %s", pricingAddr.String()))
 	}
 	b.listedTokens = tokenAddrs
 
@@ -127,7 +128,7 @@ func (b *Blockchain) LoadAndSetTokenIndices() error {
 		tokenAddrs,
 	)
 	if err != nil {
-		return err
+		return errors.Wrap(err, fmt.Sprintf("failed to load token index using contract %s", pricingAddr.String()))
 	}
 	for i, tok := range tokenAddrs {
 		b.tokenIndices[tok.Hex()] = newTBIndex(

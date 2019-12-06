@@ -3,6 +3,8 @@ package config
 import (
 	"encoding/json"
 	"io/ioutil"
+
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // SiteConfig contain config for a remote api access
@@ -34,8 +36,8 @@ type WorldEndpoints struct {
 	BinanceTUSD  SiteConfig `json:"binance_tusd"`
 }
 
-// ExchangePoints ...
-type ExchangePoints struct {
+// ExchangeEndpoints ...
+type ExchangeEndpoints struct {
 	Binance SiteConfig `json:"binance"`
 	Houbi   SiteConfig `json:"houbi"`
 }
@@ -48,16 +50,74 @@ type Authentication struct {
 	KNConfirmConfiguration string `json:"kn_confirm_configuration"`
 }
 
+// ContractAddresses ...
+type ContractAddresses struct {
+	Proxy   common.Address `json:"proxy"`
+	Reserve common.Address `json:"reserve"`
+	Wrapper common.Address `json:"wrapper"`
+	Pricing common.Address `json:"pricing"`
+}
+
+type Node struct {
+	Main   string   `json:"main"`
+	Backup []string `json:"backup"`
+}
+
+// Token present for a token
+type Token struct {
+	Address  string `json:"address"`
+	Name     string `json:"name"`
+	Decimals int64  `json:"decimals"`
+	Internal bool   `json:"internal use"`
+	Active   bool   `json:"listed"`
+}
+
+// TokenSet ..
+type TokenSet map[string]Token
+
+// DepositAddressesSet ..
+type DepositAddressesSet map[string]DepositAddresses
+
+// DepositAddresses ..
+type DepositAddresses map[string]common.Address
+
+// AWSConfig ...
+type AWSConfig struct {
+	Region                       string `json:"aws_region"`
+	AccessKeyID                  string `json:"aws_access_key_id"`
+	SecretKey                    string `json:"aws_secret_access_key"`
+	Token                        string `json:"aws_token"`
+	ExpiredStatDataBucketName    string `json:"aws_expired_stat_data_bucket_name"`
+	ExpiredReserveDataBucketName string `json:"aws_expired_reserve_data_bucket_name"`
+	LogBucketName                string `json:"aws_log_bucket_name"`
+}
+
 // AppConfig represnet for app configuration
 type AppConfig struct {
-	Authentication
-	KeyStorePath        string `json:"keystore"`
-	Passphrase          string `json:"passphrase"`
-	KeyStoreDepositPath string `json:"deposit_keystore"`
-	PassphraseDeposit   string `json:"passphrase_deposit"`
+	Authentication      Authentication `json:"authentication"`
+	AWSConfig           AWSConfig      `json:"aws_config"`
+	KeyStorePath        string         `json:"keystore_path"`
+	Passphrase          string         `json:"passphrase"`
+	KeyStoreDepositPath string         `json:"keystore_deposit_path"`
+	PassphraseDeposit   string         `json:"passphrase_deposit"`
 
-	ExchangePoints ExchangePoints `json:"exchange_points"`
-	WorldEndpoints WorldEndpoints `json:"world_endpoints"`
+	ExchangeEndpoints   ExchangeEndpoints   `json:"exchange_endpoints"`
+	WorldEndpoints      WorldEndpoints      `json:"world_endpoints"`
+	ContractAddresses   ContractAddresses   `json:"contract_addresses"`
+	TokenSet            TokenSet            `json:"tokens"`
+	SettingDB           string              `json:"setting_db"`
+	DepositAddressesSet DepositAddressesSet `json:"deposit_addresses"`
+	Node                Node                `json:"nodes"`
+	HoubiKeystorePath   string              `json:"keystore_intermediator_path"`
+	HuobiPassphrase     string              `json:"passphrase_intermediate_account"`
+
+	BinanceKey    string `json:"binance_key"`
+	BinanceSecret string `json:"binance_secret"`
+	BinanceDB     string `json:"binance_db"`
+
+	HuobiKey    string `json:"huobi_key"`
+	HuobiSecret string `json:"huobi_secret"`
+	HuobiDB     string `json:"huobi_db"`
 }
 
 // LoadConfig parse json config and return config object

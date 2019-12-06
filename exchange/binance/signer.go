@@ -3,8 +3,6 @@ package binance
 import (
 	"crypto/hmac"
 	"crypto/sha256"
-	"encoding/json"
-	"io/ioutil"
 
 	ethereum "github.com/ethereum/go-ethereum/common"
 	"go.uber.org/zap"
@@ -30,17 +28,4 @@ func (s Signer) Sign(msg string) string {
 
 func NewSigner(key, secret string) *Signer {
 	return &Signer{key, secret}
-}
-
-func NewSignerFromFile(path string) Signer {
-	raw, err := ioutil.ReadFile(path)
-	if err != nil {
-		panic(err)
-	}
-	signer := Signer{}
-	err = json.Unmarshal(raw, &signer)
-	if err != nil {
-		panic(err)
-	}
-	return signer
 }

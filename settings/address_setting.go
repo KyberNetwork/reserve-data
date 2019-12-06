@@ -43,21 +43,19 @@ type AddressSetting struct {
 }
 
 //NewAddressSetting return an implementation of Address Setting
-func NewAddressSetting(data common.AddressConfig) (*AddressSetting, error) {
+func NewAddressSetting(data common.AddressConfig) *AddressSetting {
 	address := make(map[AddressName]ethereum.Address)
 	addressSetting := &AddressSetting{
 		Addresses: address,
 	}
-	if err := addressSetting.saveAddressFromAddressConfig(data); err != nil {
-		return addressSetting, err
-	}
-	return addressSetting, nil
+	addressSetting.saveAddressFromAddressConfig(data)
+	return addressSetting
 }
 
-func (addrSetting *AddressSetting) saveAddressFromAddressConfig(addrs common.AddressConfig) error {
+func (addrSetting *AddressSetting) saveAddressFromAddressConfig(addrs common.AddressConfig) {
 	addrSetting.Addresses[Reserve] = ethereum.HexToAddress(addrs.Reserve)
 	addrSetting.Addresses[Wrapper] = ethereum.HexToAddress(addrs.Wrapper)
 	addrSetting.Addresses[Pricing] = ethereum.HexToAddress(addrs.Pricing)
 	addrSetting.Addresses[Proxy] = ethereum.HexToAddress(addrs.Proxy)
-	return nil
+	return
 }

@@ -7,7 +7,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/KyberNetwork/reserve-data"
-	"github.com/KyberNetwork/reserve-data/cmd/configuration"
 	"github.com/KyberNetwork/reserve-data/common"
 )
 
@@ -35,20 +34,12 @@ Allow overwriting some parameter`,
 	if runMode == common.ProductionMode {
 		runMode = common.MainnetMode
 	}
-
-	defaultValue := configuration.AddressConfigs[runMode]
-
 	// start server flags.
+	startServer.Flags().StringVar(&configFile, "config", "config.json", "path to config file")
 	startServer.Flags().BoolVarP(&noAuthEnable, "noauth", "", false, "disable authentication")
 	startServer.Flags().IntVarP(&servPort, "port", "p", 8000, "server port")
-	startServer.Flags().StringVar(&endpointOW, "endpoint", "", "endpoint, default to configuration file")
-	startServer.PersistentFlags().StringVar(&baseURL, "base_url", defaultBaseURL, "base_url for authenticated enpoint")
 	startServer.Flags().BoolVarP(&stdoutLog, "log-to-stdout", "", false, "send log to both log file and stdout terminal")
 	startServer.Flags().BoolVarP(&dryRun, "dryrun", "", false, "only test if all the configs are set correctly, will not actually run core")
-	startServer.Flags().StringVar(&cliAddress.Reserve, "reserve-addr", defaultValue.Reserve, "reserve contract address")
-	startServer.Flags().StringVar(&cliAddress.Wrapper, "wrapper-addr", defaultValue.Wrapper, "wrapper contract address")
-	startServer.Flags().StringVar(&cliAddress.Pricing, "pricing-addr", defaultValue.Pricing, "pricing contract address")
-	startServer.Flags().StringVar(&cliAddress.Proxy, "network-addr", defaultValue.Proxy, "network proxy contract address")
 	startServer.Flags().StringVar(&profilerPrefix, "profiler-prefix", "", "set prefix for pprof http handler, eg: \"/debug/pprof\", profiler will be disabled if this flag value is empty. A secure token can be put into profiler-prefix to limit access")
 	startServer.Flags().StringVar(&sentryDSN, "sentry-dsn", "", "sentry-dsn address")
 	startServer.Flags().StringVar(&sentryLevel, "sentry-level", "warn", "sentry level [info,warn,error,fatal]")

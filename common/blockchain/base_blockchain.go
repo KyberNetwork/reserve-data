@@ -41,7 +41,6 @@ type BaseBlockchain struct {
 	operators   map[string]*Operator
 	broadcaster *Broadcaster
 	//ethRate        EthUSDRate
-	chainType      string
 	contractCaller *ContractCaller
 	erc20abi       abi.ABI
 	l              *zap.SugaredLogger
@@ -358,13 +357,9 @@ func (b *BaseBlockchain) TxStatus(hash ethereum.Hash) (string, uint64, error) {
 			// only byzantium has status field at the moment
 			// mainnet, ropsten are byzantium, other chains such as
 			// devchain, kovan are not
-			if b.chainType == "byzantium" {
-				if receipt.Status == 1 {
-					// successful tx
-					return common.MiningStatusMined, tx.BlockNumber().Uint64(), nil
-				}
-				// failed tx
-				return common.MiningStatusFailed, tx.BlockNumber().Uint64(), nil
+			if receipt.Status == 1 {
+				// successful tx
+				return common.MiningStatusMined, tx.BlockNumber().Uint64(), nil
 			}
 			return common.MiningStatusMined, tx.BlockNumber().Uint64(), nil
 		}
@@ -384,7 +379,6 @@ func NewBaseBlockchain(
 	client *ethclient.Client,
 	operators map[string]*Operator,
 	broadcaster *Broadcaster,
-	chainType string,
 	contractcaller *ContractCaller) *BaseBlockchain {
 
 	file, err := os.Open(
@@ -402,7 +396,6 @@ func NewBaseBlockchain(
 		rpcClient:      rpcClient,
 		operators:      operators,
 		broadcaster:    broadcaster,
-		chainType:      chainType,
 		erc20abi:       packabi,
 		contractCaller: contractcaller,
 		l:              zap.S(),

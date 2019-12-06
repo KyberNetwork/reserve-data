@@ -173,24 +173,8 @@ func configLog(stdoutLog bool) io.Writer {
 	return mw
 }
 
-func InitInterface() {
-	if baseURL != defaultBaseURL {
-		zap.S().Infof("Overwriting base URL with %s", baseURL)
-	}
-	configuration.SetInterface(baseURL)
-}
-
-// GetConfigFromENV: From ENV variable and overwriting instruction, build the config
-func GetConfigFromENV(kyberENV string) *configuration.Config {
-	zap.S().Infof("Running in %s mode", kyberENV)
-	config := configuration.GetConfig(kyberENV,
-		!noAuthEnable,
-		endpointOW, cliAddress, runnerConfig)
-	return config
-}
-
 // CreateBlockchain create new blockchain instance
-func CreateBlockchain(config *configuration.Config) (bc *blockchain.Blockchain, err error) {
+func CreateBlockchain(config *configuration.AppState) (bc *blockchain.Blockchain, err error) {
 	bc, err = blockchain.NewBlockchain(
 		config.Blockchain,
 		config.Setting,
@@ -208,7 +192,7 @@ func CreateBlockchain(config *configuration.Config) (bc *blockchain.Blockchain, 
 	return
 }
 
-func CreateDataCore(config *configuration.Config, kyberENV string, bc *blockchain.Blockchain) (*data.ReserveData, *core.ReserveCore) {
+func CreateDataCore(config *configuration.AppState, kyberENV string, bc *blockchain.Blockchain) (*data.ReserveData, *core.ReserveCore) {
 	//get fetcher based on config and ENV == simulation.
 	dataFetcher := fetcher.NewFetcher(
 		config.FetcherStorage,

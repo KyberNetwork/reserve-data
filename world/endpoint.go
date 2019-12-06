@@ -1,9 +1,6 @@
 package world
 
 import (
-	"encoding/json"
-	"io/ioutil"
-
 	"github.com/KyberNetwork/reserve-data/common/config"
 )
 
@@ -65,177 +62,81 @@ type Endpoint interface {
 	BinanceTUSDEndpoint() string
 }
 
-type RealEndpoint struct {
-	OneForgeKey string `json:"oneforge"`
-}
-
-func (re RealEndpoint) BitFinexUSDTEndpoint() string {
-	return "https://api-pub.bitfinex.com/v2/ticker/tETHUSD"
-}
-
-func (re RealEndpoint) BinanceUSDTEndpoint() string {
-	return "https://api.binance.com/api/v3/ticker/bookTicker?symbol=ETHUSDT"
-}
-
-func (re RealEndpoint) BinancePAXEndpoint() string {
-	return "https://api.binance.com/api/v3/ticker/bookTicker?symbol=ETHPAX"
-}
-
-func (re RealEndpoint) BinanceTUSDEndpoint() string {
-	return "https://api.binance.com/api/v3/ticker/bookTicker?symbol=ETHTUSD"
-}
-
-func (re RealEndpoint) CoinbaseDAIEndpoint() string {
-	return "https://api.pro.coinbase.com/products/eth-dai/ticker"
-}
-
-func (re RealEndpoint) HitDaiEndpoint() string {
-	return "https://api.hitbtc.com/api/2/public/ticker/ETHDAI"
-}
-
-func (re RealEndpoint) CoinbaseUSDEndpoint() string {
-	return "https://api.pro.coinbase.com/products/eth-usd/ticker"
-}
-
-func (re RealEndpoint) CoinbaseUSDCEndpoint() string {
-	return "https://api.pro.coinbase.com/products/eth-usdc/ticker"
-}
-
-func (re RealEndpoint) BinanceUSDCEndpoint() string {
-	return "https://api.binance.com/api/v3/ticker/bookTicker?symbol=ETHUSDC"
-}
-
-func (re RealEndpoint) GoldDataEndpoint() string {
-	return "https://datafeed.digix.global/tick/"
-}
-
-func (re RealEndpoint) OneForgeGoldETHDataEndpoint() string {
-	return "https://api.1forge.com/convert?from=XAU&to=ETH&quantity=1&api_key=" + re.OneForgeKey
-}
-
-func (re RealEndpoint) OneForgeGoldUSDDataEndpoint() string {
-	return "https://api.1forge.com/convert?from=XAU&to=USD&quantity=1&api_key=" + re.OneForgeKey
-}
-
-func (re RealEndpoint) GDAXDataEndpoint() string {
-	return "https://api.pro.coinbase.com/products/eth-usd/ticker"
-}
-
-func (re RealEndpoint) KrakenDataEndpoint() string {
-	return "https://api.kraken.com/0/public/Ticker?pair=ETHUSD"
-}
-
-func (re RealEndpoint) GeminiDataEndpoint() string {
-	return "https://api.gemini.com/v1/pubticker/ethusd"
-}
-
-func (re RealEndpoint) CoinbaseBTCEndpoint() string {
-	return "https://api.pro.coinbase.com/products/eth-btc/ticker"
-}
-
-func (re RealEndpoint) GeminiBTCEndpoint() string {
-	return "https://api.gemini.com/v1/pubticker/ethbtc"
-}
-
-func NewRealEndpointFromFile(path string) (*RealEndpoint, error) {
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	result := RealEndpoint{}
-	err = json.Unmarshal(data, &result)
-	return &result, err
-}
-
-// SimulatedEndpoint implement endpoint for testing in simulate.
-type SimulatedEndpoint struct {
+// WorldEndpoint implement endpoint for testing in simulate.
+type WorldEndpoint struct {
 	eps config.WorldEndpoints
 }
 
-// NewSimulationEndpoint ...
-func NewSimulationEndpoint(eps config.WorldEndpoints) *SimulatedEndpoint {
-	return &SimulatedEndpoint{eps: eps}
+// NewWorldEndpoint ...
+func NewWorldEndpoint(eps config.WorldEndpoints) *WorldEndpoint {
+	return &WorldEndpoint{eps: eps}
 }
 
-// NewSimulationEndpointFromFile create new simulation with config endpoints from file
-func NewSimulationEndpointFromFile(file string) (*SimulatedEndpoint, error) {
-	data, err := ioutil.ReadFile(file)
-	if err != nil {
-		return nil, err
-	}
-	result := config.WorldEndpoints{}
-	err = json.Unmarshal(data, &result)
-	if err != nil {
-		return nil, err
-	}
-	return NewSimulationEndpoint(result), nil
+func (ep WorldEndpoint) BitFinexUSDTEndpoint() string {
+	return ep.eps.BitFinexUSDT.URL
 }
 
-func (se SimulatedEndpoint) BitFinexUSDTEndpoint() string {
-	return se.eps.BitFinexUSDT.URL
+func (ep WorldEndpoint) BinanceUSDTEndpoint() string {
+	return ep.eps.BinanceUSDT.URL
 }
 
-func (se SimulatedEndpoint) BinanceUSDTEndpoint() string {
-	return se.eps.BinanceUSDT.URL
+func (ep WorldEndpoint) BinancePAXEndpoint() string {
+	return ep.eps.BinancePAX.URL
 }
 
-func (se SimulatedEndpoint) BinancePAXEndpoint() string {
-	return se.eps.BinancePAX.URL
+func (ep WorldEndpoint) BinanceTUSDEndpoint() string {
+	return ep.eps.BinanceTUSD.URL
 }
 
-func (se SimulatedEndpoint) BinanceTUSDEndpoint() string {
-	return se.eps.BinanceTUSD.URL
+func (ep WorldEndpoint) CoinbaseDAIEndpoint() string {
+	return ep.eps.CoinbaseDAI.URL
 }
 
-func (se SimulatedEndpoint) CoinbaseDAIEndpoint() string {
-	return se.eps.CoinbaseDAI.URL
+func (ep WorldEndpoint) HitDaiEndpoint() string {
+	return ep.eps.HitDai.URL
 }
 
-func (se SimulatedEndpoint) HitDaiEndpoint() string {
-	return se.eps.HitDai.URL
-}
-
-func (se SimulatedEndpoint) CoinbaseUSDEndpoint() string {
-	return se.eps.CoinbaseUSD.URL
+func (ep WorldEndpoint) CoinbaseUSDEndpoint() string {
+	return ep.eps.CoinbaseUSD.URL
 }
 
 // TODO: support simulation
-func (se SimulatedEndpoint) CoinbaseUSDCEndpoint() string {
-	return se.eps.CoinbaseUSDC.URL
+func (ep WorldEndpoint) CoinbaseUSDCEndpoint() string {
+	return ep.eps.CoinbaseUSDC.URL
 }
 
-func (se SimulatedEndpoint) BinanceUSDCEndpoint() string {
-	return se.eps.BinanceUSDC.URL
+func (ep WorldEndpoint) BinanceUSDCEndpoint() string {
+	return ep.eps.BinanceUSDC.URL
 }
 
-func (se SimulatedEndpoint) GoldDataEndpoint() string {
-	return se.eps.GoldData.URL
+func (ep WorldEndpoint) GoldDataEndpoint() string {
+	return ep.eps.GoldData.URL
 }
 
-func (se SimulatedEndpoint) OneForgeGoldETHDataEndpoint() string {
-	return se.eps.OneForgeGoldETH.URL
+func (ep WorldEndpoint) OneForgeGoldETHDataEndpoint() string {
+	return ep.eps.OneForgeGoldETH.URL
 }
 
-func (se SimulatedEndpoint) OneForgeGoldUSDDataEndpoint() string {
-	return se.eps.OneForgeGoldUSD.URL
+func (ep WorldEndpoint) OneForgeGoldUSDDataEndpoint() string {
+	return ep.eps.OneForgeGoldUSD.URL
 }
 
-func (se SimulatedEndpoint) GDAXDataEndpoint() string {
-	return se.eps.GDAXData.URL
+func (ep WorldEndpoint) GDAXDataEndpoint() string {
+	return ep.eps.GDAXData.URL
 }
 
-func (se SimulatedEndpoint) KrakenDataEndpoint() string {
-	return se.eps.KrakenData.URL
+func (ep WorldEndpoint) KrakenDataEndpoint() string {
+	return ep.eps.KrakenData.URL
 }
 
-func (se SimulatedEndpoint) GeminiDataEndpoint() string {
-	return se.eps.GeminiData.URL
+func (ep WorldEndpoint) GeminiDataEndpoint() string {
+	return ep.eps.GeminiData.URL
 }
 
-func (se SimulatedEndpoint) CoinbaseBTCEndpoint() string {
-	return se.eps.CoinbaseBTC.URL
+func (ep WorldEndpoint) CoinbaseBTCEndpoint() string {
+	return ep.eps.CoinbaseBTC.URL
 }
 
-func (se SimulatedEndpoint) GeminiBTCEndpoint() string {
-	return se.eps.GeminiBTC.URL
+func (ep WorldEndpoint) GeminiBTCEndpoint() string {
+	return ep.eps.GeminiBTC.URL
 }

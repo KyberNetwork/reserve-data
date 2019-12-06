@@ -31,7 +31,7 @@ func CurrentDir() string {
 
 // CmdDirLocation returns the absolute location of cmd directory where
 // public settings will be read.
-func CmdDirLocation() string {
+func CmdDirLocation0() string {
 	_, fileName, _, _ := runtime.Caller(0)
 	return filepath.Join(filepath.Dir(filepath.Dir(fileName)), "cmd")
 }

@@ -3,7 +3,6 @@ package configuration
 import (
 	"errors"
 	"fmt"
-	"path/filepath"
 	"sync"
 
 	"go.uber.org/zap"
@@ -11,6 +10,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/blockchain"
 	"github.com/KyberNetwork/reserve-data/common/blockchain/nonce"
+	"github.com/KyberNetwork/reserve-data/common/config"
 	"github.com/KyberNetwork/reserve-data/data/fetcher"
 	"github.com/KyberNetwork/reserve-data/exchange"
 	"github.com/KyberNetwork/reserve-data/exchange/binance"
@@ -34,26 +34,9 @@ func AsyncUpdateDepositAddress(ex common.Exchange, tokenID, addr string, wait *s
 	}
 }
 
-func getBinanceInterface(kyberENV string) binance.Interface {
-	envInterface, ok := BinanceInterfaces[kyberENV]
-	if !ok {
-		envInterface = BinanceInterfaces[common.DevMode]
-	}
-	return envInterface
-}
-
-func getHuobiInterface(kyberENV string) huobi.Interface {
-	envInterface, ok := HuobiInterfaces[kyberENV]
-	if !ok {
-		envInterface = HuobiInterfaces[common.DevMode]
-	}
-	return envInterface
-}
-
 func NewExchangePool(
-	settingPaths SettingPaths,
-	blockchain *blockchain.BaseBlockchain,
-	kyberENV string, setting *settings.Settings) (*ExchangePool, error) {
+	ac config.AppConfig,
+	blockchain *blockchain.BaseBlockchain, setting *settings.Settings) (*ExchangePool, error) {
 	exchanges := map[common.ExchangeID]interface{}{}
 	exparams := settings.RunningExchanges()
 	l := zap.S()
@@ -68,9 +51,9 @@ func NewExchangePool(
 			}
 			exchanges[stableEx.ID()] = stableEx
 		case "binance":
-			binanceSigner := binance.NewSignerFromFile(settingPaths.secretPath)
-			endpoint := binance.NewBinanceEndpoint(binanceSigner, getBinanceInterface(kyberENV))
-			storage, err := binance.NewBoltStorage(filepath.Join(common.CmdDirLocation(), "binance.db"))
+			binanceSigner := binance.NewSigner(ac.BinanceKey, ac.BinanceSecret)
+			endpoint := binance.NewBinanceEndpoint(*binanceSigner, binance.NewRealInterface(ac.ExchangeEndpoints.Binance.URL))
+			storage, err := binance.NewBoltStorage(ac.BinanceDB)
 			if err != nil {
 				return nil, fmt.Errorf("can not create Binance storage: (%+v)", err)
 			}
@@ -97,13 +80,13 @@ func NewExchangePool(
 			}
 			exchanges[bin.ID()] = bin
 		case "huobi":
-			huobiSigner := huobi.NewSignerFromFile(settingPaths.secretPath)
-			endpoint := huobi.NewHuobiEndpoint(huobiSigner, getHuobiInterface(kyberENV))
-			storage, err := huobi.NewBoltStorage(filepath.Join(common.CmdDirLocation(), "huobi.db"))
+			huobiSigner := huobi.NewSigner(ac.HuobiKey, ac.HuobiSecret)
+			endpoint := huobi.NewHuobiEndpoint(*huobiSigner, huobi.NewRealInterface(ac.ExchangeEndpoints.Houbi.URL))
+			storage, err := huobi.NewBoltStorage(ac.HuobiDB)
 			if err != nil {
 				return nil, fmt.Errorf("can not create Huobi storage: (%+v)", err)
 			}
-			intermediatorSigner := HuobiIntermediatorSignerFromFile(settingPaths.secretPath)
+			intermediatorSigner := HuobiIntermediatorSignerFromFile(ac.HoubiKeystorePath, ac.HuobiPassphrase)
 			intermediatorNonce := nonce.NewTimeWindow(intermediatorSigner.GetAddress(), 10000)
 			hExchange, err := exchange.NewHuobi(
 				endpoint,
