@@ -62,81 +62,81 @@ type Endpoint interface {
 	BinanceTUSDEndpoint() string
 }
 
-// WorldEndpoint implement endpoint for testing in simulate.
-type WorldEndpoint struct {
+// Endpoints implement endpoint for testing in simulate.
+type Endpoints struct {
 	eps config.WorldEndpoints
 }
 
 // NewWorldEndpoint ...
-func NewWorldEndpoint(eps config.WorldEndpoints) *WorldEndpoint {
-	return &WorldEndpoint{eps: eps}
+func NewWorldEndpoint(eps config.WorldEndpoints) *Endpoints {
+	return &Endpoints{eps: eps}
 }
 
-func (ep WorldEndpoint) BitFinexUSDTEndpoint() string {
+func (ep Endpoints) BitFinexUSDTEndpoint() string {
 	return ep.eps.BitFinexUSDT.URL
 }
 
-func (ep WorldEndpoint) BinanceUSDTEndpoint() string {
+func (ep Endpoints) BinanceUSDTEndpoint() string {
 	return ep.eps.BinanceUSDT.URL
 }
 
-func (ep WorldEndpoint) BinancePAXEndpoint() string {
+func (ep Endpoints) BinancePAXEndpoint() string {
 	return ep.eps.BinancePAX.URL
 }
 
-func (ep WorldEndpoint) BinanceTUSDEndpoint() string {
+func (ep Endpoints) BinanceTUSDEndpoint() string {
 	return ep.eps.BinanceTUSD.URL
 }
 
-func (ep WorldEndpoint) CoinbaseDAIEndpoint() string {
+func (ep Endpoints) CoinbaseDAIEndpoint() string {
 	return ep.eps.CoinbaseDAI.URL
 }
 
-func (ep WorldEndpoint) HitDaiEndpoint() string {
+func (ep Endpoints) HitDaiEndpoint() string {
 	return ep.eps.HitDai.URL
 }
 
-func (ep WorldEndpoint) CoinbaseUSDEndpoint() string {
+func (ep Endpoints) CoinbaseUSDEndpoint() string {
 	return ep.eps.CoinbaseUSD.URL
 }
 
 // TODO: support simulation
-func (ep WorldEndpoint) CoinbaseUSDCEndpoint() string {
+func (ep Endpoints) CoinbaseUSDCEndpoint() string {
 	return ep.eps.CoinbaseUSDC.URL
 }
 
-func (ep WorldEndpoint) BinanceUSDCEndpoint() string {
+func (ep Endpoints) BinanceUSDCEndpoint() string {
 	return ep.eps.BinanceUSDC.URL
 }
 
-func (ep WorldEndpoint) GoldDataEndpoint() string {
+func (ep Endpoints) GoldDataEndpoint() string {
 	return ep.eps.GoldData.URL
 }
 
-func (ep WorldEndpoint) OneForgeGoldETHDataEndpoint() string {
+func (ep Endpoints) OneForgeGoldETHDataEndpoint() string {
 	return ep.eps.OneForgeGoldETH.URL
 }
 
-func (ep WorldEndpoint) OneForgeGoldUSDDataEndpoint() string {
+func (ep Endpoints) OneForgeGoldUSDDataEndpoint() string {
 	return ep.eps.OneForgeGoldUSD.URL
 }
 
-func (ep WorldEndpoint) GDAXDataEndpoint() string {
+func (ep Endpoints) GDAXDataEndpoint() string {
 	return ep.eps.GDAXData.URL
 }
 
-func (ep WorldEndpoint) KrakenDataEndpoint() string {
+func (ep Endpoints) KrakenDataEndpoint() string {
 	return ep.eps.KrakenData.URL
 }
 
-func (ep WorldEndpoint) GeminiDataEndpoint() string {
+func (ep Endpoints) GeminiDataEndpoint() string {
 	return ep.eps.GeminiData.URL
 }
 
-func (ep WorldEndpoint) CoinbaseBTCEndpoint() string {
+func (ep Endpoints) CoinbaseBTCEndpoint() string {
 	return ep.eps.CoinbaseBTC.URL
 }
 
-func (ep WorldEndpoint) GeminiBTCEndpoint() string {
+func (ep Endpoints) GeminiBTCEndpoint() string {
 	return ep.eps.GeminiBTC.URL
 }

@@ -57,5 +57,4 @@ func (addrSetting *AddressSetting) saveAddressFromAddressConfig(addrs common.Add
 	addrSetting.Addresses[Wrapper] = ethereum.HexToAddress(addrs.Wrapper)
 	addrSetting.Addresses[Pricing] = ethereum.HexToAddress(addrs.Pricing)
 	addrSetting.Addresses[Proxy] = ethereum.HexToAddress(addrs.Proxy)
-	return
 }

@@ -7,7 +7,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/KyberNetwork/reserve-data"
-	"github.com/KyberNetwork/reserve-data/common"
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -29,10 +28,6 @@ func Execute() {
 Allow overwriting some parameter`,
 		Example: "KYBER_ENV=dev KYBER_EXCHANGES=binance ./cmd server --noauth -p 8000",
 		Run:     serverStart,
-	}
-	runMode := common.RunningMode()
-	if runMode == common.ProductionMode {
-		runMode = common.MainnetMode
 	}
 	// start server flags.
 	startServer.Flags().StringVar(&configFile, "config", "config.json", "path to config file")

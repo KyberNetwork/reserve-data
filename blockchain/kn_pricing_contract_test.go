@@ -73,7 +73,6 @@ func TestGeneratedGetListedTokens(t *testing.T) {
 		ethClient,      // eth client
 		nil,            // map[string]*Operator
 		nil,            // broadcaster
-		"byzantium",    // chaintype
 		contractCaller, // contract caller
 	)
 
