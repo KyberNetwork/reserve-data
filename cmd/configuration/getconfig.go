@@ -8,14 +8,14 @@ import (
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/archive"
 	"github.com/KyberNetwork/reserve-data/common/blockchain"
-	config2 "github.com/KyberNetwork/reserve-data/common/config"
+	ccfg "github.com/KyberNetwork/reserve-data/common/config"
 	"github.com/KyberNetwork/reserve-data/http"
 	"github.com/KyberNetwork/reserve-data/settings"
 	settingstorage "github.com/KyberNetwork/reserve-data/settings/storage"
 	"github.com/KyberNetwork/reserve-data/world"
 )
 
-func GetSetting(ac config2.AppConfig, addressSetting *settings.AddressSetting) (*settings.Settings, error) {
+func GetSetting(ac ccfg.AppConfig, addressSetting *settings.AddressSetting) (*settings.Settings, error) {
 	boltSettingStorage, err := settingstorage.NewBoltSettingStorage(ac.SettingDB)
 	if err != nil {
 		return nil, err
@@ -40,12 +40,12 @@ func GetSetting(ac config2.AppConfig, addressSetting *settings.AddressSetting) (
 	return setting, err
 }
 
-func newTheWorld(exp config2.WorldEndpoints) (*world.TheWorld, error) {
+func newTheWorld(exp ccfg.WorldEndpoints) (*world.TheWorld, error) {
 	endpoint := world.NewWorldEndpoint(exp)
 	return world.NewTheWorld(endpoint, zap.S()), nil
 }
 
-func InitAppState(authEnbl bool, runnerConfig common.RunnerConfig, ac config2.AppConfig) *AppState {
+func InitAppState(authEnbl bool, runnerConfig common.RunnerConfig, ac ccfg.AppConfig) *AppState {
 	l := zap.S()
 	theWorld, err := newTheWorld(ac.WorldEndpoints)
 	if err != nil {
@@ -60,11 +60,7 @@ func InitAppState(authEnbl bool, runnerConfig common.RunnerConfig, ac config2.Ap
 		Pricing: ac.ContractAddresses.Pricing.String(),
 		Proxy:   ac.ContractAddresses.Proxy.String(),
 	})
-	var endpoint = ac.Node.Main
-	bkEndpoints := ac.Node.Backup
-
-	//set client & endpoint
-	client, err := rpc.Dial(endpoint)
+	client, err := rpc.Dial(ac.Node.Main)
 	if err != nil {
 		panic(err)
 	}
@@ -73,7 +69,7 @@ func InitAppState(authEnbl bool, runnerConfig common.RunnerConfig, ac config2.Ap
 	bkClients := map[string]*ethclient.Client{}
 
 	var callClients []*common.EthClient
-	for _, ep := range bkEndpoints {
+	for _, ep := range ac.Node.Backup {
 		client, err := common.NewEthClient(ep)
 		if err != nil {
 			l.Warnw("Cannot connect to RPC,ignore it.", "endpoint", ep, "err", err)
@@ -98,8 +94,8 @@ func InitAppState(authEnbl bool, runnerConfig common.RunnerConfig, ac config2.Ap
 	s3archive := archive.NewS3Archive(ac.AWSConfig)
 	aps := &AppState{
 		Blockchain:              bc,
-		EthereumEndpoint:        endpoint,
-		BackupEthereumEndpoints: bkEndpoints,
+		EthereumEndpoint:        ac.Node.Main,
+		BackupEthereumEndpoints: ac.Node.Backup,
 		AuthEngine:              hmac512auth,
 		EnableAuthentication:    authEnbl,
 		Archive:                 s3archive,

@@ -41,7 +41,7 @@ type Server struct {
 	app            reserve.Data
 	core           reserve.Core
 	metric         metric.Storage
-	host           string
+	bindAddr       string
 	authEnabled    bool
 	auth           Authentication
 	profilerPrefix string
@@ -1225,7 +1225,7 @@ func (s *Server) Run() {
 	if len(s.profilerPrefix) != 0 {
 		pprof.Register(s.r, s.profilerPrefix)
 	}
-	if err := s.r.Run(s.host); err != nil {
+	if err := s.r.Run(s.bindAddr); err != nil {
 		log.Panic(err)
 	}
 }
@@ -1235,7 +1235,7 @@ func NewHTTPServer(
 	app reserve.Data,
 	core reserve.Core,
 	metric metric.Storage,
-	host string,
+	bindAddr string,
 	enableAuth bool,
 	profilerPrefix string,
 	authEngine Authentication,
@@ -1266,7 +1266,7 @@ func NewHTTPServer(
 		app:            app,
 		core:           core,
 		metric:         metric,
-		host:           host,
+		bindAddr:       bindAddr,
 		authEnabled:    enableAuth,
 		auth:           authEngine,
 		profilerPrefix: profilerPrefix,

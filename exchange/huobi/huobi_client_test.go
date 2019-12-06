@@ -13,7 +13,7 @@ func TestGetDepositAddress(t *testing.T) {
 	secret := "" // enter only once for test
 	signer := NewSigner(key, secret)
 	interf := NewRealInterface("https://api.huobi.pro")
-	ep := NewHuobiEndpoint(*signer, interf)
+	ep := NewHuobiClient(*signer, interf)
 
 	listTokens := []string{"LBA", "ZIL", "DTA", "EKO", "POLY", "CVC", "BIX"}
 	for _, token := range listTokens {

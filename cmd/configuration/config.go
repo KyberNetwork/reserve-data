@@ -77,8 +77,8 @@ func (c *AppState) AddCoreConfig(appc config.AppConfig, runnerConfig common.Runn
 		dataControllerRunner = datapruner.NewStorageControllerTickerRunner(24 * time.Hour)
 	}
 
-	pricingSigner := PricingSignerFromConfigFile(appc.KeyStorePath, appc.Passphrase)
-	depositSigner := DepositSignerFromConfigFile(appc.KeyStoreDepositPath, appc.PassphraseDeposit)
+	pricingSigner := blockchain.NewEthereumSigner(appc.KeyStorePath, appc.Passphrase)
+	depositSigner := blockchain.NewEthereumSigner(appc.KeyStoreDepositPath, appc.PassphraseDeposit)
 
 	c.ActivityStorage = dataStorage
 	c.DataStorage = dataStorage

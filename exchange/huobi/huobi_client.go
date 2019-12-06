@@ -19,14 +19,14 @@ import (
 	"github.com/KyberNetwork/reserve-data/exchange"
 )
 
-//Endpoint endpoint object
-type Endpoint struct {
+//Client endpoint object
+type Client struct {
 	signer Signer
 	interf Interface
 	l      *zap.SugaredLogger
 }
 
-func (ep *Endpoint) fillRequest(req *http.Request, signNeeded bool) {
+func (ep *Client) fillRequest(req *http.Request, signNeeded bool) {
 	if req.Method == "POST" || req.Method == "PUT" || req.Method == "DELETE" {
 		req.Header.Add("Content-Type", "application/json")
 	} else {
@@ -47,7 +47,7 @@ func (ep *Endpoint) fillRequest(req *http.Request, signNeeded bool) {
 }
 
 //GetResponse from huobi api
-func (ep *Endpoint) GetResponse(
+func (ep *Client) GetResponse(
 	method string, reqURL string,
 	params map[string]string, signNeeded bool) ([]byte, error) {
 
@@ -103,7 +103,7 @@ func (ep *Endpoint) GetResponse(
 }
 
 //GetAccounts Get account list for later use
-func (ep *Endpoint) GetAccounts() (exchange.HuobiAccounts, error) {
+func (ep *Client) GetAccounts() (exchange.HuobiAccounts, error) {
 	result := exchange.HuobiAccounts{}
 	resp, err := ep.GetResponse(
 		"GET",
@@ -118,7 +118,7 @@ func (ep *Endpoint) GetAccounts() (exchange.HuobiAccounts, error) {
 }
 
 // GetDepthOnePair get depth one pair on huobi
-func (ep *Endpoint) GetDepthOnePair(
+func (ep *Client) GetDepthOnePair(
 	baseID, quoteID string) (exchange.HuobiDepth, error) {
 
 	respBody, err := ep.GetResponse(
@@ -139,7 +139,7 @@ func (ep *Endpoint) GetDepthOnePair(
 }
 
 // Trade create a new order on huobi
-func (ep *Endpoint) Trade(tradeType string, base, quote common.Token, rate, amount float64, timepoint uint64) (exchange.HuobiTrade, error) {
+func (ep *Client) Trade(tradeType string, base, quote common.Token, rate, amount float64, timepoint uint64) (exchange.HuobiTrade, error) {
 	result := exchange.HuobiTrade{}
 	symbol := strings.ToLower(base.ID) + strings.ToLower(quote.ID)
 	orderType := tradeType + "-limit"
@@ -177,7 +177,7 @@ func (ep *Endpoint) Trade(tradeType string, base, quote common.Token, rate, amou
 }
 
 //WithdrawHistory return withdraw history from huobi
-func (ep *Endpoint) WithdrawHistory(tokens []common.Token) (exchange.HuobiWithdraws, error) {
+func (ep *Client) WithdrawHistory(tokens []common.Token) (exchange.HuobiWithdraws, error) {
 	result := exchange.HuobiWithdraws{}
 	size := len(tokens) * 2
 	respBody, err := ep.GetResponse(
@@ -202,7 +202,7 @@ func (ep *Endpoint) WithdrawHistory(tokens []common.Token) (exchange.HuobiWithdr
 }
 
 //DepositHistory get deposit history from huobi
-func (ep *Endpoint) DepositHistory(tokens []common.Token) (exchange.HuobiDeposits, error) {
+func (ep *Client) DepositHistory(tokens []common.Token) (exchange.HuobiDeposits, error) {
 	result := exchange.HuobiDeposits{}
 	size := len(tokens) * 2
 	respBody, err := ep.GetResponse(
@@ -228,7 +228,7 @@ func (ep *Endpoint) DepositHistory(tokens []common.Token) (exchange.HuobiDeposit
 }
 
 // CancelOrder cancel open order on huobi
-func (ep *Endpoint) CancelOrder(symbol string, id uint64) (exchange.HuobiCancel, error) {
+func (ep *Client) CancelOrder(symbol string, id uint64) (exchange.HuobiCancel, error) {
 	result := exchange.HuobiCancel{}
 	respBody, err := ep.GetResponse(
 		"POST",
@@ -251,7 +251,7 @@ func (ep *Endpoint) CancelOrder(symbol string, id uint64) (exchange.HuobiCancel,
 }
 
 // OrderStatus check order status on huobi
-func (ep *Endpoint) OrderStatus(symbol string, id uint64) (exchange.HuobiOrder, error) {
+func (ep *Client) OrderStatus(symbol string, id uint64) (exchange.HuobiOrder, error) {
 	result := exchange.HuobiOrder{}
 	respBody, err := ep.GetResponse(
 		"GET",
@@ -274,7 +274,7 @@ func (ep *Endpoint) OrderStatus(symbol string, id uint64) (exchange.HuobiOrder, 
 }
 
 // Withdraw token from huobi
-func (ep *Endpoint) Withdraw(token common.Token, amount *big.Int, address ethereum.Address) (string, error) {
+func (ep *Client) Withdraw(token common.Token, amount *big.Int, address ethereum.Address) (string, error) {
 	result := exchange.HuobiWithdraw{}
 	respBody, err := ep.GetResponse(
 		"POST",
@@ -300,7 +300,7 @@ func (ep *Endpoint) Withdraw(token common.Token, amount *big.Int, address ethere
 }
 
 // GetInfo return exchange info
-func (ep *Endpoint) GetInfo() (exchange.HuobiInfo, error) {
+func (ep *Client) GetInfo() (exchange.HuobiInfo, error) {
 	result := exchange.HuobiInfo{}
 	accounts, err := ep.GetAccounts()
 	if err != nil {
@@ -322,7 +322,7 @@ func (ep *Endpoint) GetInfo() (exchange.HuobiInfo, error) {
 }
 
 // GetAccountTradeHistory return account trade history
-func (ep *Endpoint) GetAccountTradeHistory(
+func (ep *Client) GetAccountTradeHistory(
 	base, quote common.Token) (exchange.HuobiTradeHistory, error) {
 	result := exchange.HuobiTradeHistory{}
 	symbol := strings.ToUpper(fmt.Sprintf("%s%s", base.ID, quote.ID))
@@ -342,7 +342,7 @@ func (ep *Endpoint) GetAccountTradeHistory(
 }
 
 //GetDepositAddress get huobi deposit address
-func (ep *Endpoint) GetDepositAddress(asset string) (exchange.HuobiDepositAddress, error) {
+func (ep *Client) GetDepositAddress(asset string) (exchange.HuobiDepositAddress, error) {
 	result := exchange.HuobiDepositAddress{}
 	respBody, err := ep.GetResponse(
 		"GET",
@@ -365,7 +365,7 @@ func (ep *Endpoint) GetDepositAddress(asset string) (exchange.HuobiDepositAddres
 }
 
 // GetExchangeInfo get huobi exchange info
-func (ep *Endpoint) GetExchangeInfo() (exchange.HuobiExchangeInfo, error) {
+func (ep *Client) GetExchangeInfo() (exchange.HuobiExchangeInfo, error) {
 	result := exchange.HuobiExchangeInfo{}
 	respBody, err := ep.GetResponse(
 		"GET",
@@ -379,7 +379,7 @@ func (ep *Endpoint) GetExchangeInfo() (exchange.HuobiExchangeInfo, error) {
 	return result, err
 }
 
-//NewHuobiEndpoint return new endpoint instance
-func NewHuobiEndpoint(signer Signer, interf Interface) *Endpoint {
-	return &Endpoint{signer: signer, interf: interf, l: zap.S()}
+//NewHuobiClient return new endpoint instance
+func NewHuobiClient(signer Signer, interf Interface) *Client {
+	return &Client{signer: signer, interf: interf, l: zap.S()}
 }

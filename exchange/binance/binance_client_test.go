@@ -17,7 +17,7 @@ func TestGetDepositAddress(t *testing.T) {
 
 	signer := NewSigner(binanceKey, binanceSecret)
 	interf := NewRealInterface("https://api.binance.com")
-	binanceEndpoint := NewBinanceEndpoint(*signer, interf)
+	binanceEndpoint := NewBinanceClient(*signer, interf)
 
 	address, err := binanceEndpoint.GetDepositAddress("CHAT")
 	assert.NoError(t, err)

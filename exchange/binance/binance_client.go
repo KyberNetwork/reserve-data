@@ -20,18 +20,18 @@ import (
 	"github.com/KyberNetwork/reserve-data/exchange"
 )
 
-// Endpoint object stand for Binance endpoint
+// Client object stand for Binance endpoint
 // including signer for api call authentication,
 // interf for calling api in different env
 // timedelta to make sure calling api in time
-type Endpoint struct {
+type Client struct {
 	signer    Signer
 	interf    Interface
 	timeDelta int64
 	l         *zap.SugaredLogger
 }
 
-func (ep *Endpoint) fillRequest(req *http.Request, signNeeded bool, timepoint uint64) {
+func (ep *Client) fillRequest(req *http.Request, signNeeded bool, timepoint uint64) {
 	if req.Method == "POST" || req.Method == "PUT" || req.Method == "DELETE" {
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 		req.Header.Add("User-Agent", "binance/go")
@@ -52,7 +52,7 @@ func (ep *Endpoint) fillRequest(req *http.Request, signNeeded bool, timepoint ui
 }
 
 // GetResponse function to do the request to binance
-func (ep *Endpoint) GetResponse(
+func (ep *Client) GetResponse(
 	method string, url string,
 	params map[string]string, signNeeded bool, timepoint uint64) ([]byte, error) {
 	var (
@@ -110,7 +110,7 @@ func (ep *Endpoint) GetResponse(
 }
 
 // GetDepthOnePair return list of orderbook for one pair of tokens
-func (ep *Endpoint) GetDepthOnePair(baseID, quoteID string) (exchange.Binaresp, error) {
+func (ep *Client) GetDepthOnePair(baseID, quoteID string) (exchange.Binaresp, error) {
 
 	respBody, err := ep.GetResponse(
 		"GET", ep.interf.PublicEndpoint()+"/api/v3/depth",
@@ -145,7 +145,7 @@ func (ep *Endpoint) GetDepthOnePair(baseID, quoteID string) (exchange.Binaresp, 
 //
 // In this version, we only support LIMIT order which means only buy/sell with acceptable price,
 // and GTC time in force which means that the order will be active until it's implicitly canceled
-func (ep *Endpoint) Trade(tradeType string, base, quote common.Token, rate, amount float64) (exchange.Binatrade, error) {
+func (ep *Client) Trade(tradeType string, base, quote common.Token, rate, amount float64) (exchange.Binatrade, error) {
 	result := exchange.Binatrade{}
 	symbol := base.ID + quote.ID
 	orderType := "LIMIT"
@@ -172,7 +172,7 @@ func (ep *Endpoint) Trade(tradeType string, base, quote common.Token, rate, amou
 }
 
 // GetTradeHistory return trade history from an account
-func (ep *Endpoint) GetTradeHistory(symbol string) (exchange.BinanceTradeHistory, error) {
+func (ep *Client) GetTradeHistory(symbol string) (exchange.BinanceTradeHistory, error) {
 	result := exchange.BinanceTradeHistory{}
 	timepoint := common.GetTimepoint()
 	respBody, err := ep.GetResponse(
@@ -192,7 +192,7 @@ func (ep *Endpoint) GetTradeHistory(symbol string) (exchange.BinanceTradeHistory
 }
 
 // GetAccountTradeHistory return trade history from our account on binance
-func (ep *Endpoint) GetAccountTradeHistory(
+func (ep *Client) GetAccountTradeHistory(
 	base, quote common.Token,
 	fromID string) (exchange.BinaAccountTradeHistory, error) {
 
@@ -221,7 +221,7 @@ func (ep *Endpoint) GetAccountTradeHistory(
 }
 
 // WithdrawHistory get withdraw history
-func (ep *Endpoint) WithdrawHistory(startTime, endTime uint64) (exchange.Binawithdrawals, error) {
+func (ep *Client) WithdrawHistory(startTime, endTime uint64) (exchange.Binawithdrawals, error) {
 	result := exchange.Binawithdrawals{}
 	respBody, err := ep.GetResponse(
 		"GET",
@@ -245,7 +245,7 @@ func (ep *Endpoint) WithdrawHistory(startTime, endTime uint64) (exchange.Binawit
 }
 
 // DepositHistory get deposit history from binance
-func (ep *Endpoint) DepositHistory(startTime, endTime uint64) (exchange.Binadeposits, error) {
+func (ep *Client) DepositHistory(startTime, endTime uint64) (exchange.Binadeposits, error) {
 	result := exchange.Binadeposits{}
 	respBody, err := ep.GetResponse(
 		"GET",
@@ -269,7 +269,7 @@ func (ep *Endpoint) DepositHistory(startTime, endTime uint64) (exchange.Binadepo
 }
 
 // CancelOrder cancel an open order
-func (ep *Endpoint) CancelOrder(symbol string, id uint64) (exchange.Binacancel, error) {
+func (ep *Client) CancelOrder(symbol string, id uint64) (exchange.Binacancel, error) {
 	result := exchange.Binacancel{}
 	respBody, err := ep.GetResponse(
 		"DELETE",
@@ -293,7 +293,7 @@ func (ep *Endpoint) CancelOrder(symbol string, id uint64) (exchange.Binacancel, 
 }
 
 // OrderStatus check order status
-func (ep *Endpoint) OrderStatus(symbol string, id uint64) (exchange.Binaorder, error) {
+func (ep *Client) OrderStatus(symbol string, id uint64) (exchange.Binaorder, error) {
 	result := exchange.Binaorder{}
 	respBody, err := ep.GetResponse(
 		"GET",
@@ -317,7 +317,7 @@ func (ep *Endpoint) OrderStatus(symbol string, id uint64) (exchange.Binaorder, e
 }
 
 // Withdraw token from binance to our reserve
-func (ep *Endpoint) Withdraw(token common.Token, amount *big.Int, address ethereum.Address) (string, error) {
+func (ep *Client) Withdraw(token common.Token, amount *big.Int, address ethereum.Address) (string, error) {
 	result := exchange.Binawithdraw{}
 	respBody, err := ep.GetResponse(
 		"POST",
@@ -345,7 +345,7 @@ func (ep *Endpoint) Withdraw(token common.Token, amount *big.Int, address ethere
 
 // GetInfo return account info
 // including balance info
-func (ep *Endpoint) GetInfo() (exchange.Binainfo, error) {
+func (ep *Client) GetInfo() (exchange.Binainfo, error) {
 	result := exchange.Binainfo{}
 	respBody, err := ep.GetResponse(
 		"GET",
@@ -366,7 +366,7 @@ func (ep *Endpoint) GetInfo() (exchange.Binainfo, error) {
 }
 
 // OpenOrdersForOnePair get open orders for one pair of token and quote
-func (ep *Endpoint) OpenOrdersForOnePair(pair common.TokenPair) (exchange.Binaorders, error) {
+func (ep *Client) OpenOrdersForOnePair(pair common.TokenPair) (exchange.Binaorders, error) {
 
 	result := exchange.Binaorders{}
 	respBody, err := ep.GetResponse(
@@ -388,7 +388,7 @@ func (ep *Endpoint) OpenOrdersForOnePair(pair common.TokenPair) (exchange.Binaor
 }
 
 // GetDepositAddress get deposit address of token from binance
-func (ep *Endpoint) GetDepositAddress(asset string) (exchange.Binadepositaddress, error) {
+func (ep *Client) GetDepositAddress(asset string) (exchange.Binadepositaddress, error) {
 	result := exchange.Binadepositaddress{}
 	respBody, err := ep.GetResponse(
 		"GET",
@@ -415,7 +415,7 @@ func (ep *Endpoint) GetDepositAddress(asset string) (exchange.Binadepositaddress
 // GetExchangeInfo return info from exchange
 // include base, quote asset precision
 // min, max price, min notional
-func (ep *Endpoint) GetExchangeInfo() (exchange.BinanceExchangeInfo, error) {
+func (ep *Client) GetExchangeInfo() (exchange.BinanceExchangeInfo, error) {
 	result := exchange.BinanceExchangeInfo{}
 	respBody, err := ep.GetResponse(
 		"GET",
@@ -430,7 +430,7 @@ func (ep *Endpoint) GetExchangeInfo() (exchange.BinanceExchangeInfo, error) {
 	return result, err
 }
 
-func (ep *Endpoint) getServerTime() (uint64, error) {
+func (ep *Client) getServerTime() (uint64, error) {
 	result := exchange.BinaServerTime{}
 	respBody, err := ep.GetResponse(
 		"GET",
@@ -447,7 +447,7 @@ func (ep *Endpoint) getServerTime() (uint64, error) {
 
 // UpdateTimeDelta check binance time server
 // then adjust timeDelta params to make sure the request valid
-func (ep *Endpoint) UpdateTimeDelta() error {
+func (ep *Client) UpdateTimeDelta() error {
 	currentTime := common.GetTimepoint()
 	serverTime, err := ep.getServerTime()
 	responseTime := common.GetTimepoint()
@@ -465,9 +465,9 @@ func (ep *Endpoint) UpdateTimeDelta() error {
 	return nil
 }
 
-//NewBinanceEndpoint return new endpoint instance for using binance
-func NewBinanceEndpoint(signer Signer, interf Interface) *Endpoint {
-	endpoint := &Endpoint{signer: signer, interf: interf, l: zap.S()}
+//NewBinanceClient return new endpoint instance for using binance
+func NewBinanceClient(signer Signer, interf Interface) *Client {
+	endpoint := &Client{signer: signer, interf: interf, l: zap.S()}
 	err := endpoint.UpdateTimeDelta()
 	if err != nil {
 		endpoint.l.Panic(err)

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"log"
 	"path/filepath"
 	"runtime"
@@ -32,7 +31,7 @@ var (
 	// logDir is located at base of this repository.
 	logDir         = filepath.Join(filepath.Dir(filepath.Dir(common.CurrentDir())), "log")
 	noAuthEnable   bool
-	servPort       = 8000
+	bindAddr       = "localhost:8000"
 	stdoutLog      bool
 	dryRun         bool
 	profilerPrefix string
@@ -55,7 +54,6 @@ func serverStart(_ *cobra.Command, _ []string) {
 	}
 	defer f()
 	zap.ReplaceGlobals(s.Desugar())
-	//get configuration from ENV variable
 	kyberENV := common.RunningMode()
 	ac, err := config.LoadConfig(configFile)
 	if err != nil {
@@ -89,18 +87,14 @@ func serverStart(_ *cobra.Command, _ []string) {
 			log.Panic(err)
 		}
 	}
-
-	//set static field supportExchange from common...
 	for _, ex := range appState.Exchanges {
 		common.SupportedExchanges[ex.ID()] = ex
 	}
 
-	//Create Server
-	servPortStr := fmt.Sprintf(":%d", servPort)
 	server := http.NewHTTPServer(
 		rData, rCore,
 		appState.MetricStorage,
-		servPortStr,
+		bindAddr,
 		appState.EnableAuthentication,
 		profilerPrefix,
 		appState.AuthEngine,

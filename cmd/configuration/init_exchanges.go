@@ -8,7 +8,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/KyberNetwork/reserve-data/common"
-	"github.com/KyberNetwork/reserve-data/common/blockchain"
+	bbc "github.com/KyberNetwork/reserve-data/common/blockchain"
 	"github.com/KyberNetwork/reserve-data/common/blockchain/nonce"
 	"github.com/KyberNetwork/reserve-data/common/config"
 	"github.com/KyberNetwork/reserve-data/data/fetcher"
@@ -22,7 +22,7 @@ type ExchangePool struct {
 	Exchanges map[common.ExchangeID]interface{}
 }
 
-func AsyncUpdateDepositAddress(ex common.Exchange, tokenID, addr string, wait *sync.WaitGroup, setting *settings.Settings) {
+func asyncUpdateDepositAddress(ex common.Exchange, tokenID, addr string, wait *sync.WaitGroup, setting *settings.Settings) {
 	defer wait.Done()
 	l := zap.S()
 	token, err := setting.GetTokenByID(tokenID)
@@ -36,7 +36,7 @@ func AsyncUpdateDepositAddress(ex common.Exchange, tokenID, addr string, wait *s
 
 func NewExchangePool(
 	ac config.AppConfig,
-	blockchain *blockchain.BaseBlockchain, setting *settings.Settings) (*ExchangePool, error) {
+	blockchain *bbc.BaseBlockchain, setting *settings.Settings) (*ExchangePool, error) {
 	exchanges := map[common.ExchangeID]interface{}{}
 	exparams := settings.RunningExchanges()
 	l := zap.S()
@@ -52,15 +52,12 @@ func NewExchangePool(
 			exchanges[stableEx.ID()] = stableEx
 		case "binance":
 			binanceSigner := binance.NewSigner(ac.BinanceKey, ac.BinanceSecret)
-			endpoint := binance.NewBinanceEndpoint(*binanceSigner, binance.NewRealInterface(ac.ExchangeEndpoints.Binance.URL))
+			client := binance.NewBinanceClient(*binanceSigner, binance.NewRealInterface(ac.ExchangeEndpoints.Binance.URL))
 			storage, err := binance.NewBoltStorage(ac.BinanceDB)
 			if err != nil {
 				return nil, fmt.Errorf("can not create Binance storage: (%+v)", err)
 			}
-			bin, err := exchange.NewBinance(
-				endpoint,
-				storage,
-				setting)
+			bin, err := exchange.NewBinance(client, storage, setting)
 			if err != nil {
 				return nil, fmt.Errorf("can not create exchange Binance: (%+v)", err)
 			}
@@ -72,7 +69,7 @@ func NewExchangePool(
 			wait := sync.WaitGroup{}
 			for tokenID, addr := range addrs {
 				wait.Add(1)
-				go AsyncUpdateDepositAddress(bin, tokenID, addr.Hex(), &wait, setting)
+				go asyncUpdateDepositAddress(bin, tokenID, addr.Hex(), &wait, setting)
 			}
 			wait.Wait()
 			if err = bin.UpdatePairsPrecision(); err != nil {
@@ -81,20 +78,15 @@ func NewExchangePool(
 			exchanges[bin.ID()] = bin
 		case "huobi":
 			huobiSigner := huobi.NewSigner(ac.HuobiKey, ac.HuobiSecret)
-			endpoint := huobi.NewHuobiEndpoint(*huobiSigner, huobi.NewRealInterface(ac.ExchangeEndpoints.Houbi.URL))
+			client := huobi.NewHuobiClient(*huobiSigner, huobi.NewRealInterface(ac.ExchangeEndpoints.Houbi.URL))
 			storage, err := huobi.NewBoltStorage(ac.HuobiDB)
 			if err != nil {
 				return nil, fmt.Errorf("can not create Huobi storage: (%+v)", err)
 			}
-			intermediatorSigner := HuobiIntermediatorSignerFromFile(ac.HoubiKeystorePath, ac.HuobiPassphrase)
+			intermediatorSigner := bbc.NewEthereumSigner(ac.HoubiKeystorePath, ac.HuobiPassphrase)
 			intermediatorNonce := nonce.NewTimeWindow(intermediatorSigner.GetAddress(), 10000)
-			hExchange, err := exchange.NewHuobi(
-				endpoint,
-				blockchain,
-				intermediatorSigner,
-				intermediatorNonce,
-				storage,
-				setting,
+			hExchange, err := exchange.NewHuobi(client, blockchain,
+				intermediatorSigner, intermediatorNonce, storage, setting,
 			)
 			if err != nil {
 				return nil, fmt.Errorf("can not create exchange Huobi: (%+v)", err)
@@ -107,7 +99,7 @@ func NewExchangePool(
 			wait := sync.WaitGroup{}
 			for tokenID, addr := range addrs {
 				wait.Add(1)
-				go AsyncUpdateDepositAddress(hExchange, tokenID, addr.Hex(), &wait, setting)
+				go asyncUpdateDepositAddress(hExchange, tokenID, addr.Hex(), &wait, setting)
 			}
 			wait.Wait()
 			if err = hExchange.UpdatePairsPrecision(); err != nil {
