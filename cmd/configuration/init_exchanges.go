@@ -51,7 +51,10 @@ func NewExchangePool(
 			}
 			exchanges[stableEx.ID()] = stableEx
 		case "binance":
-			binanceSigner := binance.NewSigner(ac.BinanceKey, ac.BinanceSecret)
+			binanceSigner, err := binance.NewSigner(ac.BinanceKey, ac.BinanceSecret)
+			if err != nil {
+				l.Panicw("failed to init binance signer", "err", err)
+			}
 			client := binance.NewBinanceClient(*binanceSigner, binance.NewRealInterface(ac.ExchangeEndpoints.Binance.URL))
 			storage, err := binance.NewBoltStorage(ac.BinanceDB)
 			if err != nil {
@@ -77,7 +80,10 @@ func NewExchangePool(
 			}
 			exchanges[bin.ID()] = bin
 		case "huobi":
-			huobiSigner := huobi.NewSigner(ac.HuobiKey, ac.HuobiSecret)
+			huobiSigner, err := huobi.NewSigner(ac.HuobiKey, ac.HuobiSecret)
+			if err != nil {
+				l.Panicw("failed to init houbi signer", "err", err)
+			}
 			client := huobi.NewHuobiClient(*huobiSigner, huobi.NewRealInterface(ac.ExchangeEndpoints.Houbi.URL))
 			storage, err := huobi.NewBoltStorage(ac.HuobiDB)
 			if err != nil {

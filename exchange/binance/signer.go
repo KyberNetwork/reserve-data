@@ -3,6 +3,7 @@ package binance
 import (
 	"crypto/hmac"
 	"crypto/sha256"
+	"errors"
 
 	ethereum "github.com/ethereum/go-ethereum/common"
 	"go.uber.org/zap"
@@ -26,6 +27,9 @@ func (s Signer) Sign(msg string) string {
 	return result
 }
 
-func NewSigner(key, secret string) *Signer {
-	return &Signer{key, secret}
+func NewSigner(key, secret string) (*Signer, error) {
+	if key == "" || secret == "" {
+		return nil, errors.New("key and secret must not empty")
+	}
+	return &Signer{key, secret}, nil
 }

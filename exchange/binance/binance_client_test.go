@@ -15,7 +15,8 @@ const (
 func TestGetDepositAddress(t *testing.T) {
 	t.Skip() // skip as external test
 
-	signer := NewSigner(binanceKey, binanceSecret)
+	signer, err := NewSigner(binanceKey, binanceSecret)
+	assert.NoError(t, err)
 	interf := NewRealInterface("https://api.binance.com")
 	binanceEndpoint := NewBinanceClient(*signer, interf)
 

@@ -11,7 +11,8 @@ func TestGetDepositAddress(t *testing.T) {
 	t.Skip()     // skip as external test
 	key := ""    // enter only once for test
 	secret := "" // enter only once for test
-	signer := NewSigner(key, secret)
+	signer, err := NewSigner(key, secret)
+	assert.NoError(t, err)
 	interf := NewRealInterface("https://api.huobi.pro")
 	ep := NewHuobiClient(*signer, interf)
 
