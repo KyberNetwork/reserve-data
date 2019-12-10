@@ -26,13 +26,12 @@ func Execute() {
 		Short: "initiate the server with specific config",
 		Long: `Start reserve-data core server with preset Environment and
 Allow overwriting some parameter`,
-		Example: "KYBER_ENV=dev KYBER_EXCHANGES=binance ./cmd server --noauth -b :8000",
+		Example: "KYBER_ENV=dev KYBER_EXCHANGES=binance ./cmd server --noauth",
 		Run:     serverStart,
 	}
 	// start server flags.
 	startServer.Flags().StringVar(&configFile, "config", "config.json", "path to config file")
 	startServer.Flags().BoolVarP(&noAuthEnable, "noauth", "", false, "disable authentication")
-	startServer.Flags().StringVarP(&bindAddr, "bind-addr", "b", "localhost:8000", "http server binding address")
 	startServer.Flags().BoolVarP(&stdoutLog, "log-to-stdout", "", false, "send log to both log file and stdout terminal")
 	startServer.Flags().BoolVarP(&dryRun, "dryrun", "", false, "only test if all the configs are set correctly, will not actually run core")
 	startServer.Flags().StringVar(&profilerPrefix, "profiler-prefix", "", "set prefix for pprof http handler, eg: \"/debug/pprof\", profiler will be disabled if this flag value is empty. A secure token can be put into profiler-prefix to limit access")

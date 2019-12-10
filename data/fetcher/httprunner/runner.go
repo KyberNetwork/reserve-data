@@ -12,7 +12,7 @@ import (
 // HTTPRunner is an implementation of FetcherRunner
 // that run a HTTP server and tick when it receives request to a certain endpoints.
 type HTTPRunner struct {
-	port int
+	bindAddr string
 
 	oticker          chan time.Time
 	aticker          chan time.Time
@@ -57,7 +57,7 @@ func (h *HTTPRunner) waitPingResponse() error {
 		client   = http.Client{Timeout: time.Second}
 	)
 
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://127.0.0.1:%d/%s", h.port, "ping"), nil)
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%s/%s", h.bindAddr, "ping"), nil)
 	if err != nil {
 		return err
 	}
@@ -89,14 +89,11 @@ func (h *HTTPRunner) Start() error {
 	if h.server != nil {
 		return errors.New("runner start already")
 	}
-	var addr string
-	if h.port != 0 {
-		addr = fmt.Sprintf(":%d", h.port)
-	}
-	h.server = NewServer(h, addr)
+	h.server = NewServer(h, h.bindAddr)
+
 	go func() {
 		if err := h.server.Start(); err != nil {
-			h.l.Fatalf("Http server for runner couldn't start or get stopped. Error: %s", err)
+			h.l.Fatalw("Http server for runner couldn't start or get stopped.", "err", err)
 		}
 	}()
 
@@ -118,11 +115,11 @@ func (h *HTTPRunner) Stop() error {
 // Option is the option to setup the HTTPRunner on creation.
 type Option func(hr *HTTPRunner)
 
-// WithPort setups the HTTPRunner instance with the given port.
-// Without this option, NewHTTPRunner will use a random port.
-func WithPort(port int) Option {
+// WithBindAddr setups the HTTPRunner instance with the given bindAddr.
+// Without this option, NewHTTPRunner will use a random bindAddr.
+func WithBindAddr(bindAddr string) Option {
 	return func(hr *HTTPRunner) {
-		hr.port = port
+		hr.bindAddr = bindAddr
 	}
 }
 

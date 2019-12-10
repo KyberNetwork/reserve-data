@@ -6,10 +6,12 @@ import (
 	"testing"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/KyberNetwork/reserve-data/common"
 )
 
-func testTicker(t *testing.T, ch <-chan time.Time, path string, port int) {
+func testTicker(t *testing.T, ch <-chan time.Time, path string, runnerAddr string) {
 	t.Helper()
 
 	t.Logf("testing ticker for path: %s", path)
@@ -25,7 +27,7 @@ func testTicker(t *testing.T, ch <-chan time.Time, path string, port int) {
 	}(ch)
 
 	client := &http.Client{Timeout: time.Second}
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://127.0.0.1:%d/%s", port, path), nil)
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%s/%s", runnerAddr, path), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -45,7 +47,8 @@ func testTicker(t *testing.T, ch <-chan time.Time, path string, port int) {
 }
 
 func TestHttpRunner(t *testing.T) {
-	runner, err := NewHTTPRunner()
+	zap.ReplaceGlobals(zap.NewExample())
+	runner, err := NewHTTPRunner(WithBindAddr("localhost:9007"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -81,6 +84,6 @@ func TestHttpRunner(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		testTicker(t, tc.ch, tc.path, runner.port)
+		testTicker(t, tc.ch, tc.path, runner.bindAddr)
 	}
 }

@@ -63,7 +63,7 @@ func (c *AppState) AddCoreConfig(appc config.AppConfig, runnerConfig common.Runn
 	var fetcherRunner fetcher.Runner
 	var dataControllerRunner datapruner.StorageControllerRunner
 	if common.RunningMode() == common.SimulationMode {
-		if fetcherRunner, err = httprunner.NewHTTPRunner(httprunner.WithPort(8001)); err != nil {
+		if fetcherRunner, err = httprunner.NewHTTPRunner(httprunner.WithBindAddr(appc.SimulationRunnerAddr)); err != nil {
 			log.Fatalf("failed to create HTTP runner: %+v", err)
 		}
 	} else {

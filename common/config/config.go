@@ -94,12 +94,14 @@ type AWSConfig struct {
 
 // AppConfig represnet for app configuration
 type AppConfig struct {
-	Authentication      Authentication `json:"authentication"`
-	AWSConfig           AWSConfig      `json:"aws_config"`
-	KeyStorePath        string         `json:"keystore_path"`
-	Passphrase          string         `json:"passphrase"`
-	KeyStoreDepositPath string         `json:"keystore_deposit_path"`
-	PassphraseDeposit   string         `json:"passphrase_deposit"`
+	Authentication       Authentication `json:"authentication"`
+	AWSConfig            AWSConfig      `json:"aws_config"`
+	KeyStorePath         string         `json:"keystore_path"`
+	Passphrase           string         `json:"passphrase"`
+	KeyStoreDepositPath  string         `json:"keystore_deposit_path"`
+	PassphraseDeposit    string         `json:"passphrase_deposit"`
+	HTTPAPIAddr          string         `json:"http_api_addr"`
+	SimulationRunnerAddr string         `json:"http_simulation_runner_addr"`
 
 	ExchangeEndpoints   ExchangeEndpoints   `json:"exchange_endpoints"`
 	WorldEndpoints      WorldEndpoints      `json:"world_endpoints"`

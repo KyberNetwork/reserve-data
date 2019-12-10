@@ -31,7 +31,6 @@ var (
 	// logDir is located at base of this repository.
 	logDir         = filepath.Join(filepath.Dir(filepath.Dir(common.CurrentDir())), "log")
 	noAuthEnable   bool
-	bindAddr       = "localhost:8000"
 	stdoutLog      bool
 	dryRun         bool
 	profilerPrefix string
@@ -94,7 +93,7 @@ func serverStart(_ *cobra.Command, _ []string) {
 	server := http.NewHTTPServer(
 		rData, rCore,
 		appState.MetricStorage,
-		bindAddr,
+		ac.HTTPAPIAddr,
 		appState.EnableAuthentication,
 		profilerPrefix,
 		appState.AuthEngine,

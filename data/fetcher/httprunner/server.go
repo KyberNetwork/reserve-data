@@ -24,10 +24,10 @@ const maxTimeSpot uint64 = math.MaxUint64
 
 // Server is the HTTP ticker server.
 type Server struct {
-	runner *HTTPRunner
-	host   string
-	r      *gin.Engine
-	http   *http.Server
+	runner   *HTTPRunner
+	bindAddr string
+	r        *gin.Engine
+	http     *http.Server
 
 	// notifyCh is notified when the HTTP server is ready.
 	notifyCh chan struct{}
@@ -81,26 +81,11 @@ func (s *Server) Start() error {
 			Handler: s.r,
 		}
 
-		lis, err := net.Listen("tcp", s.host)
+		lis, err := net.Listen("tcp", s.bindAddr)
 		if err != nil {
 			return err
 		}
-
-		// if port is not provided, use a random one and set it back to runner.
-		if s.runner.port == 0 {
-			_, listenedPort, sErr := net.SplitHostPort(lis.Addr().String())
-			if sErr != nil {
-				return sErr
-			}
-			port, sErr := strconv.Atoi(listenedPort)
-			if sErr != nil {
-				return sErr
-			}
-			s.runner.port = port
-		}
-
 		s.notifyCh <- struct{}{}
-
 		return s.http.Serve(lis)
 	}
 	return errors.New("server start already")
@@ -118,12 +103,12 @@ func (s *Server) Stop() error {
 }
 
 // NewServer creates a new instance of HttpRunnerServer.
-func NewServer(runner *HTTPRunner, host string) *Server {
+func NewServer(runner *HTTPRunner, bindAddr string) *Server {
 	r := gin.Default()
 	r.Use(sentry.Recovery(raven.DefaultClient, false))
 	server := &Server{
 		runner:   runner,
-		host:     host,
+		bindAddr: bindAddr,
 		r:        r,
 		http:     nil,
 		notifyCh: make(chan struct{}, 1),

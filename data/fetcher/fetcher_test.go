@@ -97,7 +97,7 @@ func TestExchangeDown(t *testing.T) {
 			t.Error(rErr)
 		}
 	}()
-	runner, err := httprunner.NewHTTPRunner(httprunner.WithPort(9000))
+	runner, err := httprunner.NewHTTPRunner(httprunner.WithBindAddr("localhost:9005"))
 	if err != nil {
 		t.Fatal(err)
 	}
