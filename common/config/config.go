@@ -187,15 +187,27 @@ type AppConfig struct {
 }
 
 // LoadConfig parse json config and return config object
-func LoadConfig(file string) (AppConfig, error) {
+func LoadConfig(file string, ac *AppConfig) error {
 	data, err := ioutil.ReadFile(file)
 	if err != nil {
-		return AppConfig{}, err
+		return err
 	}
-	var a AppConfig
-	err = json.Unmarshal(data, &a)
+	err = json.Unmarshal(data, ac)
 	if err != nil {
-		return AppConfig{}, err
+		return err
 	}
-	return a, nil
+	return nil
+}
+
+// DefaultAppConfig ... set default value, currently only delay fetcher set, other should be explicit set
+func DefaultAppConfig() AppConfig {
+	return AppConfig{
+		FetcherDelay: FetcherDelay{
+			OrderBook:     HumanDuration(time.Second * 7),
+			AuthData:      HumanDuration(time.Second * 5),
+			RateFetching:  HumanDuration(time.Second * 3),
+			BlockFetching: HumanDuration(time.Second * 5),
+			GlobalData:    HumanDuration(time.Second * 10),
+		},
+	}
 }

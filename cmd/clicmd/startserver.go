@@ -46,7 +46,8 @@ func serverStart(_ *cobra.Command, _ []string) {
 	defer f()
 	zap.ReplaceGlobals(s.Desugar())
 	kyberENV := common.RunningMode()
-	ac, err := config.LoadConfig(configFile)
+	var ac = config.DefaultAppConfig()
+	err = config.LoadConfig(configFile, &ac)
 	if err != nil {
 		s.Panicw("failed to load config file", "err", err)
 	}
