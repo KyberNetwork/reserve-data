@@ -4,7 +4,6 @@ import (
 	"log"
 	"path/filepath"
 	"runtime"
-	"time"
 
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
@@ -19,12 +18,6 @@ import (
 
 const (
 	remoteLogPath = "core-log"
-
-	defaultOrderBookFetchingInterval  = 7 * time.Second
-	defaultAuthDataFetchingInterval   = 5 * time.Second
-	defaultRateFetchingInterval       = 3 * time.Second
-	defaultBlockFetchingInterval      = 5 * time.Second
-	defaultGlobalDataFetchingInterval = 10 * time.Second
 )
 
 var (
@@ -35,11 +28,10 @@ var (
 	dryRun         bool
 	profilerPrefix string
 
-	sentryDSN    string
-	sentryLevel  string
-	zapMode      string
-	configFile   string
-	runnerConfig common.RunnerConfig
+	sentryDSN   string
+	sentryLevel string
+	zapMode     string
+	configFile  string
 )
 
 func serverStart(_ *cobra.Command, _ []string) {
@@ -58,7 +50,7 @@ func serverStart(_ *cobra.Command, _ []string) {
 	if err != nil {
 		s.Panicw("failed to load config file", "err", err)
 	}
-	appState := configuration.InitAppState(!noAuthEnable, runnerConfig, ac)
+	appState := configuration.InitAppState(!noAuthEnable, ac)
 	//backup other log daily
 	backupLog(appState.Archive, "@daily", "core.+\\.log")
 	//backup core.log every 2 hour

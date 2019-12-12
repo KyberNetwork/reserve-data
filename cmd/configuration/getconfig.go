@@ -45,7 +45,7 @@ func newTheWorld(exp ccfg.WorldEndpoints) (*world.TheWorld, error) {
 	return world.NewTheWorld(endpoint, zap.S()), nil
 }
 
-func InitAppState(authEnbl bool, runnerConfig common.RunnerConfig, ac ccfg.AppConfig) *AppState {
+func InitAppState(authEnbl bool, ac ccfg.AppConfig) *AppState {
 	l := zap.S()
 	theWorld, err := newTheWorld(ac.WorldEndpoints)
 	if err != nil {
@@ -106,6 +106,6 @@ func InitAppState(authEnbl bool, runnerConfig common.RunnerConfig, ac ccfg.AppCo
 
 	l.Infof("configured endpoint: %s, backup: %v", aps.EthereumEndpoint, aps.BackupEthereumEndpoints)
 
-	aps.AddCoreConfig(ac, runnerConfig)
+	aps.AddCoreConfig(ac)
 	return aps
 }

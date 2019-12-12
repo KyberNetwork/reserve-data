@@ -49,13 +49,13 @@ type AppState struct {
 	AppConfig      config.AppConfig
 }
 
-func (c *AppState) AddCoreConfig(appc config.AppConfig, runnerConfig common.RunnerConfig) {
+func (c *AppState) AddCoreConfig(appc config.AppConfig) {
 	setting, err := GetSetting(appc, c.AddressSetting)
 	if err != nil {
 		log.Panicf("Failed to create setting: %+v", err)
 	}
 	c.Setting = setting
-	dataStorage, err := storage.NewBoltStorage(appc.SettingDB)
+	dataStorage, err := storage.NewBoltStorage(appc.DataDB)
 	if err != nil {
 		panic(err)
 	}
@@ -68,11 +68,11 @@ func (c *AppState) AddCoreConfig(appc config.AppConfig, runnerConfig common.Runn
 		}
 	} else {
 		fetcherRunner = fetcher.NewTickerRunner(
-			runnerConfig.OrderBookFetchingInterval,
-			runnerConfig.AuthDataFetchingInterval,
-			runnerConfig.RateFetchingInterval,
-			runnerConfig.BlockFetchingInterval,
-			runnerConfig.GlobalDataFetchingInterval,
+			time.Duration(appc.FetcherDelay.OrderBook),
+			time.Duration(appc.FetcherDelay.AuthData),
+			time.Duration(appc.FetcherDelay.RateFetching),
+			time.Duration(appc.FetcherDelay.BlockFetching),
+			time.Duration(appc.FetcherDelay.GlobalData),
 		)
 		dataControllerRunner = datapruner.NewStorageControllerTickerRunner(24 * time.Hour)
 	}

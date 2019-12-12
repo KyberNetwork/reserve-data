@@ -2,7 +2,10 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
+	"strconv"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -72,11 +75,60 @@ type Token struct {
 	Active   bool   `json:"listed"`
 }
 
+type HumanDuration time.Duration
+
+func parseHumanDuration(v []byte) (HumanDuration, error) {
+	vlen := len(v)
+	if vlen == 0 {
+		return 0, nil
+	}
+	switch v[vlen-1] {
+	case 's', 'S':
+		d, err := strconv.ParseInt(string(v[:vlen-1]), 10, 0)
+		if err != nil {
+			return 0, err
+		}
+		return HumanDuration(time.Second * time.Duration(d)), nil
+	case 'm', 'M':
+		d, err := strconv.ParseInt(string(v[:vlen-1]), 10, 0)
+		if err != nil {
+			return 0, err
+		}
+		return HumanDuration(time.Minute * time.Duration(d)), nil
+	case 'h', 'H':
+		d, err := strconv.ParseInt(string(v[:vlen-1]), 10, 0)
+		if err != nil {
+			return 0, err
+		}
+		return HumanDuration(time.Hour * time.Duration(d)), nil
+	case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+		d, err := strconv.ParseInt(string(v), 10, 0)
+		if err != nil {
+			return 0, err
+		}
+		return HumanDuration(time.Duration(d)), nil
+	default:
+		return HumanDuration(0), fmt.Errorf("not support unit %c for value %s", v[vlen-1], v)
+	}
+}
+
+func (d *HumanDuration) UnmarshalJSON(text []byte) error {
+	if len(text) < 2 || (text[0] != '"' || text[len(text)-1] != '"') {
+		return fmt.Errorf("expect value in double quote")
+	}
+	v, err := parseHumanDuration(text[1 : len(text)-1])
+	if err != nil {
+		return err
+	}
+	*d = v
+	return nil
+}
+
 // TokenSet ..
 type TokenSet map[string]Token
 
-// DepositAddressesSet ..
-type DepositAddressesSet map[string]DepositAddresses
+// ExchangesTokensDepositAddresses ..
+type ExchangesTokensDepositAddresses map[string]DepositAddresses
 
 // DepositAddresses ..
 type DepositAddresses map[string]common.Address
@@ -92,6 +144,15 @@ type AWSConfig struct {
 	LogBucketName                string `json:"aws_log_bucket_name"`
 }
 
+// FetcherDelay ...
+type FetcherDelay struct {
+	OrderBook     HumanDuration `json:"order_book"`
+	AuthData      HumanDuration `json:"auth_data"`
+	RateFetching  HumanDuration `json:"rate_fetching"`
+	BlockFetching HumanDuration `json:"block_fetching"`
+	GlobalData    HumanDuration `json:"global_data"`
+}
+
 // AppConfig represnet for app configuration
 type AppConfig struct {
 	Authentication       Authentication `json:"authentication"`
@@ -103,15 +164,16 @@ type AppConfig struct {
 	HTTPAPIAddr          string         `json:"http_api_addr"`
 	SimulationRunnerAddr string         `json:"http_simulation_runner_addr"`
 
-	ExchangeEndpoints   ExchangeEndpoints   `json:"exchange_endpoints"`
-	WorldEndpoints      WorldEndpoints      `json:"world_endpoints"`
-	ContractAddresses   ContractAddresses   `json:"contract_addresses"`
-	TokenSet            TokenSet            `json:"tokens"`
-	SettingDB           string              `json:"setting_db"`
-	DepositAddressesSet DepositAddressesSet `json:"deposit_addresses"`
-	Node                Node                `json:"nodes"`
-	HoubiKeystorePath   string              `json:"keystore_intermediator_path"`
-	HuobiPassphrase     string              `json:"passphrase_intermediate_account"`
+	ExchangeEndpoints   ExchangeEndpoints               `json:"exchange_endpoints"`
+	WorldEndpoints      WorldEndpoints                  `json:"world_endpoints"`
+	ContractAddresses   ContractAddresses               `json:"contract_addresses"`
+	TokenSet            TokenSet                        `json:"tokens"`
+	SettingDB           string                          `json:"setting_db"`
+	DataDB              string                          `json:"data_db"`
+	DepositAddressesSet ExchangesTokensDepositAddresses `json:"deposit_addresses"`
+	Node                Node                            `json:"nodes"`
+	HoubiKeystorePath   string                          `json:"keystore_intermediator_path"`
+	HuobiPassphrase     string                          `json:"passphrase_intermediate_account"`
 
 	BinanceKey    string `json:"binance_key"`
 	BinanceSecret string `json:"binance_secret"`
@@ -120,6 +182,8 @@ type AppConfig struct {
 	HuobiKey    string `json:"huobi_key"`
 	HuobiSecret string `json:"huobi_secret"`
 	HuobiDB     string `json:"huobi_db"`
+
+	FetcherDelay FetcherDelay `json:"fetcher_delay"`
 }
 
 // LoadConfig parse json config and return config object
