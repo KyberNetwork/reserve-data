@@ -1,0 +1,138 @@
+{
+  "binance_key": "binankey",
+  "binance_secret": "binancesecret",
+  "binance_db": "binance.db",
+  "huobi_key": "houbikey",
+  "huobi_secret": "houbisecret",
+  "huobi_db": "huobi.db",
+  "keystore_path": "keystore",
+  "passphrase": "kyber",
+  "keystore_deposit_path": "deposit_keystore",
+  "passphrase_deposit": "123456789",
+  "keystore_intermediator_path": "intermediate_account_keystore",
+  "passphrase_intermediate_account": "123456789",
+
+  "authentication": {
+    "kn_secret": "secret",
+    "kn_readonly": "readonly",
+    "kn_configuration": "configkey",
+    "kn_confirm_configuration": "confirmkey"
+  },
+  "aws_config": {
+    "aws_access_key_id": "aa222",
+    "aws_secret_access_key": "bbcc",
+    "aws_expired_stat_data_bucket_name": "kn-data-collector",
+    "aws_expired_analytic_folder_path": "expired-analytic-data/",
+    "aws_expired_reserve_data_bucket_name": "kn-data-collector",
+    "aws_expired_auth_data_folder_path": "expired-auth-data/",
+    "aws_region": "ap-southeast-1"
+  },
+  "setting_db": "dev_setting.db",
+  "data_db": "dev.db",
+
+  "fetcher_delay": {
+    "order_book": "7s",
+    "auth_data": "5s",
+    "rate_fetching": "3s",
+    "block_fetching": "5s",
+    "global_data": "10s"
+  },
+
+  "nodes": {
+    "main": "https://eth-mainnet.alchemyapi.io/jsonrpc/projetid",
+    "backup": [
+      "https://mainnet.infura.io/v3/proid",
+      "https://api.myetherwallet.com/eth"
+    ]
+  },
+  "tokens": {
+    "ETH": {
+      "address": "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "name": "ETH",
+      "decimals": 18,
+      "internal use": true,
+      "listed": true
+    }
+  },
+  "deposit_addresses": {
+    "binance": {
+      "ETH": "0x44d34a119ba21a42167ff8b77a88f0fc7bb2db90"
+    },
+    "huobi": {
+      "ETH": "0x0c8fd73eaf6089ef1b91231d0a07d0d2ca2b9d66"
+    },
+    "stable_exchange": {
+      "ETH": "0xFDF28Bf25779ED4cA74e958d54653260af604C20"
+    }
+  },
+  "http_api_addr": "localhost:8000",
+  "http_simulation_runner_addr": "localhost:8001",
+
+  "contract_addresses": {
+    "wrapper": "0x6172AFC8c00c46E0D07ce3AF203828198194620a",
+    "network_proxy": "0x818E6FECD516Ecc3849DAf6845e3EC868087B755",
+    "pricing": "0x798AbDA6Cc246D0EDbA912092A2a3dBd3d11191B",
+    "reserve": "0x63825c174ab367968EC60f061753D3bbD36A0D8F"
+  },
+  "exchange_endpoints": {
+    "binance": {
+      "url": "https://api.binance.com"
+    },
+    "houbi": {
+      "url": "https://api.huobi.pro"
+    }
+  },
+  "world_endpoints": {
+    "gold_data": {
+      "url": "https://datafeed.digix.global/tick/"
+    },
+    "one_forge_gold_eth": {
+      "url": "https://api.1forge.com/convert?from=XAU&to=ETH&quantity=1&api_key=mykey"
+    },
+    "one_forge_gold_usd": {
+      "url": "https://api.1forge.com/convert?from=XAU&to=USD&quantity=1&api_key=mykey"
+    },
+    "gdax_data": {
+      "url": "https://api.pro.coinbase.com/products/eth-usd/ticker"
+    },
+    "kraken_data": {
+      "url": "https://api.kraken.com/0/public/Ticker?pair=ETHUSD"
+    },
+    "gemini_data": {
+      "url": "https://api.gemini.com/v1/pubticker/ethusd"
+    },
+    "coinbase_btc": {
+      "url": "https://api.pro.coinbase.com/products/eth-btc/ticker"
+    },
+    "gemini_btc": {
+      "url": "https://api.gemini.com/v1/pubticker/ethbtc"
+    },
+    "coinbase_usdc": {
+      "url": "https://api.pro.coinbase.com/products/eth-usdc/ticker"
+    },
+    "binance_usdc": {
+      "url": "https://api.binance.com/api/v3/ticker/bookTicker?symbol=ETHUSDC"
+    },
+    "coinbase_usd": {
+      "url": "https://api.pro.coinbase.com/products/eth-usd/ticker"
+    },
+    "coinbase_dai": {
+      "url": "https://api.pro.coinbase.com/products/eth-dai/ticker"
+    },
+    "hit_dai": {
+      "url": "https://api.hitbtc.com/api/2/public/ticker/ETHDAI"
+    },
+    "bit_finex_usdt": {
+      "url": "https://api-pub.bitfinex.com/v2/ticker/tETHUSD"
+    },
+    "binance_usdt": {
+      "url": "https://api.binance.com/api/v3/ticker/bookTicker?symbol=ETHUSDT"
+    },
+    "binance_pax": {
+      "url": "https://api.binance.com/api/v3/ticker/bookTicker?symbol=ETHPAX"
+    },
+    "binance_tusd": {
+      "url": "https://api.binance.com/api/v3/ticker/bookTicker?symbol=ETHTUSD"
+    }
+  }
+}

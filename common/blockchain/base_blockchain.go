@@ -361,7 +361,7 @@ func (b *BaseBlockchain) TxStatus(hash ethereum.Hash) (string, uint64, error) {
 				// successful tx
 				return common.MiningStatusMined, tx.BlockNumber().Uint64(), nil
 			}
-			return common.MiningStatusMined, tx.BlockNumber().Uint64(), nil
+			return common.MiningStatusFailed, tx.BlockNumber().Uint64(), nil
 		}
 		// networking issue
 		return "", 0, err

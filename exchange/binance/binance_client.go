@@ -26,7 +26,7 @@ import (
 // timedelta to make sure calling api in time
 type Client struct {
 	signer    Signer
-	interf    Interface
+	interf    EndpointsInterface
 	timeDelta int64
 	l         *zap.SugaredLogger
 }
@@ -466,7 +466,7 @@ func (ep *Client) UpdateTimeDelta() error {
 }
 
 //NewBinanceClient return new endpoint instance for using binance
-func NewBinanceClient(signer Signer, interf Interface) *Client {
+func NewBinanceClient(signer Signer, interf EndpointsInterface) *Client {
 	endpoint := &Client{signer: signer, interf: interf, l: zap.S()}
 	err := endpoint.UpdateTimeDelta()
 	if err != nil {

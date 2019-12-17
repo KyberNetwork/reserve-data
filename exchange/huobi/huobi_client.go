@@ -22,7 +22,7 @@ import (
 //Client endpoint object
 type Client struct {
 	signer Signer
-	interf Interface
+	interf EndpointsInterface
 	l      *zap.SugaredLogger
 }
 
@@ -380,6 +380,6 @@ func (ep *Client) GetExchangeInfo() (exchange.HuobiExchangeInfo, error) {
 }
 
 //NewHuobiClient return new endpoint instance
-func NewHuobiClient(signer Signer, interf Interface) *Client {
+func NewHuobiClient(signer Signer, interf EndpointsInterface) *Client {
 	return &Client{signer: signer, interf: interf, l: zap.S()}
 }

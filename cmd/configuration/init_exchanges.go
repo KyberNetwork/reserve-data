@@ -55,7 +55,7 @@ func NewExchangePool(
 			if err != nil {
 				l.Panicw("failed to init binance signer", "err", err)
 			}
-			client := binance.NewBinanceClient(*binanceSigner, binance.NewRealInterface(ac.ExchangeEndpoints.Binance.URL))
+			client := binance.NewBinanceClient(*binanceSigner, binance.NewEndpoints(ac.ExchangeEndpoints.Binance.URL))
 			storage, err := binance.NewBoltStorage(ac.BinanceDB)
 			if err != nil {
 				return nil, fmt.Errorf("can not create Binance storage: (%+v)", err)
@@ -84,7 +84,7 @@ func NewExchangePool(
 			if err != nil {
 				l.Panicw("failed to init houbi signer", "err", err)
 			}
-			client := huobi.NewHuobiClient(*huobiSigner, huobi.NewRealInterface(ac.ExchangeEndpoints.Houbi.URL))
+			client := huobi.NewHuobiClient(*huobiSigner, huobi.NewEndpoints(ac.ExchangeEndpoints.Houbi.URL))
 			storage, err := huobi.NewBoltStorage(ac.HuobiDB)
 			if err != nil {
 				return nil, fmt.Errorf("can not create Huobi storage: (%+v)", err)

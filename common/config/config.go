@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"strconv"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -77,50 +76,15 @@ type Token struct {
 
 type HumanDuration time.Duration
 
-func parseHumanDuration(v []byte) (HumanDuration, error) {
-	vlen := len(v)
-	if vlen == 0 {
-		return 0, nil
-	}
-	switch v[vlen-1] {
-	case 's', 'S':
-		d, err := strconv.ParseInt(string(v[:vlen-1]), 10, 0)
-		if err != nil {
-			return 0, err
-		}
-		return HumanDuration(time.Second * time.Duration(d)), nil
-	case 'm', 'M':
-		d, err := strconv.ParseInt(string(v[:vlen-1]), 10, 0)
-		if err != nil {
-			return 0, err
-		}
-		return HumanDuration(time.Minute * time.Duration(d)), nil
-	case 'h', 'H':
-		d, err := strconv.ParseInt(string(v[:vlen-1]), 10, 0)
-		if err != nil {
-			return 0, err
-		}
-		return HumanDuration(time.Hour * time.Duration(d)), nil
-	case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
-		d, err := strconv.ParseInt(string(v), 10, 0)
-		if err != nil {
-			return 0, err
-		}
-		return HumanDuration(time.Duration(d)), nil
-	default:
-		return HumanDuration(0), fmt.Errorf("not support unit %c for value %s", v[vlen-1], v)
-	}
-}
-
 func (d *HumanDuration) UnmarshalJSON(text []byte) error {
 	if len(text) < 2 || (text[0] != '"' || text[len(text)-1] != '"') {
 		return fmt.Errorf("expect value in double quote")
 	}
-	v, err := parseHumanDuration(text[1 : len(text)-1])
+	v, err := time.ParseDuration(string(text[1 : len(text)-1]))
 	if err != nil {
 		return err
 	}
-	*d = v
+	*d = HumanDuration(v)
 	return nil
 }
 

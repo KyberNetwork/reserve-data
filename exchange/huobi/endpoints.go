@@ -1,7 +1,7 @@
 package huobi
 
-// Interface is Huobi exchange API endpoints interface.
-type Interface interface {
+// EndpointsInterface is Huobi exchange API endpoints interface.
+type EndpointsInterface interface {
 	// PublicEndpoint returns the endpoint that does not requires authentication.
 	PublicEndpoint() string
 	// AuthenticatedEndpoint returns the endpoint that requires authentication.
@@ -9,19 +9,19 @@ type Interface interface {
 	AuthenticatedEndpoint() string
 }
 
-type RealInterface struct {
+type Endpoints struct {
 	baseURL string
 }
 
-func (r *RealInterface) PublicEndpoint() string {
+func (r *Endpoints) PublicEndpoint() string {
 	return r.baseURL
 }
 
-func (r *RealInterface) AuthenticatedEndpoint() string {
+func (r *Endpoints) AuthenticatedEndpoint() string {
 	return r.baseURL
 }
 
-// NewRealInterface ...
-func NewRealInterface(baseURL string) Interface {
-	return &RealInterface{baseURL: baseURL}
+// NewEndpoints ...
+func NewEndpoints(baseURL string) EndpointsInterface {
+	return &Endpoints{baseURL: baseURL}
 }

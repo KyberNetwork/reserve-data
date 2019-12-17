@@ -47,8 +47,7 @@ func serverStart(_ *cobra.Command, _ []string) {
 	zap.ReplaceGlobals(s.Desugar())
 	kyberENV := common.RunningMode()
 	var ac = config.DefaultAppConfig()
-	err = config.LoadConfig(configFile, &ac)
-	if err != nil {
+	if err = config.LoadConfig(configFile, &ac); err != nil {
 		s.Panicw("failed to load config file", "err", err)
 	}
 	appState := configuration.InitAppState(!noAuthEnable, ac)
