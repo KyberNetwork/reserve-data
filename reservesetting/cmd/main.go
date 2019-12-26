@@ -19,7 +19,6 @@ import (
 	"github.com/KyberNetwork/reserve-data/exchange/huobi"
 	libapp "github.com/KyberNetwork/reserve-data/lib/app"
 	"github.com/KyberNetwork/reserve-data/lib/httputil"
-	"github.com/KyberNetwork/reserve-data/reservesetting/blockchain"
 	"github.com/KyberNetwork/reserve-data/reservesetting/http"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage/postgres"
 )
@@ -41,8 +40,6 @@ func main() {
 	app.Flags = append(app.Flags, httputil.NewHTTPCliFlags(httputil.V3ServicePort)...)
 	app.Flags = append(app.Flags, configuration.NewExchangeCliFlag())
 	app.Flags = append(app.Flags, profiler.NewCliFlags()...)
-	app.Flags = append(app.Flags, blockchain.NewWrapperAddressFlag()...)
-	app.Flags = append(app.Flags, blockchain.NewEthereumNodeFlags())
 	app.Flags = append(app.Flags, libapp.NewSentryFlags()...)
 	app.Flags = append(app.Flags, cli.StringFlag{
 		Name:   coreEndpointFlag,
@@ -106,27 +103,8 @@ func run(c *cli.Context) error {
 		return err
 	}
 
-	wrapperAddress, err := blockchain.NewWrapperAddressFromContext(c)
-	if err != nil {
-		return err
-	}
-
-	rateAddress, err := blockchain.NewRateAddressFromContext(c)
-	if err != nil {
-		return err
-	}
-
-	ethClient, err := blockchain.NewEthereumClientFromFlag(c)
-	if err != nil {
-		return err
-	}
-
-	newBlockchain, err := blockchain.NewBlockchain(wrapperAddress, rateAddress, ethClient)
-	if err != nil {
-		return err
-	}
 	sentryDSN := libapp.SentryDSNFromFlag(c)
-	server := http.NewServer(sr, host, liveExchanges, newBlockchain, sentryDSN)
+	server := http.NewServer(sr, host, liveExchanges, sentryDSN, coreEndpoint)
 	if profiler.IsEnableProfilerFromContext(c) {
 		server.EnableProfiler()
 	}

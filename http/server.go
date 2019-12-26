@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"log"
 	"math/big"
+	"net/http"
 	"strconv"
 
+	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/getsentry/raven-go"
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-contrib/sentry"
@@ -432,6 +434,37 @@ func (s *Server) updateTokenIndice(c *gin.Context) {
 	httputil.ResponseSuccess(c)
 }
 
+type checkTokenIndiceRequest struct {
+	Address string `form:"address" binding:"required"`
+}
+
+func (s *Server) checkTokenIndice(c *gin.Context) {
+	var (
+		query checkTokenIndiceRequest
+	)
+	if err := c.ShouldBindQuery(&query); err != nil {
+		c.JSON(
+			http.StatusBadRequest,
+			nil,
+		)
+		return
+	}
+	if err := s.blockchain.CheckTokenIndices(ethereum.HexToAddress(query.Address)); err != nil {
+		c.JSON(
+			http.StatusInternalServerError,
+			gin.H{
+				"error": err.Error(),
+			},
+		)
+		return
+	}
+
+	c.JSON(
+		http.StatusOK,
+		nil,
+	)
+}
+
 func (s *Server) register() {
 	if s.core != nil && s.app != nil {
 		g := s.r.Group("/v3")
@@ -465,6 +498,7 @@ func (s *Server) register() {
 		g.GET("/addresses", s.GetAddresses)
 
 		g.PUT("/update-token-indice", s.updateTokenIndice)
+		g.GET("/check-token-indice", s.checkTokenIndice)
 	}
 }
 

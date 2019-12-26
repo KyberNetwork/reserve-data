@@ -28,7 +28,7 @@ func TestExchanges(t *testing.T) {
 	}()
 	s, err := postgres.NewStorage(db, "")
 	require.NoError(t, err)
-	server := NewServer(s, "", supportedExchanges, nil, "")
+	server := NewServer(s, "", supportedExchanges, "", "")
 	c := apiClient{s: server}
 
 	ex, err := c.getExchange(binance)

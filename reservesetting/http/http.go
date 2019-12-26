@@ -10,7 +10,6 @@ import (
 	"go.uber.org/zap"
 
 	v1common "github.com/KyberNetwork/reserve-data/common"
-	"github.com/KyberNetwork/reserve-data/reservesetting/blockchain"
 	"github.com/KyberNetwork/reserve-data/reservesetting/common"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage"
 )
@@ -20,14 +19,14 @@ type Server struct {
 	storage            storage.Interface
 	r                  *gin.Engine
 	host               string
-	blockchain         *blockchain.Blockchain
 	supportedExchanges map[v1common.ExchangeID]v1common.LiveExchange
 	l                  *zap.SugaredLogger
+	coreEndpoint       string
 }
 
 // NewServer creates new HTTP server for reservesetting APIs.
 func NewServer(storage storage.Interface, host string, supportedExchanges map[v1common.ExchangeID]v1common.LiveExchange,
-	blockchain *blockchain.Blockchain, sentryDSN string) *Server {
+	sentryDSN, coreEndpoint string) *Server {
 	l := zap.S()
 	r := gin.Default()
 	if sentryDSN != "" {
@@ -43,9 +42,9 @@ func NewServer(storage storage.Interface, host string, supportedExchanges map[v1
 		storage:            storage,
 		r:                  r,
 		host:               host,
-		blockchain:         blockchain,
 		supportedExchanges: supportedExchanges,
 		l:                  l,
+		coreEndpoint:       coreEndpoint,
 	}
 	g := r.Group("/v3")
 

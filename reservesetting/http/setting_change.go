@@ -2,7 +2,9 @@ package http
 
 import (
 	"fmt"
+	"net/http"
 	"reflect"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -12,6 +14,10 @@ import (
 	"github.com/KyberNetwork/reserve-data/http/httputil"
 	"github.com/KyberNetwork/reserve-data/reservesetting/common"
 	"github.com/KyberNetwork/reserve-data/world"
+)
+
+const (
+	defaultTimeout = 5 * time.Second
 )
 
 func (s *Server) validateChangeEntry(e common.SettingChangeType, changeType common.ChangeType) error {
@@ -486,11 +492,23 @@ func checkFeedWeight(setrate *common.SetRate, feedWeight *common.FeedWeight) err
 
 func (s *Server) checkCreateAssetParams(createEntry common.CreateAssetEntry) error {
 	if createEntry.Transferable {
-		if s.blockchain == nil {
-			return common.ErrBlockchainHaveNotInitiated
-		}
-		if err := s.blockchain.CheckTokenIndices(createEntry.Address); err != nil {
-			return common.ErrAssetAddressIsNotIndexInContract
+		if s.coreEndpoint != "" { // check to by pass test as local test does not need this
+			// update token indice in core
+			endpoint := fmt.Sprintf("%s/check-token-indice?address=%s", s.coreEndpoint, createEntry.Address)
+			req, err := http.NewRequest(http.MethodGet, endpoint, nil)
+			if err != nil {
+				return fmt.Errorf("failed to create new check token indice request: %s", err)
+			}
+			client := http.Client{
+				Timeout: defaultTimeout,
+			}
+			resp, err := client.Do(req)
+			if err != nil {
+				return common.ErrAssetAddressIsNotIndexInContract
+			}
+			if resp.StatusCode != http.StatusOK {
+				return common.ErrAssetAddressIsNotIndexInContract
+			}
 		}
 	}
 	if createEntry.Rebalance && createEntry.RebalanceQuadratic == nil {
