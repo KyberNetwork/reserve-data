@@ -159,7 +159,7 @@ func (s *Storage) applyChange(tx *sqlx.Tx, i int, entry common.SettingChangeEntr
 		}
 		if s.coreEndpoint != "" { // check to by pass test as local test does not need this
 			// update token indice in core
-			endpoint := fmt.Sprintf("%s/update-token-indice", s.coreEndpoint)
+			endpoint := fmt.Sprintf("%s/v3/update-token-indice", s.coreEndpoint)
 			req, err := http.NewRequest(http.MethodPut, endpoint, nil)
 			if err != nil {
 				return fmt.Errorf("failed to create new update token indices request: %s", err)

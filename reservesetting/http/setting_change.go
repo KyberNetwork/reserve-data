@@ -494,7 +494,7 @@ func (s *Server) checkCreateAssetParams(createEntry common.CreateAssetEntry) err
 	if createEntry.Transferable {
 		if s.coreEndpoint != "" { // check to by pass test as local test does not need this
 			// update token indice in core
-			endpoint := fmt.Sprintf("%s/check-token-indice?address=%s", s.coreEndpoint, createEntry.Address)
+			endpoint := fmt.Sprintf("%s/v3/check-token-indice?address=%s", s.coreEndpoint, createEntry.Address)
 			req, err := http.NewRequest(http.MethodGet, endpoint, nil)
 			if err != nil {
 				return fmt.Errorf("failed to create new check token indice request: %s", err)

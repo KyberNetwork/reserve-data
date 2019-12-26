@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/urfave/cli"
@@ -19,13 +20,14 @@ import (
 	"github.com/KyberNetwork/reserve-data/exchange/huobi"
 	libapp "github.com/KyberNetwork/reserve-data/lib/app"
 	"github.com/KyberNetwork/reserve-data/lib/httputil"
-	"github.com/KyberNetwork/reserve-data/reservesetting/http"
+	settinghttp "github.com/KyberNetwork/reserve-data/reservesetting/http"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage/postgres"
 )
 
 const (
-	defaultDB        = "reserve_data"
-	coreEndpointFlag = "core-endpoint"
+	defaultDB           = "reserve_data"
+	coreEndpointFlag    = "core-endpoint"
+	defaultCoreEndpoint = "http://localhost:8000" // suppose to change
 )
 
 func main() {
@@ -45,6 +47,7 @@ func main() {
 		Name:   coreEndpointFlag,
 		Usage:  "core endpoint URL",
 		EnvVar: "CORE_ENDPOINT",
+		Value:  defaultCoreEndpoint,
 	})
 
 	if err := app.Run(os.Args); err != nil {
@@ -94,7 +97,7 @@ func run(c *cli.Context) error {
 	}
 
 	coreEndpoint := c.String(coreEndpointFlag)
-	if coreEndpoint == "" {
+	if !checkCoreEndpoint(coreEndpoint) {
 		sugar.Error("core endpoint is not provided, if you create new asset, you cannot update token indice, please provide.")
 		return errors.New("core endpoint is required")
 	}
@@ -104,7 +107,7 @@ func run(c *cli.Context) error {
 	}
 
 	sentryDSN := libapp.SentryDSNFromFlag(c)
-	server := http.NewServer(sr, host, liveExchanges, sentryDSN, coreEndpoint)
+	server := settinghttp.NewServer(sr, host, liveExchanges, sentryDSN, coreEndpoint)
 	if profiler.IsEnableProfilerFromContext(c) {
 		server.EnableProfiler()
 	}
@@ -127,4 +130,21 @@ func getLiveExchanges(enabledExchanges []v1common.ExchangeID, bi exchange.Binanc
 		}
 	}
 	return liveExchanges, nil
+}
+
+func checkCoreEndpoint(endpoint string) bool {
+	if endpoint == "" {
+		return true
+	}
+
+	resp, err := http.Get(fmt.Sprintf("%s/v3/timeserver", endpoint))
+	if err != nil {
+		return false
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return false
+	}
+
+	return true
 }
