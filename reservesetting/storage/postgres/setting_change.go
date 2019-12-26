@@ -205,6 +205,12 @@ func (s *Storage) applyChange(tx *sqlx.Tx, i int, entry common.SettingChangeEntr
 			s.l.Infow("update stable token params", "index", i, "err", err)
 			return err
 		}
+	case *common.SetFeedConfigurationEntry:
+		err = s.setFeedConfiguration(tx, *e)
+		if err != nil {
+			s.l.Infow("set feed configuration", "index", i, "err", err)
+			return err
+		}
 	default:
 		return fmt.Errorf("unexpected change object %+v", e)
 	}

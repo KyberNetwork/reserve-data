@@ -54,6 +54,7 @@ func NewServer(storage storage.Interface, host string, supportedExchanges map[v1
 	g.GET("/exchange", server.getExchanges)
 	g.GET("/trading-pair/:id", server.getTradingPair)
 	g.GET("/stable-token-params", server.getStableTokenParams)
+	g.GET("/feed-configurations", server.getFeedConfigurations)
 
 	// because we don't allow to create asset directly, it must go through pending operation
 	// so all 'create' operation mean to operate on pending object.
@@ -93,6 +94,12 @@ func NewServer(storage storage.Interface, host string, supportedExchanges map[v1
 	g.GET("/setting-change-update-exchange/:id", server.getSettingChange)
 	g.PUT("/setting-change-update-exchange/:id", server.confirmSettingChange)
 	g.DELETE("/setting-change-update-exchange/:id", server.rejectSettingChange)
+
+	g.POST("/setting-change-feed-configuration", server.createSettingChangeWithType(common.ChangeCatalogSetFeedConfiguration))
+	g.GET("/setting-change-feed-configuration", server.getSettingChangeWithType(common.ChangeCatalogSetFeedConfiguration))
+	g.GET("/setting-change-feed-configuration/:id", server.getSettingChange)
+	g.PUT("/setting-change-feed-configuration/:id", server.confirmSettingChange)
+	g.DELETE("/setting-change-feed-configuration/:id", server.rejectSettingChange)
 
 	g.GET("/price-factor", server.getPriceFactor)
 	g.POST("/price-factor", server.setPriceFactor)

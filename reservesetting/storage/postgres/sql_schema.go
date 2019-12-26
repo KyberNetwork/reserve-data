@@ -522,4 +522,12 @@ BEGIN
     RETURN _id;
 END
 $$ LANGUAGE PLPGSQL;
+
+CREATE TABLE IF NOT EXISTS "feed_configurations"
+(
+	name                   TEXT    PRIMARY KEY,
+    enabled                BOOLEAN NOT NULL,
+    base_volatility_spread FLOAT   DEFAULT 0,
+    normal_spread          FLOAT   DEFAULT 0,
+);
 `

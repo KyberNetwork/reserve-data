@@ -42,6 +42,8 @@ type SettingReader interface {
 	GetTransferableAssets() ([]v3.Asset, error)
 	GetMinNotional(exchangeID, baseID, quoteID uint64) (float64, error)
 	GetStableTokenParams() (map[string]interface{}, error)
+	// GetFeedConfigurations return all feed configuration
+	GetFeedConfigurations() ([]v3.FeedConfiguration, error)
 }
 
 type ControlInfoInterface interface {

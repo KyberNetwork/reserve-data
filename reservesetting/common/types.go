@@ -273,17 +273,27 @@ type ChangeAssetAddressEntry struct {
 	Address ethereum.Address `json:"address" binding:"required"`
 }
 
+// SetFeedConfigurationEntry data to set feed config
+type SetFeedConfigurationEntry struct {
+	settingChangeMarker
+	Name                 string   `json:"name" binding:"required"`
+	Enabled              *bool    `json:"enabled"`
+	BaseVolatilitySpread *float64 `json:"base_volatility_spread"`
+	NormalSpread         *float64 `json:"normal_spread"`
+}
+
 // ChangeCatalog represent catalog the change list belong to, each catalog keep track pending change independent
 //go:generate enumer -type=ChangeCatalog -linecomment -json=true
 type ChangeCatalog int
 
 const (
-	ChangeCatalogSetTarget          ChangeCatalog = iota // set_target
-	ChangeCatalogSetPWIS                                 // set_pwis
-	ChangeCatalogStableToken                             // set_stable_token
-	ChangeCatalogRebalanceQuadratic                      // set_rebalance_quadratic
-	ChangeCatalogUpdateExchange                          // update_exchange
-	ChangeCatalogMain                                    // main
+	ChangeCatalogSetTarget            ChangeCatalog = iota // set_target
+	ChangeCatalogSetPWIS                                   // set_pwis
+	ChangeCatalogStableToken                               // set_stable_token
+	ChangeCatalogRebalanceQuadratic                        // set_rebalance_quadratic
+	ChangeCatalogUpdateExchange                            // update_exchange
+	ChangeCatalogMain                                      // main
+	ChangeCatalogSetFeedConfiguration                      // set_feed_configuration
 )
 
 // ChangeType represent type of change type entry in list change
@@ -311,6 +321,8 @@ const (
 	ChangeTypeDeleteAssetExchange // delete_asset_exchange
 	// ChangeTypeUpdateStableTokenParams is used in present update stable token params
 	ChangeTypeUpdateStableTokenParams // update_stable_token_params
+	// ChangeTypeSetFeedConfiguration is used when set feed confuguration
+	ChangeTypeSetFeedConfiguration // set_feed_configuration
 )
 
 // SettingChangeType interface just make sure that only some of selected type can be put into SettingChange list
@@ -357,4 +369,12 @@ type DeleteAssetExchangeEntry struct {
 type UpdateStableTokenParamsEntry struct {
 	settingChangeMarker
 	Params map[string]interface{} `json:"params"`
+}
+
+// FeedConfiguration feed configuration
+type FeedConfiguration struct {
+	Name                 string  `json:"name" db:"name"`
+	Enabled              bool    `json:"enabled" db:"enabled"`
+	BaseVolatilitySpread float64 `json:"base_volatility_spread" db:"base_volatility_spread"`
+	NormalSpread         float64 `json:"normal_spread" db:"normal_spread"`
 }

@@ -56,6 +56,9 @@ type preparedStmts struct {
 	getRebalance        *sqlx.Stmt
 	newStableTokenParam *sqlx.Stmt
 	getStableTokenParam *sqlx.Stmt
+
+	setFeedConfiguration  *sqlx.Stmt
+	getFeedConfigurations *sqlx.Stmt
 }
 
 func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
@@ -155,6 +158,11 @@ func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
 		return nil, err
 	}
 
+	setFeedConfigurationStmt, getFeedConfigurationsStmt, err := feedConfigurationStatements(db)
+	if err != nil {
+		return nil, err
+	}
+
 	return &preparedStmts{
 		getExchanges:        getExchanges,
 		getExchange:         getExchange,
@@ -200,6 +208,9 @@ func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
 		getRebalance:        getRebalance,
 		newStableTokenParam: newStabeTokenParams,
 		getStableTokenParam: getStableTokenParams,
+
+		setFeedConfiguration:  setFeedConfigurationStmt,
+		getFeedConfigurations: getFeedConfigurationsStmt,
 	}, nil
 }
 
@@ -695,4 +706,22 @@ func stableTokenParamsControlStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, er
 		return nil, nil, err
 	}
 	return newStableTokenStmt, getStableTokenStmt, nil
+}
+
+func feedConfigurationStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, error) {
+	const setFeedConfiguration = `UPDATE feed_configurations
+																SET enabled                = COALESCE(:enabled, enabled),
+																		base_volatility_spread = COALESCE(:base_volatility_spread, base_volatility_spread),
+																		normal_spread          = COALESCE(:normal_spread, normal_spread)
+																WHERE name = :name RETURNING name;`
+	setFeedConfigurationStmt, err := db.Preparex(setFeedConfiguration)
+	if err != nil {
+		return nil, nil, err
+	}
+	const getFeedConfigurations = `SELECT name, enabled, base_volatility_spread, normal_spread FROM feed_configurations`
+	getFeedConfigurationsStmt, err := db.Preparex(getFeedConfigurations)
+	if err != nil {
+		return nil, nil, err
+	}
+	return setFeedConfigurationStmt, getFeedConfigurationsStmt, nil
 }

@@ -46,6 +46,8 @@ func (s *Server) validateChangeEntry(e common.SettingChangeType, changeType comm
 		err = s.checkDeleteAssetExchangeParams(*e.(*common.DeleteAssetExchangeEntry))
 	case common.ChangeTypeUpdateStableTokenParams:
 		return nil
+	case common.ChangeTypeSetFeedConfiguration:
+		err = s.checkSetFeedConfigurationParams(*e.(*common.SetFeedConfigurationEntry))
 	default:
 		return errors.Errorf("unknown type of setting change: %v", reflect.TypeOf(e))
 	}
@@ -597,4 +599,13 @@ func (s *Server) checkUpdateExchangeParams(updateExchangeEntry common.UpdateExch
 	//check if exchange exist
 	_, err := s.storage.GetExchange(updateExchangeEntry.ExchangeID)
 	return err
+}
+
+func (s *Server) checkSetFeedConfigurationParams(setFeedConfigurationEntry common.SetFeedConfigurationEntry) error {
+	for _, feed := range world.AllFeeds() {
+		if setFeedConfigurationEntry.Name == feed {
+			return nil
+		}
+	}
+	return fmt.Errorf("feed does not exist, feed=%s", setFeedConfigurationEntry.Name)
 }
