@@ -4,12 +4,10 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/jmoiron/sqlx"
-	// "github.com/lib/pq"
-	// "github.com/pkg/errors"
 	pgutil "github.com/KyberNetwork/reserve-data/common/postgres"
 	"github.com/KyberNetwork/reserve-data/reservesetting/common"
 	"github.com/KyberNetwork/reserve-data/world"
+	"github.com/jmoiron/sqlx"
 )
 
 type setFeedConfigurationParams struct {
@@ -17,13 +15,6 @@ type setFeedConfigurationParams struct {
 	Enabled              *bool    `db:"enabled"`
 	BaseVolatilitySpread *float64 `db:"base_volatility_spread"`
 	NormalSpread         *float64 `db:"normal_spread"`
-}
-
-type feedConfigurationDB struct {
-	Name                 sql.NullString  `db:"name"`
-	Enabled              sql.NullBool    `db:"enabled"`
-	BaseVolatilitySpread sql.NullFloat64 `db:"base_volatility_spread"`
-	NormalSpread         sql.NullFloat64 `db:"normal_spread"`
 }
 
 func (s *Storage) initFeedData() error {
@@ -75,23 +66,18 @@ func (s *Storage) GetFeedConfigurations() ([]common.FeedConfiguration, error) {
 
 // GetFeedConfiguration return feed configuration by name
 func (s *Storage) GetFeedConfiguration(name string) (common.FeedConfiguration, error) {
-	var resultDB feedConfigurationDB
+	var result common.FeedConfiguration
 	tx, err := s.db.Beginx()
 	if err != nil {
-		return common.FeedConfiguration{}, err
+		return result, err
 	}
 	defer pgutil.RollbackUnlessCommitted(tx)
 
-	if err := tx.Stmtx(s.stmts.getFeedConfiguration).Get(&resultDB, name); err != nil {
+	if err := tx.Stmtx(s.stmts.getFeedConfiguration).Get(&result, name); err != nil {
 		if err == sql.ErrNoRows {
-			return common.FeedConfiguration{}, common.ErrNotFound
+			return result, common.ErrNotFound
 		}
-		return common.FeedConfiguration{}, err
+		return result, err
 	}
-	return common.FeedConfiguration{
-		Name:                 resultDB.Name.String,
-		Enabled:              resultDB.Enabled.Bool,
-		BaseVolatilitySpread: resultDB.BaseVolatilitySpread.Float64,
-		NormalSpread:         resultDB.NormalSpread.Float64,
-	}, nil
+	return result, nil
 }

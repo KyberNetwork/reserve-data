@@ -95,8 +95,8 @@ func NewServer(storage storage.Interface, host string, supportedExchanges map[v1
 	g.PUT("/setting-change-update-exchange/:id", server.confirmSettingChange)
 	g.DELETE("/setting-change-update-exchange/:id", server.rejectSettingChange)
 
-	g.POST("/setting-change-feed-configuration", server.createSettingChangeWithType(common.ChangeCatalogSetFeedConfiguration))
-	g.GET("/setting-change-feed-configuration", server.getSettingChangeWithType(common.ChangeCatalogSetFeedConfiguration))
+	g.POST("/setting-change-feed-configuration", server.createSettingChangeWithType(common.ChangeCatalogFeedConfiguration))
+	g.GET("/setting-change-feed-configuration", server.getSettingChangeWithType(common.ChangeCatalogFeedConfiguration))
 	g.GET("/setting-change-feed-configuration/:id", server.getSettingChange)
 	g.PUT("/setting-change-feed-configuration/:id", server.confirmSettingChange)
 	g.DELETE("/setting-change-feed-configuration/:id", server.rejectSettingChange)

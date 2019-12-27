@@ -287,13 +287,13 @@ type SetFeedConfigurationEntry struct {
 type ChangeCatalog int
 
 const (
-	ChangeCatalogSetTarget            ChangeCatalog = iota // set_target
-	ChangeCatalogSetPWIS                                   // set_pwis
-	ChangeCatalogStableToken                               // set_stable_token
-	ChangeCatalogRebalanceQuadratic                        // set_rebalance_quadratic
-	ChangeCatalogUpdateExchange                            // update_exchange
-	ChangeCatalogMain                                      // main
-	ChangeCatalogSetFeedConfiguration                      // set_feed_configuration
+	ChangeCatalogSetTarget          ChangeCatalog = iota // set_target
+	ChangeCatalogSetPWIS                                 // set_pwis
+	ChangeCatalogStableToken                             // set_stable_token
+	ChangeCatalogRebalanceQuadratic                      // set_rebalance_quadratic
+	ChangeCatalogUpdateExchange                          // update_exchange
+	ChangeCatalogMain                                    // main
+	ChangeCatalogFeedConfiguration                       // set_feed_configuration
 )
 
 // ChangeType represent type of change type entry in list change
