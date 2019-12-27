@@ -41,9 +41,6 @@ func WithCoreEndpoint(coreEndpoint string) Option {
 
 		g.GET("/addresses", coreProxyMW)
 
-		g.PUT("/update-token-indice", coreProxyMW)
-		g.GET("/check-token-indice", coreProxyMW)
-
 		return nil
 	}
 }
