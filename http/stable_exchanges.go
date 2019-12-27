@@ -3,8 +3,6 @@ package http
 import (
 	"go.uber.org/zap"
 
-	"github.com/KyberNetwork/reserve-data/common"
-
 	"github.com/gin-gonic/gin"
 
 	"github.com/KyberNetwork/reserve-data/http/httputil"
@@ -40,29 +38,4 @@ func (s *Server) GetUSDData(c *gin.Context) {
 	} else {
 		httputil.ResponseSuccess(c, httputil.WithData(data))
 	}
-}
-
-// UpdateFeedConfiguration update configuration for feed
-func (s *Server) UpdateFeedConfiguration(c *gin.Context) {
-	var input common.FeedConfigurationRequest
-	if err := c.ShouldBindJSON(&input); err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-
-	if err := s.app.UpdateFeedConfiguration(input.Data.Name, input.Data.Enabled); err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	httputil.ResponseSuccess(c)
-}
-
-// GetFeedConfiguration return feed configuration
-func (s *Server) GetFeedConfiguration(c *gin.Context) {
-	data, err := s.app.GetFeedConfiguration()
-	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	httputil.ResponseSuccess(c, httputil.WithData(data))
 }

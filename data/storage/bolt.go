@@ -9,7 +9,6 @@ import (
 	"math"
 	"os"
 	"strconv"
-	"strings"
 	"sync"
 
 	"github.com/boltdb/bolt"
@@ -17,7 +16,6 @@ import (
 	"github.com/KyberNetwork/reserve-data/boltutil"
 	"github.com/KyberNetwork/reserve-data/common"
 	commonv3 "github.com/KyberNetwork/reserve-data/reservesetting/common"
-	"github.com/KyberNetwork/reserve-data/world"
 )
 
 const (
@@ -187,71 +185,6 @@ func (bs *BoltStorage) CurrentUSDInfoVersion(timepoint uint64) (common.Version, 
 		return nil
 	})
 	return common.Version(result), err
-}
-
-// UpdateFeedConfiguration upate feed configuration
-func (bs *BoltStorage) UpdateFeedConfiguration(name string, enabled bool) error {
-	const disableValue = "disabled"
-	var (
-		allFeeds = world.AllFeeds()
-		exists   = false
-	)
-	// ignore case
-	name = strings.ToLower(name)
-
-	for _, feed := range allFeeds {
-		if strings.EqualFold(name, feed) {
-			exists = true
-			break
-		}
-	}
-	if !exists {
-		return fmt.Errorf("unknown feed: %q", name)
-	}
-
-	return bs.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(disabledFeedsBucket))
-		if v := b.Get([]byte(name)); v == nil {
-			// feed does not exists in disabled feeds bucket yet
-			if !enabled {
-				return b.Put([]byte(name), []byte(disableValue))
-			}
-			return nil
-		}
-
-		if enabled {
-			return b.Delete([]byte(name))
-		}
-		return nil
-	})
-}
-
-// GetFeedConfiguration return feed configuration
-func (bs *BoltStorage) GetFeedConfiguration() ([]common.FeedConfiguration, error) {
-	var (
-		err      error
-		allFeeds = world.AllFeeds()
-		results  []common.FeedConfiguration
-	)
-
-	for _, feed := range allFeeds {
-		results = append(results, common.FeedConfiguration{Name: feed, Enabled: true})
-	}
-
-	err = bs.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(disabledFeedsBucket))
-		return b.ForEach(func(k, _ []byte) error {
-			for i := range results {
-				if strings.ToLower(results[i].Name) == string(k) {
-					results[i].Enabled = false
-					break
-				}
-			}
-			return nil
-		})
-	})
-
-	return results, err
 }
 
 // GetBTCInfo returns BTC info at given time point. It implements data.GlobalStorage interface.

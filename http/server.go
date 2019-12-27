@@ -492,8 +492,6 @@ func (s *Server) register() {
 		g.GET("/gold-feed", s.GetGoldData)
 		g.GET("/btc-feed", s.GetBTCData)
 		g.GET("/usd-feed", s.GetUSDData)
-		g.POST("/set-feed-configuration", s.UpdateFeedConfiguration)
-		g.GET("/get-feed-configuration", s.GetFeedConfiguration)
 
 		g.GET("/addresses", s.GetAddresses)
 

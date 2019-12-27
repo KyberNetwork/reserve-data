@@ -86,6 +86,10 @@ func NewStorage(db *sqlx.DB) (*Storage, error) {
 
 	s := &Storage{db: db, stmts: stmts, l: l}
 
+	if err = s.initFeedData(); err != nil {
+		return nil, fmt.Errorf("failed to init feed data, err=%s", err)
+	}
+
 	exchanges, err := s.GetExchanges()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get existing exchanges")

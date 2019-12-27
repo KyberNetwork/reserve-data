@@ -73,16 +73,6 @@ func (rd ReserveData) GetUSDData(timestamp uint64) (common.USDData, error) {
 	return rd.globalStorage.GetUSDInfo(version)
 }
 
-// UpdateFeedConfiguration update feed configuration
-func (rd ReserveData) UpdateFeedConfiguration(name string, enabled bool) error {
-	return rd.globalStorage.UpdateFeedConfiguration(name, enabled)
-}
-
-// GetFeedConfiguration return configuration for feed (gold, btc)
-func (rd ReserveData) GetFeedConfiguration() ([]common.FeedConfiguration, error) {
-	return rd.globalStorage.GetFeedConfiguration()
-}
-
 // CurrentPriceVersion return current price version
 func (rd ReserveData) CurrentPriceVersion(timepoint uint64) (common.Version, error) {
 	return rd.storage.CurrentPriceVersion(timepoint)

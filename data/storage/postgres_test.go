@@ -263,37 +263,6 @@ func TestAuthData(t *testing.T) {
 	assert.Equal(t, uint64(1), deleted)
 }
 
-func TestFeedConfiguration(t *testing.T) {
-	db, teardown := testutil.MustNewDevelopmentDB()
-	defer func() {
-		require.NoError(t, teardown())
-	}()
-
-	ps, err := NewPostgresStorage(db)
-	require.NoError(t, err)
-
-	// test default all feed are enabled
-	feeds, err := ps.GetFeedConfiguration()
-	assert.NoError(t, err)
-	for _, feed := range feeds {
-		assert.True(t, feed.Enabled)
-	}
-
-	// test update feed
-	err = ps.UpdateFeedConfiguration("Gemini", false)
-	assert.NoError(t, err)
-
-	feeds, err = ps.GetFeedConfiguration()
-	assert.NoError(t, err)
-	for _, feed := range feeds {
-		if feed.Name == "Gemini" {
-			assert.False(t, feed.Enabled)
-			continue
-		}
-		assert.True(t, feed.Enabled)
-	}
-}
-
 func TestGoldData(t *testing.T) {
 	db, teardown := testutil.MustNewDevelopmentDB()
 	defer func() {

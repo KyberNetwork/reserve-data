@@ -525,24 +525,3 @@ func (ps *PostgresStorage) CurrentBTCInfoVersion(timepoint uint64) (common.Versi
 func (ps *PostgresStorage) CurrentUSDInfoVersion(timepoint uint64) (common.Version, error) {
 	return ps.currentVersion(usdDataType, timepoint)
 }
-
-// UpdateFeedConfiguration return false if there is an error
-func (ps *PostgresStorage) UpdateFeedConfiguration(name string, enabled bool) error {
-	query := fmt.Sprintf(`INSERT INTO %s (name, enabled) VALUES ($1, $2) ON CONFLICT (name) DO UPDATE SET enabled = EXCLUDED.enabled`, feedConfigurationTable)
-	if _, err := ps.db.Exec(query, name, enabled); err != nil {
-		return err
-	}
-	return nil
-}
-
-// GetFeedConfiguration return feed configuration
-func (ps *PostgresStorage) GetFeedConfiguration() ([]common.FeedConfiguration, error) {
-	var (
-		result []common.FeedConfiguration
-	)
-	query := fmt.Sprintf(`SELECT name, enabled FROM "%s"`, feedConfigurationTable)
-	if err := ps.db.Select(&result, query); err != nil {
-		return nil, err
-	}
-	return result, nil
-}
