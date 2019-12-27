@@ -1298,3 +1298,95 @@ func TestCreateTradingPair(t *testing.T) {
 	}
 	assert.Equal(t, true, found)
 }
+
+func TestSetFeedConfiguration(t *testing.T) {
+	db, tearDown := testutil.MustNewDevelopmentDB()
+	defer func() {
+		assert.NoError(t, tearDown())
+	}()
+	s, err := postgres.NewStorage(db)
+	require.NoError(t, err)
+	supportedExchanges := make(map[v1common.ExchangeID]v1common.LiveExchange)
+	server := NewServer(s, "", supportedExchanges, "", "")
+	var (
+		setFeedConfigurationEndpoint = "/v3/setting-change-feed-configuration"
+		setFeedConfigurationID       uint64
+
+		fname                 = "DGX"
+		fenabled              = false
+		fbaseVolatilitySpread = 1.1
+		fnormalSpread         = 1.2
+
+		expectFC = common.FeedConfiguration{
+			Name:                 fname,
+			Enabled:              fenabled,
+			BaseVolatilitySpread: fbaseVolatilitySpread,
+			NormalSpread:         fnormalSpread,
+		}
+	)
+
+	var tests = []testCase{
+		{
+			msg:      "test create set feed configuration",
+			endpoint: setFeedConfigurationEndpoint,
+			method:   http.MethodPost,
+			data: common.SettingChange{
+				ChangeList: []common.SettingChangeEntry{
+					{
+						Type: common.ChangeTypeSetFeedConfiguration,
+						Data: common.SetFeedConfigurationEntry{
+							Name:                 fname,
+							Enabled:              &fenabled,
+							BaseVolatilitySpread: &fbaseVolatilitySpread,
+							NormalSpread:         &fnormalSpread,
+						},
+					},
+				},
+			},
+			assert: func(t *testing.T, resp *httptest.ResponseRecorder) {
+				var idResponse struct {
+					ID      uint64 `json:"id"`
+					Success bool   `json:"success"`
+					Reason  string `json:"reason"`
+				}
+				require.Equal(t, http.StatusOK, resp.Code)
+				err = json.Unmarshal(resp.Body.Bytes(), &idResponse)
+				require.NoError(t, err)
+				require.True(t, idResponse.Success)
+				setFeedConfigurationID = idResponse.ID
+			},
+		},
+		{
+			msg: "test get pending set feed configuration",
+			endpointExp: func() string {
+				return setFeedConfigurationEndpoint + fmt.Sprintf("/%d", setFeedConfigurationID)
+			},
+			method: http.MethodGet,
+			assert: httputil.ExpectSuccess,
+		},
+		{
+			msg: "confirm set feed configuration",
+			endpointExp: func() string {
+				return setFeedConfigurationEndpoint + fmt.Sprintf("/%d", setFeedConfigurationID)
+			},
+			method: http.MethodPut,
+			assert: func(t *testing.T, resp *httptest.ResponseRecorder) {
+				var response struct {
+					Success bool   `json:"success"`
+					Reason  string `json:"reason"`
+				}
+				require.Equal(t, http.StatusOK, resp.Code)
+				err = json.Unmarshal(resp.Body.Bytes(), &response)
+				require.NoError(t, err)
+				require.Equal(t, true, response.Success)
+				newFC, err := s.GetFeedConfiguration(fname)
+				require.NoError(t, err)
+				require.Equal(t, expectFC, newFC)
+			},
+		},
+	}
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.msg, func(t *testing.T) { testHTTPRequest(t, tc, server.r) })
+	}
+}
