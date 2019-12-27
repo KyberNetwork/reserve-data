@@ -18,7 +18,7 @@ func TestStorage_UpdateExchange(t *testing.T) {
 		assert.NoError(t, tearDown())
 	}()
 
-	s, err := NewStorage(db, "")
+	s, err := NewStorage(db)
 	require.NoError(t, err)
 
 	// expect that exchange are initialized
@@ -101,7 +101,7 @@ func TestStorage_GetUpdateByName(t *testing.T) {
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()
-	s, err := NewStorage(db, "")
+	s, err := NewStorage(db)
 	assert.NoError(t, err)
 	initData(t, s)
 	exchangeByID, err := s.GetExchange(binance)

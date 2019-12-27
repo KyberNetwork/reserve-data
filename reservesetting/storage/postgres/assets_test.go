@@ -15,7 +15,7 @@ func TestUpdateAsset(t *testing.T) {
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()
-	s, err := NewStorage(db, "")
+	s, err := NewStorage(db)
 	assert.NoError(t, err)
 	initData(t, s)
 	assetID := uint64(1)
@@ -149,7 +149,7 @@ func TestGetAssetBySymbol(t *testing.T) {
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()
-	s, err := NewStorage(db, "")
+	s, err := NewStorage(db)
 	assert.NoError(t, err)
 	initData(t, s)
 	assetByID, err := s.GetAsset(3)

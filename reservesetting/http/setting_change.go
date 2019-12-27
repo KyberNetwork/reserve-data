@@ -493,7 +493,7 @@ func checkFeedWeight(setrate *common.SetRate, feedWeight *common.FeedWeight) err
 func (s *Server) checkCreateAssetParams(createEntry common.CreateAssetEntry) error {
 	if createEntry.Transferable {
 		if s.coreEndpoint != "" { // check to by pass test as local test does not need this
-			// update token indice in core
+			// check token indice in core
 			endpoint := fmt.Sprintf("%s/v3/check-token-indice?address=%s", s.coreEndpoint, createEntry.Address)
 			req, err := http.NewRequest(http.MethodGet, endpoint, nil)
 			if err != nil {
@@ -508,6 +508,20 @@ func (s *Server) checkCreateAssetParams(createEntry common.CreateAssetEntry) err
 			}
 			if resp.StatusCode != http.StatusOK {
 				return common.ErrAssetAddressIsNotIndexInContract
+			}
+
+			// update token indice in core
+			endpoint = fmt.Sprintf("%s/v3/update-token-indice", s.coreEndpoint)
+			req, err = http.NewRequest(http.MethodPut, endpoint, nil)
+			if err != nil {
+				return fmt.Errorf("failed to create new update token indices request: %s", err)
+			}
+			resp, err = client.Do(req)
+			if err != nil {
+				return fmt.Errorf("failed to update token indice: %s", err)
+			}
+			if resp.StatusCode != http.StatusOK {
+				return fmt.Errorf("update token endpoint failed, status code: %d", resp.StatusCode)
 			}
 		}
 	}

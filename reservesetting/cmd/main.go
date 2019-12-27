@@ -101,7 +101,7 @@ func run(c *cli.Context) error {
 		sugar.Error("core endpoint is not provided, if you create new asset, you cannot update token indice, please provide.")
 		return errors.New("core endpoint is required")
 	}
-	sr, err := postgres.NewStorage(db, coreEndpoint)
+	sr, err := postgres.NewStorage(db)
 	if err != nil {
 		return err
 	}
