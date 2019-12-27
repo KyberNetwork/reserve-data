@@ -13,7 +13,6 @@ import (
 
 	"github.com/KyberNetwork/reserve-data/common"
 	commonv3 "github.com/KyberNetwork/reserve-data/reservesetting/common"
-	"github.com/KyberNetwork/reserve-data/world"
 )
 
 const (
@@ -48,13 +47,6 @@ CREATE TABLE IF NOT EXISTS "activity"
 );
 CREATE INDEX IF NOT EXISTS "activity_idx" ON "activity" (timepoint, eid);
 CREATE INDEX IF NOT EXISTS "pending_idx" ON "activity" (is_pending) WHERE is_pending IS TRUE;
-
-CREATE TABLE IF NOT EXISTS "feed_configuration"
-(
-	id SERIAL PRIMARY KEY,
-	name TEXT UNIQUE NOT NULL,
-	enabled BOOLEAN NOT NULL
-);
 `
 	fetchDataTable = "fetch_data" // data fetch from exchange and blockchain
 	activityTable  = "activity"
@@ -91,13 +83,6 @@ func NewPostgresStorage(db *sqlx.DB) (*PostgresStorage, error) {
 		l:  zap.S(),
 	}
 
-	// init all feed as enabled
-	query := `INSERT INTO "feed_configuration" (name, enabled) VALUES ($1, $2) ON CONFLICT DO NOTHING;`
-	for _, feed := range world.AllFeeds() {
-		if _, err := s.db.Exec(query, feed, true); err != nil {
-			return s, err
-		}
-	}
 	return s, nil
 }
 
