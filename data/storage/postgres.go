@@ -56,9 +56,8 @@ CREATE TABLE IF NOT EXISTS "feed_configuration"
 	enabled BOOLEAN NOT NULL
 );
 `
-	fetchDataTable         = "fetch_data" // data fetch from exchange and blockchain
-	activityTable          = "activity"
-	feedConfigurationTable = "feed_configuration"
+	fetchDataTable = "fetch_data" // data fetch from exchange and blockchain
+	activityTable  = "activity"
 	// data type constant
 
 )

@@ -65,6 +65,8 @@ func SettingChangeFromType(t ChangeType) (SettingChangeType, error) {
 		i = &DeleteAssetExchangeEntry{}
 	case ChangeTypeUpdateStableTokenParams:
 		i = &UpdateStableTokenParamsEntry{}
+	case ChangeTypeSetFeedConfiguration:
+		i = &SetFeedConfigurationEntry{}
 	}
 	return i, nil
 }
