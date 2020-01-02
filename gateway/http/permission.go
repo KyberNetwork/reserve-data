@@ -24,7 +24,8 @@ p, %[1]s, /v3/setting-change-target, POST
 p, %[1]s, /v3/setting-change-pwis, POST
 p, %[1]s, /v3/setting-change-rbquadratic, POST
 p, %[1]s, /v3/setting-change-main, POST
-p, %[1]s, /v3/setting-change-stable, POST`, key)
+p, %[1]s, /v3/setting-change-stable, POST
+p, %[1]s, /v3/setting-change-feed-configuration, POST`, key)
 }
 
 func addKeyConfirmPolicy(key string) string {
@@ -36,11 +37,11 @@ p, %[1]s, /v3/setting-change-pwis/:id, (PUT)|(DELETE)
 p, %[1]s, /v3/setting-change-rbquadratic/:id, (PUT)|(DELETE)
 p, %[1]s, /v3/setting-change-main/:id, (PUT)|(DELETE)
 p, %[1]s, /v3/setting-change-stable/:id, (PUT)|(DELETE)
+p, %[1]s, /v3/setting-change-feed-configuration/:id, (PUT)|(DELETE)
 p, %[1]s, /v3/hold-rebalance, POST
 p, %[1]s, /v3/enable-rebalance, POST
 p, %[1]s, /v3/hold-set-rate, POST
-p, %[1]s, /v3/enable-set-rate, POST
-p, %[1]s, /v3/set-feed-configuration, POST`, key)
+p, %[1]s, /v3/enable-set-rate, POST`, key)
 }
 
 func addKeyRebalancePolicy(key string) string {

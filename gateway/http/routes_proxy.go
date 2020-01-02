@@ -36,8 +36,6 @@ func WithCoreEndpoint(coreEndpoint string) Option {
 		g.GET("/gold-feed", coreProxyMW)
 		g.GET("/btc-feed", coreProxyMW)
 		g.GET("/usd-feed", coreProxyMW)
-		g.POST("/set-feed-configuration", coreProxyMW)
-		g.GET("/get-feed-configuration", coreProxyMW)
 
 		g.GET("/addresses", coreProxyMW)
 
@@ -60,6 +58,7 @@ func WithSettingEndpoint(settingEndpoint string) Option {
 		g.GET("/exchange", settingProxyMW)
 		g.GET("trading-pair/:id", settingProxyMW)
 		g.GET("/stable-token-params", settingProxyMW)
+		g.GET("/feed-configurations", settingProxyMW)
 
 		g.GET("/setting-change-main", settingProxyMW)
 		g.GET("setting-change-main/:id", settingProxyMW)
@@ -96,6 +95,12 @@ func WithSettingEndpoint(settingEndpoint string) Option {
 		g.POST("/setting-change-update-exchange", settingProxyMW)
 		g.PUT("/setting-change-update-exchange/:id", settingProxyMW)
 		g.DELETE("/setting-change-update-exchange/:id", settingProxyMW)
+
+		g.POST("/setting-change-feed-configuration", settingProxyMW)
+		g.GET("/setting-change-feed-configuration", settingProxyMW)
+		g.GET("/setting-change-feed-configuration/:id", settingProxyMW)
+		g.PUT("/setting-change-feed-configuration/:id", settingProxyMW)
+		g.DELETE("/setting-change-feed-configuration/:id", settingProxyMW)
 
 		g.GET("/rebalance-status", settingProxyMW)
 		g.POST("/hold-rebalance", settingProxyMW)
