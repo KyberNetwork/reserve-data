@@ -112,4 +112,4 @@ curl -X DELETE "https://gateway.local/v3/setting-change-feed-configuration/6"
 ### HTTP Request
 
 `DELETE https://gateway.local/v3/setting-change-feed-configuration/:change_id`
-<aside class="notice">Delete key is required</aside>
+<aside class="notice">Confirm key is required</aside>
