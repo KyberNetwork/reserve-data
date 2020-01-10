@@ -358,9 +358,11 @@ func (f *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord) (m
 
 	for _, activity := range pendings {
 		if activity.IsBlockchainPending() && (activity.Action == common.ActionSetRate || activity.Action == common.ActionDeposit || activity.Action == common.ActionWithdraw) {
-			var blockNum uint64
-			var status string
-			var err error
+			var (
+				blockNum uint64
+				status   string
+				err      error
+			)
 			txStr, ok := activity.Result["tx"].(string)
 			if !ok {
 				f.l.Warnw("TX_STATUS:cannot convert activity.Result[tx] to string type", "tx", activity.Result["tx"])
@@ -372,6 +374,7 @@ func (f *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord) (m
 			}
 			status, blockNum, err = f.blockchain.TxStatus(tx)
 			if err != nil {
+				f.l.Warnw("cannot get tx status", "tx hash", txStr)
 				return result, fmt.Errorf("TX_STATUS: ERROR Getting tx status failed: %s", err)
 			}
 
