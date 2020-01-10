@@ -374,8 +374,7 @@ func (f *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord) (m
 			}
 			status, blockNum, err = f.blockchain.TxStatus(tx)
 			if err != nil {
-				f.l.Warnw("cannot get tx status", "tx hash", txStr)
-				return result, fmt.Errorf("TX_STATUS: ERROR Getting tx status failed: %s", err)
+				return result, fmt.Errorf("TX_STATUS: ERROR Getting tx %s status failed: %s", txStr, err)
 			}
 
 			switch status {
