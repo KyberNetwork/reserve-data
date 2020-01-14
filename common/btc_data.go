@@ -3,8 +3,8 @@ package common
 // BTCData is the data returned by /btc-feed API.
 type BTCData struct {
 	Timestamp uint64
-	Coinbase  CoinbaseData     `json:"CoinbaseBTC"`
-	Gemini    GeminiETHBTCData `json:"GeminiBTC"`
+	Coinbase  CoinbaseData `json:"CoinbaseBTC"`
+	Binance   BinanceData  `json:"BinanceBTC"`
 }
 
 // CoinBaseData is the response of Coinbase ETH/BTC ticker request.

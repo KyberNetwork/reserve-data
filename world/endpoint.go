@@ -14,7 +14,8 @@ var (
 		"Gemini",
 
 		"CoinbaseBTC",
-		"GeminiBTC",
+		"GeminiBTC", // this no longer use and replace by BinanceBTC below.
+		"BinanceBTC",
 
 		"CoinbaseUSD",
 		"BinanceUSD",
@@ -48,7 +49,6 @@ type Endpoint interface {
 	GeminiDataEndpoint() string
 
 	CoinbaseBTCEndpoint() string
-	GeminiBTCEndpoint() string
 
 	CoinbaseUSDCEndpoint() string
 	BinanceUSDCEndpoint() string
@@ -60,6 +60,7 @@ type Endpoint interface {
 	BinanceUSDTEndpoint() string
 	BinancePAXEndpoint() string
 	BinanceTUSDEndpoint() string
+	BinanceBTCEndpoint() string
 }
 
 // Endpoints implement endpoint for testing in simulate.
@@ -137,6 +138,6 @@ func (ep Endpoints) CoinbaseBTCEndpoint() string {
 	return ep.eps.CoinbaseBTC.URL
 }
 
-func (ep Endpoints) GeminiBTCEndpoint() string {
-	return ep.eps.GeminiBTC.URL
+func (ep Endpoints) BinanceBTCEndpoint() string {
+	return ep.eps.BinanceBTC.URL
 }
