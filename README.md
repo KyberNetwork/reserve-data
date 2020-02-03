@@ -99,4 +99,4 @@ sample:
 
 ## APIs
 
-//TODO: add deployed url documentation 
+https://dev-reserve-data-docs.knstats.com/#introduction
