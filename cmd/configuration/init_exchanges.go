@@ -85,7 +85,7 @@ func updateDepositAddress(assetStorage storage.Interface, be exchange.BinanceInt
 	for _, asset := range assets {
 		for _, ae := range asset.Exchanges {
 			switch ae.ExchangeID {
-			case uint64(common.Binance):
+			case uint64(common.Binance), uint64(common.Binance2):
 				l.Warnw("updating deposit address for asset", "asset_id", asset.ID,
 					"exchange", common.Binance.String(), "symbol", ae.Symbol)
 				if be == nil {
@@ -101,7 +101,7 @@ func updateDepositAddress(assetStorage storage.Interface, be exchange.BinanceInt
 				}
 				err = assetStorage.UpdateDepositAddress(
 					asset.ID,
-					uint64(common.Binance),
+					ae.ExchangeID,
 					ethereum.HexToAddress(depositAddress.Address))
 				if err != nil {
 					l.Warnw("assetStorage.UpdateDepositAddress", "err", err.Error())
@@ -173,12 +173,13 @@ func NewExchangePool(
 			if exparam == common.Binance2 {
 				binanceSigner := binance.NewSigner(rcf.Binance2Key, rcf.Binance2Secret)
 			}
-			be = binance.NewBinanceEndpoint(binanceSigner, bi, dpl)
+			be = binance.NewBinanceEndpoint(binanceSigner, bi, dpl, exparam)
 			binancestorage, err := binanceStorage.NewPostgresStorage(db)
 			if err != nil {
 				return nil, fmt.Errorf("can not create Binance storage: (%s)", err.Error())
 			}
 			bin, err = exchange.NewBinance(
+				exparam,
 				be,
 				binancestorage,
 				assetStorage)

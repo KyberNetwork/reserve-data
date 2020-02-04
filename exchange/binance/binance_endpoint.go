@@ -26,10 +26,11 @@ import (
 // interf for calling api in different env
 // timedelta to make sure calling api in time
 type Endpoint struct {
-	signer    Signer
-	interf    Interface
-	timeDelta int64
-	l         *zap.SugaredLogger
+	signer     Signer
+	interf     Interface
+	timeDelta  int64
+	l          *zap.SugaredLogger
+	exchangeID common.ExchangeID
 }
 
 func (ep *Endpoint) fillRequest(req *http.Request, signNeeded bool, timepoint uint64) {
@@ -316,7 +317,7 @@ func (ep *Endpoint) OrderStatus(symbol string, id uint64) (exchange.Binaorder, e
 func (ep *Endpoint) Withdraw(asset commonv3.Asset, amount *big.Int, address ethereum.Address) (string, error) {
 	var symbol string
 	for _, exchg := range asset.Exchanges {
-		if exchg.ExchangeID == uint64(common.Binance) {
+		if exchg.ExchangeID == uint64(ep.exchangeID) {
 			symbol = exchg.Symbol
 		}
 	}
@@ -457,7 +458,7 @@ func (ep *Endpoint) UpdateTimeDelta() error {
 }
 
 //NewBinanceEndpoint return new endpoint instance for using binance
-func NewBinanceEndpoint(signer Signer, interf Interface, dpl deployment.Deployment) *Endpoint {
+func NewBinanceEndpoint(signer Signer, interf Interface, dpl deployment.Deployment, exchangeID common.ExchangeID) *Endpoint {
 	l := zap.S()
 	endpoint := &Endpoint{signer: signer, interf: interf, l: l}
 	switch dpl {

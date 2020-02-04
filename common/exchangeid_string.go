@@ -4,9 +4,9 @@ package common
 
 import "strconv"
 
-const _ExchangeID_name = "binancehuobistable_exchange"
+const _ExchangeID_name = "binancehuobibinance_2"
 
-var _ExchangeID_index = [...]uint8{0, 7, 12, 27}
+var _ExchangeID_index = [...]uint8{0, 7, 12, 21}
 
 func (i ExchangeID) String() string {
 	i -= 1

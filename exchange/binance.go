@@ -20,22 +20,26 @@ const (
 	batchSize      int     = 4
 )
 
+// Binance instance for binance exchange
 type Binance struct {
 	interf  BinanceInterface
 	storage BinanceStorage
 	sr      storage.Interface
 	l       *zap.SugaredLogger
 	BinanceLive
+	id common.ExchangeID
 }
 
+// TokenAddresses return deposit addresses of token
 func (bn *Binance) TokenAddresses() (map[string]ethereum.Address, error) {
-	result, err := bn.sr.GetDepositAddresses(uint64(common.Binance))
+	result, err := bn.sr.GetDepositAddresses(uint64(bn.id))
 	if err != nil {
 		return nil, err
 	}
 	return result, nil
 }
 
+// MarshalText Return exchange id by name
 func (bn *Binance) MarshalText() (text []byte, err error) {
 	return []byte(bn.ID().String()), nil
 }
@@ -44,14 +48,14 @@ func (bn *Binance) MarshalText() (text []byte, err error) {
 func (bn *Binance) Address(asset commonv3.Asset) (ethereum.Address, bool) {
 	var symbol string
 	for _, exchange := range asset.Exchanges {
-		if exchange.ExchangeID == uint64(common.Binance) {
+		if exchange.ExchangeID == uint64(bn.id) {
 			symbol = exchange.Symbol
 		}
 	}
 	liveAddress, err := bn.interf.GetDepositAddress(symbol)
 	if err != nil || liveAddress.Address == "" {
 		bn.l.Warnw("Get Binance live deposit address for token failed or the address replied is empty . Use the currently available address instead", "assetID", asset.ID, "err", err)
-		addrs, uErr := bn.sr.GetDepositAddresses(uint64(common.Binance))
+		addrs, uErr := bn.sr.GetDepositAddresses(uint64(bn.id))
 		if uErr != nil {
 			bn.l.Warnw("get address of token in Binance exchange failed, it will be considered as not supported", "assetID", asset.ID, "err", err)
 			return ethereum.Address{}, false
@@ -62,7 +66,7 @@ func (bn *Binance) Address(asset commonv3.Asset) (ethereum.Address, bool) {
 	bn.l.Infof("Got Binance live deposit address for token %d, attempt to update it to current setting", asset.ID)
 	if err = bn.sr.UpdateDepositAddress(
 		asset.ID,
-		uint64(common.Binance),
+		uint64(bn.id),
 		ethereum.HexToAddress(liveAddress.Address)); err != nil {
 		bn.l.Warnw("failed to update deposit address", "err", err)
 		return ethereum.Address{}, false
@@ -73,17 +77,19 @@ func (bn *Binance) Address(asset commonv3.Asset) (ethereum.Address, bool) {
 
 // ID must return the exact string or else simulation will fail
 func (bn *Binance) ID() common.ExchangeID {
-	return common.Binance
+	return bn.id
 }
 
+// TokenPairs return token pairs supported by exchange
 func (bn *Binance) TokenPairs() ([]commonv3.TradingPairSymbols, error) {
-	pairs, err := bn.sr.GetTradingPairs(uint64(common.Binance))
+	pairs, err := bn.sr.GetTradingPairs(uint64(bn.id))
 	if err != nil {
 		return nil, err
 	}
 	return pairs, nil
 }
 
+// QueryOrder return current order status
 func (bn *Binance) QueryOrder(symbol string, id uint64) (done float64, remaining float64, finished bool, err error) {
 	result, err := bn.interf.OrderStatus(symbol, id)
 	if err != nil {
@@ -243,7 +249,7 @@ func (bn *Binance) FetchEBalanceData(timepoint uint64) (common.EBalanceEntry, er
 				tokenSymbol := b.Asset
 				for _, asset := range assets {
 					for _, exchg := range asset.Exchanges {
-						if exchg.ExchangeID == uint64(common.Binance) && exchg.Symbol == tokenSymbol {
+						if exchg.ExchangeID == uint64(bn.id) && exchg.Symbol == tokenSymbol {
 							avai, _ := strconv.ParseFloat(b.Free, 64)
 							locked, _ := strconv.ParseFloat(b.Locked, 64)
 							result.AvailableBalance[tokenSymbol] = avai
@@ -393,7 +399,8 @@ func (bn *Binance) OrderStatus(id string, base, quote string) (string, error) {
 	return common.ExchangeStatusDone, nil
 }
 
-func NewBinance(interf BinanceInterface, storage BinanceStorage, sr storage.Interface) (*Binance, error) {
+// NewBinance init new binance instance
+func NewBinance(id common.ExchangeID, interf BinanceInterface, storage BinanceStorage, sr storage.Interface) (*Binance, error) {
 	binance := &Binance{
 		interf:  interf,
 		storage: storage,
@@ -401,7 +408,8 @@ func NewBinance(interf BinanceInterface, storage BinanceStorage, sr storage.Inte
 		BinanceLive: BinanceLive{
 			interf: interf,
 		},
-		l: zap.S(),
+		id: id,
+		l:  zap.S(),
 	}
 	return binance, nil
 }
