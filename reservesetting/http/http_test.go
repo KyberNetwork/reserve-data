@@ -15,7 +15,6 @@ const (
 	binance           = uint64(common2.Binance)
 	huobi             = uint64(common2.Huobi)
 	settingChangePath = "/v3/setting-change-main"
-	stable            = uint64(common2.StableExchange)
 )
 
 type assertFn func(t *testing.T, resp *httptest.ResponseRecorder)

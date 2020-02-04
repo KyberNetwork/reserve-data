@@ -34,12 +34,12 @@ func createSampleAsset(store *postgres.Storage) (uint64, error) {
 		return 0, err
 	}
 
-	_, err = store.CreateAssetExchange(stable, 1, "ETH", eth.HexToAddress("0x00"), 10,
+	_, err = store.CreateAssetExchange(binance, 1, "ETH", eth.HexToAddress("0x00"), 10,
 		0.2, 5.0, 0.3, nil)
 	if err != nil {
 		return 0, err
 	}
-	err = store.UpdateExchange(stable, storage.UpdateExchangeOpts{
+	err = store.UpdateExchange(binance, storage.UpdateExchangeOpts{
 		Disable:         common.BoolPointer(false),
 		TradingFeeTaker: common.FloatPointer(0.1),
 		TradingFeeMaker: common.FloatPointer(0.2),
@@ -94,7 +94,7 @@ func createSampleAsset(store *postgres.Storage) (uint64, error) {
 			{
 				Symbol:            "ABC",
 				DepositAddress:    eth.HexToAddress("0x000002"),
-				ExchangeID:        stable,
+				ExchangeID:        binance,
 				TargetRatio:       0.1,
 				TargetRecommended: 1000.0,
 				WithdrawFee:       0.5,
@@ -125,7 +125,7 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 	)
 
 	//create map of test exchange
-	for _, exchangeID := range []v1common.ExchangeID{v1common.Binance, v1common.Huobi, v1common.StableExchange} {
+	for _, exchangeID := range []v1common.ExchangeID{v1common.Binance, v1common.Huobi} {
 		exchange := v1common.TestExchange{}
 		supportedExchanges[exchangeID] = exchange
 	}
@@ -567,7 +567,7 @@ func TestHTTPServerAssetExchangeWithOptionalTradingPair(t *testing.T) {
 	)
 
 	//create map of test exchange
-	for _, exchangeID := range []v1common.ExchangeID{v1common.Binance, v1common.Huobi, v1common.StableExchange} {
+	for _, exchangeID := range []v1common.ExchangeID{v1common.Binance, v1common.Huobi} {
 		exchange := v1common.TestExchange{}
 		supportedExchanges[exchangeID] = exchange
 	}
@@ -841,7 +841,7 @@ func TestHTTPServerAssetExchangeWithOptionalTradingPair(t *testing.T) {
 								Base:  assetID, // ABC asset
 								Quote: 1,       // ETH
 							},
-							ExchangeID: stable,
+							ExchangeID: binance,
 						},
 					},
 				},
@@ -994,7 +994,7 @@ func TestHTTPServer_ChangeAssetAddress(t *testing.T) {
 	)
 
 	//create map of test exchange
-	for _, exchangeID := range []v1common.ExchangeID{v1common.Binance, v1common.Huobi, v1common.StableExchange} {
+	for _, exchangeID := range []v1common.ExchangeID{v1common.Binance, v1common.Huobi} {
 		exchange := v1common.TestExchange{}
 		supportedExchanges[exchangeID] = exchange
 	}
@@ -1088,7 +1088,7 @@ func TestHTTPServer_DeleteTradingPair(t *testing.T) {
 	)
 
 	//create map of test exchange
-	for _, exchangeID := range []v1common.ExchangeID{v1common.Binance, v1common.Huobi, v1common.StableExchange} {
+	for _, exchangeID := range []v1common.ExchangeID{v1common.Binance, v1common.Huobi} {
 		exchange := v1common.TestExchange{}
 		supportedExchanges[exchangeID] = exchange
 	}
@@ -1170,7 +1170,7 @@ func TestHTTPServer_DeleteAssetExchange(t *testing.T) {
 	)
 
 	//create map of test exchange
-	for _, exchangeID := range []v1common.ExchangeID{v1common.Binance, v1common.Huobi, v1common.StableExchange} {
+	for _, exchangeID := range []v1common.ExchangeID{v1common.Binance, v1common.Huobi} {
 		exchange := v1common.TestExchange{}
 		supportedExchanges[exchangeID] = exchange
 	}
@@ -1250,7 +1250,7 @@ func TestCreateTradingPair(t *testing.T) {
 	)
 
 	// create map of test exchange
-	for _, exchangeID := range []v1common.ExchangeID{v1common.Binance, v1common.Huobi, v1common.StableExchange} {
+	for _, exchangeID := range []v1common.ExchangeID{v1common.Binance, v1common.Huobi} {
 		exchange := v1common.TestExchange{}
 		supportedExchanges[exchangeID] = exchange
 	}

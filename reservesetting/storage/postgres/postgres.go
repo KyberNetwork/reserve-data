@@ -43,7 +43,7 @@ VALUES (unnest($1::INT[]),
 	disable := false
 
 	// stable exchange is not a real exchange, we will just enable it by default with fake fee configuration
-	err = s.UpdateExchange(uint64(common.StableExchange), storage.UpdateExchangeOpts{
+	err = s.UpdateExchange(uint64(common.Binance), storage.UpdateExchangeOpts{
 		TradingFeeMaker: &maker,
 		TradingFeeTaker: &taker,
 		Disable:         &disable,

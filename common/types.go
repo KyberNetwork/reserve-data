@@ -773,10 +773,12 @@ type RawConfig struct {
 	DepositKeystore   string `json:"keystore_deposit_path"`
 	DepositPassphrase string `json:"passphrase_deposit"`
 
-	BinanceKey    string `json:"binance_key"`
-	BinanceSecret string `json:"binance_secret"`
-	HoubiKey      string `json:"huobi_key"`
-	HoubiSecret   string `json:"huobi_secret"`
+	BinanceKey     string `json:"binance_key"`
+	BinanceSecret  string `json:"binance_secret"`
+	Binance2Key    string `json:"binance_2_key"`
+	Binance2Secret string `json:"binance_2_secret"`
+	HoubiKey       string `json:"huobi_key"`
+	HoubiSecret    string `json:"huobi_secret"`
 
 	IntermediatorKeystore   string `json:"keystore_intermediator_path"`
 	IntermediatorPassphrase string `json:"passphrase_intermediate_account"`

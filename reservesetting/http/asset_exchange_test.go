@@ -20,7 +20,7 @@ func TestServer_UpdateAssetExchange(t *testing.T) {
 	)
 
 	// create map of test exchange
-	for _, exchangeID := range []v1common.ExchangeID{v1common.Binance, v1common.Huobi, v1common.StableExchange} {
+	for _, exchangeID := range []v1common.ExchangeID{v1common.Binance, v1common.Huobi} {
 		exchange := v1common.TestExchange{}
 		supportedExchanges[exchangeID] = exchange
 	}

@@ -27,16 +27,9 @@ func TestStorage_UpdateExchange(t *testing.T) {
 	assert.Len(t, exchanges, len(common.ValidExchangeNames))
 
 	for _, exchange := range exchanges {
-		switch exchange.ID {
-		case uint64(common.StableExchange):
-			assert.NotZero(t, exchange.TradingFeeMaker)
-			assert.NotZero(t, exchange.TradingFeeTaker)
-			assert.False(t, exchange.Disable)
-		default:
-			assert.Zero(t, exchange.TradingFeeMaker)
-			assert.Zero(t, exchange.TradingFeeTaker)
-			assert.True(t, exchange.Disable)
-		}
+		assert.Zero(t, exchange.TradingFeeMaker)
+		assert.Zero(t, exchange.TradingFeeTaker)
+		assert.True(t, exchange.Disable)
 	}
 
 	// exchange should not be allowed to enable if trading fees are not all set

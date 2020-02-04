@@ -18,15 +18,15 @@ const (
 	Binance ExchangeID = iota + 1 //binance
 	//Huobi is the enumerated key for huobi
 	Huobi //huobi
-	//StableExchange is the enumerated key for stable_exchange
-	StableExchange //stable_exchange
+	// Binance2 is second binance exchange
+	Binance2 // binance_2
 )
 
 // ValidExchangeNames returns all valid exchange names.
 var ValidExchangeNames = map[string]ExchangeID{
-	Binance.String():        Binance,
-	Huobi.String():          Huobi,
-	StableExchange.String(): StableExchange,
+	Binance.String():  Binance,
+	Huobi.String():    Huobi,
+	Binance2.String(): Binance2,
 }
 
 // Exchange represents a centralized exchange like Binance, Huobi...

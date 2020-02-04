@@ -9,15 +9,18 @@ import (
 	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
+// Signer for binance
 type Signer struct {
 	Key    string `json:"binance_key"`
 	Secret string `json:"binance_secret"`
 }
 
+// GetKey return binance key
 func (s Signer) GetKey() string {
 	return s.Key
 }
 
+// Sign a message
 func (s Signer) Sign(msg string) string {
 	mac := hmac.New(sha256.New, []byte(s.Secret))
 	if _, err := mac.Write([]byte(msg)); err != nil {
@@ -32,6 +35,7 @@ func NewSigner(key, secret string) Signer {
 	return Signer{key, secret}
 }
 
+// NewSignerFromFile return signer for binance from file
 func NewSignerFromFile(path string) Signer {
 	raw, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -42,5 +46,8 @@ func NewSignerFromFile(path string) Signer {
 	if err != nil {
 		panic(err)
 	}
-	return signer
+	return Signer{
+		Key:    signer.Key,
+		Secret: signer.Secret,
+	}
 }

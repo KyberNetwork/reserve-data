@@ -19,6 +19,7 @@
 .glide/
 reserve-data
 config.json
+config-v3.json
 log/*
 cmd/*_awsconfig.json
 cmd/cmd
@@ -33,6 +34,7 @@ cmd/faucet/faucet_wallet
 temp
 build.sh
 cmd/config.json
+cmd/config-v3.json
 cmd/dev.db
 cmd/internal_mainnet.db
 cmd/internal_mainnet_config.json
@@ -74,3 +76,4 @@ cmd/mainnet_users.db
 cmd/shared/
 */cmd/cmd
 apidocs/build
+cmd/local.sh

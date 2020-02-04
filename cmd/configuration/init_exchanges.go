@@ -168,14 +168,11 @@ func NewExchangePool(
 
 	for _, exparam := range enabledExchanges {
 		switch exparam {
-		case common.StableExchange:
-			stableEx, err := exchange.NewStableEx(s)
-			if err != nil {
-				return nil, fmt.Errorf("can not create exchange stable_exchange: (%s)", err.Error())
-			}
-			exchanges[stableEx.ID()] = stableEx
-		case common.Binance:
+		case common.Binance, common.Binance2:
 			binanceSigner := binance.NewSigner(rcf.BinanceKey, rcf.BinanceSecret)
+			if exparam == common.Binance2 {
+				binanceSigner := binance.NewSigner(rcf.Binance2Key, rcf.Binance2Secret)
+			}
 			be = binance.NewBinanceEndpoint(binanceSigner, bi, dpl)
 			binancestorage, err := binanceStorage.NewPostgresStorage(db)
 			if err != nil {
