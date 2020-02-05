@@ -9,7 +9,6 @@ import (
 
 	"github.com/KyberNetwork/reserve-data/common"
 	v3 "github.com/KyberNetwork/reserve-data/reservesetting/common"
-	"github.com/KyberNetwork/reserve-data/reservesetting/storage"
 )
 
 // Storage is an implementation of storage.Interface that use PostgreSQL as database system.
@@ -38,16 +37,6 @@ VALUES (unnest($1::INT[]),
 		return err
 	}
 
-	maker := 1.0
-	taker := 1.0
-	disable := false
-
-	// stable exchange is not a real exchange, we will just enable it by default with fake fee configuration
-	err = s.UpdateExchange(uint64(common.Binance), storage.UpdateExchangeOpts{
-		TradingFeeMaker: &maker,
-		TradingFeeTaker: &taker,
-		Disable:         &disable,
-	})
 	return err
 }
 
