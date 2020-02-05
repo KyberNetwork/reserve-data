@@ -1,7 +1,6 @@
 package blockchain
 
 import (
-	"log"
 	"math/big"
 
 	"github.com/KyberNetwork/reserve-data/common/blockchain"
@@ -48,8 +47,6 @@ func NewBlockchain(
 	signer blockchain.Signer, nonce blockchain.NonceCorpus) (*Blockchain, error) {
 
 	base.MustRegisterOperator(HuobiOP, blockchain.NewOperator(signer, nonce))
-
-	log.Printf("register huobi intermediate operator: %s", signer.GetAddress().Hex())
 
 	return &Blockchain{
 		BaseBlockchain: base,
