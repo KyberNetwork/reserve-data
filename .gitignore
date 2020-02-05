@@ -34,6 +34,7 @@ cmd/faucet/faucet_wallet
 temp
 build.sh
 cmd/config.json
+cmd/secret.json
 cmd/config-v3.json
 cmd/dev.db
 cmd/internal_mainnet.db

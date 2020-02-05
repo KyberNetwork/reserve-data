@@ -3,6 +3,7 @@ package http
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -21,20 +22,6 @@ import (
 
 func createSampleAsset(store *postgres.Storage) (uint64, error) {
 	_, err := store.CreateAssetExchange(binance, 1, "ETH", eth.HexToAddress("0x00"), 10,
-		0.2, 5.0, 0.3, nil)
-	if err != nil {
-		return 0, err
-	}
-	err = store.UpdateExchange(binance, storage.UpdateExchangeOpts{
-		Disable:         common.BoolPointer(false),
-		TradingFeeTaker: common.FloatPointer(0.1),
-		TradingFeeMaker: common.FloatPointer(0.2),
-	})
-	if err != nil {
-		return 0, err
-	}
-
-	_, err = store.CreateAssetExchange(binance, 1, "ETH", eth.HexToAddress("0x00"), 10,
 		0.2, 5.0, 0.3, nil)
 	if err != nil {
 		return 0, err
@@ -90,15 +77,6 @@ func createSampleAsset(store *postgres.Storage) (uint64, error) {
 						PricePrecision:  1.0,
 					},
 				},
-			},
-			{
-				Symbol:            "ABC",
-				DepositAddress:    eth.HexToAddress("0x000002"),
-				ExchangeID:        binance,
-				TargetRatio:       0.1,
-				TargetRecommended: 1000.0,
-				WithdrawFee:       0.5,
-				MinDeposit:        100.0,
 			},
 		}, &common.AssetTarget{
 			TransferThreshold:  1.0,
@@ -826,34 +804,6 @@ func TestHTTPServerAssetExchangeWithOptionalTradingPair(t *testing.T) {
 			assert:   httputil.ExpectSuccess,
 			data:     nil,
 		},
-		{
-			msg:      "create trading pair successfully",
-			endpoint: settingChangePath,
-			method:   http.MethodPost,
-			assert:   httputil.ExpectSuccess,
-			data: &common.SettingChange{
-				ChangeList: []common.SettingChangeEntry{
-					{
-						Type: common.ChangeTypeCreateTradingPair,
-						Data: common.CreateTradingPairEntry{
-							AssetID: assetID,
-							TradingPair: common.TradingPair{
-								Base:  assetID, // ABC asset
-								Quote: 1,       // ETH
-							},
-							ExchangeID: binance,
-						},
-					},
-				},
-			},
-		},
-		{
-			msg:      "confirm create trading pair successfully",
-			endpoint: settingChangePath + "/3",
-			method:   http.MethodPut,
-			assert:   httputil.ExpectSuccess,
-			data:     nil,
-		},
 	}
 
 	for _, tc := range tests {
@@ -1181,8 +1131,45 @@ func TestHTTPServer_DeleteAssetExchange(t *testing.T) {
 	require.NoError(t, err)
 
 	const deleteAssetExchange = "/v3/setting-change-main"
+	const deleteTradingPair = "/v3/setting-change-main"
 	var deleteAssetExchangeID uint64
+	var deleteTradingPairID uint64
 	var tests = []testCase{
+		{
+			msg:      "create delete trading pair",
+			endpoint: deleteTradingPair,
+			method:   http.MethodPost,
+			data: common.SettingChange{
+				ChangeList: []common.SettingChangeEntry{
+					{
+						Type: common.ChangeTypeDeleteTradingPair,
+						Data: common.DeleteTradingPairEntry{
+							TradingPairID: 1,
+						},
+					},
+				},
+			},
+			assert: func(t *testing.T, resp *httptest.ResponseRecorder) {
+				var idResponse struct {
+					ID      uint64 `json:"id"`
+					Success bool   `json:"success"`
+					Reason  string `json:"reason"`
+				}
+				require.Equal(t, http.StatusOK, resp.Code)
+				err = json.Unmarshal(resp.Body.Bytes(), &idResponse)
+				require.NoError(t, err)
+				require.True(t, idResponse.Success)
+				deleteTradingPairID = idResponse.ID
+			},
+		},
+		{
+			msg: "confirm delete trading pair",
+			endpointExp: func() string {
+				return deleteTradingPair + fmt.Sprintf("/%d", deleteTradingPairID)
+			},
+			method: http.MethodPut,
+			assert: httputil.ExpectSuccess,
+		},
 		{
 			msg:      "create delete asset exchange",
 			endpoint: deleteAssetExchange,
@@ -1206,6 +1193,7 @@ func TestHTTPServer_DeleteAssetExchange(t *testing.T) {
 				require.Equal(t, http.StatusOK, resp.Code)
 				err = json.Unmarshal(resp.Body.Bytes(), &idResponse)
 				require.NoError(t, err)
+				log.Printf("%v", idResponse)
 				require.True(t, idResponse.Success)
 				deleteAssetExchangeID = idResponse.ID
 			},
