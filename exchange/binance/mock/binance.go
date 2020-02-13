@@ -17,24 +17,32 @@ func init() {
 // BinanceTestExchange is the mock implementation of binance exchange, for testing purpose.
 type BinanceTestExchange struct{}
 
-// Address return address of token
+// Address binance mock address function
 func (bte *BinanceTestExchange) Address(_ commonv3.Asset) (address ethereum.Address, supported bool) {
 	return ethereum.Address{}, true
 }
 
+// Withdraw binance mock withdraw function
 func (bte *BinanceTestExchange) Withdraw(asset commonv3.Asset, amount *big.Int, address ethereum.Address) (string, error) {
 	return "withdrawid", nil
 }
+
+// Trade binance mock trade function
 func (bte *BinanceTestExchange) Trade(tradeType string, pair commonv3.TradingPairSymbols, rate float64, amount float64) (id string, done float64, remaining float64, finished bool, err error) {
 	return "tradeid", 10, 5, false, nil
 }
+
+// CancelOrder binance mock cancel order function
 func (bte *BinanceTestExchange) CancelOrder(id, base, quote string) error {
 	return nil
 }
+
+// MarshalText mock function
 func (bte *BinanceTestExchange) MarshalText() (text []byte, err error) {
 	return []byte("binance"), nil
 }
 
+// GetTradeHistory mock function
 func (bte *BinanceTestExchange) GetTradeHistory(fromTime, toTime uint64) (common.ExchangeTradeHistory, error) {
 	return common.ExchangeTradeHistory{}, nil
 }

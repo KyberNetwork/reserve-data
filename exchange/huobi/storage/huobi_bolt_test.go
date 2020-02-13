@@ -129,10 +129,10 @@ func TestHuobiStoreDepositActivity(t *testing.T) {
 	// stored intermediate tx
 	err = storage.StoreIntermediateTx(txID, txEntry)
 	if err != nil {
-		t.Fatalf("Huobi store intermedate tx failed: %s", err.Error())
+		t.Fatalf("Huobi store intermediate tx failed: %s", err.Error())
 	}
 
-	// get intermedate tx
+	// get intermediate tx
 	tx, err := storage.GetIntermedatorTx(txID)
 	if err != nil {
 		t.Fatalf("Huobi get intermediate tx failed: %s", err.Error())

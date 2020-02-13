@@ -5,11 +5,13 @@ import (
 	"fmt"
 )
 
+// Binaprice binance order book item
 type Binaprice struct {
 	Quantity string
 	Rate     string
 }
 
+// UnmarshalJSON custom unmarshal reponse from binance api to Binaprice
 func (bp *Binaprice) UnmarshalJSON(text []byte) error {
 	temp := []interface{}{}
 	if err := json.Unmarshal(text, &temp); err != nil {
@@ -28,6 +30,7 @@ func (bp *Binaprice) UnmarshalJSON(text []byte) error {
 	return nil
 }
 
+// Binaresp is response for binance orderbook
 type Binaresp struct {
 	LastUpdatedID int64       `json:"lastUpdateId"`
 	Code          int         `json:"code"`
@@ -36,6 +39,7 @@ type Binaresp struct {
 	Asks          []Binaprice `json:"asks"`
 }
 
+// Binainfo is user account info including balance
 type Binainfo struct {
 	Code             int    `json:"code"`
 	Msg              string `json:"msg"`
@@ -53,6 +57,7 @@ type Binainfo struct {
 	} `json:"balances"`
 }
 
+// FilterLimit limit info from binance
 type FilterLimit struct {
 	FilterType  string `json:"filterType"`
 	MinPrice    string `json:"minPrice"`
@@ -64,6 +69,7 @@ type FilterLimit struct {
 	MinNotional string `json:"minNotional"`
 }
 
+// BinanceSymbol is precision from binance
 type BinanceSymbol struct {
 	Symbol             string        `json:"symbol"`
 	BaseAssetPrecision int           `json:"baseAssetPrecision"`
@@ -71,10 +77,12 @@ type BinanceSymbol struct {
 	Filters            []FilterLimit `json:"filters"`
 }
 
+// BinanceExchangeInfo list of token info
 type BinanceExchangeInfo struct {
 	Symbols []BinanceSymbol
 }
 
+// Binatrade request
 type Binatrade struct {
 	Symbol        string `json:"symbol"`
 	OrderID       uint64 `json:"orderId"`
@@ -82,12 +90,14 @@ type Binatrade struct {
 	TransactTime  uint64 `json:"transactTime"`
 }
 
+// Binawithdraw response for withdrawal
 type Binawithdraw struct {
 	Success bool   `json:"success"`
 	Msg     string `json:"msg"`
 	ID      string `json:"id"`
 }
 
+// Binaorder - binance order status
 type Binaorder struct {
 	Code          int    `json:"code"`
 	Msg           string `json:"msg"`
@@ -106,8 +116,10 @@ type Binaorder struct {
 	Time          uint64 `json:"time"`
 }
 
+// Binaorders list of order on binance
 type Binaorders []Binaorder
 
+// Binadepositaddress - deposit address from binance
 type Binadepositaddress struct {
 	Success    bool   `json:"success"`
 	Msg        string `json:"msg"`
@@ -116,6 +128,7 @@ type Binadepositaddress struct {
 	Asset      string `json:"asset"`
 }
 
+// Binacancel cancel order from binance
 type Binacancel struct {
 	Code              int    `json:"code"`
 	Msg               string `json:"msg"`
@@ -125,34 +138,14 @@ type Binacancel struct {
 	ClientOrderID     string `json:"clientOrderId"`
 }
 
-// {
-// 	"depositList": [
-// 		{
-// 			"insertTime": 1508198532000,
-// 			"amount": 0.04670582,
-// 			"asset": "ETH",
-// 			"address": "0x6915f16f8791d0a1cc2bf47c13a6b2a92000504b",
-// 			"txId": "0xdf33b22bdb2b28b1f75ccd201a4a4m6e7g83jy5fc5d5a9d1340961598cfcb0a1",
-// 			"status": 1
-// 		},
-// 		{
-// 			"insertTime": 1508298532000,
-// 			"amount": 1000,
-// 			"asset": "XMR",
-// 			"address": "463tWEBn5XZJSxLU34r6g7h8jtxuNcDbjLSjkn3XAXHCbLrTTErJrBWYgHJQyrCwkNgYvyV3z8zctJLPCZy24jvb3NiTcTJ",
-// 			"addressTag": "342341222",
-// 			"txId": "b3c6219639c8ae3f9cf010cdc24fw7f7yt8j1e063f9b4bd1a05cb44c4b6e2509",
-// 			"status": 1
-// 		}
-// 	],
-// 	"success": true
-// }
+// Binadeposits list of deposit info
 type Binadeposits struct {
 	Success  bool          `json:"success"`
 	Msg      string        `json:"msg"`
 	Deposits []Binadeposit `json:"depositList"`
 }
 
+// Binadeposit deposit record
 type Binadeposit struct {
 	InsertTime uint64  `json:"insertTime"`
 	Amount     float64 `json:"amount"`
@@ -162,36 +155,14 @@ type Binadeposit struct {
 	Status     int     `json:"status"`
 }
 
-// {
-// 	"withdrawList": [
-// 		{
-// 			"id":"7213fea8e94b4a5593d507237e5a555b"
-// 			"amount": 1,
-// 			"address": "0x6915f16f8791d0a1cc2bf47c13a6b2a92000504b",
-// 			"asset": "ETH",
-// 			"txId": "0xdf33b22bdb2b28b1f75ccd201a4a4m6e7g83jy5fc5d5a9d1340961598cfcb0a1",
-// 			"applyTime": 1508198532000
-// 			"status": 4
-// 		},
-// 		{
-// 			"id":"7213fea8e94b4a5534ggsd237e5a555b"
-// 			"amount": 1000,
-// 			"address": "463tWEBn5XZJSxLU34r6g7h8jtxuNcDbjLSjkn3XAXHCbLrTTErJrBWYgHJQyrCwkNgYvyV3z8zctJLPCZy24jvb3NiTcTJ",
-// 			"addressTag": "342341222",
-// 			"txId": "b3c6219639c8ae3f9cf010cdc24fw7f7yt8j1e063f9b4bd1a05cb44c4b6e2509",
-// 			"asset": "XMR",
-// 			"applyTime": 1508198532000,
-// 			"status": 4
-// 		}
-// 	],
-// 	"success": true
-// }
+// Binawithdrawals list of withdrawals
 type Binawithdrawals struct {
 	Success     bool             `json:"success"`
 	Msg         string           `json:"msg"`
 	Withdrawals []Binawithdrawal `json:"withdrawList"`
 }
 
+// Binawithdrawal withdrawal record from binance
 type Binawithdrawal struct {
 	ID        string  `json:"id"`
 	Amount    float64 `json:"amount"`
@@ -202,6 +173,7 @@ type Binawithdrawal struct {
 	Status    int     `json:"status"`
 }
 
+// BinaServerTime time from binance server
 type BinaServerTime struct {
 	ServerTime uint64 `json:"serverTime"`
 }
