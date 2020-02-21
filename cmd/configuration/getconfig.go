@@ -81,7 +81,10 @@ func InitAppState(authEnbl bool, ac ccfg.AppConfig) *AppState {
 	if len(callClients) == 0 {
 		l.Warn("no backup client available")
 	}
-	callClients = append(callClients, mainClient)
+	callClients = append(callClients, &common.EthClient{
+		Client: mainClient,
+		URL:    ac.Node.Main,
+	})
 
 	bc := blockchain.NewBaseBlockchain(
 		client, mainClient, map[string]*blockchain.Operator{},
