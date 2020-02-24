@@ -24,6 +24,7 @@ type Interface interface {
 	GetPriceFactors(uint64, uint64) ([]v3.PriceFactorAtTime, error)
 
 	UpdateExchange(id uint64, updateOpts UpdateExchangeOpts) error
+	UpdateFeedStatus(name string, enabled bool) error
 }
 
 // SettingReader is the common interface for reading exchanges, assets configuration.
@@ -47,6 +48,7 @@ type SettingReader interface {
 	GetStableTokenParams() (map[string]interface{}, error)
 	// GetFeedConfigurations return all feed configuration
 	GetFeedConfigurations() ([]v3.FeedConfiguration, error)
+	GetFeedConfiguration(name string) (v3.FeedConfiguration, error)
 }
 
 type ControlInfoInterface interface {

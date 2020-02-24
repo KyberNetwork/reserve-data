@@ -101,6 +101,7 @@ func NewServer(storage storage.Interface, host string, supportedExchanges map[v1
 	g.GET("/setting-change-feed-configuration/:id", server.getSettingChange)
 	g.PUT("/setting-change-feed-configuration/:id", server.confirmSettingChange)
 	g.DELETE("/setting-change-feed-configuration/:id", server.rejectSettingChange)
+	g.PUT("/update-feed-status/:name", server.updateFeedStatus)
 
 	g.GET("/price-factor", server.getPriceFactor)
 	g.POST("/price-factor", server.setPriceFactor)

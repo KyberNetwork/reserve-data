@@ -28,6 +28,14 @@ func (s *Storage) initFeedData() error {
 	return nil
 }
 
+// UpdateFeedStatus update feed status
+func (s *Storage) UpdateFeedStatus(name string, enabled bool) error {
+	return s.setFeedConfiguration(nil, common.SetFeedConfigurationEntry{
+		Name:    name,
+		Enabled: common.BoolPointer(enabled),
+	})
+}
+
 func (s *Storage) setFeedConfiguration(tx *sqlx.Tx, feedConfiguration common.SetFeedConfigurationEntry) error {
 	var sts = s.stmts.setFeedConfiguration
 	if tx != nil {

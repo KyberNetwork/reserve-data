@@ -68,3 +68,30 @@ func TestSetFeedConfigurations(t *testing.T) {
 
 	require.Equal(t, expectFC, newFC)
 }
+
+func TestUpdateFeedStatus(t *testing.T) {
+	db, tearDown := testutil.MustNewDevelopmentDB()
+	defer func() {
+		assert.NoError(t, tearDown())
+	}()
+
+	s, err := NewStorage(db)
+	require.NoError(t, err)
+
+	fcs, err := s.GetFeedConfigurations()
+	require.NoError(t, err)
+
+	require.NotZero(t, len(fcs))
+	require.Equal(t, len(world.AllFeeds()), len(fcs))
+	var (
+		fname     = fcs[0].Name
+		newStatus = !fcs[0].Enabled
+	)
+	err = s.UpdateFeedStatus(fname, newStatus)
+	require.NoError(t, err)
+
+	newFeed, err := s.GetFeedConfiguration(fname)
+	require.NoError(t, err)
+
+	require.Equal(t, newStatus, newFeed.Enabled)
+}

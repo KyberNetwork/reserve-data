@@ -113,3 +113,24 @@ curl -X DELETE "https://gateway.local/v3/setting-change-feed-configuration/6"
 
 `DELETE https://gateway.local/v3/setting-change-feed-configuration/:change_id`
 <aside class="notice">Confirm key is required</aside>
+
+## Update feed status
+
+```shell
+curl -X PUT "https://gateway.local/v3/update-feed-status/:name" \
+-H 'Content-Type: application/json' \
+-d '{"enabled": true}'
+```
+
+> sample response
+
+```json
+{
+  "success": true
+}
+```
+
+### HTTP Request
+
+`PUT https://gateway.local/v3/update-feed-status/:name`
+<aside class="notice">Write key is required</aside>
