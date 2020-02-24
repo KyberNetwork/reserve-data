@@ -32,6 +32,8 @@ type BinanceInterface interface {
 		pair commonv3.TradingPairSymbols,
 		rate, amount float64) (Binatrade, error)
 
+    OpenOrders(symbol string) ([]Binaorder, error)
+
 	CancelOrder(symbol string, id uint64) (Binacancel, error)
 
 	DepositHistory(startTime, endTime uint64) (Binadeposits, error)
