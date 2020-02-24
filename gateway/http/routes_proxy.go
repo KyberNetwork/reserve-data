@@ -102,6 +102,7 @@ func WithSettingEndpoint(settingEndpoint string) Option {
 		g.GET("/setting-change-feed-configuration/:id", settingProxyMW)
 		g.PUT("/setting-change-feed-configuration/:id", settingProxyMW)
 		g.DELETE("/setting-change-feed-configuration/:id", settingProxyMW)
+		g.PUT("/update-feed-status/:name", settingProxyMW)
 
 		g.GET("/rebalance-status", settingProxyMW)
 		g.POST("/hold-rebalance", settingProxyMW)
