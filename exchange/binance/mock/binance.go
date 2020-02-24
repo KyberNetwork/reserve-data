@@ -17,6 +17,7 @@ func init() {
 // BinanceTestExchange is the mock implementation of binance exchange, for testing purpose.
 type BinanceTestExchange struct{}
 
+// Address return address of token
 func (bte *BinanceTestExchange) Address(_ commonv3.Asset) (address ethereum.Address, supported bool) {
 	return ethereum.Address{}, true
 }
@@ -36,6 +37,11 @@ func (bte *BinanceTestExchange) MarshalText() (text []byte, err error) {
 
 func (bte *BinanceTestExchange) GetTradeHistory(fromTime, toTime uint64) (common.ExchangeTradeHistory, error) {
 	return common.ExchangeTradeHistory{}, nil
+}
+
+// OpenOrders get open orders for one pair
+func (bte *BinanceTestExchange) OpenOrders(pair commonv3.TradingPairSymbols) ([]common.Order, error) {
+	return nil, nil
 }
 
 // ID return binance exchange id

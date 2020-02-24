@@ -651,6 +651,36 @@ func (h *Huobi) ID() common.ExchangeID {
 	return common.Huobi
 }
 
+// OpenOrders get open orders from binance
+func (h *Huobi) OpenOrders(pair commonv3.TradingPairSymbols) ([]common.Order, error) {
+	var (
+		result []common.Order
+	)
+	orders, err := h.interf.OpenOrdersForOnePair(pair)
+	if err != nil {
+		return nil, err
+	}
+	for _, order := range orders {
+		originalQty, err := strconv.ParseFloat(order.Data.OrigQty, 64)
+		if err != nil {
+			return nil, err
+		}
+		price, err := strconv.ParseFloat(order.Data.Price, 64)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, common.Order{
+			OrderID: strconv.FormatUint(order.Data.OrderID, 10),
+			Type:    order.Data.Type,
+			OrigQty: originalQty,
+			Price:   price,
+			Base:    pair.BaseSymbol,
+			Quote:   pair.QuoteSymbol,
+		})
+	}
+	return result, nil
+}
+
 //NewHuobi creates new Huobi exchange instance
 func NewHuobi(
 	interf HuobiInterface,

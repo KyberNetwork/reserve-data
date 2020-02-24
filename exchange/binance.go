@@ -399,6 +399,37 @@ func (bn *Binance) OrderStatus(id string, base, quote string) (string, error) {
 	return common.ExchangeStatusDone, nil
 }
 
+// OpenOrders get open orders from binance
+func (bn *Binance) OpenOrders(pair commonv3.TradingPairSymbols) ([]common.Order, error) {
+	var (
+		result []common.Order
+	)
+	orders, err := bn.interf.OpenOrdersForOnePair(pair)
+	if err != nil {
+		return nil, err
+	}
+	for _, order := range orders {
+		originalQty, err := strconv.ParseFloat(order.OrigQty, 64)
+		if err != nil {
+			return nil, err
+		}
+		price, err := strconv.ParseFloat(order.Price, 64)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, common.Order{
+			OrderID: strconv.FormatUint(order.OrderID, 10),
+			Side:    order.Side,
+			Type:    order.Type,
+			OrigQty: originalQty,
+			Price:   price,
+			Base:    pair.BaseSymbol,
+			Quote:   pair.QuoteSymbol,
+		})
+	}
+	return result, nil
+}
+
 // NewBinance init new binance instance
 func NewBinance(id common.ExchangeID, interf BinanceInterface, storage BinanceStorage, sr storage.Interface) (*Binance, error) {
 	binance := &Binance{

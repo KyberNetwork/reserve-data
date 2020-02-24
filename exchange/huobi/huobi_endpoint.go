@@ -383,6 +383,35 @@ func (ep *Endpoint) GetExchangeInfo() (exchange.HuobiExchangeInfo, error) {
 	return result, err
 }
 
+// OpenOrdersForOnePair return list open orders for one pair of token
+func (ep *Endpoint) OpenOrdersForOnePair(pair commonv3.TradingPairSymbols) ([]exchange.HuobiOrder, error) {
+	result := []exchange.HuobiOrder{}
+	accounts, err := ep.GetAccounts()
+	if err != nil {
+		return result, err
+	}
+	if len(accounts.Data) == 0 {
+		return result, errors.New("cannot get Huobi account")
+	}
+	account := strconv.FormatUint(accounts.Data[0].ID, 10)
+	respBody, err := ep.GetResponse(
+		"GET",
+		ep.interf.AuthenticatedEndpoint()+"/v1/order/openOrders",
+		map[string]string{
+			"account": account,
+			"symbol":  pair.BaseSymbol + pair.QuoteSymbol,
+		},
+		true,
+	)
+	if err != nil {
+		return result, err
+	}
+	if err = json.Unmarshal(respBody, &result); err != nil {
+		return result, err
+	}
+	return result, nil
+}
+
 //NewHuobiEndpoint return new endpoint instance
 func NewHuobiEndpoint(signer Signer, interf Interface, client *http.Client) *Endpoint {
 	return &Endpoint{signer: signer, interf: interf, l: zap.S(), client: client}

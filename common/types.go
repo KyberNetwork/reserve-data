@@ -450,6 +450,7 @@ type AllBalanceResponse struct {
 	Data       map[string]BalanceResponse
 }
 
+// Order accross multiple exchanges
 type Order struct {
 	ID          string // standard id across multiple exchanges
 	Base        string

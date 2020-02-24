@@ -20,7 +20,7 @@ const (
 	Huobi //huobi
 	// Binance2 is second binance exchange
 	Binance2 // binance_2
-	// Coinbase
+	// Coinbase is the enumerated key for coinbase
 	Coinbase // coinbase
 )
 
@@ -41,6 +41,9 @@ type Exchange interface {
 	Address(asset common.Asset) (address ethereum.Address, supported bool)
 	Withdraw(asset common.Asset, amount *big.Int, address ethereum.Address) (string, error)
 	Trade(tradeType string, pair common.TradingPairSymbols, rate, amount float64) (id string, done, remaining float64, finished bool, err error)
+
+	// OpenOrders return open orders from exchange
+	OpenOrders(pair common.TradingPairSymbols) (orders []Order, err error)
 	CancelOrder(id, base, quote string) error
 	MarshalText() (text []byte, err error)
 

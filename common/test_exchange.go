@@ -51,3 +51,8 @@ func (te TestExchange) GetTradeHistory(fromTime, toTime uint64) (ExchangeTradeHi
 func (te TestExchange) GetLiveExchangeInfos(pair []common.TradingPairSymbols) (ExchangeInfo, error) {
 	return ExchangeInfo{}, nil
 }
+
+// OpenOrders mock open orders from binance
+func (te TestExchange) OpenOrders(pair common.TradingPairSymbols) ([]Order, error) {
+	return nil, nil
+}
