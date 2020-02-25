@@ -99,7 +99,7 @@ type HuobiWithdraw struct {
 
 // HuobiOrder represent an order on huobi
 type HuobiOrder struct {
-	Status string `json:"status"`
+	Status string `json:"status,omitempty"`
 	Data   struct {
 		OrderID     uint64 `json:"id"`
 		Symbol      string `json:"symbol"`
@@ -110,7 +110,23 @@ type HuobiOrder struct {
 		State       string `json:"state"`
 		ExecutedQty string `json:"field-amount"`
 	} `json:"data"`
-	Reason string `json:"err-msg"`
+	Reason string `json:"err-msg,omitempty"`
+}
+
+// HuobiOpenOrders is list of orders response from huobi
+type HuobiOpenOrders struct {
+	Status string `json:"status,omitempty"`
+	Data   []struct {
+		OrderID     uint64 `json:"id,omitempty"`
+		Symbol      string `json:"symbol,omitempty"`
+		AccountID   uint64 `json:"account-id"`
+		OrigQty     string `json:"amount"`
+		Price       string `json:"price"`
+		Type        string `json:"type"`
+		State       string `json:"state"`
+		ExecutedQty string `json:"field-amount"`
+	} `json:"data"`
+	Reason string `json:"err-msg,omitempty"`
 }
 
 // HuobiDepositAddress return deposit address

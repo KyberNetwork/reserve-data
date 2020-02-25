@@ -660,18 +660,18 @@ func (h *Huobi) OpenOrders(pair commonv3.TradingPairSymbols) ([]common.Order, er
 	if err != nil {
 		return nil, err
 	}
-	for _, order := range orders {
-		originalQty, err := strconv.ParseFloat(order.Data.OrigQty, 64)
+	for _, order := range orders.Data {
+		originalQty, err := strconv.ParseFloat(order.OrigQty, 64)
 		if err != nil {
 			return nil, err
 		}
-		price, err := strconv.ParseFloat(order.Data.Price, 64)
+		price, err := strconv.ParseFloat(order.Price, 64)
 		if err != nil {
 			return nil, err
 		}
 		result = append(result, common.Order{
-			OrderID: strconv.FormatUint(order.Data.OrderID, 10),
-			Type:    order.Data.Type,
+			OrderID: strconv.FormatUint(order.OrderID, 10),
+			Type:    order.Type,
 			OrigQty: originalQty,
 			Price:   price,
 			Base:    pair.BaseSymbol,

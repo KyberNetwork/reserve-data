@@ -248,8 +248,8 @@ func (s *Server) Trade(c *gin.Context) {
 
 // OpenOrdersRequest request for open orders
 type OpenOrdersRequest struct {
-	ExchangeID uint64 `json:"exchange_id" binding:"required"`
-	Pair       uint64 `json:"pair" binding:"required"`
+	ExchangeID uint64 `form:"exchange_id" binding:"required"`
+	Pair       uint64 `form:"pair" binding:"required"`
 }
 
 // OpenOrders request for open orders
@@ -261,6 +261,7 @@ func (s *Server) OpenOrders(c *gin.Context) {
 	if err := c.ShouldBindQuery(&query); err != nil {
 		logger.Errorw("query is is not correct format", "error", err)
 		httputil.ResponseFailure(c, httputil.WithError(err))
+		return
 	}
 
 	exchange, ok := common.SupportedExchanges[common.ExchangeID(query.ExchangeID)]
@@ -273,6 +274,7 @@ func (s *Server) OpenOrders(c *gin.Context) {
 	if err != nil {
 		logger.Errorw("failed to get trading token pair from setting data base", "err", err)
 		httputil.ResponseFailure(c, httputil.WithError(err))
+		return
 	}
 	logger.Infow("getting open orders for pair", "base", pair.BaseSymbol, "quote", pair.QuoteSymbol)
 
@@ -280,6 +282,7 @@ func (s *Server) OpenOrders(c *gin.Context) {
 	if err != nil {
 		logger.Errorw("failed to get open orders", "exchange", exchange.ID().String, "base", pair.BaseSymbol, "quote", pair.QuoteSymbol)
 		httputil.ResponseFailure(c, httputil.WithError(err))
+		return
 	}
 
 	httputil.ResponseSuccess(c, httputil.WithData(openOrders))

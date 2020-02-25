@@ -452,19 +452,19 @@ type AllBalanceResponse struct {
 
 // Order accross multiple exchanges
 type Order struct {
-	ID          string // standard id across multiple exchanges
-	Base        string
+	ID          string `json:"ID,omitempty"` // standard id across multiple exchanges
+	Base        string `json:"Base"`
 	Quote       string
 	OrderID     string
 	Price       float64
 	OrigQty     float64 // original quantity
 	ExecutedQty float64 // matched quantity
-	TimeInForce string
-	Type        string // market or limit
-	Side        string // buy or sell
-	StopPrice   string
-	IcebergQty  string
-	Time        uint64
+	TimeInForce string  `json:"TimeInForce,omitempty"`
+	Type        string  // market or limit
+	Side        string  // buy or sell
+	StopPrice   string  `json:"StopPrice,omitempty"`
+	IcebergQty  string  `json:"IcebergQty,omitempty"`
+	Time        uint64  `json:"Time,omitempty"`
 }
 
 type OrderEntry struct {

@@ -23,6 +23,7 @@ func WithCoreEndpoint(coreEndpoint string) Option {
 		g.GET("/activities", coreProxyMW)
 		g.GET("/immediate-pending-activities", coreProxyMW)
 
+		g.GET("/open-orders", coreProxyMW)
 		g.POST("/cancelorder", coreProxyMW)
 		g.POST("/cancel-all-orders", coreProxyMW)
 		g.POST("/deposit", coreProxyMW)

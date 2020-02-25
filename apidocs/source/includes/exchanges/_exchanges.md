@@ -42,6 +42,43 @@ amount | float64 | true | nil | order amount
 type | string | true | nil | order type (buy or sell)
 
 
+## Get Open Orders
+
+```shell
+curl -X POST "http://gateway.local/v3/open-orders?exchange_id=1&pair=2"
+```
+
+> sample response
+
+```json
+{
+    "data": [
+        {
+            "Base": "KNC",
+            "Quote": "ETH",
+            "OrderID": "54649705",
+            "Price": 0.0018,
+            "OrigQty": 118,
+            "ExecutedQty": 0,
+            "Type": "LIMIT",
+            "Side": "BUY"
+        }
+    ],
+    "success": true
+}
+```
+
+
+### HTTP Request
+
+`GET https://gateway.local/v3/open-orders`
+
+Param | Type | Required | Default | Description
+----- | ---- | -------- | ------- | -----------
+exchange_id | uint64 | true | nil | id of exchange (ex: binance - 1, huobi - 2)
+pair | uint64 | true | nil | id of pair (ex: KNCETH - 1, OMGETH - 2)
+
+
 ## Cancel order 
 
 ```shell

@@ -384,8 +384,8 @@ func (ep *Endpoint) GetExchangeInfo() (exchange.HuobiExchangeInfo, error) {
 }
 
 // OpenOrdersForOnePair return list open orders for one pair of token
-func (ep *Endpoint) OpenOrdersForOnePair(pair commonv3.TradingPairSymbols) ([]exchange.HuobiOrder, error) {
-	result := []exchange.HuobiOrder{}
+func (ep *Endpoint) OpenOrdersForOnePair(pair commonv3.TradingPairSymbols) (exchange.HuobiOpenOrders, error) {
+	result := exchange.HuobiOpenOrders{}
 	accounts, err := ep.GetAccounts()
 	if err != nil {
 		return result, err
@@ -399,7 +399,7 @@ func (ep *Endpoint) OpenOrdersForOnePair(pair commonv3.TradingPairSymbols) ([]ex
 		ep.interf.AuthenticatedEndpoint()+"/v1/order/openOrders",
 		map[string]string{
 			"account": account,
-			"symbol":  pair.BaseSymbol + pair.QuoteSymbol,
+			"symbol":  strings.ToLower(pair.BaseSymbol + pair.QuoteSymbol),
 		},
 		true,
 	)
