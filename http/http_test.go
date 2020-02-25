@@ -76,6 +76,7 @@ func TestGetActivities(t *testing.T) {
 		deployment.Development, // deployment mode
 		nil,                    // blockchain
 		nil,                    // storage
+		common.ContractAddresses{},
 	)
 
 	sv.register()
