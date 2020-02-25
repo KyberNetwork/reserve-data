@@ -49,10 +49,14 @@ type Config struct {
 }
 
 // AddCoreConfig add config for core
-func (c *Config) AddCoreConfig(cliCtx *cli.Context, rcf common.RawConfig, dpl deployment.Deployment, bi binance.Interface,
+func (c *Config) AddCoreConfig(cliCtx *cli.Context, rcf common.RawConfig, bi binance.Interface,
 	hi huobi.Interface, cb coinbase.Interface, settingStore storagev3.Interface) error {
 	l := zap.S()
 	db, err := NewDBFromContext(cliCtx)
+	if err != nil {
+		return err
+	}
+	dpl, err := deployment.NewDeploymentFromContext(cliCtx)
 	if err != nil {
 		return err
 	}

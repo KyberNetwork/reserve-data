@@ -158,10 +158,6 @@ func CreateDataCore(config *Config, dpl deployment.Deployment, bc *blockchain.Bl
 
 // NewConfigurationFromContext returns the Configuration object from cli context.
 func NewConfigurationFromContext(c *cli.Context, rcf common.RawConfig, s *zap.SugaredLogger) (*Config, error) {
-	dpl, err := deployment.NewDeploymentFromContext(c)
-	if err != nil {
-		return nil, err
-	}
 
 	bi := binance.NewRealInterface(rcf.ExchangeEndpoints.Binance.URL)
 	hi := huobi.NewRealInterface(rcf.ExchangeEndpoints.Houbi.URL)
@@ -188,7 +184,6 @@ func NewConfigurationFromContext(c *cli.Context, rcf common.RawConfig, s *zap.Su
 
 	config, err := GetConfig(
 		c,
-		dpl,
 		ethereumNodeConf,
 		bi,
 		hi,

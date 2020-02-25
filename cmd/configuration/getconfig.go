@@ -6,7 +6,6 @@ import (
 	"github.com/urfave/cli"
 	"go.uber.org/zap"
 
-	"github.com/KyberNetwork/reserve-data/cmd/deployment"
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/archive"
 	"github.com/KyberNetwork/reserve-data/common/blockchain"
@@ -17,35 +16,9 @@ import (
 	"github.com/KyberNetwork/reserve-data/world"
 )
 
-const (
-	byzantiumChainType = "byzantium"
-	homesteadChainType = "homestead"
-)
-
-// GetChainType return chain type
-func GetChainType(dpl deployment.Deployment) string {
-	switch dpl {
-	case deployment.Production:
-		return byzantiumChainType
-	case deployment.Development:
-		return homesteadChainType
-	case deployment.Kovan:
-		return homesteadChainType
-	case deployment.Staging:
-		return byzantiumChainType
-	case deployment.Simulation, deployment.Analytic:
-		return homesteadChainType
-	case deployment.Ropsten:
-		return byzantiumChainType
-	default:
-		return homesteadChainType
-	}
-}
-
 // GetConfig return config for core
 func GetConfig(
 	cliCtx *cli.Context,
-	dpl deployment.Deployment,
 	nodeConf *EthereumNodeConfiguration,
 	bi binance.Interface,
 	hi huobi.Interface,
@@ -106,7 +79,7 @@ func GetConfig(
 	}
 
 	l.Infow("configured endpoint", "endpoint", config.EthereumEndpoint, "backup", config.BackupEthereumEndpoints)
-	if err = config.AddCoreConfig(cliCtx, rcf, dpl, bi, hi, cb, settingStorage); err != nil {
+	if err = config.AddCoreConfig(cliCtx, rcf, bi, hi, cb, settingStorage); err != nil {
 		return nil, err
 	}
 	return config, nil
