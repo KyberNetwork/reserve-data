@@ -38,7 +38,6 @@ type Server struct {
 	blockchain     Blockchain
 	settingStorage storage.Interface
 	l              *zap.SugaredLogger
-	addrs          common.ContractAddresses
 }
 
 func getTimePoint(c *gin.Context, useDefault bool, l *zap.SugaredLogger) uint64 {
@@ -525,7 +524,7 @@ func NewHTTPServer(
 	host string,
 	dpl deployment.Deployment,
 	bc Blockchain,
-	settingStorage storage.Interface, addrs common.ContractAddresses,
+	settingStorage storage.Interface,
 ) *Server {
 	r := gin.Default()
 	sentryCli, err := raven.NewWithTags(
@@ -550,6 +549,5 @@ func NewHTTPServer(
 		blockchain:     bc,
 		settingStorage: settingStorage,
 		l:              zap.S(),
-		addrs:          addrs,
 	}
 }

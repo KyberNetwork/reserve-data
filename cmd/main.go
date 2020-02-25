@@ -96,7 +96,6 @@ func run(c *cli.Context) error {
 		dpl,
 		bc,
 		conf.SettingStorage,
-		rcf.ContractAddresses,
 	)
 	if profiler.IsEnableProfilerFromContext(c) {
 		server.EnableProfiler()
