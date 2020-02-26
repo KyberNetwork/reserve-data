@@ -27,7 +27,7 @@ func (bi *binanceTestInterface) GetDepthOnePair(baseID, quoteID string) (Binares
 	panic("implement me")
 }
 
-func (bi *binanceTestInterface) OpenOrdersForOnePair(pair commonv3.TradingPairSymbols) (Binaorders, error) {
+func (bi *binanceTestInterface) OpenOrdersForOnePair(pair *commonv3.TradingPairSymbols) (Binaorders, error) {
 	panic("implement me")
 }
 
@@ -75,8 +75,4 @@ func (bi *binanceTestInterface) WithdrawHistory(startTime, endTime uint64) (Bina
 
 func (bi *binanceTestInterface) OrderStatus(symbol string, id uint64) (Binaorder, error) {
 	panic("implement me")
-}
-
-func (bi *binanceTestInterface) OpenOrders(symbol string) ([]Binaorder, error) {
-	return []Binaorder{}, nil
 }

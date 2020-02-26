@@ -403,10 +403,19 @@ func (bn *Binance) OrderStatus(id string, base, quote string) (string, error) {
 func (bn *Binance) OpenOrders(pair commonv3.TradingPairSymbols) ([]common.Order, error) {
 	var (
 		result []common.Order
+		orders []Binaorder
+		err    error
 	)
-	orders, err := bn.interf.OpenOrdersForOnePair(pair)
-	if err != nil {
-		return nil, err
+	if pair.ID != 0 {
+		orders, err = bn.interf.OpenOrdersForOnePair(&pair)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		orders, err = bn.interf.OpenOrdersForOnePair(nil)
+		if err != nil {
+			return nil, err
+		}
 	}
 	for _, order := range orders {
 		originalQty, err := strconv.ParseFloat(order.OrigQty, 64)

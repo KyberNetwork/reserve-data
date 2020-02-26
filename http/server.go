@@ -249,7 +249,7 @@ func (s *Server) Trade(c *gin.Context) {
 // OpenOrdersRequest request for open orders
 type OpenOrdersRequest struct {
 	ExchangeID uint64 `form:"exchange_id" binding:"required"`
-	Pair       uint64 `form:"pair" binding:"required"`
+	Pair       uint64 `form:"pair"`
 }
 
 // OpenOrders request for open orders
@@ -257,6 +257,8 @@ func (s *Server) OpenOrders(c *gin.Context) {
 	var (
 		logger = s.l.With("func", caller.GetCurrentFunctionName())
 		query  OpenOrdersRequest
+		pair   v3common.TradingPairSymbols
+		err    error
 	)
 	if err := c.ShouldBindQuery(&query); err != nil {
 		logger.Errorw("query is is not correct format", "error", err)
@@ -269,14 +271,18 @@ func (s *Server) OpenOrders(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithError(errors.Errorf("exchange %v is not supported", query.ExchangeID)))
 		return
 	}
-
-	pair, err := s.settingStorage.GetTradingPair(query.Pair)
-	if err != nil {
-		logger.Errorw("failed to get trading token pair from setting data base", "err", err)
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
+	if query.Pair != 0 {
+		logger.Infow("query pair", "pair", query.Pair)
+		pair, err = s.settingStorage.GetTradingPair(query.Pair)
+		if err != nil {
+			logger.Errorw("failed to get trading token pair from setting data base", "err", err)
+			httputil.ResponseFailure(c, httputil.WithError(err))
+			return
+		}
+		logger.Infow("getting open orders for pair", "base", pair.BaseSymbol, "quote", pair.QuoteSymbol)
+	} else {
+		logger.Info("pair id not provide, getting open orders for all supported pairs")
 	}
-	logger.Infow("getting open orders for pair", "base", pair.BaseSymbol, "quote", pair.QuoteSymbol)
 
 	openOrders, err := exchange.OpenOrders(pair)
 	if err != nil {

@@ -17,6 +17,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/cmd/deployment"
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/exchange"
+	"github.com/KyberNetwork/reserve-data/lib/caller"
 	commonv3 "github.com/KyberNetwork/reserve-data/reservesetting/common"
 )
 
@@ -371,15 +372,20 @@ func (ep *Endpoint) GetInfo() (exchange.Binainfo, error) {
 }
 
 // OpenOrdersForOnePair return list open orders for one pair of token
-func (ep *Endpoint) OpenOrdersForOnePair(pair commonv3.TradingPairSymbols) (exchange.Binaorders, error) {
-
-	result := exchange.Binaorders{}
+func (ep *Endpoint) OpenOrdersForOnePair(pair *commonv3.TradingPairSymbols) (exchange.Binaorders, error) {
+	var (
+		result = exchange.Binaorders{}
+		logger = ep.l.With("func", caller.GetCurrentFunctionName())
+		params = make(map[string]string)
+	)
+	if pair != nil {
+		logger.Infow("getting open order for pair", "pair", pair.BaseSymbol+pair.QuoteSymbol)
+		params["symbol"] = pair.BaseSymbol + pair.QuoteSymbol
+	}
 	respBody, err := ep.GetResponse(
 		"GET",
 		ep.interf.AuthenticatedEndpoint()+"/api/v3/openOrders",
-		map[string]string{
-			"symbol": pair.BaseSymbol + pair.QuoteSymbol,
-		},
+		params,
 		true,
 		common.NowInMillis(),
 	)
