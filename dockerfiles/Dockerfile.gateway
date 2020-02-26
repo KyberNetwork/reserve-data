@@ -2,7 +2,7 @@ FROM golang:1.13-stretch AS build-env
 
 COPY . /reserve-data
 WORKDIR /reserve-data/gateway/cmd
-RUN go build -v -mod=vendor -o /gateway
+RUN go build -v -o /gateway
 
 FROM debian:stretch
 COPY --from=build-env /gateway /
