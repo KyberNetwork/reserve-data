@@ -45,6 +45,8 @@ CREATE TABLE IF NOT EXISTS "activity"
 	is_pending BOOL NOT NULL,
 	data JSONB NOT NULL
 );
+ALTER TABLE "activity" 
+	ADD COLUMN IF NOT EXISTS "exchange_id" REFERENCE "exchanges" (id);
 CREATE INDEX IF NOT EXISTS "activity_idx" ON "activity" (timepoint, eid);
 CREATE INDEX IF NOT EXISTS "pending_idx" ON "activity" (is_pending) WHERE is_pending IS TRUE;
 `
