@@ -52,8 +52,8 @@ func timebasedID(id string) common.ActivityID {
 }
 
 // CancelOrder cancel an order on centralized exchanges
-func (rc ReserveCore) CancelOrder(id common.ActivityID, exchange common.Exchange) error {
-	activity, err := rc.activityStorage.GetActivity(id)
+func (rc ReserveCore) CancelOrder(orderID string, exchange common.Exchange) error {
+	activity, err := rc.activityStorage.GetActivity(exchange.ID(), orderID)
 	if err != nil {
 		return err
 	}
@@ -62,7 +62,6 @@ func (rc ReserveCore) CancelOrder(id common.ActivityID, exchange common.Exchange
 	}
 	base := activity.Params.Base
 	quote := activity.Params.Quote
-	orderID := id.EID
 	return exchange.CancelOrder(orderID, base, quote)
 }
 

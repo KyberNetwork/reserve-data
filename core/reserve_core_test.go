@@ -105,7 +105,7 @@ func (tas testActivityStorage) Record(
 	return nil
 }
 
-func (tas testActivityStorage) GetActivity(id common.ActivityID) (common.ActivityRecord, error) {
+func (tas testActivityStorage) GetActivity(exchangeID common.ExchangeID, id string) (common.ActivityRecord, error) {
 	return common.ActivityRecord{}, nil
 }
 

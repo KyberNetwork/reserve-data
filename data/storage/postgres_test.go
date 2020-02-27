@@ -185,7 +185,7 @@ func TestActivity(t *testing.T) {
 	assert.False(t, hasPending)
 
 	// test get activity
-	activity, err := ps.GetActivity(testID)
+	activity, err := ps.GetActivity(0, testID.EID)
 	assert.NoError(t, err)
 	assert.Equal(t, activityTest, activity)
 }

@@ -18,7 +18,7 @@ type ActivityStorage interface {
 		timepoint uint64) error
 	HasPendingDeposit(token commonv3.Asset, exchange common.Exchange) (bool, error)
 
-	GetActivity(id common.ActivityID) (common.ActivityRecord, error)
+	GetActivity(exchangeID common.ExchangeID, orderID string) (common.ActivityRecord, error)
 
 	// PendingSetRate return the last pending set rate and number of pending
 	// transactions.

@@ -34,7 +34,7 @@ func (s *Server) CancelAllOrders(c *gin.Context) {
 				httputil.ResponseFailure(c, httputil.WithError(fmt.Errorf("exchange %s does not exist", exchange.ID().String())))
 				return
 			}
-			if err := s.core.CancelOrder(activity.ID, exchange); err != nil {
+			if err := s.core.CancelOrder(activity.ID.EID, exchange); err != nil {
 				// save failed order id
 				response = append(response, failedCancelOrder{
 					Reason: err.Error(),
