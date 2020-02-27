@@ -656,12 +656,12 @@ func (h *Huobi) ID() common.ExchangeID {
 // OpenOrders get open orders from binance
 func (h *Huobi) OpenOrders(pair commonv3.TradingPairSymbols) ([]common.Order, error) {
 	var (
-		logger     = h.l.With("func", caller.GetCurrentFunctionName())
-		result     []common.Order
-		pairs      []commonv3.TradingPairSymbols
-		err        error
-		errGroup   errgroup.Group
-		openOrders sync.Map
+		logger   = h.l.With("func", caller.GetCurrentFunctionName())
+		result   []common.Order
+		pairs    []commonv3.TradingPairSymbols
+		err      error
+		errGroup errgroup.Group
+		mu       sync.Mutex
 	)
 	if pair.BaseSymbol == "" {
 		logger.Info("No pair token provided, get open orders for all token")
@@ -690,7 +690,8 @@ func (h *Huobi) OpenOrders(pair commonv3.TradingPairSymbols) ([]common.Order, er
 						if err != nil {
 							return err
 						}
-						openOrders.Store(order.OrderID, common.Order{
+						mu.Lock()
+						result = append(result, common.Order{
 							OrderID: strconv.FormatUint(order.OrderID, 10),
 							Type:    order.Type,
 							OrigQty: originalQty,
@@ -698,6 +699,7 @@ func (h *Huobi) OpenOrders(pair commonv3.TradingPairSymbols) ([]common.Order, er
 							Base:    pair.BaseSymbol,
 							Quote:   pair.QuoteSymbol,
 						})
+						mu.Unlock()
 					}
 					return nil
 				}
@@ -708,15 +710,6 @@ func (h *Huobi) OpenOrders(pair commonv3.TradingPairSymbols) ([]common.Order, er
 	if err := errGroup.Wait(); err != nil {
 		return result, err
 	}
-
-	openOrders.Range(func(key, value interface{}) bool {
-		order, ok := value.(common.Order)
-		if !ok {
-			return false
-		}
-		result = append(result, order)
-		return true
-	})
 
 	return result, nil
 }
