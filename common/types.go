@@ -230,6 +230,7 @@ func NewActivityID(timepoint uint64, eid string) ActivityID {
 type ActivityRecord struct {
 	Action         string         `json:"action,omitempty"`
 	ID             ActivityID     `json:"id,omitempty"`
+	EID            string         `json:"eid"`
 	Destination    string         `json:"destination,omitempty"`
 	Params         ActivityParams `json:"params,omitempty"`
 	Result         ActivityResult `json:"result,omitempty"`
