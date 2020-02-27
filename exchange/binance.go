@@ -436,6 +436,11 @@ func (bn *Binance) OpenOrders(pair commonv3.TradingPairSymbols) ([]common.Order,
 		if err != nil {
 			return nil, err
 		}
+
+		// because binance api response with symbol base + quote as a string
+		// we cannot split them,
+		// then when we get all open orders at a time, base symbol will include both base and quote (for human view)
+		// and quote symbol will be empty
 		var symbol = order.Symbol
 		if pair.BaseSymbol != "" {
 			symbol = pair.BaseSymbol
