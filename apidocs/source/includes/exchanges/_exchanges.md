@@ -85,7 +85,8 @@ pair | uint64 | true | nil | id of pair (ex: KNCETH - 1, OMGETH - 2)
 curl -X POST "http://gateway.local/v3/cancelorder/binance"
 -H 'Content-Type: application/json'
 -d '{
-    "order_id": 43142
+    "order_id": 43142,
+    "exchange": "binance"
 }'
 ```
 

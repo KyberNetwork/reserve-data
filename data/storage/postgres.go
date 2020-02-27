@@ -381,7 +381,7 @@ func (ps *PostgresStorage) GetActivity(exchangeID common.ExchangeID, id string) 
 		activityRecord common.ActivityRecord
 		data           []byte
 	)
-	query := fmt.Sprintf(`SELECT data FROM "%s" WHERE data->>'exchange' = $1 AND eid = $2`, activityTable)
+	query := fmt.Sprintf(`SELECT data FROM "%s" WHERE data->>'destination' = $1 AND eid = $2`, activityTable)
 	if err := ps.db.Get(&data, query, exchangeID.String(), id); err != nil {
 		return common.ActivityRecord{}, err
 	}
