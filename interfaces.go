@@ -58,7 +58,7 @@ type Core interface {
 		token commonv3.Asset,
 		amount *big.Int) (common.ActivityID, error)
 
-	CancelOrder(ids []string, exchange common.Exchange) map[string]string // return map of order id and its error if any
+	CancelOrder(ids []string, exchange common.Exchange) map[string]common.CancelOrderResult
 
 	// blockchain related action
 	SetRates(tokens []commonv3.Asset, buys, sells []*big.Int, block *big.Int, afpMid []*big.Int, msgs []string) (common.ActivityID, error)

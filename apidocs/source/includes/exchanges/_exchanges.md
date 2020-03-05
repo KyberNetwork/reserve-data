@@ -96,7 +96,20 @@ curl -X POST "http://gateway.local/v3/cancelorder"
 
 ```json
 {
-    "success": true
+    "success": true,
+    "data": [
+        {
+            "43142": {
+                "success": true
+            }
+        },
+        {
+            "43224": {
+                "success": false,
+                "error": "this order does not exist"
+            }
+        }
+    ]
 }
 ```
 

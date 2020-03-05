@@ -13,11 +13,6 @@ import (
 	"github.com/KyberNetwork/reserve-data/common/archive"
 )
 
-const (
-	// CancelOrderStatusSuccess is success status for cancel order request
-	CancelOrderStatusSuccess = "success"
-)
-
 // Version indicate fetched data version
 type Version uint64
 
@@ -229,6 +224,12 @@ func NewActivityID(timepoint uint64, eid string) ActivityID {
 		Timepoint: timepoint,
 		EID:       eid,
 	}
+}
+
+// CancelOrderResult is response when calling cancel an order
+type CancelOrderResult struct {
+	Success bool   `json:"success"`
+	Error   string `json:"error"`
 }
 
 // ActivityRecord object

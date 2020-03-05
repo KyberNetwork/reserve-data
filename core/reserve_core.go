@@ -52,23 +52,31 @@ func timebasedID(id string) common.ActivityID {
 }
 
 // CancelOrder cancel an order on centralized exchanges
-func (rc ReserveCore) CancelOrder(orderIDs []string, exchange common.Exchange) map[string]string {
-	result := make(map[string]string)
+func (rc ReserveCore) CancelOrder(orderIDs []string, exchange common.Exchange) map[string]common.CancelOrderResult {
+	result := make(map[string]common.CancelOrderResult)
 	for _, orderID := range orderIDs {
 		activity, err := rc.activityStorage.GetActivity(exchange.ID(), orderID)
 		if err != nil {
 			return result
 		}
 		if activity.Action != common.ActionTrade {
-			result[orderID] = "This is not an order activity so cannot cancel"
+			result[orderID] = common.CancelOrderResult{
+				Success: false,
+				Error:   "This is not an order activity so cannot cancel",
+			}
 			continue
 		}
 		base := activity.Params.Base
 		quote := activity.Params.Quote
 		if err := exchange.CancelOrder(orderID, base, quote); err != nil {
-			result[orderID] = err.Error()
+			result[orderID] = common.CancelOrderResult{
+				Success: false,
+				Error:   err.Error(),
+			}
 		} else {
-			result[orderID] = common.CancelOrderStatusSuccess
+			result[orderID] = common.CancelOrderResult{
+				Success: true,
+			}
 		}
 	}
 	return result

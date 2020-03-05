@@ -300,19 +300,6 @@ type CancelOrderRequest struct {
 	OrderIDs   []string `json:"order_ids"`
 }
 
-func buildResponse(result map[string]string) error {
-	var errString string
-	for id, err := range result {
-		if err != common.CancelOrderStatusSuccess {
-			errString += fmt.Sprintf("id: %s, error: %s\n", id, err)
-		}
-	}
-	if errString != "" {
-		return fmt.Errorf(errString)
-	}
-	return nil
-}
-
 // CancelOrder cancel an order from cexs
 func (s *Server) CancelOrder(c *gin.Context) {
 	var request CancelOrderRequest
@@ -328,11 +315,7 @@ func (s *Server) CancelOrder(c *gin.Context) {
 	}
 	s.l.Infow("Cancel order", "id", request.OrderIDs, "from", exchange.ID().String())
 	result := s.core.CancelOrder(request.OrderIDs, exchange)
-	if err := buildResponse(result); err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	httputil.ResponseSuccess(c)
+	httputil.ResponseSuccess(c, httputil.WithData(result))
 }
 
 // WithdrawRequest type
