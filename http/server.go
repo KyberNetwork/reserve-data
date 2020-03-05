@@ -303,8 +303,8 @@ type CancelOrderRequest struct {
 func buildResponse(result map[string]string) error {
 	var errString string
 	for id, err := range result {
-		if err != "" {
-			errString = fmt.Sprintf("id: %s, error: %s", id, err)
+		if err != common.CancelOrderStatusSuccess {
+			errString = errString + fmt.Sprintf("id: %s, error: %s\n", id, err)
 		}
 	}
 	if errString != "" {

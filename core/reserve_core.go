@@ -68,7 +68,7 @@ func (rc ReserveCore) CancelOrder(orderIDs []string, exchange common.Exchange) m
 		if err := exchange.CancelOrder(orderID, base, quote); err != nil {
 			result[orderID] = err.Error()
 		} else {
-			result[orderID] = "success"
+			result[orderID] = common.CancelOrderStatusSuccess
 		}
 	}
 	return result

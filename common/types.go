@@ -13,6 +13,11 @@ import (
 	"github.com/KyberNetwork/reserve-data/common/archive"
 )
 
+const (
+	// CancelOrderStatusSuccess is success status for cancel order request
+	CancelOrderStatusSuccess = "success"
+)
+
 // Version indicate fetched data version
 type Version uint64
 

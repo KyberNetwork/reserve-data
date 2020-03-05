@@ -39,7 +39,7 @@ func (s *Server) CancelAllOrders(c *gin.Context) {
 	for exchange, orderIDs := range cancelOrders {
 		result := s.core.CancelOrder(orderIDs, exchange)
 		for id, err := range result {
-			if err != "" {
+			if err != common.CancelOrderStatusSuccess {
 				// save failed order id
 				response = append(response, failedCancelOrder{
 					Reason: fmt.Sprintf("exchange: %s, order: %s, err: %s", exchange.ID().String(), id, err),
