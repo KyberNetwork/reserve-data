@@ -10,8 +10,7 @@ import (
 )
 
 type failedCancelOrder struct {
-	Reason string            `json:"reason"`
-	ID     common.ActivityID `json:"id"`
+	Reason string `json:"reason"`
 }
 
 // CancelAllOrders cancel all orders
@@ -24,7 +23,7 @@ func (s *Server) CancelAllOrders(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
-
+	cancelOrders := make(map[common.Exchange][]string)
 	for _, activity := range pendingActivites {
 		if activity.Action == common.ActionTrade {
 			exchangeID := activity.Params.Exchange
@@ -34,13 +33,17 @@ func (s *Server) CancelAllOrders(c *gin.Context) {
 				httputil.ResponseFailure(c, httputil.WithError(fmt.Errorf("exchange %s does not exist", exchange.ID().String())))
 				return
 			}
-			if err := s.core.CancelOrder(activity.ID.EID, exchange); err != nil {
+			cancelOrders[exchange] = append(cancelOrders[exchange], activity.EID)
+		}
+	}
+	for exchange, orderIDs := range cancelOrders {
+		result := s.core.CancelOrder(orderIDs, exchange)
+		for id, err := range result {
+			if err != "" {
 				// save failed order id
 				response = append(response, failedCancelOrder{
-					Reason: err.Error(),
-					ID:     activity.ID,
+					Reason: fmt.Sprintf("exchange: %s, order: %s, err: %s", exchange.ID().String(), id, err),
 				})
-				continue
 			}
 		}
 	}
