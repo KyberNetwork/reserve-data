@@ -34,8 +34,6 @@ func (n *Price) UnmarshalJSON(buf []byte) error {
 
 type Resp struct {
 	Sequence int64   `json:"sequence"`
-	Code     int     `json:"code"`
-	Msg      string  `json:"msg"`
 	Bids     []Price `json:"bids"`
 	Asks     []Price `json:"asks"`
 }
@@ -44,13 +42,13 @@ func (c *Resp) toFeed(amount float64) common.Feed {
 	ask, err := getAfp(c.Asks, amount, false)
 	if err != nil {
 		return common.Feed{
-			Error: err.Error(),
+			Error: err,
 		}
 	}
 	bid, err := getAfp(c.Bids, amount, true)
 	if err != nil {
 		return common.Feed{
-			Error: err.Error(),
+			Error: err,
 		}
 	}
 	return common.Feed{

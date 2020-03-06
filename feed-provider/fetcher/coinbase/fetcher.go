@@ -2,7 +2,6 @@ package coinbase
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -47,23 +46,23 @@ func (f *Fetcher) GetResponse(method string, url string, params map[string]strin
 	}
 	_ = resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return respBody, fmt.Errorf("coinbase return not OK code %d", resp.StatusCode)
+		return respBody, &common.RespError{
+			Msg:        "coinbase return not OK code",
+			StatusCode: resp.StatusCode,
+			Body:       respBody,
+		}
 	}
 	return respBody, err
 }
 
 func (f *Fetcher) getData() (Resp, error) {
-	respBody, err := f.GetResponse("GET", f.endpoint, nil)
-
+	respBody, err := f.GetResponse(http.MethodGet, f.endpoint, nil)
 	respData := Resp{}
 	if err != nil {
 		return respData, err
 	}
 	if err = json.Unmarshal(respBody, &respData); err != nil {
 		return respData, err
-	}
-	if respData.Code != 0 {
-		return respData, fmt.Errorf("getting orderbook from coinbase failed: %s", respData.Msg)
 	}
 	return respData, nil
 }
@@ -74,7 +73,7 @@ func (f *Fetcher) GetData() common.Feed {
 	if err != nil {
 		f.sugar.Errorw("Get error while get coinbase feed", "error", err)
 		return common.Feed{
-			Error: err.Error(),
+			Error: err,
 		}
 	}
 	f.sugar.Debugw("Response from coinbase", "resp", resp)

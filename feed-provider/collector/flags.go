@@ -18,7 +18,7 @@ func NewCliFlags() []cli.Flag {
 		cli.DurationFlag{
 			Name:   intervalFlag,
 			Usage:  "time between data collection",
-			EnvVar: "COLLECTOR-INTERVAL",
+			EnvVar: "COLLECTOR_INTERVAL",
 			Value:  5 * time.Second,
 		},
 	}

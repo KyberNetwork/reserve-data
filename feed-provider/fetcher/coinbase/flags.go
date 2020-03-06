@@ -22,13 +22,13 @@ func NewCliFlags() []cli.Flag {
 		cli.StringFlag{
 			Name:   coinbaseDAIETHFlag,
 			Usage:  "endpoint to get dai-eth on coinbase",
-			EnvVar: "COINBASE-DAIETH-URL",
+			EnvVar: "COINBASE_DAIETH_URL",
 			Value:  defaultCoinbaseDAIETH,
 		},
 		cli.Float64Flag{
 			Name:   daiRequiredDepthFlag,
 			Usage:  "required amount of dai to calculate on each size of orderbook",
-			EnvVar: "COINBASE-REQUIRE-DAI",
+			EnvVar: "COINBASE_REQUIRE_DAI",
 			Value:  defaultDaiRequiredDepth,
 		},
 	}

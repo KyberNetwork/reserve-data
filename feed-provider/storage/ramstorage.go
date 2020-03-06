@@ -32,7 +32,7 @@ func (r *RAMStorage) Load(feed string) common.Feed {
 	data, ok := r.data[feed]
 	if !ok {
 		return common.Feed{
-			Error: fmt.Sprintf("There is no record for %s", feed),
+			Error: fmt.Errorf("there is no record for %s", feed),
 		}
 	}
 	return data
