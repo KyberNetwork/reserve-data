@@ -32,6 +32,7 @@ require (
 	github.com/gin-gonic/gin v1.4.0
 	github.com/go-logfmt/logfmt v0.4.0 // indirect
 	github.com/go-ozzo/ozzo-validation v3.5.0+incompatible
+	github.com/go-ozzo/ozzo-validation/v4 v4.1.0
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/uuid v1.1.1 // indirect
 	github.com/gorilla/websocket v1.4.1 // indirect
