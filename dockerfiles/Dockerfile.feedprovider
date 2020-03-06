@@ -1,0 +1,16 @@
+FROM golang:1.12-stretch AS build-env
+
+COPY . /reserve-data
+WORKDIR /reserve-data/feed-provider/cmd
+RUN go build -v -mod=vendor -o /feed-provider
+
+FROM debian:stretch
+COPY --from=build-env /feed-provider /
+
+RUN apt-get update && \
+    apt-get install -y ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV HTTP_ADDRESS=0.0.0.0:8005
+EXPOSE 8005
+ENTRYPOINT ["/feed-provider"]

@@ -1,7 +1,7 @@
 language: go
 
 go:
-  - "1.11.x"
+  - "1.12.x"
 
 services:
   - docker
@@ -12,7 +12,7 @@ addons:
 
 env:
   global:
-    - GOLANGCI_LINT_VERSION=1.15.0
+    - GOLANGCI_LINT_VERSION=1.21.0
     - GO111MODULE=on
     - GOFLAGS=-mod=vendor
 
@@ -33,6 +33,7 @@ after_success:
   - docker build -f Dockerfile.next --label "commit=$TRAVIS_COMMIT" -t kybernetwork/reserve-data:$TRAVIS_COMMIT .
   - docker build -f dockerfiles/Dockerfile.gateway --label "commit=$TRAVIS_COMMIT" -t kybernetwork/reserve-data-gateway:$TRAVIS_COMMIT .
   - docker build -f dockerfiles/Dockerfile.setting --label "commit=$TRAVIS_COMMIT" -t kybernetwork/reserve-data-setting:$TRAVIS_COMMIT .
+  - docker build -f dockerfiles/Dockerfile.feed-provider --label "commit=$TRAVIS_COMMIT" -t kybernetwork/reserve-data-feed-provider:$TRAVIS_COMMIT .
 
 deploy:
   - provider: script
