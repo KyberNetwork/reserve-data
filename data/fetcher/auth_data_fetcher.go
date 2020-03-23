@@ -12,12 +12,12 @@ import (
 
 /**
 AuthData here including:
-	balance of token from
-	- exchanges (binance, huobi, etc)
-	- blockchain (reserve)
+	balance of token from:
+		- exchanges (binance, huobi, etc)
+		- blockchain (reserve)
 	pending activity: (pending activity is the one thing affect balance directly)
-	- exchange status(submitted, success, failed)
-	- blockchain status (pending, mined, failed, lost)
+		- exchange status(submitted, success, failed)
+		- blockchain status (pending, mined, failed, lost)
 **/
 
 // RunAuthDataFetcher start fetching authdata
