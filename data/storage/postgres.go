@@ -15,6 +15,10 @@ import (
 	commonv3 "github.com/KyberNetwork/reserve-data/reservesetting/common"
 )
 
+// TODO:
+// auto partition table fetch_data by created field (monthly, quarterly or yearly (tbd))
+// auto upload to s3 storage
+
 const (
 	schema = `
 DO
@@ -33,7 +37,7 @@ CREATE TABLE IF NOT EXISTS "fetch_data"
 	created TIMESTAMPTZ NOT NULL,
 	data JSON NOT NULL,
 	type fetch_data_type NOT NULL
-);
+) PARTITION BY RANGE (created);
 CREATE INDEX IF NOT EXISTS "fetch_data_created_index" ON "fetch_data" (created);
 
 CREATE TABLE IF NOT EXISTS "activity"
