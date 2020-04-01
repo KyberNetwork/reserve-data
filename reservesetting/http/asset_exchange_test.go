@@ -48,6 +48,7 @@ func TestServer_UpdateAssetExchange(t *testing.T) {
 		WithdrawFee:       common.FloatPointer(3.2),
 		TargetRecommended: common.FloatPointer(3.3),
 		TargetRatio:       common.FloatPointer(3.4),
+		Message:           "Update asset exchange",
 	}
 	pending, err := c.createSettingChange(common.SettingChange{ChangeList: []common.SettingChangeEntry{
 		{
