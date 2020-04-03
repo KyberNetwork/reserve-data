@@ -54,7 +54,7 @@ Change types includes:
 
 
 ```shell
-curl -X GET "https://gateway.local/v3/setting-change-main"
+curl -X GET "https://gateway.local/v3/setting-change-main?status=pending"
 ```
 
 > sample response
@@ -81,6 +81,11 @@ curl -X GET "https://gateway.local/v3/setting-change-main"
 
 `GET https://gateway.local/v3/setting-change-main`
 <aside class="notice">All keys are accepted</aside>
+
+#### Params
+Params | Type | Required | Default | Description
+------ | ---- | -------- | ------- | -----------
+status | string | false | pending | status of setting change (include: pending, accepted, rejected)
 
 ## Confirm pending setting change
 
