@@ -125,7 +125,7 @@ func (s *Storage) RejectSettingChange(id uint64) error {
 		return err
 	}
 	defer pgutil.RollbackUnlessCommitted(tx)
-	err = tx.Stmtx(s.stmts.deleteSettingChange).Get(&returnedID, id)
+	err = tx.Stmtx(s.stmts.updateSettingChangeStatus).Get(&returnedID, id, "rejected")
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return common.ErrNotFound
@@ -235,7 +235,7 @@ func (s *Storage) ConfirmSettingChange(id uint64, commit bool) error {
 			return err
 		}
 	}
-	_, err = tx.Stmtx(s.stmts.deleteSettingChange).Exec(id)
+	_, err = tx.Stmtx(s.stmts.updateSettingChangeStatus).Exec(id, "done")
 	if err != nil {
 		return err
 	}

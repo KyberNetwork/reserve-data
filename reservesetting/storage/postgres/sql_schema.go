@@ -162,6 +162,9 @@ $$
             CREATE TYPE setting_change_cat AS ENUM ('set_target', 'set_pwis',
                 'set_stable_token','set_rebalance_quadratic', 'main', 'update_exchange', 'set_feed_configuration');
         END IF;
+        IF NOT EXISTS(SELECT 1 FROM pg_type WHERE typname = 'setting_change_status') THEN
+            CREATE TYPE setting_change_status AS ENUM ('pending', 'done', 'rejected');
+        END IF;
     END
 $$;
 
@@ -170,8 +173,9 @@ CREATE TABLE IF NOT EXISTS setting_change
 (
     id      SERIAL PRIMARY KEY,
     created TIMESTAMPTZ                 NOT NULL,
-    cat     setting_change_cat UNIQUE NOT NULL,
-    data    JSON                      NOT NULL
+    cat     setting_change_cat NOT NULL,
+    data    JSON                      NOT NULL,
+    status  setting_change_status NOT NULL DEFAULT 'pending'
 );
 
 CREATE TABLE IF NOT EXISTS price_factor

@@ -38,9 +38,9 @@ type preparedStmts struct {
 	getTradingBy    *sqlx.Stmt
 	deleteTradingBy *sqlx.Stmt
 
-	newSettingChange    *sqlx.Stmt
-	deleteSettingChange *sqlx.Stmt
-	getSettingChange    *sqlx.Stmt
+	newSettingChange          *sqlx.Stmt
+	updateSettingChangeStatus *sqlx.Stmt
+	getSettingChange          *sqlx.Stmt
 
 	newPriceFactor      *sqlx.Stmt
 	getPriceFactor      *sqlx.Stmt
@@ -128,7 +128,7 @@ func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
 		return nil, err
 	}
 
-	newSettingChange, deleteSettingChange, getSettingChange, err := settingChangeStatements(db)
+	newSettingChange, updateSettingChangeStatus, getSettingChange, err := settingChangeStatements(db)
 	if err != nil {
 		return nil, err
 	}
@@ -191,9 +191,9 @@ func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
 		getTradingPairSymbols: tradingPairStmts.getBySymbolStmt,
 		getMinNotional:        getMinNotional,
 
-		newSettingChange:    newSettingChange,
-		deleteSettingChange: deleteSettingChange,
-		getSettingChange:    getSettingChange,
+		newSettingChange:          newSettingChange,
+		updateSettingChangeStatus: updateSettingChangeStatus,
+		getSettingChange:          getSettingChange,
 
 		newPriceFactor:      newPriceFactor,
 		getPriceFactor:      getPriceFactor,
@@ -647,8 +647,8 @@ func settingChangeStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, e
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	const deleteSettingChangeQuery = `DELETE FROM setting_change WHERE id=$1 returning id`
-	deleteSettingChangeStmt, err := db.Preparex(deleteSettingChangeQuery)
+	const updateSettingChangeStatus = `UPDATE setting_change SET status = $2 WHERE id=$1 returning id`
+	updateSettingChangeStatusStmt, err := db.Preparex(updateSettingChangeStatus)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -657,7 +657,7 @@ func settingChangeStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, e
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	return newSettingChangeStmt, deleteSettingChangeStmt, listSettingChangeStmt, nil
+	return newSettingChangeStmt, updateSettingChangeStatusStmt, listSettingChangeStmt, nil
 }
 
 func priceFactorStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, error) {
