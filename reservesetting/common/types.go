@@ -164,7 +164,6 @@ type CreateAssetExchangeEntry struct {
 	TargetRecommended float64          `json:"target_recommended"`
 	TargetRatio       float64          `json:"target_ratio"`
 	TradingPairs      []TradingPair    `json:"trading_pairs"`
-	Message           string           `json:"message"`
 }
 
 // UpdateAssetExchangeEntry is the configuration of an asset for a specific exchange to be update
@@ -177,7 +176,6 @@ type UpdateAssetExchangeEntry struct {
 	WithdrawFee       *float64          `json:"withdraw_fee"`
 	TargetRecommended *float64          `json:"target_recommended"`
 	TargetRatio       *float64          `json:"target_ratio"`
-	Message           string            `json:"message"`
 }
 
 // CreateAssetEntry represents an asset in centralized exchange, eg: ETH, KNC, Bitcoin...
@@ -199,7 +197,6 @@ type CreateAssetEntry struct {
 	Target             *AssetTarget        `json:"target"`
 	StableParam        *StableParam        `json:"stable_param"`
 	FeedWeight         *FeedWeight         `json:"feed_weight,omitempty"`
-	Message            string              `json:"message"`
 }
 
 // UpdateAssetEntry entry object for update asset
@@ -220,7 +217,6 @@ type UpdateAssetEntry struct {
 	Target             *AssetTarget        `json:"target"`
 	StableParam        *UpdateStableParam  `json:"stable_param"`
 	FeedWeight         *FeedWeight         `json:"feed_weight,omitempty"`
-	Message            string              `json:"message"`
 }
 
 type UpdateExchangeEntry struct {
@@ -229,7 +225,6 @@ type UpdateExchangeEntry struct {
 	TradingFeeMaker *float64 `json:"trading_fee_maker"`
 	TradingFeeTaker *float64 `json:"trading_fee_taker"`
 	Disable         *bool    `json:"disable"`
-	Message         string   `json:"message"`
 }
 
 // CreateTradingPairEntry represents an trading pair in central exchange.
@@ -239,7 +234,6 @@ type CreateTradingPairEntry struct {
 	TradingPair
 	AssetID    uint64 `json:"asset_id"`
 	ExchangeID uint64 `json:"exchange_id"`
-	Message    string `json:"message"`
 }
 
 // ChangeAssetAddressEntry present data to create a change asset address
@@ -247,7 +241,6 @@ type ChangeAssetAddressEntry struct {
 	settingChangeMarker
 	ID      uint64           `json:"id" binding:"required"`
 	Address ethereum.Address `json:"address" binding:"required"`
-	Message string           `json:"message"`
 }
 
 // SetFeedConfigurationEntry data to set feed config
@@ -258,7 +251,6 @@ type SetFeedConfigurationEntry struct {
 	Enabled              *bool    `json:"enabled"`
 	BaseVolatilitySpread *float64 `json:"base_volatility_spread"`
 	NormalSpread         *float64 `json:"normal_spread"`
-	Message              string   `json:"message"`
 }
 
 // ChangeCatalog represent catalog the change list belong to, each catalog keep track pending change independent
@@ -324,6 +316,7 @@ type SettingChangeEntry struct {
 // SettingChange present for setting change request
 type SettingChange struct {
 	ChangeList []SettingChangeEntry `json:"change_list"`
+	Message    string               `json:"message"`
 }
 
 // SettingChangeResponse setting change response
@@ -337,20 +330,17 @@ type SettingChangeResponse struct {
 type DeleteTradingPairEntry struct {
 	settingChangeMarker
 	TradingPairID uint64 `json:"id"`
-	Message       string `json:"message"`
 }
 
 // DeleteAssetExchangeEntry presents data to delete an asset exchange
 type DeleteAssetExchangeEntry struct {
 	settingChangeMarker
 	AssetExchangeID uint64 `json:"id"`
-	Message         string `json:"message"`
 }
 
 type UpdateStableTokenParamsEntry struct {
 	settingChangeMarker
-	Params  map[string]interface{} `json:"params"`
-	Message string                 `json:"message"`
+	Params map[string]interface{} `json:"params"`
 }
 
 // FeedConfiguration feed configuration

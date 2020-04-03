@@ -146,7 +146,6 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 							WithdrawFee:       11.0,
 							TargetRecommended: 12.0,
 							TargetRatio:       13.0,
-							Message:           "support huobi",
 						},
 					},
 					{
@@ -156,10 +155,10 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 							DepositAddress: common.AddressPointer(eth.HexToAddress("0x0000000000001")),
 							MinDeposit:     common.FloatPointer(6.0),
 							WithdrawFee:    common.FloatPointer(9.0),
-							Message:        "update fees",
 						},
 					},
 				},
+				Message: "support huobi",
 			},
 			assert: httputil.ExpectSuccess,
 		},
@@ -255,10 +254,10 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 							StableParam: &common.StableParam{
 								AskSpread: expectedAskSpread,
 							},
-							Message: "create a new asset",
 						},
 					},
 				},
+				Message: "create a new asset",
 			},
 			assert: httputil.ExpectSuccess,
 		},
@@ -345,10 +344,10 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 								feed.GeminiETHBTC.String():   3.0,
 								feed.CoinbaseETHBTC.String(): 1.2,
 							},
-							Message: "create OMG",
 						},
 					},
 				},
+				Message: "create OMG",
 			},
 			assert: httputil.ExpectSuccess,
 		},
@@ -381,10 +380,10 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 							FeedWeight: &common.FeedWeight{
 								feed.GeminiETHBTC.String(): 3.0,
 							},
-							Message: "Update feed weight",
 						},
 					},
 				},
+				Message: "Update feed weight",
 			},
 			assert: httputil.ExpectSuccess,
 		},
@@ -414,10 +413,10 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 						Data: common.UpdateAssetEntry{
 							AssetID: 6,
 							IsQuote: common.BoolPointer(false),
-							Message: "Change quote type",
 						},
 					},
 				},
+				Message: "Change quote type",
 			},
 			assert: httputil.ExpectSuccess,
 		},
@@ -448,10 +447,10 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 							SetRate:    &btcFeed,
 							AssetID:    6,
 							FeedWeight: &emptyFeedWeight,
-							Message:    "remove feed weight",
 						},
 					},
 				},
+				Message: "remove feed weight",
 			},
 			assert: httputil.ExpectSuccess,
 		},
@@ -539,10 +538,10 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 								"some_random_feed":         1.2,
 								feed.GeminiETHBTC.String(): 3.0,
 							},
-							Message: "update feed weight",
 						},
 					},
 				},
+				Message: "update feed weight",
 			},
 			assert: httputil.ExpectFailure,
 		},
@@ -628,10 +627,10 @@ func TestHTTPServerAssetExchangeWithOptionalTradingPair(t *testing.T) {
 									MinNotional:     0.001,
 								},
 							},
-							Message: "Support huobi",
 						},
 					},
 				},
+				Message: "Support huobi",
 			},
 		},
 		{
@@ -664,10 +663,10 @@ func TestHTTPServerAssetExchangeWithOptionalTradingPair(t *testing.T) {
 									MinNotional:     0.001,
 								},
 							},
-							Message: "Create trading pair",
 						},
 					},
 				},
+				Message: "Create trading pair",
 			},
 		},
 		{
@@ -700,10 +699,10 @@ func TestHTTPServerAssetExchangeWithOptionalTradingPair(t *testing.T) {
 									MinNotional:     0.001,
 								},
 							},
-							Message: "create trading pair",
 						},
 					},
 				},
+				Message: "create trading pair",
 			},
 		},
 		{
@@ -736,10 +735,10 @@ func TestHTTPServerAssetExchangeWithOptionalTradingPair(t *testing.T) {
 									MinNotional:     0.001,
 								},
 							},
-							Message: "create trading pair",
 						},
 					},
 				},
+				Message: "create trading pair",
 			},
 		},
 		{
@@ -782,10 +781,10 @@ func TestHTTPServerAssetExchangeWithOptionalTradingPair(t *testing.T) {
 									MinNotional:     0.001,
 								},
 							},
-							Message: "create new trading pair",
 						},
 					},
 				},
+				Message: "create new trading pair",
 			},
 		},
 		{
@@ -818,10 +817,10 @@ func TestHTTPServerAssetExchangeWithOptionalTradingPair(t *testing.T) {
 									MinNotional:     0.001,
 								},
 							},
-							Message: "create new trading pair",
 						},
 					},
 				},
+				Message: "create new trading pair",
 			},
 		},
 		{
@@ -867,10 +866,10 @@ func TestHTTPServer_SettingChangeUpdateExchange(t *testing.T) {
 							TradingFeeMaker: common.FloatPointer(0.4),
 							TradingFeeTaker: common.FloatPointer(0.6),
 							Disable:         common.BoolPointer(false),
-							Message:         "Update exchange",
 						},
 					},
 				},
+				Message: "Update exchange",
 			},
 			assert: func(t *testing.T, resp *httptest.ResponseRecorder) {
 				var idResponse struct {
@@ -937,10 +936,10 @@ func TestHTTPServer_SettingChangeUpdateExchange(t *testing.T) {
 							TradingFeeMaker: common.FloatPointer(0.4),
 							TradingFeeTaker: common.FloatPointer(0.6),
 							Disable:         common.BoolPointer(false),
-							Message:         "update exchange fee",
 						},
 					},
 				},
+				Message: "update exchange fee",
 			},
 			assert: func(t *testing.T, resp *httptest.ResponseRecorder) {
 				msg := resp.Body.Bytes()
@@ -996,10 +995,10 @@ func TestHTTPServer_ChangeAssetAddress(t *testing.T) {
 						Data: common.ChangeAssetAddressEntry{
 							ID:      1,
 							Address: eth.HexToAddress("0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5"),
-							Message: "update asset address",
 						},
 					},
 				},
+				Message: "update asset address",
 			},
 			assert: func(t *testing.T, resp *httptest.ResponseRecorder) {
 				var idResponse struct {
@@ -1093,10 +1092,10 @@ func TestHTTPServer_DeleteTradingPair(t *testing.T) {
 						Type: common.ChangeTypeDeleteTradingPair,
 						Data: common.DeleteTradingPairEntry{
 							TradingPairID: 1,
-							Message:       "delete trading pair",
 						},
 					},
 				},
+				Message: "delete trading pair",
 			},
 			assert: func(t *testing.T, resp *httptest.ResponseRecorder) {
 				var idResponse struct {
@@ -1176,10 +1175,10 @@ func TestHTTPServer_DeleteAssetExchange(t *testing.T) {
 						Type: common.ChangeTypeDeleteTradingPair,
 						Data: common.DeleteTradingPairEntry{
 							TradingPairID: 1,
-							Message:       "create new trading pair",
 						},
 					},
 				},
+				Message: "delete trading pair",
 			},
 			assert: func(t *testing.T, resp *httptest.ResponseRecorder) {
 				var idResponse struct {
@@ -1212,10 +1211,10 @@ func TestHTTPServer_DeleteAssetExchange(t *testing.T) {
 						Type: common.ChangeTypeDeleteAssetExchange,
 						Data: common.DeleteAssetExchangeEntry{
 							AssetExchangeID: 2,
-							Message:         "delete asset exchange",
 						},
 					},
 				},
+				Message: "delete asset exchange",
 			},
 			assert: func(t *testing.T, resp *httptest.ResponseRecorder) {
 				var idResponse struct {
@@ -1288,20 +1287,22 @@ func TestCreateTradingPair(t *testing.T) {
 	server := NewServer(s, "", supportedExchanges, "", "")
 	c := apiClient{s: server}
 	quote := uint64(1) // ETH
-	postRes, err := c.createSettingChange(common.SettingChange{ChangeList: []common.SettingChangeEntry{
-		{
-			Type: common.ChangeTypeCreateTradingPair,
-			Data: common.CreateTradingPairEntry{
-				TradingPair: common.TradingPair{
-					Base:  id,
-					Quote: quote, // ETH
+	postRes, err := c.createSettingChange(common.SettingChange{
+		ChangeList: []common.SettingChangeEntry{
+			{
+				Type: common.ChangeTypeCreateTradingPair,
+				Data: common.CreateTradingPairEntry{
+					TradingPair: common.TradingPair{
+						Base:  id,
+						Quote: quote, // ETH
+					},
+					AssetID:    id,
+					ExchangeID: binance,
 				},
-				AssetID:    id,
-				ExchangeID: binance,
-				Message:    "create trading pair",
 			},
 		},
-	}})
+		Message: "create trading pair",
+	})
 	require.NoError(t, err)
 	_, err = c.confirmSettingChange(postRes.ID)
 	require.NoError(t, err)
@@ -1364,10 +1365,10 @@ func TestSetFeedConfiguration(t *testing.T) {
 							Enabled:              &fenabled,
 							BaseVolatilitySpread: &fbaseVolatilitySpread,
 							NormalSpread:         &fnormalSpread,
-							Message:              "set feed configuration",
 						},
 					},
 				},
+				Message: "set feed configuration",
 			},
 			assert: func(t *testing.T, resp *httptest.ResponseRecorder) {
 				var idResponse struct {

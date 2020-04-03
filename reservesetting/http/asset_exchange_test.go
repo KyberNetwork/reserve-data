@@ -48,14 +48,15 @@ func TestServer_UpdateAssetExchange(t *testing.T) {
 		WithdrawFee:       common.FloatPointer(3.2),
 		TargetRecommended: common.FloatPointer(3.3),
 		TargetRatio:       common.FloatPointer(3.4),
-		Message:           "Update asset exchange",
 	}
 	pending, err := c.createSettingChange(common.SettingChange{ChangeList: []common.SettingChangeEntry{
 		{
 			Type: common.ChangeTypeUpdateAssetExchange,
 			Data: updateAxe,
 		},
-	}})
+	},
+		Message: "Update asset exchange",
+	})
 	require.NoError(t, err)
 	confirm, err := c.confirmSettingChange(pending.ID)
 	require.NoError(t, err)
