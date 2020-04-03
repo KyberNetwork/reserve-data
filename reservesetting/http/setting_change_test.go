@@ -1127,6 +1127,12 @@ func TestHTTPServer_DeleteTradingPair(t *testing.T) {
 			assert: httputil.ExpectSuccess,
 		},
 		{
+			msg:      "get setting change accepted",
+			endpoint: fmt.Sprintf("/v3/setting-change-main?status=%s", common.ChangeStatusAccepted.String()),
+			method:   http.MethodGet,
+			assert:   httputil.ExpectSuccess,
+		},
+		{
 			msg:      "get trading pair",
 			endpoint: fmt.Sprintf("/v3/trading-pair/%d", 1),
 			method:   http.MethodGet,

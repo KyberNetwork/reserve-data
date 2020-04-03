@@ -296,6 +296,16 @@ const (
 	ChangeTypeSetFeedConfiguration // set_feed_configuration
 )
 
+// ChangeStatus represent status of change
+//go:generate enumer -type=ChangeStatus -linecomment -json=true
+type ChangeStatus int
+
+const (
+	ChangeStatusPending  ChangeStatus = iota // pending
+	ChangeStatusAccepted                     // accepted
+	ChangeStatusRejected                     // rejected
+)
+
 // SettingChangeType interface just make sure that only some of selected type can be put into SettingChange list
 type SettingChangeType interface {
 	nope()

@@ -16,7 +16,7 @@ type Interface interface {
 
 	CreateSettingChange(v3.ChangeCatalog, v3.SettingChange) (uint64, error)
 	GetSettingChange(uint64) (v3.SettingChangeResponse, error)
-	GetSettingChanges(catalog v3.ChangeCatalog) ([]v3.SettingChangeResponse, error)
+	GetSettingChanges(catalog v3.ChangeCatalog, status v3.ChangeStatus) ([]v3.SettingChangeResponse, error)
 	RejectSettingChange(uint64) error
 	ConfirmSettingChange(uint64, bool) error
 

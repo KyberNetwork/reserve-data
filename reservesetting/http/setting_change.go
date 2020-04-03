@@ -234,13 +234,23 @@ func (s *Server) getSettingChange(c *gin.Context) {
 	}
 	httputil.ResponseSuccess(c, httputil.WithData(result))
 }
+
+type getSettingChangeWitTypeFilter struct {
+	status common.ChangeStatus `form:"status"`
+}
+
 func (s *Server) getSettingChangeWithType(t common.ChangeCatalog) func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
 		s.getSettingChanges(ctx, t)
 	}
 }
 func (s *Server) getSettingChanges(c *gin.Context, t common.ChangeCatalog) {
-	result, err := s.storage.GetSettingChanges(t)
+	var query getSettingChangeWitTypeFilter
+	if err := c.ShouldBindQuery(&query); err != nil {
+		httputil.ResponseFailure(c, httputil.WithError(err))
+		return
+	}
+	result, err := s.storage.GetSettingChanges(t, query.status)
 	if err != nil {
 		s.l.Warnw("failed to get setting changes", "err", err)
 		httputil.ResponseFailure(c, httputil.WithError(err))

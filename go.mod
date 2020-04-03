@@ -5,6 +5,7 @@ require (
 	github.com/KyberNetwork/httpsign-utils v0.1.1
 	github.com/TheZeroSlave/zapsentry v0.0.0-20190902083357-8d59d83a8818
 	github.com/allegro/bigcache v1.2.1 // indirect
+	github.com/alvaroloes/enumer v1.1.2 // indirect
 	github.com/apilayer/freegeoip v3.5.0+incompatible // indirect
 	github.com/aristanetworks/goarista v0.0.0-20190625195245-f3b0eb5a88b2 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a // indirect

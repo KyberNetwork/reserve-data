@@ -652,7 +652,8 @@ func settingChangeStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, e
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	const listSettingChangeQuery = `SELECT id,created,data FROM setting_change WHERE id=COALESCE($1, setting_change.id) AND cat=COALESCE($2, setting_change.cat)`
+	const listSettingChangeQuery = `SELECT id,created,data FROM setting_change WHERE id=COALESCE($1, setting_change.id) AND cat=COALESCE($2, setting_change.cat)
+	AND status=COALESCE($3, 'pending'::setting_change_status)`
 	listSettingChangeStmt, err := db.Preparex(listSettingChangeQuery)
 	if err != nil {
 		return nil, nil, nil, err

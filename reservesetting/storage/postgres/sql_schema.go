@@ -163,7 +163,7 @@ $$
                 'set_stable_token','set_rebalance_quadratic', 'main', 'update_exchange', 'set_feed_configuration');
         END IF;
         IF NOT EXISTS(SELECT 1 FROM pg_type WHERE typname = 'setting_change_status') THEN
-            CREATE TYPE setting_change_status AS ENUM ('pending', 'done', 'rejected');
+            CREATE TYPE setting_change_status AS ENUM ('pending', 'accepted', 'rejected');
         END IF;
     END
 $$;
