@@ -175,7 +175,7 @@ CREATE TABLE IF NOT EXISTS setting_change
     created TIMESTAMPTZ                 NOT NULL,
     cat     setting_change_cat NOT NULL,
     data    JSON                      NOT NULL,
-    status  setting_change_status NOT NULL DEFAULT 'pending'
+    status  setting_change_status DEFAULT 'pending'
 );
 
 CREATE TABLE IF NOT EXISTS price_factor
