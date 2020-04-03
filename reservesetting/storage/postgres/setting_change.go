@@ -15,7 +15,9 @@ import (
 )
 
 const (
-	settingChangeCatUnique = "setting_change_cat_key"
+	settingChangeCatUnique      = "setting_change_cat_key"
+	settingChangeStatusDone     = "done"
+	settingChangeStatusRejected = "rejected"
 )
 
 // CreateSettingChange creates an setting change in database and return id
@@ -125,7 +127,7 @@ func (s *Storage) RejectSettingChange(id uint64) error {
 		return err
 	}
 	defer pgutil.RollbackUnlessCommitted(tx)
-	err = tx.Stmtx(s.stmts.updateSettingChangeStatus).Get(&returnedID, id, "rejected")
+	err = tx.Stmtx(s.stmts.updateSettingChangeStatus).Get(&returnedID, id, settingChangeStatusRejected)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return common.ErrNotFound
@@ -235,7 +237,7 @@ func (s *Storage) ConfirmSettingChange(id uint64, commit bool) error {
 			return err
 		}
 	}
-	_, err = tx.Stmtx(s.stmts.updateSettingChangeStatus).Exec(id, "done")
+	_, err = tx.Stmtx(s.stmts.updateSettingChangeStatus).Exec(id, settingChangeStatusDone)
 	if err != nil {
 		return err
 	}
