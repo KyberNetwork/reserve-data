@@ -236,7 +236,7 @@ func (s *Server) getSettingChange(c *gin.Context) {
 }
 
 type getSettingChangeWitTypeFilter struct {
-	status common.ChangeStatus `form:"status"`
+	Status common.ChangeStatus `form:"status"`
 }
 
 func (s *Server) getSettingChangeWithType(t common.ChangeCatalog) func(ctx *gin.Context) {
@@ -250,7 +250,7 @@ func (s *Server) getSettingChanges(c *gin.Context, t common.ChangeCatalog) {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
-	result, err := s.storage.GetSettingChanges(t, query.status)
+	result, err := s.storage.GetSettingChanges(t, query.Status)
 	if err != nil {
 		s.l.Warnw("failed to get setting changes", "err", err)
 		httputil.ResponseFailure(c, httputil.WithError(err))
