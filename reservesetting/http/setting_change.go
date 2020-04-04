@@ -245,15 +245,22 @@ func (s *Server) getSettingChangeWithType(t common.ChangeCatalog) func(ctx *gin.
 	}
 }
 func (s *Server) getSettingChanges(c *gin.Context, t common.ChangeCatalog) {
-	var query getSettingChangeWitTypeFilter
+	var (
+		query getSettingChangeWitTypeFilter
+		err   error
+	)
 	if err := c.ShouldBindQuery(&query); err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
-	status, err := common.ChangeStatusString(query.Status)
-	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
+
+	status := common.ChangeStatusPending
+	if query.Status != "" {
+		status, err = common.ChangeStatusString(query.Status)
+		if err != nil {
+			httputil.ResponseFailure(c, httputil.WithError(err))
+			return
+		}
 	}
 
 	result, err := s.storage.GetSettingChanges(t, status)
