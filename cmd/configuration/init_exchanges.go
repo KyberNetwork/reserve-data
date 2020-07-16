@@ -177,7 +177,7 @@ func NewExchangePool(
 			be = binance.NewBinanceEndpoint(binanceSigner, bi, dpl, httpClient, exparam)
 			binancestorage, err := binanceStorage.NewPostgresStorage(db)
 			if err != nil {
-				return nil, fmt.Errorf("can not create Binance storage: (%s)", err.Error())
+				return nil, fmt.Errorf("cannot create Binance storage: (%s)", err.Error())
 			}
 			bin, err = exchange.NewBinance(
 				exparam,
@@ -185,7 +185,7 @@ func NewExchangePool(
 				binancestorage,
 				assetStorage)
 			if err != nil {
-				return nil, fmt.Errorf("can not create exchange Binance: (%s)", err.Error())
+				return nil, fmt.Errorf("cannot create exchange Binance: (%s)", err.Error())
 			}
 			exchanges[bin.ID()] = bin
 		case common.Huobi:
@@ -193,7 +193,7 @@ func NewExchangePool(
 			he = huobi.NewHuobiEndpoint(huobiSigner, hi, httpClient)
 			huobistorage, err := huobiStorage.NewPostgresStorage(db)
 			if err != nil {
-				return nil, fmt.Errorf("can not create Binance storage: (%s)", err.Error())
+				return nil, fmt.Errorf("cannot create Binance storage: (%s)", err.Error())
 			}
 			intermediatorSigner := blockchaincommon.NewEthereumSigner(rcf.IntermediatorKeystore, rcf.IntermediatorPassphrase)
 			intermediatorNonce := nonce.NewTimeWindow(intermediatorSigner.GetAddress(), 10000)
@@ -206,15 +206,15 @@ func NewExchangePool(
 				assetStorage,
 			)
 			if err != nil {
-				return nil, fmt.Errorf("can not create exchange Huobi: (%s)", err.Error())
+				return nil, fmt.Errorf("cannot create exchange Huobi: (%s)", err.Error())
 			}
 			exchanges[hb.ID()] = hb
 		}
 	}
 
 	go updateDepositAddress(assetStorage, be, he)
-	if bin != nil {
-		go updateTradingPairConf(assetStorage, bin, uint64(common.Binance))
+	if bin, ok := exchanges[common.Binance].(*exchange.Binance); ok {
+		go updateTradingPairConf(assetStorage, bin, uint64(bin.ID()))
 	}
 	if bin2, ok := exchanges[common.Binance2].(*exchange.Binance); ok {
 		go updateTradingPairConf(assetStorage, bin2, uint64(bin2.ID()))
