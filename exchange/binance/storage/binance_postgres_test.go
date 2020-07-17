@@ -53,7 +53,7 @@ func Test_BinancePostgres(t *testing.T) {
 	var tradeHistory common.ExchangeTradeHistory
 	fromTime := uint64(1528934400000)
 	toTime := uint64(1529020800000)
-	tradeHistory, err = storage.GetTradeHistory(1, fromTime, toTime)
+	tradeHistory, err = storage.GetTradeHistory(uint64(common.Binance), fromTime, toTime)
 	if err != nil {
 		t.Fatal(err)
 	}
