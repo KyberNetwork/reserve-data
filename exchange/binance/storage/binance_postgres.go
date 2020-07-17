@@ -14,7 +14,7 @@ const (
 	schema = `
 		CREATE TABLE IF NOT EXISTS "binance_trade_history"(
 		    id 				SERIAL PRIMARY KEY,
-		    pair_id			BIGINT,
+		    pair_id			INTEGER REFERENCES trading_pairs(id),
 		    trade_id		TEXT UNIQUE NOT NULL,
 		    price 			FLOAT NOT NULL,
 		    qty 			FLOAT NOT NULL, 
@@ -59,7 +59,8 @@ func (s *postgresStorage) prepareStmts() error {
 	}
 	s.stmts.getHistoryStmt, err = s.db.Preparex(`SELECT pair_id, trade_id, price, qty, type, time 
 		FROM "binance_trade_history"
-		WHERE time >= $1 AND time <= $2`)
+		JOIN trading_pairs ON binance_trade_history.pair_id = trading_pairs.id
+		WHERE trading_pairs.exchange_id = $1 AND time >= $2 AND time <= $3`)
 	if err != nil {
 		return err
 	}
@@ -112,10 +113,10 @@ func (s *postgresStorage) StoreTradeHistory(data common.ExchangeTradeHistory) er
 }
 
 // GetTradeHistory implements exchange.BinanceStorage and get trade history within a time period
-func (s *postgresStorage) GetTradeHistory(fromTime, toTime uint64) (common.ExchangeTradeHistory, error) {
+func (s *postgresStorage) GetTradeHistory(exchangeID, fromTime, toTime uint64) (common.ExchangeTradeHistory, error) {
 	var result = make(common.ExchangeTradeHistory)
 	var records []exchangeTradeHistoryDB
-	err := s.stmts.getHistoryStmt.Select(&records, fromTime, toTime)
+	err := s.stmts.getHistoryStmt.Select(&records, exchangeID, fromTime, toTime)
 	if err != nil {
 		return result, err
 	}

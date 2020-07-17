@@ -373,7 +373,7 @@ func (bn *Binance) FetchTradeHistory() {
 
 // GetTradeHistory get trade history from binance
 func (bn *Binance) GetTradeHistory(fromTime, toTime uint64) (common.ExchangeTradeHistory, error) {
-	return bn.storage.GetTradeHistory(fromTime, toTime)
+	return bn.storage.GetTradeHistory(uint64(bn.ID()), fromTime, toTime)
 }
 
 // DepositStatus return status of a deposit on binance
