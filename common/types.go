@@ -792,7 +792,8 @@ type RawConfig struct {
 	IntermediatorKeystore   string `json:"keystore_intermediator_path"`
 	IntermediatorPassphrase string `json:"passphrase_intermediate_account"`
 
-	MigrationFolderPath string `json:"migration_folder_path"`
+	MigrationPath string `json:"migration_folder_path"`
+	DatabaseName  string `json:"database_name"`
 }
 
 // FeedProviderResponse ...

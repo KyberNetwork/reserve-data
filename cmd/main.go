@@ -60,7 +60,8 @@ func run(c *cli.Context) error {
 		return err
 	}
 
-	rcf.MigrationFolderPath = configuration.NewMigrationPathFromContext(c)
+	rcf.MigrationPath = configuration.NewMigrationPathFromContext(c)
+	rcf.DatabaseName = configuration.DatabaseNameFromContext(c)
 
 	conf, err := configuration.NewConfigurationFromContext(c, rcf, l)
 	if err != nil {

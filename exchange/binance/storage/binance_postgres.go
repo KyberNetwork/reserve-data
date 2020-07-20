@@ -40,7 +40,7 @@ type preparedStmt struct {
 }
 
 // NewPostgresStorage creates new obj exchange.BinanceStorage with db engine = postgres
-func NewPostgresStorage(db *sqlx.DB, migrationFolderPath string) (exchange.BinanceStorage, error) {
+func NewPostgresStorage(db *sqlx.DB, migrationFolderPath, databaseName string) (exchange.BinanceStorage, error) {
 	var (
 		err error
 	)
@@ -60,7 +60,7 @@ func NewPostgresStorage(db *sqlx.DB, migrationFolderPath string) (exchange.Binan
 		}
 		m, err := migrate.NewWithDatabaseInstance(
 			fmt.Sprintf("file://%s", migrationFolderPath),
-			"reserve_data", driver,
+			databaseName, driver,
 		)
 		if err != nil {
 			log.Println("error create migration", err)

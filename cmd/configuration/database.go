@@ -72,3 +72,8 @@ func NewDBFromContext(c *cli.Context) (*sqlx.DB, error) {
 	)
 	return sqlx.Connect(driverName, connStr)
 }
+
+// DatabaseNameFromContext return database name
+func DatabaseNameFromContext(c *cli.Context) string {
+	return c.String(postgresDatabaseFlag)
+}
