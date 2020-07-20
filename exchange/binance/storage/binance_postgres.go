@@ -11,7 +11,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/exchange"
 	"github.com/golang-migrate/migrate/v4"
 	migratepostgres "github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
+	_ "github.com/golang-migrate/migrate/v4/source/file" // driver for migration
 )
 
 const (
@@ -65,7 +65,9 @@ func NewPostgresStorage(db *sqlx.DB, migrationFolderPath string) (exchange.Binan
 		if err != nil {
 			log.Println("error create migration", err)
 		}
-		err = m.Up()
+		if err = m.Up(); err != nil && err != migrate.ErrNoChange {
+			return storage, err
+		}
 	}
 
 	return storage, err
