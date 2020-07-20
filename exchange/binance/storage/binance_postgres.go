@@ -2,7 +2,6 @@ package storage
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/jmoiron/sqlx"
 
@@ -63,7 +62,7 @@ func NewPostgresStorage(db *sqlx.DB, migrationFolderPath, databaseName string) (
 			databaseName, driver,
 		)
 		if err != nil {
-			log.Println("error create migration", err)
+			return storage, err
 		}
 		if err = m.Up(); err != nil && err != migrate.ErrNoChange {
 			return storage, err
