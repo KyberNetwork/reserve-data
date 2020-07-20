@@ -2,12 +2,16 @@ package storage
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/jmoiron/sqlx"
 
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/postgres"
 	"github.com/KyberNetwork/reserve-data/exchange"
+	"github.com/golang-migrate/migrate/v4"
+	migratepostgres "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
 const (
@@ -21,12 +25,6 @@ const (
 		    type			TEXT NOT NULL,
 		    time			BIGINT
 		);
-		ALTER TABLE binance_trade_history 
-			ALTER COLUMN pair_id TYPE INTEGER;
-		ALTER TABLE binance_trade_history 
-			DROP CONSTRAINT IF EXISTS binance_trade_history_pair_fkey;
-		ALTER TABLE binance_trade_history 
-			ADD CONSTRAINT binance_trade_history_pair_fkey FOREIGN KEY (pair_id) REFERENCES trading_pairs(id);
 	`
 )
 
@@ -42,7 +40,10 @@ type preparedStmt struct {
 }
 
 // NewPostgresStorage creates new obj exchange.BinanceStorage with db engine = postgres
-func NewPostgresStorage(db *sqlx.DB) (exchange.BinanceStorage, error) {
+func NewPostgresStorage(db *sqlx.DB, migrationFolderPath string) (exchange.BinanceStorage, error) {
+	var (
+		err error
+	)
 	if _, err := db.Exec(schema); err != nil {
 		return nil, fmt.Errorf("failed to intialize database schema err=%s", err.Error())
 	}
@@ -50,7 +51,23 @@ func NewPostgresStorage(db *sqlx.DB) (exchange.BinanceStorage, error) {
 	storage := &postgresStorage{
 		db: db,
 	}
-	err := storage.prepareStmts()
+	err = storage.prepareStmts()
+
+	if migrationFolderPath != "" {
+		driver, err := migratepostgres.WithInstance(db.DB, &migratepostgres.Config{})
+		if err != nil {
+			return storage, err
+		}
+		m, err := migrate.NewWithDatabaseInstance(
+			fmt.Sprintf("file://%s", migrationFolderPath),
+			"reserve_data", driver,
+		)
+		if err != nil {
+			log.Println("error create migration", err)
+		}
+		err = m.Up()
+	}
+
 	return storage, err
 }
 

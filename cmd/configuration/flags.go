@@ -92,6 +92,7 @@ func NewCliFlags() []cli.Flag {
 	flags = append(flags, NewExchangeCliFlag())
 	flags = append(flags, NewPostgreSQLFlags(defaultDB)...)
 	flags = append(flags, app.NewSentryFlags()...)
+	flags = append(flags, NewMigrationFolderPathFlag())
 
 	return flags
 }

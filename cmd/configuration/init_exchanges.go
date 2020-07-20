@@ -175,7 +175,7 @@ func NewExchangePool(
 				binanceSigner = binance.NewSigner(rcf.Binance2Key, rcf.Binance2Secret)
 			}
 			be = binance.NewBinanceEndpoint(binanceSigner, bi, dpl, httpClient, exparam)
-			binancestorage, err := binanceStorage.NewPostgresStorage(db)
+			binancestorage, err := binanceStorage.NewPostgresStorage(db, rcf.MigrationFolderPath)
 			if err != nil {
 				return nil, fmt.Errorf("cannot create Binance storage: (%s)", err.Error())
 			}

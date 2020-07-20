@@ -8,6 +8,7 @@ import (
 const (
 	secretConfigFileFlag = "secret-file"
 	configFileFlag       = "config"
+	migrationFolderFlag  = "migration-folder"
 )
 
 // NewSecretConfigCliFlag returns the cli flag to configure secret config file flag.
@@ -26,6 +27,21 @@ func NewSecretConfigCliFlag() []cli.Flag {
 			Value:  "config.json",
 		},
 	}
+}
+
+//NewMigrationFolderPathFlag return new flag for migration folder
+func NewMigrationFolderPathFlag() cli.Flag {
+	return cli.StringFlag{
+		Name:   migrationFolderFlag,
+		Usage:  "path for migration folder",
+		EnvVar: "MIGRATION_FOLDER",
+		Value:  "migrations",
+	}
+}
+
+// NewMigrationPathFromContext return migration folder path
+func NewMigrationPathFromContext(c *cli.Context) string {
+	return c.String(migrationFolderFlag)
 }
 
 // NewConfigFilesFromContext returns the configured secret config file location.
