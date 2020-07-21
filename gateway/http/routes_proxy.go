@@ -39,6 +39,7 @@ func WithCoreEndpoint(coreEndpoint string) Option {
 		g.GET("/usd-feed", coreProxyMW)
 
 		g.GET("/addresses", coreProxyMW)
+		g.GET("/token-rate-trigger", coreProxyMW)
 
 		return nil
 	}
