@@ -245,6 +245,12 @@ type ActivityRecord struct {
 	Timestamp      Timestamp       `json:"timestamp,omitempty"`
 }
 
+// AssetRateTrigger keep result of calculate token rate trigger
+type AssetRateTrigger struct {
+	AssetID AssetID `json:"asset_id"`
+	Count   int     `json:"count"`
+}
+
 // ActivityParams is params for activity
 type ActivityParams struct {
 	// deposit, withdraw params
@@ -260,10 +266,11 @@ type ActivityParams struct {
 	AFPMid []*big.Int `json:"afpMid,omitempty"`
 	Msgs   []string   `json:"msgs,omitempty"`
 	// Trade params
-	Type  string  `json:"type,omitempty"`
-	Base  string  `json:"base,omitempty"`
-	Quote string  `json:"quote,omitempty"`
-	Rate  float64 `json:"rate,omitempty"`
+	Type     string  `json:"type,omitempty"`
+	Base     string  `json:"base,omitempty"`
+	Quote    string  `json:"quote,omitempty"`
+	Rate     float64 `json:"rate,omitempty"`
+	Triggers []bool  `json:"triggers,omitempty"`
 }
 
 // ActivityResult is result of an activity

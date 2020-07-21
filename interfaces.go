@@ -34,6 +34,7 @@ type Data interface {
 	Run() error
 	RunStorageController() error
 	Stop() error
+	GetAssetRateTriggers(fromTime uint64, toTime uint64) (map[common.AssetID]int, error)
 }
 
 // Core is the interface that wrap around all interactions
@@ -61,5 +62,5 @@ type Core interface {
 	CancelOrders(orders []common.RequestOrder, exchange common.Exchange) map[string]common.CancelOrderResult
 
 	// blockchain related action
-	SetRates(tokens []commonv3.Asset, buys, sells []*big.Int, block *big.Int, afpMid []*big.Int, msgs []string) (common.ActivityID, error)
+	SetRates(tokens []commonv3.Asset, buys, sells []*big.Int, block *big.Int, afpMid []*big.Int, msgs []string, triggers []bool) (common.ActivityID, error)
 }

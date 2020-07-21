@@ -18,6 +18,7 @@ type RateRequest struct {
 	Sell    string `json:"sell"`
 	Mid     string `json:"mid"`
 	Msg     string `json:"msg"`
+	Trigger bool   `json:"trigger"`
 }
 
 // SetRateEntry is input for set rate request
@@ -35,7 +36,7 @@ func tokenExisted(tokenAddr ethereum.Address, assets []v3common.Asset) bool {
 	return false
 }
 
-func (s *Server) checkDelistedTokens(assets []v3common.Asset, bigBuys, bigSells, bigAfpMid []*big.Int) ([]v3common.Asset, []*big.Int, []*big.Int, []*big.Int, error) {
+func (s *Server) checkDelistedTokens(assets []v3common.Asset, bigBuys, bigSells, bigAfpMid []*big.Int, triggers []bool) ([]v3common.Asset, []*big.Int, []*big.Int, []*big.Int, []bool, error) {
 	listedToken := s.blockchain.ListedTokens()
 	for _, tokenAddr := range listedToken {
 		if !tokenExisted(tokenAddr, assets) {
@@ -45,9 +46,10 @@ func (s *Server) checkDelistedTokens(assets []v3common.Asset, bigBuys, bigSells,
 			bigBuys = append(bigBuys, big.NewInt(0))
 			bigSells = append(bigSells, big.NewInt(0))
 			bigAfpMid = append(bigAfpMid, big.NewInt(0))
+			triggers = append(triggers, false)
 		}
 	}
-	return assets, bigBuys, bigSells, bigAfpMid, nil
+	return assets, bigBuys, bigSells, bigAfpMid, triggers, nil
 }
 
 // SetRate is for setting token rate
@@ -58,6 +60,7 @@ func (s *Server) SetRate(c *gin.Context) {
 		bigBuys   = []*big.Int{}
 		bigSells  = []*big.Int{}
 		bigAfpMid = []*big.Int{}
+		triggers  []bool
 		msgs      []string
 	)
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -92,13 +95,14 @@ func (s *Server) SetRate(c *gin.Context) {
 		}
 		bigAfpMid = append(bigAfpMid, rMid)
 		msgs = append(msgs, rate.Msg)
+		triggers = append(triggers, rate.Trigger)
 	}
 	var err error
-	assets, bigBuys, bigSells, bigAfpMid, err = s.checkDelistedTokens(assets, bigBuys, bigSells, bigAfpMid)
+	assets, bigBuys, bigSells, bigAfpMid, triggers, err = s.checkDelistedTokens(assets, bigBuys, bigSells, bigAfpMid, triggers)
 	if err != nil {
 		s.l.Warnw("failed to check delisted token", "error", err)
 	}
-	id, err := s.core.SetRates(assets, bigBuys, bigSells, big.NewInt(int64(input.Block)), bigAfpMid, msgs)
+	id, err := s.core.SetRates(assets, bigBuys, bigSells, big.NewInt(int64(input.Block)), bigAfpMid, msgs, triggers)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(fmt.Errorf("failed to set rates: %s", err.Error())))
 		return

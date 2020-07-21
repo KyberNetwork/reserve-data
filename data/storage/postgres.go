@@ -345,6 +345,37 @@ func (ps *PostgresStorage) GetAllRecords(fromTime, toTime uint64) ([]common.Acti
 	return activities, nil
 }
 
+type assetRateTriggerDB struct {
+	AssetID common.AssetID `db:"asset_id"`
+	Count   int            `db:"count"`
+}
+
+// GetAssetRateTriggers return a list of AssetRateTrigger, which calculate number of time an asset was record for setRate with trigger=true
+func (ps *PostgresStorage) GetAssetRateTriggers(fromTime uint64, toTime uint64) ([]common.AssetRateTrigger, error) {
+	from := common.MillisToTime(fromTime)
+	to := common.MillisToTime(toTime)
+	var res []assetRateTriggerDB
+	query := `SELECT id as asset_id, (SELECT count(*) from (
+	SELECT (data->'params'->'trigger'->(
+			SELECT array_position(TRANSLATE((data->'params'->'assets')::text,'[]','{}')::integer[], assets.id)-1 as idx 
+			FROM activity WHERE ID = p1.ID AND created between $1 and $2 AND data->>'action'='set_rates'
+		)
+	)::BOOLEAN AS trigg FROM activity p1
+) p2 WHERE trigg IS TRUE) as count from assets`
+	err := ps.db.Select(&res, query, from, to)
+	if err != nil {
+		return nil, err
+	}
+	var cres = make([]common.AssetRateTrigger, 0, len(res))
+	for _, r := range res {
+		cres = append(cres, common.AssetRateTrigger{
+			AssetID: r.AssetID,
+			Count:   r.Count,
+		})
+	}
+	return cres, nil
+}
+
 // GetPendingActivities return all pending activities
 func (ps *PostgresStorage) GetPendingActivities() ([]common.ActivityRecord, error) {
 	var (

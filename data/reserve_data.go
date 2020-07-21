@@ -272,6 +272,19 @@ func getOneRateData(rate common.AllRateEntry) map[uint64]common.RateResponse {
 	return data
 }
 
+// GetAssetRateTriggers query count of setRate with trigger=true, for each asset
+func (rd ReserveData) GetAssetRateTriggers(fromTime uint64, toTime uint64) (map[common.AssetID]int, error) {
+	triggers, err := rd.storage.GetAssetRateTriggers(fromTime, toTime)
+	if err != nil {
+		return nil, err
+	}
+	res := make(map[common.AssetID]int)
+	for _, t := range triggers {
+		res[t.AssetID] = t.Count
+	}
+	return res, nil
+}
+
 // GetRates return all rates version
 func (rd ReserveData) GetRates(fromTime, toTime uint64) ([]common.AllRateResponse, error) {
 	result := []common.AllRateResponse{}
