@@ -355,13 +355,16 @@ func (ps *PostgresStorage) GetAssetRateTriggers(fromTime uint64, toTime uint64) 
 	from := common.MillisToTime(fromTime)
 	to := common.MillisToTime(toTime)
 	var res []assetRateTriggerDB
-	query := `SELECT id as asset_id, (SELECT count(*) from (
+	query := `WITH sr AS(
+	SELECT * FROM activity WHERE created BETWEEN $1 AND $2 AND data->>'action'='set_rates'
+)
+SELECT id AS asset_id, (SELECT count(*) FROM (
 	SELECT (data->'params'->'trigger'->(
 			SELECT array_position(TRANSLATE((data->'params'->'assets')::text,'[]','{}')::integer[], assets.id)-1 as idx 
-			FROM activity WHERE ID = p1.ID AND created between $1 and $2 AND data->>'action'='set_rates'
+			FROM sr WHERE ID = p1.ID
 		)
-	)::BOOLEAN AS trigg FROM activity p1
-) p2 WHERE trigg IS TRUE) as count from assets`
+	)::BOOLEAN AS trigg FROM sr p1
+) p2 WHERE trigg IS TRUE) AS count FROM assets`
 	err := ps.db.Select(&res, query, from, to)
 	if err != nil {
 		return nil, err
