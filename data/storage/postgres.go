@@ -359,7 +359,7 @@ func (ps *PostgresStorage) GetAssetRateTriggers(fromTime uint64, toTime uint64) 
 	SELECT * FROM activity WHERE created BETWEEN $1 AND $2 AND data->>'action'='set_rates'
 )
 SELECT id AS asset_id, (SELECT count(*) FROM (
-	SELECT (data->'params'->'trigger'->(
+	SELECT (data->'params'->'triggers'->(
 			SELECT array_position(TRANSLATE((data->'params'->'assets')::text,'[]','{}')::integer[], assets.id)-1 as idx 
 			FROM sr WHERE ID = p1.ID
 		)
