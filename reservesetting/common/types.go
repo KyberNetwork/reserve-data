@@ -130,24 +130,25 @@ type FeedWeight map[string]float64
 
 // Asset represents an asset in centralized exchange, eg: ETH, KNC, Bitcoin...
 type Asset struct {
-	ID                 uint64              `json:"id"`
-	Symbol             string              `json:"symbol" binding:"required"`
-	Name               string              `json:"name"`
-	Address            ethereum.Address    `json:"address"`
-	OldAddresses       []ethereum.Address  `json:"old_addresses,omitempty"`
-	Decimals           uint64              `json:"decimals"`
-	Transferable       bool                `json:"transferable"`
-	SetRate            SetRate             `json:"set_rate"`
-	Rebalance          bool                `json:"rebalance"`
-	IsQuote            bool                `json:"is_quote"`
-	PWI                *AssetPWI           `json:"pwi,omitempty"`
-	RebalanceQuadratic *RebalanceQuadratic `json:"rebalance_quadratic,omitempty"`
-	Exchanges          []AssetExchange     `json:"exchanges,omitempty" binding:"dive"`
-	Target             *AssetTarget        `json:"target,omitempty"`
-	StableParam        StableParam         `json:"stable_param"`
-	Created            time.Time           `json:"created"`
-	Updated            time.Time           `json:"updated"`
-	FeedWeight         *FeedWeight         `json:"feed_weight,omitempty"`
+	ID                    uint64              `json:"id"`
+	Symbol                string              `json:"symbol" binding:"required"`
+	Name                  string              `json:"name"`
+	Address               ethereum.Address    `json:"address"`
+	OldAddresses          []ethereum.Address  `json:"old_addresses,omitempty"`
+	Decimals              uint64              `json:"decimals"`
+	Transferable          bool                `json:"transferable"`
+	SetRate               SetRate             `json:"set_rate"`
+	Rebalance             bool                `json:"rebalance"`
+	IsQuote               bool                `json:"is_quote"`
+	PWI                   *AssetPWI           `json:"pwi,omitempty"`
+	RebalanceQuadratic    *RebalanceQuadratic `json:"rebalance_quadratic,omitempty"`
+	Exchanges             []AssetExchange     `json:"exchanges,omitempty" binding:"dive"`
+	Target                *AssetTarget        `json:"target,omitempty"`
+	StableParam           StableParam         `json:"stable_param"`
+	Created               time.Time           `json:"created"`
+	Updated               time.Time           `json:"updated"`
+	FeedWeight            *FeedWeight         `json:"feed_weight,omitempty"`
+	NormalUpdatePerPeriod float64             `json:"normal_update_per_period"`
 }
 
 // TODO: write custom marshal json for created/updated fields
@@ -181,42 +182,44 @@ type UpdateAssetExchangeEntry struct {
 // CreateAssetEntry represents an asset in centralized exchange, eg: ETH, KNC, Bitcoin...
 type CreateAssetEntry struct {
 	settingChangeMarker
-	Symbol             string              `json:"symbol" binding:"required"`
-	Name               string              `json:"name" binding:"required"`
-	Address            ethereum.Address    `json:"address"`
-	OldAddresses       []ethereum.Address  `json:"old_addresses"`
-	Decimals           uint64              `json:"decimals"`
-	Transferable       bool                `json:"transferable"`
-	SetRate            SetRate             `json:"set_rate"`
-	Rebalance          bool                `json:"rebalance"`
-	IsQuote            bool                `json:"is_quote"`
-	IsEnabled          bool                `json:"is_enabled"`
-	PWI                *AssetPWI           `json:"pwi"`
-	RebalanceQuadratic *RebalanceQuadratic `json:"rebalance_quadratic"`
-	Exchanges          []AssetExchange     `json:"exchanges" binding:"dive"`
-	Target             *AssetTarget        `json:"target"`
-	StableParam        *StableParam        `json:"stable_param"`
-	FeedWeight         *FeedWeight         `json:"feed_weight,omitempty"`
+	Symbol                string              `json:"symbol" binding:"required"`
+	Name                  string              `json:"name" binding:"required"`
+	Address               ethereum.Address    `json:"address"`
+	OldAddresses          []ethereum.Address  `json:"old_addresses"`
+	Decimals              uint64              `json:"decimals"`
+	Transferable          bool                `json:"transferable"`
+	SetRate               SetRate             `json:"set_rate"`
+	Rebalance             bool                `json:"rebalance"`
+	IsQuote               bool                `json:"is_quote"`
+	IsEnabled             bool                `json:"is_enabled"`
+	PWI                   *AssetPWI           `json:"pwi"`
+	RebalanceQuadratic    *RebalanceQuadratic `json:"rebalance_quadratic"`
+	Exchanges             []AssetExchange     `json:"exchanges" binding:"dive"`
+	Target                *AssetTarget        `json:"target"`
+	StableParam           *StableParam        `json:"stable_param"`
+	FeedWeight            *FeedWeight         `json:"feed_weight,omitempty"`
+	NormalUpdatePerPeriod float64             `json:"normal_update_per_period"`
 }
 
 // UpdateAssetEntry entry object for update asset
 type UpdateAssetEntry struct {
 	settingChangeMarker
-	AssetID            uint64              `json:"asset_id" binding:"required"`
-	Symbol             *string             `json:"symbol"`
-	Name               *string             `json:"name"`
-	Address            *ethereum.Address   `json:"address"`
-	Decimals           *uint64             `json:"decimals"`
-	Transferable       *bool               `json:"transferable"`
-	SetRate            *SetRate            `json:"set_rate"`
-	Rebalance          *bool               `json:"rebalance"`
-	IsQuote            *bool               `json:"is_quote"`
-	IsEnabled          *bool               `json:"is_enabled"`
-	PWI                *AssetPWI           `json:"pwi"`
-	RebalanceQuadratic *RebalanceQuadratic `json:"rebalance_quadratic"`
-	Target             *AssetTarget        `json:"target"`
-	StableParam        *UpdateStableParam  `json:"stable_param"`
-	FeedWeight         *FeedWeight         `json:"feed_weight,omitempty"`
+	AssetID               uint64              `json:"asset_id" binding:"required"`
+	Symbol                *string             `json:"symbol"`
+	Name                  *string             `json:"name"`
+	Address               *ethereum.Address   `json:"address"`
+	Decimals              *uint64             `json:"decimals"`
+	Transferable          *bool               `json:"transferable"`
+	SetRate               *SetRate            `json:"set_rate"`
+	Rebalance             *bool               `json:"rebalance"`
+	IsQuote               *bool               `json:"is_quote"`
+	IsEnabled             *bool               `json:"is_enabled"`
+	PWI                   *AssetPWI           `json:"pwi"`
+	RebalanceQuadratic    *RebalanceQuadratic `json:"rebalance_quadratic"`
+	Target                *AssetTarget        `json:"target"`
+	StableParam           *UpdateStableParam  `json:"stable_param"`
+	FeedWeight            *FeedWeight         `json:"feed_weight,omitempty"`
+	NormalUpdatePerPeriod *float64            `json:"normal_update_per_period"`
 }
 
 type UpdateExchangeEntry struct {

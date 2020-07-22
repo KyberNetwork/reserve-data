@@ -127,6 +127,7 @@ func initData(t *testing.T, s *Storage) {
 					BidSpread:            12,
 					SingleFeedMaxSpread:  13,
 				},
+				NormalUpdatePerPeriod: 0.5,
 			},
 		},
 		{
@@ -189,6 +190,7 @@ func initData(t *testing.T, s *Storage) {
 					RebalanceThreshold: 3,
 					TransferThreshold:  4,
 				},
+				NormalUpdatePerPeriod: 1.5,
 			},
 		},
 	}})
@@ -534,6 +536,46 @@ func TestStorage_SettingChangeCreate(t *testing.T) {
 
 			assertFn: func(t *testing.T, u uint64, e error) {
 				assert.Equal(t, common.ErrDepositAddressMissing, e)
+				assert.NoError(t, s.RejectSettingChange(u))
+			},
+		},
+		{
+			msg: "test update asset, update normal update per period",
+			data: common.SettingChange{
+				ChangeList: []common.SettingChangeEntry{
+					{
+						Type: common.ChangeTypeUpdateAsset,
+						Data: common.UpdateAssetEntry{
+							AssetID:               2,
+							NormalUpdatePerPeriod: common.FloatPointer(0.123),
+						},
+					},
+				},
+			},
+
+			assertFn: func(t *testing.T, u uint64, e error) {
+				assert.NoError(t, e)
+				asset, err := s.GetAsset(2)
+				assert.NoError(t, err)
+				assert.Equal(t, 0.123, asset.NormalUpdatePerPeriod)
+			},
+		},
+		{
+			msg: "test update asset, update normal_update_per_period < 0",
+			data: common.SettingChange{
+				ChangeList: []common.SettingChangeEntry{
+					{
+						Type: common.ChangeTypeUpdateAsset,
+						Data: common.UpdateAssetEntry{
+							AssetID:               2,
+							NormalUpdatePerPeriod: common.FloatPointer(-123),
+						},
+					},
+				},
+			},
+
+			assertFn: func(t *testing.T, u uint64, e error) {
+				assert.Error(t, e)
 				assert.NoError(t, s.RejectSettingChange(u))
 			},
 		},

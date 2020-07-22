@@ -61,6 +61,8 @@ type createAssetParams struct {
 	BidSpread            float64 `db:"stable_param_bid_spread"`
 	SingleFeedMaxSpread  float64 `db:"stable_param_single_feed_max_spread"`
 	MultipleFeedsMaxDiff float64 `db:"stable_param_multiple_feeds_max_diff"`
+
+	NormalUpdatePerPeriod float64 `db:"normal_update_per_period"`
 }
 
 // CreateAsset create a new asset
@@ -77,6 +79,7 @@ func (s *Storage) CreateAsset(
 	target *common.AssetTarget,
 	stableParam *common.StableParam,
 	feedWeight *common.FeedWeight,
+	normalUpdatePerPeriod float64,
 ) (uint64, error) {
 	tx, err := s.db.Beginx()
 	if err != nil {
@@ -85,7 +88,7 @@ func (s *Storage) CreateAsset(
 	defer pgutil.RollbackUnlessCommitted(tx)
 
 	id, err := s.createAsset(tx, symbol, name, address, decimals, transferable,
-		setRate, rebalance, isQuote, isEnabled, pwi, rb, exchanges, target, stableParam, feedWeight)
+		setRate, rebalance, isQuote, isEnabled, pwi, rb, exchanges, target, stableParam, feedWeight, normalUpdatePerPeriod)
 	if err != nil {
 		return 0, err
 	}
@@ -267,6 +270,7 @@ func (s *Storage) createAsset(
 	target *common.AssetTarget,
 	stableParam *common.StableParam,
 	feedWeight *common.FeedWeight,
+	normalUpdatePerPeriod float64,
 ) (uint64, error) {
 	// create new asset
 	var assetID uint64
@@ -288,16 +292,20 @@ func (s *Storage) createAsset(
 		addressHex := address.String()
 		addressParam = &addressHex
 	}
+	if normalUpdatePerPeriod == 0 {
+		normalUpdatePerPeriod = 1 // set to default value
+	}
 	arg := createAssetParams{
-		Symbol:       symbol,
-		Name:         name,
-		Address:      addressParam,
-		Decimals:     decimals,
-		Transferable: transferable,
-		SetRate:      setRate.String(),
-		Rebalance:    rebalance,
-		IsQuote:      isQuote,
-		IsEnabled:    isEnabled,
+		Symbol:                symbol,
+		Name:                  name,
+		Address:               addressParam,
+		Decimals:              decimals,
+		Transferable:          transferable,
+		SetRate:               setRate.String(),
+		Rebalance:             rebalance,
+		IsQuote:               isQuote,
+		IsEnabled:             isEnabled,
+		NormalUpdatePerPeriod: normalUpdatePerPeriod,
 	}
 
 	if pwi != nil {
@@ -602,22 +610,25 @@ type assetDB struct {
 	SingleFeedMaxSpread  float64 `db:"stable_param_single_feed_max_spread"`
 	MultipleFeedsMaxDiff float64 `db:"stable_param_multiple_feeds_max_diff"`
 
+	NormalUpdatePerPeriod float64 `db:"normal_update_per_period"`
+
 	Created time.Time `db:"created"`
 	Updated time.Time `db:"updated"`
 }
 
 func (adb *assetDB) ToCommon() (common.Asset, error) {
 	result := common.Asset{
-		ID:           adb.ID,
-		Symbol:       adb.Symbol,
-		Name:         adb.Name,
-		Address:      ethereum.Address{},
-		Decimals:     adb.Decimals,
-		Transferable: adb.Transferable,
-		Rebalance:    adb.Rebalance,
-		IsQuote:      adb.IsQuote,
-		Created:      adb.Created,
-		Updated:      adb.Updated,
+		ID:                    adb.ID,
+		Symbol:                adb.Symbol,
+		Name:                  adb.Name,
+		Address:               ethereum.Address{},
+		Decimals:              adb.Decimals,
+		Transferable:          adb.Transferable,
+		Rebalance:             adb.Rebalance,
+		IsQuote:               adb.IsQuote,
+		Created:               adb.Created,
+		Updated:               adb.Updated,
+		NormalUpdatePerPeriod: adb.NormalUpdatePerPeriod,
 	}
 
 	if adb.Address.Valid {
@@ -923,23 +934,25 @@ type updateAssetParam struct {
 	TargetRebalanceThreshold *float64 `db:"target_rebalance_threshold"`
 	TargetTransferThreshold  *float64 `db:"target_transfer_threshold"`
 
-	PriceUpdateThreshold *float64 `db:"stable_param_price_update_threshold"`
-	AskSpread            *float64 `db:"stable_param_ask_spread"`
-	BidSpread            *float64 `db:"stable_param_bid_spread"`
-	SingleFeedMaxSpread  *float64 `db:"stable_param_single_feed_max_spread"`
-	MultipleFeedsMaxDiff *float64 `db:"stable_param_multiple_feeds_max_diff"`
+	PriceUpdateThreshold  *float64 `db:"stable_param_price_update_threshold"`
+	AskSpread             *float64 `db:"stable_param_ask_spread"`
+	BidSpread             *float64 `db:"stable_param_bid_spread"`
+	SingleFeedMaxSpread   *float64 `db:"stable_param_single_feed_max_spread"`
+	MultipleFeedsMaxDiff  *float64 `db:"stable_param_multiple_feeds_max_diff"`
+	NormalUpdatePerPeriod *float64 `db:"normal_update_per_period"`
 }
 
 func (s *Storage) updateAsset(tx *sqlx.Tx, id uint64, uo storage.UpdateAssetOpts) error {
 	arg := updateAssetParam{
-		ID:           id,
-		Symbol:       uo.Symbol,
-		Name:         uo.Name,
-		Decimals:     uo.Decimals,
-		Transferable: uo.Transferable,
-		Rebalance:    uo.Rebalance,
-		IsQuote:      uo.IsQuote,
-		IsEnabled:    uo.IsEnabled,
+		ID:                    id,
+		Symbol:                uo.Symbol,
+		Name:                  uo.Name,
+		Decimals:              uo.Decimals,
+		Transferable:          uo.Transferable,
+		Rebalance:             uo.Rebalance,
+		IsQuote:               uo.IsQuote,
+		IsEnabled:             uo.IsEnabled,
+		NormalUpdatePerPeriod: uo.NormalUpdatePerPeriod,
 	}
 
 	var updateMsgs []string
@@ -973,6 +986,9 @@ func (s *Storage) updateAsset(tx *sqlx.Tx, id uint64, uo storage.UpdateAssetOpts
 	}
 	if uo.IsEnabled != nil {
 		updateMsgs = append(updateMsgs, fmt.Sprintf("is_enabled=%t", *uo.IsEnabled))
+	}
+	if uo.NormalUpdatePerPeriod != nil {
+		updateMsgs = append(updateMsgs, fmt.Sprintf("normal_update_per_period=%f", *uo.NormalUpdatePerPeriod))
 	}
 	pwi := uo.PWI
 	if pwi != nil {
