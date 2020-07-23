@@ -67,7 +67,8 @@ curl -X POST "https://gateway.local/v3/setting-change-main" \
                 "single_feed_max_spread": 0.4,
                 "multiple_feeds_max_diff": 0.6
             },
-            "normal_update_per_period": 1.234 // default value is 1
+            "normal_update_per_period": 1.234, // default value is 1
+            "max_imbalance_ratio": 3.456 // default value is 2
         }
     }]
 }'
