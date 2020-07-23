@@ -20,9 +20,6 @@ const (
 	exchangeForeignKeyConstraint  = "asset_exchanges_exchange_id_fkey"
 	assetForeignKeyConstraint     = "asset_exchanges_asset_id_fkey"
 	exchangeAssetUniqueConstraint = "asset_exchanges_exchange_id_asset_id_key"
-
-	defaultNormalUpdatePerPeriod float64 = 1
-	defaultMaxImbalanceRatio     float64 = 2
 )
 
 type createAssetParams struct {
@@ -296,11 +293,11 @@ func (s *Storage) createAsset(
 		addressHex := address.String()
 		addressParam = &addressHex
 	}
-	if normalUpdatePerPeriod == 0 {
-		normalUpdatePerPeriod = defaultNormalUpdatePerPeriod
+	if normalUpdatePerPeriod <= 0 {
+		return 0, common.ErrNormalUpdaterPerPeriodNotPositive
 	}
-	if maxImbalanceRatio == 0 {
-		maxImbalanceRatio = defaultMaxImbalanceRatio
+	if maxImbalanceRatio <= 0 {
+		return 0, common.ErrMaxImbalanceRatioNotPositive
 	}
 	arg := createAssetParams{
 		Symbol:                symbol,

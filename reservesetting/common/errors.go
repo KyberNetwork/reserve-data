@@ -54,4 +54,8 @@ var (
 	ErrAssetAddressIsNotIndexInContract = errors.New("asset address is not index in address please check again")
 	// ErrBlockchainHaveNotInitiated is return if blockchain have not initiated yet
 	ErrBlockchainHaveNotInitiated = errors.New("blockchain instance have not initiated")
+	// ErrNormalUpdaterPerPeriodNotPositive is return if normal update per period <= 0
+	ErrNormalUpdaterPerPeriodNotPositive = errors.New("normal update per period is not positive")
+	// ErrMaxImbalanceRatioNotPositive is return if max imbalance ratio <= 0
+	ErrMaxImbalanceRatioNotPositive = errors.New("max imbalance ratio is not positive")
 )

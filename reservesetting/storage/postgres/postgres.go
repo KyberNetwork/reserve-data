@@ -11,6 +11,11 @@ import (
 	v3 "github.com/KyberNetwork/reserve-data/reservesetting/common"
 )
 
+const (
+	defaultNormalUpdatePerPeriod float64 = 1
+	defaultMaxImbalanceRatio     float64 = 2
+)
+
 // Storage is an implementation of storage.Interface that use PostgreSQL as database system.
 type Storage struct {
 	db    *sqlx.DB
