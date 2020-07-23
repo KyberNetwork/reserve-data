@@ -11,11 +11,6 @@ import (
 	v3 "github.com/KyberNetwork/reserve-data/reservesetting/common"
 )
 
-const (
-	defaultNormalUpdatePerPeriod float64 = 1
-	defaultMaxImbalanceRatio     float64 = 2
-)
-
 // Storage is an implementation of storage.Interface that use PostgreSQL as database system.
 type Storage struct {
 	db    *sqlx.DB
@@ -46,7 +41,11 @@ VALUES (unnest($1::INT[]),
 }
 
 func (s *Storage) initAssets() error {
-	ethAddr := "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+	var (
+		defaultNormalUpdatePerPeriod float64 = 1
+		defaultMaxImbalanceRatio     float64 = 2
+		ethAddr                              = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+	)
 	_, err := s.stmts.newAsset.Exec(&createAssetParams{
 		Symbol:                "ETH",
 		Name:                  "Ethereum",
