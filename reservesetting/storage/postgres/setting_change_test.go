@@ -128,6 +128,7 @@ func initData(t *testing.T, s *Storage) {
 					SingleFeedMaxSpread:  13,
 				},
 				NormalUpdatePerPeriod: 0.5,
+				MaxImbalanceRatio:     0.6,
 			},
 		},
 		{
@@ -190,7 +191,8 @@ func initData(t *testing.T, s *Storage) {
 					RebalanceThreshold: 3,
 					TransferThreshold:  4,
 				},
-				NormalUpdatePerPeriod: 1.5,
+				NormalUpdatePerPeriod: 0.5,
+				MaxImbalanceRatio:     0.6,
 			},
 		},
 	}})
@@ -540,7 +542,7 @@ func TestStorage_SettingChangeCreate(t *testing.T) {
 			},
 		},
 		{
-			msg: "test update asset, update normal update per period",
+			msg: "test update asset, update normal_update_per_period",
 			data: common.SettingChange{
 				ChangeList: []common.SettingChangeEntry{
 					{
@@ -569,6 +571,46 @@ func TestStorage_SettingChangeCreate(t *testing.T) {
 						Data: common.UpdateAssetEntry{
 							AssetID:               2,
 							NormalUpdatePerPeriod: common.FloatPointer(-123),
+						},
+					},
+				},
+			},
+
+			assertFn: func(t *testing.T, u uint64, e error) {
+				assert.Error(t, e)
+				assert.NoError(t, s.RejectSettingChange(u))
+			},
+		},
+		{
+			msg: "test update asset, update max_imbalance_ratio",
+			data: common.SettingChange{
+				ChangeList: []common.SettingChangeEntry{
+					{
+						Type: common.ChangeTypeUpdateAsset,
+						Data: common.UpdateAssetEntry{
+							AssetID:           2,
+							MaxImbalanceRatio: common.FloatPointer(0.456),
+						},
+					},
+				},
+			},
+
+			assertFn: func(t *testing.T, u uint64, e error) {
+				assert.NoError(t, e)
+				asset, err := s.GetAsset(2)
+				assert.NoError(t, err)
+				assert.Equal(t, 0.456, asset.MaxImbalanceRatio)
+			},
+		},
+		{
+			msg: "test update asset, update max_imbalance_ratio < 0",
+			data: common.SettingChange{
+				ChangeList: []common.SettingChangeEntry{
+					{
+						Type: common.ChangeTypeUpdateAsset,
+						Data: common.UpdateAssetEntry{
+							AssetID:           2,
+							MaxImbalanceRatio: common.FloatPointer(-456),
 						},
 					},
 				},

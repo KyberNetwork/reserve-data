@@ -370,7 +370,8 @@ func assetStatements(db *sqlx.DB) (*sqlx.NamedStmt, *sqlx.Stmt, *sqlx.NamedStmt,
 		    		 :stable_param_bid_spread,
 		    		 :stable_param_single_feed_max_spread,
 						 :stable_param_multiple_feeds_max_diff,
-						 :normal_update_per_period
+						 :normal_update_per_period,
+						 :max_imbalance_ratio
 		         );`
 	newAsset, err := db.PrepareNamed(newAssetQuery)
 	if err != nil {
@@ -412,6 +413,7 @@ func assetStatements(db *sqlx.DB) (*sqlx.NamedStmt, *sqlx.Stmt, *sqlx.NamedStmt,
 									   assets.stable_param_single_feed_max_spread,
 										 assets.stable_param_multiple_feeds_max_diff,
 										 assets.normal_update_per_period,
+										 assets.max_imbalance_ratio,
 								       assets.created,
 								       assets.updated
 								FROM assets
@@ -509,6 +511,7 @@ func assetStatements(db *sqlx.DB) (*sqlx.NamedStmt, *sqlx.Stmt, *sqlx.NamedStmt,
 		    stable_param_single_feed_max_spread = COALESCE(:stable_param_single_feed_max_spread,stable_param_single_feed_max_spread),
 				stable_param_multiple_feeds_max_diff = COALESCE(:stable_param_multiple_feeds_max_diff,stable_param_multiple_feeds_max_diff),
 				normal_update_per_period = COALESCE(:normal_update_per_period,normal_update_per_period),
+				max_imbalance_ratio = COALESCE(:max_imbalance_ratio,max_imbalance_ratio),
 		    updated      = now()
 		WHERE id = :id RETURNING id;
 		`

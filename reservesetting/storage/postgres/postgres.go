@@ -51,7 +51,8 @@ func (s *Storage) initAssets() error {
 		SetRate:               v3.SetRateNotSet.String(),
 		Rebalance:             false,
 		IsQuote:               true,
-		NormalUpdatePerPeriod: 1,
+		NormalUpdatePerPeriod: defaultNormalUpdatePerPeriod,
+		MaxImbalanceRatio:     defaultMaxImbalanceRatio,
 	})
 	return err
 }

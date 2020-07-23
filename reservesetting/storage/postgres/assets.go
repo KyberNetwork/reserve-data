@@ -20,6 +20,9 @@ const (
 	exchangeForeignKeyConstraint  = "asset_exchanges_exchange_id_fkey"
 	assetForeignKeyConstraint     = "asset_exchanges_asset_id_fkey"
 	exchangeAssetUniqueConstraint = "asset_exchanges_exchange_id_asset_id_key"
+
+	defaultNormalUpdatePerPeriod float64 = 1
+	defaultMaxImbalanceRatio     float64 = 2
 )
 
 type createAssetParams struct {
@@ -63,6 +66,7 @@ type createAssetParams struct {
 	MultipleFeedsMaxDiff float64 `db:"stable_param_multiple_feeds_max_diff"`
 
 	NormalUpdatePerPeriod float64 `db:"normal_update_per_period"`
+	MaxImbalanceRatio     float64 `db:"max_imbalance_ratio"`
 }
 
 // CreateAsset create a new asset
@@ -79,7 +83,7 @@ func (s *Storage) CreateAsset(
 	target *common.AssetTarget,
 	stableParam *common.StableParam,
 	feedWeight *common.FeedWeight,
-	normalUpdatePerPeriod float64,
+	normalUpdatePerPeriod, maxImbalanceRatio float64,
 ) (uint64, error) {
 	tx, err := s.db.Beginx()
 	if err != nil {
@@ -88,7 +92,7 @@ func (s *Storage) CreateAsset(
 	defer pgutil.RollbackUnlessCommitted(tx)
 
 	id, err := s.createAsset(tx, symbol, name, address, decimals, transferable,
-		setRate, rebalance, isQuote, isEnabled, pwi, rb, exchanges, target, stableParam, feedWeight, normalUpdatePerPeriod)
+		setRate, rebalance, isQuote, isEnabled, pwi, rb, exchanges, target, stableParam, feedWeight, normalUpdatePerPeriod, maxImbalanceRatio)
 	if err != nil {
 		return 0, err
 	}
@@ -270,7 +274,7 @@ func (s *Storage) createAsset(
 	target *common.AssetTarget,
 	stableParam *common.StableParam,
 	feedWeight *common.FeedWeight,
-	normalUpdatePerPeriod float64,
+	normalUpdatePerPeriod, maxImbalanceRatio float64,
 ) (uint64, error) {
 	// create new asset
 	var assetID uint64
@@ -293,7 +297,10 @@ func (s *Storage) createAsset(
 		addressParam = &addressHex
 	}
 	if normalUpdatePerPeriod == 0 {
-		normalUpdatePerPeriod = 1 // set to default value
+		normalUpdatePerPeriod = defaultNormalUpdatePerPeriod
+	}
+	if maxImbalanceRatio == 0 {
+		maxImbalanceRatio = defaultMaxImbalanceRatio
 	}
 	arg := createAssetParams{
 		Symbol:                symbol,
@@ -306,6 +313,7 @@ func (s *Storage) createAsset(
 		IsQuote:               isQuote,
 		IsEnabled:             isEnabled,
 		NormalUpdatePerPeriod: normalUpdatePerPeriod,
+		MaxImbalanceRatio:     maxImbalanceRatio,
 	}
 
 	if pwi != nil {
@@ -611,6 +619,7 @@ type assetDB struct {
 	MultipleFeedsMaxDiff float64 `db:"stable_param_multiple_feeds_max_diff"`
 
 	NormalUpdatePerPeriod float64 `db:"normal_update_per_period"`
+	MaxImbalanceRatio     float64 `db:"max_imbalance_ratio"`
 
 	Created time.Time `db:"created"`
 	Updated time.Time `db:"updated"`
@@ -629,6 +638,7 @@ func (adb *assetDB) ToCommon() (common.Asset, error) {
 		Created:               adb.Created,
 		Updated:               adb.Updated,
 		NormalUpdatePerPeriod: adb.NormalUpdatePerPeriod,
+		MaxImbalanceRatio:     adb.MaxImbalanceRatio,
 	}
 
 	if adb.Address.Valid {
@@ -940,6 +950,7 @@ type updateAssetParam struct {
 	SingleFeedMaxSpread   *float64 `db:"stable_param_single_feed_max_spread"`
 	MultipleFeedsMaxDiff  *float64 `db:"stable_param_multiple_feeds_max_diff"`
 	NormalUpdatePerPeriod *float64 `db:"normal_update_per_period"`
+	MaxImbalanceRatio     *float64 `db:"max_imbalance_ratio"`
 }
 
 func (s *Storage) updateAsset(tx *sqlx.Tx, id uint64, uo storage.UpdateAssetOpts) error {
@@ -953,6 +964,7 @@ func (s *Storage) updateAsset(tx *sqlx.Tx, id uint64, uo storage.UpdateAssetOpts
 		IsQuote:               uo.IsQuote,
 		IsEnabled:             uo.IsEnabled,
 		NormalUpdatePerPeriod: uo.NormalUpdatePerPeriod,
+		MaxImbalanceRatio:     uo.MaxImbalanceRatio,
 	}
 
 	var updateMsgs []string
@@ -989,6 +1001,9 @@ func (s *Storage) updateAsset(tx *sqlx.Tx, id uint64, uo storage.UpdateAssetOpts
 	}
 	if uo.NormalUpdatePerPeriod != nil {
 		updateMsgs = append(updateMsgs, fmt.Sprintf("normal_update_per_period=%f", *uo.NormalUpdatePerPeriod))
+	}
+	if uo.MaxImbalanceRatio != nil {
+		updateMsgs = append(updateMsgs, fmt.Sprintf("max_imbalance_ratio=%f", *uo.MaxImbalanceRatio))
 	}
 	pwi := uo.PWI
 	if pwi != nil {
