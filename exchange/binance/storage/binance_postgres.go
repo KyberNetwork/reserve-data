@@ -50,8 +50,6 @@ func NewPostgresStorage(db *sqlx.DB, migrationFolderPath, databaseName string) (
 	storage := &postgresStorage{
 		db: db,
 	}
-	err = storage.prepareStmts()
-
 	if migrationFolderPath != "" {
 		driver, err := migratepostgres.WithInstance(db.DB, &migratepostgres.Config{})
 		if err != nil {
@@ -68,7 +66,7 @@ func NewPostgresStorage(db *sqlx.DB, migrationFolderPath, databaseName string) (
 			return storage, err
 		}
 	}
-
+	err = storage.prepareStmts()
 	return storage, err
 }
 
