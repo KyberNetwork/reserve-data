@@ -1,8 +1,5 @@
 ALTER TABLE "assets" 
-ADD COLUMN normal_update_per_period FLOAT DEFAULT 1 
-CHECK(normal_update_per_period > 0),
-ADD COLUMN max_imbalance_ratio FLOAT DEFAULT 2
-CHECK(max_imbalance_ratio > 0);
+DROP COLUMN max_imbalance_ratio;
 
 CREATE OR REPLACE FUNCTION new_asset(_symbol assets.symbol%TYPE,
                                      _name assets.symbol%TYPE,
@@ -38,8 +35,7 @@ CREATE OR REPLACE FUNCTION new_asset(_symbol assets.symbol%TYPE,
                                      _stable_param_bid_spread assets.stable_param_bid_spread%TYPE,
                                      _stable_param_single_feed_max_spread assets.stable_param_single_feed_max_spread%TYPE,
                                      _stable_param_multiple_feeds_max_diff assets.stable_param_multiple_feeds_max_diff%TYPE,
-                                     _normal_update_per_period assets.normal_update_per_period%TYPE,
-                                     _max_imbalance_ratio assets.max_imbalance_ratio%TYPE
+                                     _normal_update_per_period assets.normal_update_per_period%TYPE
 									)
     RETURNS int AS
 $$
@@ -87,7 +83,6 @@ BEGIN
                 stable_param_single_feed_max_spread,
                 stable_param_multiple_feeds_max_diff,
                 normal_update_per_period,
-                max_imbalance_ratio,
                 created,
                 updated)
     VALUES (_symbol,
@@ -125,7 +120,6 @@ BEGIN
             _stable_param_single_feed_max_spread,
             _stable_param_multiple_feeds_max_diff,
             _normal_update_per_period,
-            _max_imbalance_ratio,
             now(),
             now()) RETURNING id INTO _id;
 
