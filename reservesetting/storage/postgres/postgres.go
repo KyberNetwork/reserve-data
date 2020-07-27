@@ -64,10 +64,6 @@ func (s *Storage) initAssets() error {
 // NewStorage creates a new Storage instance from given configuration.
 func NewStorage(db *sqlx.DB) (*Storage, error) {
 	l := zap.S()
-	if _, err := db.Exec(schema); err != nil {
-		return nil, fmt.Errorf("failed to intialize database schema err=%s", err.Error())
-	}
-
 	stmts, err := newPreparedStmts(db)
 	if err != nil {
 		return nil, fmt.Errorf("failed to preprare statements err=%s", err.Error())

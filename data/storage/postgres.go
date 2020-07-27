@@ -16,38 +16,6 @@ import (
 )
 
 const (
-	schema = `
-DO
-$$
-    BEGIN
-        IF NOT EXISTS(SELECT 1 FROM pg_type WHERE typname = 'fetch_data_type') THEN
-            CREATE TYPE fetch_data_type AS ENUM ('price', 'rate',
-                'auth_data','gold', 'btc', 'usd');
-        END IF;
-    END
-$$;
-
-CREATE TABLE IF NOT EXISTS "fetch_data" 
-(
-	id SERIAL PRIMARY KEY,
-	created TIMESTAMPTZ NOT NULL,
-	data JSON NOT NULL,
-	type fetch_data_type NOT NULL
-);
-CREATE INDEX IF NOT EXISTS "fetch_data_created_index" ON "fetch_data" (created);
-
-CREATE TABLE IF NOT EXISTS "activity"
-(
-	id SERIAL PRIMARY KEY,
-	timepoint BIGINT NOT NULL,
-	eid TEXT NOT NULL,
-	created TIMESTAMPTZ NOT NULL,
-	is_pending BOOL NOT NULL,
-	data JSONB NOT NULL
-);
-CREATE INDEX IF NOT EXISTS "activity_idx" ON "activity" (timepoint, eid);
-CREATE INDEX IF NOT EXISTS "pending_idx" ON "activity" (is_pending) WHERE is_pending IS TRUE;
-`
 	fetchDataTable = "fetch_data" // data fetch from exchange and blockchain
 	activityTable  = "activity"
 	// data type constant
@@ -76,10 +44,6 @@ type PostgresStorage struct {
 
 // NewPostgresStorage return new db instance
 func NewPostgresStorage(db *sqlx.DB) (*PostgresStorage, error) {
-	if _, err := db.Exec(schema); err != nil {
-		return nil, fmt.Errorf("failed to intialize database schema err=%s", err.Error())
-	}
-
 	s := &PostgresStorage{
 		db: db,
 		l:  zap.S(),

@@ -21,6 +21,7 @@ import (
 	libapp "github.com/KyberNetwork/reserve-data/lib/app"
 	coreclient "github.com/KyberNetwork/reserve-data/lib/core-client"
 	"github.com/KyberNetwork/reserve-data/lib/httputil"
+	"github.com/KyberNetwork/reserve-data/lib/migration"
 	settinghttp "github.com/KyberNetwork/reserve-data/reservesetting/http"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage/postgres"
 )
@@ -43,6 +44,7 @@ func main() {
 	app.Flags = append(app.Flags, profiler.NewCliFlags()...)
 	app.Flags = append(app.Flags, libapp.NewSentryFlags()...)
 	app.Flags = append(app.Flags, coreclient.NewCoreFlag())
+	app.Flags = append(app.Flags, migration.NewMigrationFolderPathFlag())
 
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
@@ -62,6 +64,10 @@ func run(c *cli.Context) error {
 	host := httputil.NewHTTPAddressFromContext(c)
 	db, err := configuration.NewDBFromContext(c)
 	if err != nil {
+		return err
+	}
+
+	if err := migration.RunMigrationUp(db, migration.NewMigrationPathFromContext(c), configuration.DatabaseNameFromContext(c)); err != nil {
 		return err
 	}
 

@@ -17,6 +17,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/core"
 	"github.com/KyberNetwork/reserve-data/http"
 	"github.com/KyberNetwork/reserve-data/lib/app"
+	"github.com/KyberNetwork/reserve-data/lib/migration"
 )
 
 func main() {
@@ -60,7 +61,7 @@ func run(c *cli.Context) error {
 		return err
 	}
 
-	rcf.MigrationPath = configuration.NewMigrationPathFromContext(c)
+	rcf.MigrationPath = migration.NewMigrationPathFromContext(c)
 	rcf.DatabaseName = configuration.DatabaseNameFromContext(c)
 
 	conf, err := configuration.NewConfigurationFromContext(c, rcf, l)

@@ -15,6 +15,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/exchange/binance"
 	"github.com/KyberNetwork/reserve-data/exchange/huobi"
 	"github.com/KyberNetwork/reserve-data/lib/app"
+	"github.com/KyberNetwork/reserve-data/lib/migration"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage/postgres"
 )
 
@@ -92,7 +93,7 @@ func NewCliFlags() []cli.Flag {
 	flags = append(flags, NewExchangeCliFlag())
 	flags = append(flags, NewPostgreSQLFlags(defaultDB)...)
 	flags = append(flags, app.NewSentryFlags()...)
-	flags = append(flags, NewMigrationFolderPathFlag())
+	flags = append(flags, migration.NewMigrationFolderPathFlag())
 
 	return flags
 }
@@ -177,6 +178,10 @@ func NewConfigurationFromContext(c *cli.Context, rcf common.RawConfig, s *zap.Su
 	ethereumNodeConf := NewEthereumNodeConfiguration(rcf.Nodes.Main, rcf.Nodes.Backup)
 	db, err := NewDBFromContext(c)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := migration.RunMigrationUp(db, rcf.MigrationPath, rcf.DatabaseName); err != nil {
 		return nil, err
 	}
 

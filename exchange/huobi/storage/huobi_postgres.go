@@ -3,7 +3,6 @@ package storage
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
@@ -12,53 +11,6 @@ import (
 	"github.com/KyberNetwork/reserve-data/common/postgres"
 	"github.com/KyberNetwork/reserve-data/exchange"
 )
-
-const schema = `
-	CREATE TABLE IF NOT EXISTS "huobi_intermediate_tx"(
-	    timepoint 			BIGINT NOT NULL,
-	    eid					TEXT NOT NULL,
-	    data				JSON NOT NULL,
-	    PRIMARY KEY (timepoint, eid)
-	);
-
-	CREATE TABLE IF NOT EXISTS "huobi_pending_intermediate_tx"(
-	    timepoint 			BIGINT NOT NULL,
-	    eid					TEXT NOT NULL,
-	    data				JSON NOT NULL,
-	    PRIMARY KEY (timepoint, eid)
-	);
-
-	CREATE TABLE IF NOT EXISTS "huobi_trade_history"(
-		    id 				SERIAL PRIMARY KEY,
-		    pair_id			BIGINT,
-		    trade_id		TEXT UNIQUE NOT NULL,
-		    price 			FLOAT NOT NULL,
-		    qty 			FLOAT NOT NULL, 
-		    type			TEXT NOT NULL,
-		    time			BIGINT
-		);
-	
-	CREATE OR REPLACE FUNCTION new_intermediate_tx(_timepoint huobi_intermediate_tx.timepoint%TYPE,
-													_eid huobi_intermediate_tx.eid%TYPE,
-													_data huobi_intermediate_tx.data%TYPE)
-	RETURNS VOID
-	AS $$
-	DECLARE
-	BEGIN
-		PERFORM NULL FROM huobi_pending_intermediate_tx 
-			WHERE timepoint= _timepoint AND eid =_eid;
-		IF NOT FOUND THEN 
-			RAISE EXCEPTION 'pending tx not found' USING ERRCODE = 'assert_failure';
-		END IF ;
-		
-		INSERT INTO huobi_intermediate_tx(timepoint, eid, data) 
-			VALUES (_timepoint, _eid, _data);
-		
-		DELETE FROM huobi_pending_intermediate_tx 
-	    	WHERE timepoint = _timepoint AND eid = _eid;
-	END
-	$$ LANGUAGE PLPGSQL;
-`
 
 // postgresStorage implements huobi storage in postgres
 type postgresStorage struct {
@@ -79,9 +31,6 @@ type preparedStmt struct {
 
 // NewPostgresStorage creates a new obj exchange.HuobiStorage by db engine=postgres
 func NewPostgresStorage(db *sqlx.DB) (exchange.HuobiStorage, error) {
-	if _, err := db.Exec(schema); err != nil {
-		return nil, fmt.Errorf("failed to intialize database schema err=%s", err.Error())
-	}
 	storage := &postgresStorage{
 		db: db,
 	}
