@@ -1,25 +1,19 @@
 -- data storage schema
 
-DO
-$$
-    BEGIN
-        IF NOT EXISTS(SELECT 1 FROM pg_type WHERE typname = 'fetch_data_type') THEN
-            CREATE TYPE fetch_data_type AS ENUM ('price', 'rate',
-                'auth_data','gold', 'btc', 'usd');
-        END IF;
-    END
-$$;
 
-CREATE TABLE IF NOT EXISTS "fetch_data" 
+CREATE TYPE fetch_data_type AS ENUM ('price', 'rate',
+    'auth_data','gold', 'btc', 'usd');
+
+CREATE TABLE "fetch_data" 
 (
 	id SERIAL PRIMARY KEY,
 	created TIMESTAMPTZ NOT NULL,
 	data JSON NOT NULL,
 	type fetch_data_type NOT NULL
 );
-CREATE INDEX IF NOT EXISTS "fetch_data_created_index" ON "fetch_data" (created);
+CREATE INDEX "fetch_data_created_index" ON "fetch_data" (created);
 
-CREATE TABLE IF NOT EXISTS "activity"
+CREATE TABLE "activity"
 (
 	id SERIAL PRIMARY KEY,
 	timepoint BIGINT NOT NULL,
@@ -28,13 +22,13 @@ CREATE TABLE IF NOT EXISTS "activity"
 	is_pending BOOL NOT NULL,
 	data JSONB NOT NULL
 );
-CREATE INDEX IF NOT EXISTS "activity_idx" ON "activity" (timepoint, eid);
-CREATE INDEX IF NOT EXISTS "pending_idx" ON "activity" (is_pending) WHERE is_pending IS TRUE;
+CREATE INDEX "activity_idx" ON "activity" (timepoint, eid);
+CREATE INDEX "pending_idx" ON "activity" (is_pending) WHERE is_pending IS TRUE;
 
 -- exchange schema
 -- binance
 
-CREATE TABLE IF NOT EXISTS "binance_trade_history"(
+CREATE TABLE "binance_trade_history"(
   id 				SERIAL PRIMARY KEY,
   pair_id			BIGINT,
   trade_id		TEXT UNIQUE NOT NULL,
@@ -46,21 +40,21 @@ CREATE TABLE IF NOT EXISTS "binance_trade_history"(
 
 -- houbi
 
-CREATE TABLE IF NOT EXISTS "huobi_intermediate_tx"(
+CREATE TABLE "huobi_intermediate_tx"(
     timepoint 			BIGINT NOT NULL,
     eid					TEXT NOT NULL,
     data				JSON NOT NULL,
     PRIMARY KEY (timepoint, eid)
 );
 
-CREATE TABLE IF NOT EXISTS "huobi_pending_intermediate_tx"(
+CREATE TABLE "huobi_pending_intermediate_tx"(
     timepoint 			BIGINT NOT NULL,
     eid					TEXT NOT NULL,
     data				JSON NOT NULL,
     PRIMARY KEY (timepoint, eid)
 );
 
-CREATE TABLE IF NOT EXISTS "huobi_trade_history"(
+CREATE TABLE "huobi_trade_history"(
       id 				SERIAL PRIMARY KEY,
       pair_id			BIGINT,
       trade_id		TEXT UNIQUE NOT NULL,
@@ -93,7 +87,7 @@ $$ LANGUAGE PLPGSQL;
 
 -- reserve setting schema
 
-CREATE TABLE IF NOT EXISTS "exchanges"
+CREATE TABLE "exchanges"
 (
     id                INT PRIMARY KEY,
     name              TEXT UNIQUE NOT NULL,
@@ -105,13 +99,13 @@ CREATE TABLE IF NOT EXISTS "exchanges"
                                         ((trading_fee_maker IS NOT NULL) AND (trading_fee_taker IS NOT NULL)))
 );
 
-CREATE TABLE IF NOT EXISTS "addresses"
+CREATE TABLE "addresses"
 (
     id      SERIAL PRIMARY KEY,
     address TEXT UNIQUE NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS "assets"
+CREATE TABLE "assets"
 (
     id                            SERIAL PRIMARY KEY,
     symbol                        TEXT      NOT NULL UNIQUE,
@@ -192,7 +186,7 @@ CREATE TABLE IF NOT EXISTS "assets"
              target_transfer_threshold IS NOT NULL))
 );
 
-CREATE TABLE IF NOT EXISTS "feed_weight"
+CREATE TABLE "feed_weight"
 (
     id SERIAL PRIMARY KEY,
     asset_id  INT NOT NULL REFERENCES assets (id),
@@ -200,7 +194,7 @@ CREATE TABLE IF NOT EXISTS "feed_weight"
     weight    FLOAT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS "asset_old_addresses"
+CREATE TABLE "asset_old_addresses"
 (
     id         SERIAL PRIMARY KEY,
     address_id INT NOT NULL REFERENCES addresses (id),
@@ -208,7 +202,7 @@ CREATE TABLE IF NOT EXISTS "asset_old_addresses"
     -- TODO add a constraint to ensure that asset_id is not linked to any asset in address field already 
 );
 
-CREATE TABLE IF NOT EXISTS "asset_exchanges"
+CREATE TABLE "asset_exchanges"
 (
     id                 SERIAL PRIMARY KEY,
     exchange_id        INT REFERENCES exchanges (id) NOT NULL,
@@ -222,7 +216,7 @@ CREATE TABLE IF NOT EXISTS "asset_exchanges"
     UNIQUE (exchange_id, asset_id)
 );
 
-CREATE TABLE IF NOT EXISTS trading_pairs
+CREATE TABLE trading_pairs
 (
     id               SERIAL PRIMARY KEY,
     exchange_id      INT REFERENCES exchanges (id) NOT NULL,
@@ -239,7 +233,7 @@ CREATE TABLE IF NOT EXISTS trading_pairs
     CONSTRAINT trading_pair_check CHECK ( base_id != quote_id)
 );
 -- this table manage which asset will be use to buy/sell when trading.
-CREATE TABLE IF NOT EXISTS trading_by
+CREATE TABLE trading_by
 (
     id              SERIAL PRIMARY KEY,
     asset_id        INT REFERENCES assets (id)                          NOT NULL,
@@ -248,21 +242,12 @@ CREATE TABLE IF NOT EXISTS trading_by
 );
 
 --create enum types if exist then alter 
-DO
-$$
-    BEGIN
-        IF NOT EXISTS(SELECT 1 FROM pg_type WHERE typname = 'setting_change_cat') THEN
-            CREATE TYPE setting_change_cat AS ENUM ('set_target', 'set_pwis',
-                'set_stable_token','set_rebalance_quadratic', 'main', 'update_exchange', 'set_feed_configuration');
-        END IF;
-        IF NOT EXISTS(SELECT 1 FROM pg_type WHERE typname = 'setting_change_status') THEN
-            CREATE TYPE setting_change_status AS ENUM ('pending', 'accepted', 'rejected');
-        END IF;
-    END
-$$;
+CREATE TYPE setting_change_cat AS ENUM ('set_target', 'set_pwis',
+    'set_stable_token','set_rebalance_quadratic', 'main', 'update_exchange', 'set_feed_configuration');
+CREATE TYPE setting_change_status AS ENUM ('pending', 'accepted', 'rejected');
 
 
-CREATE TABLE IF NOT EXISTS setting_change
+CREATE TABLE setting_change
 (
     id      SERIAL PRIMARY KEY,
     created TIMESTAMPTZ                 NOT NULL,
@@ -271,28 +256,28 @@ CREATE TABLE IF NOT EXISTS setting_change
     status  setting_change_status DEFAULT 'pending'
 );
 
-CREATE TABLE IF NOT EXISTS price_factor
+CREATE TABLE price_factor
 (
     id        serial primary key,
     timepoint bigint NOT NULL,
     data      json   NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS set_rate_control
+CREATE TABLE set_rate_control
 (
     id        SERIAL PRIMARY KEY,
     timepoint TIMESTAMPTZ NOT NULL,
     status    BOOLEAN   NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS rebalance_control
+CREATE TABLE rebalance_control
 (
     id        SERIAL PRIMARY KEY,
     timepoint TIMESTAMPTZ NOT NULL,
     status    BOOLEAN   NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS stable_token_params_control
+CREATE TABLE stable_token_params_control
 (
     id        SERIAL PRIMARY KEY,
     timepoint TIMESTAMPTZ NOT NULL,
@@ -611,7 +596,7 @@ BEGIN
 END
 $$ LANGUAGE PLPGSQL;
 
-CREATE TABLE IF NOT EXISTS "feed_configurations"
+CREATE TABLE "feed_configurations"
 (
 	name                   TEXT    NOT NULL,
 	set_rate               TEXT    NOT NULL,
