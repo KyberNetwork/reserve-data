@@ -500,7 +500,7 @@ func NewBinanceEndpoint(signer Signer, interf Interface, dpl deployment.Deployme
 	default:
 		err := endpoint.UpdateTimeDelta()
 		if err != nil {
-			panic(err)
+			l.Errorw("failed to update timeDelta", "err", err)
 		}
 	}
 	return endpoint

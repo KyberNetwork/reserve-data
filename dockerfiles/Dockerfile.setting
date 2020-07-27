@@ -6,9 +6,9 @@ RUN go build -v -mod=vendor -o /setting
 
 FROM debian:stretch
 COPY --from=build-env /setting /
-
+ADD  ./cmd/migrations /migrations
 RUN apt-get update && \
     apt-get install -y ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
-ENTRYPOINT ["/setting"]
+ENTRYPOINT ["/setting","--migration-path","/migrations"]
