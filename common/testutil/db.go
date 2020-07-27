@@ -41,23 +41,16 @@ func MustNewDevelopmentDB(migrationPath string) (*sqlx.DB, func() error) {
 		dbName,
 	)
 	db := sqlx.MustConnect("postgres", connStr)
-	if err := migration.RunMigrationUp(db, migrationPath, dbName); err != nil {
+	m, err := migration.RunMigrationUp(db.DB, migrationPath, dbName)
+	if err != nil {
 		panic(err)
 	}
 	return db, func() error {
-		if err := db.Close(); err != nil {
+		if _, err := m.Close(); err != nil {
 			return err
 		}
 		ddlDB, err := sqlx.Connect("postgres", ddlDBConnStr)
 		if err != nil {
-			return err
-		}
-		// close all connections to db
-		query := `SELECT pg_terminate_backend(pg_stat_activity.pid)
-    FROM pg_stat_activity
-    WHERE pg_stat_activity.datname = $1
-			AND pid <> pg_backend_pid();`
-		if _, err = ddlDB.Exec(query, dbName); err != nil {
 			return err
 		}
 		if _, err = ddlDB.Exec(fmt.Sprintf(`DROP DATABASE "%s"`, dbName)); err != nil {

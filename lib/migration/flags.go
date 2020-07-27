@@ -1,6 +1,7 @@
 package migration
 
 import (
+	"database/sql"
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
@@ -30,22 +31,23 @@ func NewMigrationPathFromContext(c *cli.Context) string {
 }
 
 // RunMigrationUp ...
-func RunMigrationUp(db *sqlx.DB, migrationFolderPath, databaseName string) error {
-	driver, err := migratepostgres.WithInstance(db.DB, &migratepostgres.Config{})
+func RunMigrationUp(db *sql.DB, migrationFolderPath, databaseName string) (*migrate.Migrate, error) {
+	driver, err := migratepostgres.WithInstance(db, &migratepostgres.Config{})
 	if err != nil {
-		return err
+		return nil, err
 	}
 	m, err := migrate.NewWithDatabaseInstance(
 		fmt.Sprintf("file://%s", migrationFolderPath),
 		databaseName, driver,
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if err = m.Up(); err != nil && err != migrate.ErrNoChange {
-		return err
+		return nil, err
 	}
-	return nil
+
+	return m, nil
 }
 
 // RunMigrationDown ...

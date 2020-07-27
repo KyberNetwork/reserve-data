@@ -181,7 +181,7 @@ func NewConfigurationFromContext(c *cli.Context, rcf common.RawConfig, s *zap.Su
 		return nil, err
 	}
 
-	if err := migration.RunMigrationUp(db, rcf.MigrationPath, rcf.DatabaseName); err != nil {
+	if _, err := migration.RunMigrationUp(db.DB, rcf.MigrationPath, rcf.DatabaseName); err != nil {
 		return nil, err
 	}
 

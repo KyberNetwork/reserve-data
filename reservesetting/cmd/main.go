@@ -67,7 +67,7 @@ func run(c *cli.Context) error {
 		return err
 	}
 
-	if err := migration.RunMigrationUp(db, migration.NewMigrationPathFromContext(c), configuration.DatabaseNameFromContext(c)); err != nil {
+	if _, err := migration.RunMigrationUp(db.DB, migration.NewMigrationPathFromContext(c), configuration.DatabaseNameFromContext(c)); err != nil {
 		return err
 	}
 
