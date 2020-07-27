@@ -45,7 +45,7 @@ func TestGetActivities(t *testing.T) {
 		toTime   = common.TimeToMillis(time.Now().Add(1 * time.Hour))
 	)
 
-	db, tearDown := testutil.MustNewDevelopmentDB()
+	db, tearDown := testutil.MustNewDevelopmentDB("../cmd/migrations")
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()

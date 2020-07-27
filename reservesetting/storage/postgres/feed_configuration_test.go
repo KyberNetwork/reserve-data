@@ -12,7 +12,7 @@ import (
 )
 
 func TestGetFeedConfigurations(t *testing.T) {
-	db, tearDown := testutil.MustNewDevelopmentDB()
+	db, tearDown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()
@@ -27,7 +27,7 @@ func TestGetFeedConfigurations(t *testing.T) {
 }
 
 func TestSetFeedConfigurations(t *testing.T) {
-	db, tearDown := testutil.MustNewDevelopmentDB()
+	db, tearDown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()
@@ -71,7 +71,7 @@ func TestSetFeedConfigurations(t *testing.T) {
 }
 
 func TestUpdateFeedStatus(t *testing.T) {
-	db, tearDown := testutil.MustNewDevelopmentDB()
+	db, tearDown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()

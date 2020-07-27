@@ -112,7 +112,7 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 		supportedExchanges[exchangeID] = exchange
 	}
 
-	db, tearDown := testutil.MustNewDevelopmentDB()
+	db, tearDown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()
@@ -578,7 +578,7 @@ func TestHTTPServerAssetExchangeWithOptionalTradingPair(t *testing.T) {
 		supportedExchanges[exchangeID] = exchange
 	}
 
-	db, tearDown := testutil.MustNewDevelopmentDB()
+	db, tearDown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()
@@ -848,7 +848,7 @@ func TestHTTPServerAssetExchangeWithOptionalTradingPair(t *testing.T) {
 }
 
 func TestHTTPServer_SettingChangeUpdateExchange(t *testing.T) {
-	db, tearDown := testutil.MustNewDevelopmentDB()
+	db, tearDown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()
@@ -971,7 +971,7 @@ func TestHTTPServer_SettingChangeUpdateExchange(t *testing.T) {
 }
 
 func TestHTTPServer_ChangeAssetAddress(t *testing.T) {
-	db, tearDown := testutil.MustNewDevelopmentDB()
+	db, tearDown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()
@@ -1066,7 +1066,7 @@ func TestHTTPServer_ChangeAssetAddress(t *testing.T) {
 }
 
 func TestHTTPServer_DeleteTradingPair(t *testing.T) {
-	db, tearDown := testutil.MustNewDevelopmentDB()
+	db, tearDown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()
@@ -1154,7 +1154,7 @@ func TestHTTPServer_DeleteTradingPair(t *testing.T) {
 }
 
 func TestHTTPServer_DeleteAssetExchange(t *testing.T) {
-	db, tearDown := testutil.MustNewDevelopmentDB()
+	db, tearDown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()
@@ -1289,7 +1289,7 @@ func TestCreateTradingPair(t *testing.T) {
 		supportedExchanges[exchangeID] = exchange
 	}
 
-	db, tearDown := testutil.MustNewDevelopmentDB()
+	db, tearDown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()
@@ -1337,7 +1337,7 @@ func TestCreateTradingPair(t *testing.T) {
 }
 
 func TestSetFeedConfiguration(t *testing.T) {
-	db, tearDown := testutil.MustNewDevelopmentDB()
+	db, tearDown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()

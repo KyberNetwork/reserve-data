@@ -32,7 +32,7 @@ func TestServer_StableTokenParams(t *testing.T) {
 		supportedExchanges[exchangeID] = exchange
 	}
 
-	db, tearDown := testutil.MustNewDevelopmentDB()
+	db, tearDown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()

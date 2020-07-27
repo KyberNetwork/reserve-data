@@ -16,7 +16,7 @@ import (
 )
 
 func TestPriceFactor(t *testing.T) {
-	db, tearDown := testutil.MustNewDevelopmentDB()
+	db, tearDown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()
@@ -123,7 +123,7 @@ func TestServer_SetRateStatus(t *testing.T) {
 		enableSetRatePath    = "/v3/enable-set-rate"
 	)
 
-	db, tearDown := testutil.MustNewDevelopmentDB()
+	db, tearDown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()
@@ -186,7 +186,7 @@ func TestServer_RebalanceStatus(t *testing.T) {
 		enableRebalancePath    = "/v3/enable-rebalance"
 	)
 
-	db, tearDown := testutil.MustNewDevelopmentDB()
+	db, tearDown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()

@@ -13,7 +13,7 @@ import (
 )
 
 func TestStorage_UpdateExchange(t *testing.T) {
-	db, tearDown := testutil.MustNewDevelopmentDB()
+	db, tearDown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()
@@ -90,7 +90,7 @@ func TestStorage_UpdateExchange(t *testing.T) {
 }
 
 func TestStorage_GetUpdateByName(t *testing.T) {
-	db, tearDown := testutil.MustNewDevelopmentDB()
+	db, tearDown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()

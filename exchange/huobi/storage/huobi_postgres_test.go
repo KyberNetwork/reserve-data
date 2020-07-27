@@ -12,11 +12,15 @@ import (
 	"github.com/KyberNetwork/reserve-data/exchange"
 )
 
+const (
+	migrationPath = "../../../cmd/migrations"
+)
+
 func TestPostgresStorage_TradeHistory(t *testing.T) {
 	var storage exchange.HuobiStorage
 	var err error
 
-	db, tearDown := testutil.MustNewDevelopmentDB()
+	db, tearDown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()
@@ -62,7 +66,7 @@ func TestPostgresStorage_DepositActivity(t *testing.T) {
 	var storage exchange.HuobiStorage
 	var err error
 
-	db, tearDown := testutil.MustNewDevelopmentDB()
+	db, tearDown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()

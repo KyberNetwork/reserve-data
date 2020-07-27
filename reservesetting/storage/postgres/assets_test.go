@@ -10,8 +10,12 @@ import (
 	"github.com/KyberNetwork/reserve-data/reservesetting/common"
 )
 
+const (
+	migrationPath = "../../../cmd/migrations"
+)
+
 func TestUpdateAsset(t *testing.T) {
-	db, tearDown := testutil.MustNewDevelopmentDB()
+	db, tearDown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()
@@ -148,7 +152,7 @@ func TestUpdateAsset(t *testing.T) {
 }
 
 func TestGetAssetBySymbol(t *testing.T) {
-	db, tearDown := testutil.MustNewDevelopmentDB()
+	db, tearDown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()

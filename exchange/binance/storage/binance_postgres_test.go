@@ -17,7 +17,7 @@ func Test_BinancePostgres(t *testing.T) {
 	t.Skip() // skip as we do not have a way to update database yet
 	var storage exchange.BinanceStorage
 	var err error
-	db, tearDown := testutil.MustNewDevelopmentDB()
+	db, tearDown := testutil.MustNewDevelopmentDB("../../../cmd/migrations")
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()

@@ -15,7 +15,7 @@ func TestStorage_GetStableTokenParams(t *testing.T) {
 		"a": "1",
 		"b": 2,
 	}
-	db, tearDown := testutil.MustNewDevelopmentDB()
+	db, tearDown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()

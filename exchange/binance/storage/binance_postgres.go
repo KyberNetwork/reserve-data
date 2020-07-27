@@ -25,8 +25,7 @@ func NewPostgresStorage(db *sqlx.DB, migrationFolderPath, databaseName string) (
 	storage := &postgresStorage{
 		db: db,
 	}
-	err := storage.prepareStmts()
-	return storage, err
+	return storage, storage.prepareStmts()
 }
 
 func (s *postgresStorage) prepareStmts() error {

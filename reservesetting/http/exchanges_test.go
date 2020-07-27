@@ -24,7 +24,7 @@ func TestExchanges(t *testing.T) {
 		supportedExchanges[exchangeID] = exchange
 	}
 
-	db, tearDown := testutil.MustNewDevelopmentDB()
+	db, tearDown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()
@@ -56,7 +56,7 @@ func TestUpdateExchangeStatus(t *testing.T) {
 		supportedExchanges[exchangeID] = exchange
 	}
 
-	db, tearDown := testutil.MustNewDevelopmentDB()
+	db, tearDown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()

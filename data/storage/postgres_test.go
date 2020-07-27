@@ -12,8 +12,12 @@ import (
 	commonv3 "github.com/KyberNetwork/reserve-data/reservesetting/common"
 )
 
+const (
+	migrationPath = "../../cmd/migrations"
+)
+
 func TestRate(t *testing.T) {
-	db, teardown := testutil.MustNewDevelopmentDB()
+	db, teardown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		require.NoError(t, teardown())
 	}()
@@ -62,7 +66,7 @@ func TestRate(t *testing.T) {
 }
 
 func TestPrice(t *testing.T) {
-	db, teardown := testutil.MustNewDevelopmentDB()
+	db, teardown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		require.NoError(t, teardown())
 	}()
@@ -129,7 +133,7 @@ func TestPrice(t *testing.T) {
 }
 
 func TestActivity(t *testing.T) {
-	db, teardown := testutil.MustNewDevelopmentDB()
+	db, teardown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		require.NoError(t, teardown())
 	}()
@@ -191,7 +195,7 @@ func TestActivity(t *testing.T) {
 }
 
 func TestAuthData(t *testing.T) {
-	db, teardown := testutil.MustNewDevelopmentDB()
+	db, teardown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		require.NoError(t, teardown())
 	}()
@@ -267,7 +271,7 @@ func TestAuthData(t *testing.T) {
 }
 
 func TestGoldData(t *testing.T) {
-	db, teardown := testutil.MustNewDevelopmentDB()
+	db, teardown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		require.NoError(t, teardown())
 	}()
@@ -391,7 +395,7 @@ func TestGoldData(t *testing.T) {
 }
 
 func TestBTCData(t *testing.T) {
-	db, teardown := testutil.MustNewDevelopmentDB()
+	db, teardown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		require.NoError(t, teardown())
 	}()
@@ -417,7 +421,7 @@ func TestBTCData(t *testing.T) {
 }
 
 func TestUSDData(t *testing.T) {
-	db, teardown := testutil.MustNewDevelopmentDB()
+	db, teardown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		require.NoError(t, teardown())
 	}()

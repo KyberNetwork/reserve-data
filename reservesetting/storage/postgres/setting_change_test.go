@@ -202,7 +202,7 @@ func initData(t *testing.T, s *Storage) {
 }
 
 func TestStorage_SettingChangeCreate(t *testing.T) {
-	db, tearDown := testutil.MustNewDevelopmentDB()
+	db, tearDown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()
@@ -644,7 +644,7 @@ func TestStorage_SettingChangeCreate(t *testing.T) {
 }
 
 func TestStorage_GetDepositAddresses(t *testing.T) {
-	db, tearDown := testutil.MustNewDevelopmentDB()
+	db, tearDown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()

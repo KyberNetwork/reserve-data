@@ -12,7 +12,7 @@ import (
 )
 
 func TestStorage_GetAssetBySymbol(t *testing.T) {
-	db, tearDown := testutil.MustNewDevelopmentDB()
+	db, tearDown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()
@@ -30,7 +30,7 @@ func TestStorage_GetAssetBySymbol(t *testing.T) {
 }
 
 func TestStorage_GetTransferableAssets(t *testing.T) {
-	db, tearDown := testutil.MustNewDevelopmentDB()
+	db, tearDown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()
@@ -48,7 +48,7 @@ func TestStorage_GetTransferableAssets(t *testing.T) {
 }
 
 func TestStorage_GetTradingPair(t *testing.T) {
-	db, tearDown := testutil.MustNewDevelopmentDB()
+	db, tearDown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()
@@ -61,7 +61,7 @@ func TestStorage_GetTradingPair(t *testing.T) {
 }
 
 func TestStorage_GetTradingPairs(t *testing.T) {
-	db, tearDown := testutil.MustNewDevelopmentDB()
+	db, tearDown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()
@@ -75,7 +75,7 @@ func TestStorage_GetTradingPairs(t *testing.T) {
 }
 
 func TestStorage_GetMinNotional(t *testing.T) {
-	db, tearDown := testutil.MustNewDevelopmentDB()
+	db, tearDown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()

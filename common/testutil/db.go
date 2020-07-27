@@ -18,7 +18,7 @@ const (
 
 // MustNewDevelopmentDB creates a new development DB.
 // It also returns a function to teardown it after the test.
-func MustNewDevelopmentDB() (*sqlx.DB, func() error) {
+func MustNewDevelopmentDB(migrationPath string) (*sqlx.DB, func() error) {
 	dbName := RandomString(8)
 
 	ddlDBConnStr := fmt.Sprintf("host=%s port=%d user=%s password=%s sslmode=disable",
@@ -41,7 +41,7 @@ func MustNewDevelopmentDB() (*sqlx.DB, func() error) {
 		dbName,
 	)
 	db := sqlx.MustConnect("postgres", connStr)
-	if err := migration.RunMigrationUp(db, "/Users/gin/go/src/github.com/KyberNetwork/reserve-data/cmd/migrations", dbName); err != nil {
+	if err := migration.RunMigrationUp(db, migrationPath, dbName); err != nil {
 		panic(err)
 	}
 	return db, func() error {

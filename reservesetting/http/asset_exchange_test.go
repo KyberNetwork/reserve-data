@@ -13,6 +13,10 @@ import (
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage/postgres"
 )
 
+const (
+	migrationPath = "../../cmd/migrations"
+)
+
 func TestServer_UpdateAssetExchange(t *testing.T) {
 
 	var (
@@ -25,7 +29,7 @@ func TestServer_UpdateAssetExchange(t *testing.T) {
 		supportedExchanges[exchangeID] = exchange
 	}
 
-	db, tearDown := testutil.MustNewDevelopmentDB()
+	db, tearDown := testutil.MustNewDevelopmentDB(migrationPath)
 	defer func() {
 		assert.NoError(t, tearDown())
 	}()
