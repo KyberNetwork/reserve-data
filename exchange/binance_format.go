@@ -6,24 +6,6 @@ type Binaprice struct {
 	Rate     float64 `json:"price"`
 }
 
-// func (bp *Binaprice) UnmarshalJSON(text []byte) error {
-// 	temp := []interface{}{}
-// 	if err := json.Unmarshal(text, &temp); err != nil {
-// 		return err
-// 	}
-// 	qty, ok := temp[1].(string)
-// 	if !ok {
-// 		return fmt.Errorf("unmarshal err: interface %v can't be converted to string", temp[1])
-// 	}
-// 	bp.Quantity = qty
-// 	rate, ok := temp[0].(string)
-// 	if !ok {
-// 		return fmt.Errorf("unmarshal err: interface %v can't be converted to string", temp[0])
-// 	}
-// 	bp.Rate = rate
-// 	return nil
-// }
-
 // Binaresp response from binance
 type Binaresp struct {
 	LastUpdatedID int64       `json:"lastUpdateId"`
