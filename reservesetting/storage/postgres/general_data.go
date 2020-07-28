@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"database/sql"
 	"fmt"
 
 	pgutil "github.com/KyberNetwork/reserve-data/common/postgres"
@@ -20,7 +21,7 @@ func (s *Storage) SetGeneralData(data common.GeneralData) (uint64, error) {
 
 	err = tx.NamedStmt(s.stmts.setGeneralData).Get(&id, data)
 	if err != nil {
-		return 0, fmt.Errorf("failed to set general data, err=%s,", err)
+		return 0, fmt.Errorf("failed to set data, err=%s,", err)
 	}
 	if err = tx.Commit(); err != nil {
 		return 0, err
@@ -40,7 +41,10 @@ func (s *Storage) GetGeneralData(key string) (common.GeneralData, error) {
 	defer pgutil.RollbackUnlessCommitted(tx)
 	err = tx.Stmtx(s.stmts.getGeneralData).Get(&data, key)
 	if err != nil {
-		return data, fmt.Errorf("failed to get general data, err=%s,", err)
+		if err == sql.ErrNoRows {
+			return data, common.ErrNotFound
+		}
+		return data, fmt.Errorf("failed to get data, err=%s,", err)
 	}
 	return data, nil
 }
@@ -54,7 +58,7 @@ func (s *Storage) DeleteGeneralData(id uint64) error {
 	defer pgutil.RollbackUnlessCommitted(tx)
 	_, err = tx.Stmtx(s.stmts.deleteGeneralData).Exec(id)
 	if err != nil {
-		return fmt.Errorf("failed to delete general data, err=%s,", err)
+		return fmt.Errorf("failed to delete data, err=%s,", err)
 	}
 	if err = tx.Commit(); err != nil {
 		return err
