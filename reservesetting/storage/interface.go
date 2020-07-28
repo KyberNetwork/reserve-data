@@ -25,6 +25,8 @@ type Interface interface {
 
 	UpdateExchange(id uint64, updateOpts UpdateExchangeOpts) error
 	UpdateFeedStatus(name string, setRate v3.SetRate, enabled bool) error
+
+	SetGeneralData(data v3.GeneralData) (uint64, error)
 }
 
 // SettingReader is the common interface for reading exchanges, assets configuration.
@@ -49,8 +51,12 @@ type SettingReader interface {
 	// GetFeedConfigurations return all feed configuration
 	GetFeedConfigurations() ([]v3.FeedConfiguration, error)
 	GetFeedConfiguration(name string, setRate v3.SetRate) (v3.FeedConfiguration, error)
+
+	GetGeneralData(key string) (v3.GeneralData, error)
+	DeleteGeneralData(id uint64) error
 }
 
+// ControlInfoInterface ...
 type ControlInfoInterface interface {
 	GetSetRateStatus() (bool, error)
 	SetSetRateStatus(status bool) error
@@ -69,7 +75,7 @@ type UpdateExchangeOpts = v3.UpdateExchangeEntry
 // UpdateAssetOpts update asset options
 type UpdateAssetOpts = v3.UpdateAssetEntry
 
-// UpdateTradingPairOpts
+// UpdateTradingPairOpts ...
 type UpdateTradingPairOpts struct {
 	ID              uint64   `json:"id"`
 	PricePrecision  *uint64  `json:"price_precision"`

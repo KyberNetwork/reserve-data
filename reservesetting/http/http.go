@@ -115,6 +115,10 @@ func NewServer(storage storage.Interface, host string, supportedExchanges map[v1
 	g.POST("/hold-rebalance", server.holdRebalance)
 	g.POST("/enable-rebalance", server.enableRebalance)
 
+	g.GET("/rate-trigger-period-length", server.getRateTriggerPeriodLength)
+	g.POST("/rate-trigger-period-length", server.setRateTriggerPeriodLength)
+	g.DELETE("/rate-trigger-period-length/:id", server.deleteRateTriggerPeriodLength)
+
 	return server
 }
 
