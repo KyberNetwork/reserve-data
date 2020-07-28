@@ -1,4 +1,5 @@
 {
+  "market_data_base_url": "http://market-data.com",
   "fetcher_delay": {
     "order_book": "7s",
     "auth_data": "5s",
