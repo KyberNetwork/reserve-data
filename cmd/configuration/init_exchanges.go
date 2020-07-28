@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	ethereum "github.com/ethereum/go-ethereum/common"
@@ -174,7 +175,8 @@ func NewExchangePool(
 			if exparam == common.Binance2 {
 				binanceSigner = binance.NewSigner(rcf.Binance2Key, rcf.Binance2Secret)
 			}
-			be = binance.NewBinanceEndpoint(binanceSigner, bi, dpl, httpClient, exparam, rcf.MarketDataEndpoint)
+			marketDataBaseURL := strings.TrimSuffix(rcf.MarketDataBaseURL, "/")
+			be = binance.NewBinanceEndpoint(binanceSigner, bi, dpl, httpClient, exparam, marketDataBaseURL)
 			binancestorage, err := binanceStorage.NewPostgresStorage(db, rcf.MigrationPath, rcf.DatabaseName)
 			if err != nil {
 				return nil, fmt.Errorf("cannot create Binance storage: (%s)", err.Error())
