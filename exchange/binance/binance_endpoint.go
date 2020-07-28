@@ -26,12 +26,13 @@ import (
 // interf for calling api in different env
 // timedelta to make sure calling api in time
 type Endpoint struct {
-	signer     Signer
-	interf     Interface
-	timeDelta  int64
-	l          *zap.SugaredLogger
-	exchangeID common.ExchangeID
-	client     *http.Client
+	signer             Signer
+	interf             Interface
+	timeDelta          int64
+	l                  *zap.SugaredLogger
+	exchangeID         common.ExchangeID
+	client             *http.Client
+	marketDataEndpoint string
 }
 
 func (ep *Endpoint) fillRequest(req *http.Request, signNeeded bool, timepoint uint64) {
@@ -114,15 +115,12 @@ func (ep *Endpoint) GetResponse(
 func (ep *Endpoint) GetDepthOnePair(baseID, quoteID string) (exchange.Binaresp, error) {
 
 	respBody, err := ep.GetResponse(
-		"GET", ep.interf.PublicEndpoint()+"/api/v3/depth",
-		map[string]string{
-			"symbol": fmt.Sprintf("%s%s", baseID, quoteID),
-			"limit":  "100",
-		},
+		"GET",
+		fmt.Sprintf("%s/binance/%s-%s", ep.marketDataEndpoint, strings.ToLower(baseID), strings.ToLower(quoteID)),
+		map[string]string{},
 		false,
 		common.NowInMillis(),
 	)
-
 	respData := exchange.Binaresp{}
 	if err != nil {
 		return respData, err
@@ -491,9 +489,9 @@ func (ep *Endpoint) UpdateTimeDelta() error {
 }
 
 //NewBinanceEndpoint return new endpoint instance for using binance
-func NewBinanceEndpoint(signer Signer, interf Interface, dpl deployment.Deployment, client *http.Client, exparam common.ExchangeID) *Endpoint {
+func NewBinanceEndpoint(signer Signer, interf Interface, dpl deployment.Deployment, client *http.Client, exparam common.ExchangeID, marketDataEndpoint string) *Endpoint {
 	l := zap.S()
-	endpoint := &Endpoint{signer: signer, interf: interf, l: l, client: client, exchangeID: exparam}
+	endpoint := &Endpoint{signer: signer, interf: interf, l: l, client: client, exchangeID: exparam, marketDataEndpoint: marketDataEndpoint}
 	switch dpl {
 	case deployment.Simulation:
 		l.Info("Simulate environment, no updateTime called...")
