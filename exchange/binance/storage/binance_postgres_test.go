@@ -23,7 +23,7 @@ func Test_BinancePostgres(t *testing.T) {
 	}()
 	_, err = postgres.NewStorage(db)
 	require.NoError(t, err)
-	storage, err = NewPostgresStorage(db, "", "reserve_data")
+	storage, err = NewPostgresStorage(db)
 	require.NoError(t, err)
 
 	exchangeTradeHistory := common.ExchangeTradeHistory{

@@ -177,7 +177,7 @@ func NewExchangePool(
 			}
 			marketDataBaseURL := strings.TrimSuffix(rcf.MarketDataBaseURL, "/")
 			be = binance.NewBinanceEndpoint(binanceSigner, bi, dpl, httpClient, exparam, marketDataBaseURL)
-			binancestorage, err := binanceStorage.NewPostgresStorage(db, rcf.MigrationPath, rcf.DatabaseName)
+			binancestorage, err := binanceStorage.NewPostgresStorage(db)
 			if err != nil {
 				return nil, fmt.Errorf("cannot create Binance storage: (%s)", err.Error())
 			}

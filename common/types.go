@@ -800,7 +800,6 @@ type RawConfig struct {
 	IntermediatorPassphrase string `json:"passphrase_intermediate_account"`
 
 	MigrationPath     string `json:"migration_folder_path"`
-	DatabaseName      string `json:"database_name"`
 	MarketDataBaseURL string `json:"market_data_base_url"`
 }
 

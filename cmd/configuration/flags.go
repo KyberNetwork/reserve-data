@@ -180,8 +180,8 @@ func NewConfigurationFromContext(c *cli.Context, rcf common.RawConfig, s *zap.Su
 	if err != nil {
 		return nil, err
 	}
-
-	if _, err := migration.RunMigrationUp(db.DB, rcf.MigrationPath, rcf.DatabaseName); err != nil {
+	dataName := c.String(postgresDatabaseFlag)
+	if _, err := migration.RunMigrationUp(db.DB, rcf.MigrationPath, dataName); err != nil {
 		return nil, err
 	}
 

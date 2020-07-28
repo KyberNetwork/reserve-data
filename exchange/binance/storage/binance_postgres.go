@@ -21,7 +21,7 @@ type preparedStmt struct {
 }
 
 // NewPostgresStorage creates new obj exchange.BinanceStorage with db engine = postgres
-func NewPostgresStorage(db *sqlx.DB, migrationFolderPath, databaseName string) (exchange.BinanceStorage, error) {
+func NewPostgresStorage(db *sqlx.DB) (exchange.BinanceStorage, error) {
 	storage := &postgresStorage{
 		db: db,
 	}
