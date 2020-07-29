@@ -48,20 +48,3 @@ func (s *Storage) GetGeneralData(key string) (common.GeneralData, error) {
 	}
 	return data, nil
 }
-
-// DeleteGeneralData ...
-func (s *Storage) DeleteGeneralData(id uint64) error {
-	tx, err := s.db.Beginx()
-	if err != nil {
-		return err
-	}
-	defer pgutil.RollbackUnlessCommitted(tx)
-	_, err = tx.Stmtx(s.stmts.deleteGeneralData).Exec(id)
-	if err != nil {
-		return fmt.Errorf("failed to delete data, err=%s,", err)
-	}
-	if err = tx.Commit(); err != nil {
-		return err
-	}
-	return nil
-}

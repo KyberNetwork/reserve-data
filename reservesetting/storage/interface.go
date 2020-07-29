@@ -53,7 +53,6 @@ type SettingReader interface {
 	GetFeedConfiguration(name string, setRate v3.SetRate) (v3.FeedConfiguration, error)
 
 	GetGeneralData(key string) (v3.GeneralData, error)
-	DeleteGeneralData(id uint64) error
 }
 
 // ControlInfoInterface ...

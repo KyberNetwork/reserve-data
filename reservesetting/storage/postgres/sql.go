@@ -55,9 +55,8 @@ type preparedStmts struct {
 	getFeedConfiguration  *sqlx.Stmt
 	getFeedConfigurations *sqlx.Stmt
 
-	getGeneralData    *sqlx.Stmt
-	setGeneralData    *sqlx.NamedStmt
-	deleteGeneralData *sqlx.Stmt
+	getGeneralData *sqlx.Stmt
+	setGeneralData *sqlx.NamedStmt
 }
 
 func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
@@ -162,7 +161,7 @@ func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
 		return nil, err
 	}
 
-	setGeneralDataStmt, getGeneralDataStmt, deleteGeneralDataStmt, err := generalDataStatements(db)
+	setGeneralDataStmt, getGeneralDataStmt, err := generalDataStatements(db)
 	if err != nil {
 		return nil, err
 	}
@@ -217,9 +216,8 @@ func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
 		getFeedConfiguration:  getFeedConfigurationStmt,
 		getFeedConfigurations: getFeedConfigurationsStmt,
 
-		getGeneralData:    getGeneralDataStmt,
-		setGeneralData:    setGeneralDataStmt,
-		deleteGeneralData: deleteGeneralDataStmt,
+		getGeneralData: getGeneralDataStmt,
+		setGeneralData: setGeneralDataStmt,
 	}, nil
 }
 
@@ -760,21 +758,16 @@ func feedConfigurationStatements(db *sqlx.DB) (*sqlx.NamedStmt, *sqlx.Stmt, *sql
 	return setFeedConfigurationStmt, getFeedConfigurationStmt, getFeedConfigurationsStmt, nil
 }
 
-func generalDataStatements(db *sqlx.DB) (*sqlx.NamedStmt, *sqlx.Stmt, *sqlx.Stmt, error) {
+func generalDataStatements(db *sqlx.DB) (*sqlx.NamedStmt, *sqlx.Stmt, error) {
 	const setQuery = `INSERT INTO general_data(key, value, timestamp) VALUES (:key, :value, now()) RETURNING id;`
 	setGeneralDataStmt, err := db.PrepareNamed(setQuery)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 	const getQuery = `SELECT id, key, value FROM general_data WHERE key=$1 ORDER BY timestamp DESC LIMIT 1;`
 	getGeneralDataStmt, err := db.Preparex(getQuery)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
-	const deleteQuery = `DELETE FROM general_data WHERE id=$1;`
-	deleteGeneralDataStmt, err := db.Preparex(deleteQuery)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	return setGeneralDataStmt, getGeneralDataStmt, deleteGeneralDataStmt, err
+	return setGeneralDataStmt, getGeneralDataStmt, err
 }

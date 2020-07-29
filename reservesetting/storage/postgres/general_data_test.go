@@ -28,27 +28,19 @@ func TestGeneralData(t *testing.T) {
 			Value: "456.789",
 		}
 	)
-	id1, err := s.SetGeneralData(dataTest1)
+
+	_, err = s.GetGeneralData("test data")
+	assert.EqualError(t, err, common.ErrNotFound.Error())
+
+	_, err = s.SetGeneralData(dataTest1)
 	assert.NoError(t, err)
 	dataDB, err := s.GetGeneralData("test data")
 	assert.NoError(t, err)
 	assert.Equal(t, dataTest1, dataDB)
 
-	id2, err := s.SetGeneralData(dataTest2)
+	_, err = s.SetGeneralData(dataTest2)
 	assert.NoError(t, err)
 	dataDB, err = s.GetGeneralData("test data")
 	assert.NoError(t, err)
 	assert.Equal(t, dataTest2, dataDB)
-
-	err = s.DeleteGeneralData(id2)
-	assert.NoError(t, err)
-
-	dataDB, err = s.GetGeneralData("test data")
-	assert.NoError(t, err)
-	assert.Equal(t, dataTest1, dataDB)
-
-	err = s.DeleteGeneralData(id1)
-	assert.NoError(t, err)
-	_, err = s.GetGeneralData("test data")
-	assert.EqualError(t, err, common.ErrNotFound.Error())
 }

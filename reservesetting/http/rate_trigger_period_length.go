@@ -50,19 +50,3 @@ func (s *Server) getRateTriggerPeriodLength(c *gin.Context) {
 	}
 	httputil.ResponseSuccess(c, httputil.WithData(data))
 }
-
-func (s *Server) deleteRateTriggerPeriodLength(c *gin.Context) {
-	var input struct {
-		ID uint64 `uri:"id" binding:"required"`
-	}
-	if err := c.ShouldBindUri(&input); err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	err := s.storage.DeleteGeneralData(input.ID)
-	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	httputil.ResponseSuccess(c)
-}
