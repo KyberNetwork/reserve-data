@@ -23,6 +23,7 @@ includes:
   - settings/setting_change_rbquadratic
   - settings/set_feed_configuration
   - reserve/rates
+  - settings/rate_trigger
   - exchanges/exchanges
   - exchanges/rebalance
   - stable-token-and-btc/apis

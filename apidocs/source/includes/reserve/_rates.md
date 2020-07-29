@@ -196,3 +196,57 @@ Params | Type | Required | Default | Description
 ------ | ---- | -------- | ------- | -----------
 fromTime | uint64 | false | 24 hours ago | fromTime to get all rates
 toTime | uint64 | false | current time | toTime to get all rates
+
+## Set Rate
+
+Set rate create a contract call to set rate into conversion rate contract.
+
+``` shell
+curl -X POST "https://gateway.local/v3/setrates" \
+-H 'Content-Type: application/json' \
+-d '{
+        "block": 9000000,
+        "rates": [
+            {
+            "asset_id": 1
+            "buy": "122",
+            "sell": "123",
+            "mid": "123",
+            "msg": "set rate"
+            "trigger": true
+            }
+        ]
+    }'
+```
+
+> sample response
+
+```json
+{
+  "id": "rate-rate-id",
+  "success": true
+}
+```
+
+### HTTP Request
+
+`POST https://gateway.local/v3/setrates`
+
+Params | Type | Required | Default | Description
+------ | ---- | -------- | ------- | -----------
+block | int64 | yes |  | block that use to validate rate
+rates | []RateRequest | yes |  | a list of set rate request
+
+#### RateRequest
+
+Field | Type | Required | Default | Description
+------ | ---- | -------- | ------- | -----------
+asset_id | int64 | yes |  | asset id
+buy | big number | yes |  | buy rate
+sell | big number | yes |  | sell rate
+mid | big number | yes |  | mid value
+msg | big number | yes |  | a string will be attach into activity record, general purpose
+trigger | bool | yes |  | mark set rate on asset as trigger
+
+
+<aside class="notice">Rebalance key is required</aside>
