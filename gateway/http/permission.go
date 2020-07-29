@@ -27,7 +27,7 @@ p, %[1]s, /v3/setting-change-main, POST
 p, %[1]s, /v3/setting-change-stable, POST
 p, %[1]s, /v3/setting-change-feed-configuration, POST
 p, %[1]s, /v3/update-feed-status/:name, PUT
-p, %[1]s, /v3/rate-trigger-period-length, POST`, key)
+p, %[1]s, /v3/rate-trigger-period, POST`, key)
 }
 
 func addKeyConfirmPolicy(key string) string {

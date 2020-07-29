@@ -117,8 +117,8 @@ func WithSettingEndpoint(settingEndpoint string) Option {
 		g.GET("/price-factor", settingProxyMW)
 		g.POST("/price-factor", settingProxyMW)
 
-		g.GET("/rate-trigger-period-length", settingProxyMW)
-		g.POST("/rate-trigger-period-length", settingProxyMW)
+		g.GET("/rate-trigger-period", settingProxyMW)
+		g.POST("/rate-trigger-period", settingProxyMW)
 
 		return nil
 	}

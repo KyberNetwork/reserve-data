@@ -377,28 +377,28 @@ type GeneralData struct {
 	Value string `db:"value"`
 }
 
-// ToRateTriggerPeriodLength ...
-func (g GeneralData) ToRateTriggerPeriodLength() (RateTriggerPeriodLength, error) {
+// ToRateTriggerPeriod ...
+func (g GeneralData) ToRateTriggerPeriod() (RateTriggerPeriod, error) {
 	value, err := strconv.ParseFloat(g.Value, 64)
 	if err != nil {
-		return RateTriggerPeriodLength{}, err
+		return RateTriggerPeriod{}, err
 	}
-	return RateTriggerPeriodLength{
+	return RateTriggerPeriod{
 		ID:    g.ID,
 		Key:   g.Key,
 		Value: value,
 	}, nil
 }
 
-// RateTriggerPeriodLength ...
-type RateTriggerPeriodLength struct {
-	ID    uint64
+// RateTriggerPeriod ...
+type RateTriggerPeriod struct {
+	ID    uint64  `json:"-"`
 	Key   string  `json:"key"`
 	Value float64 `json:"value"`
 }
 
 // ToGeneralData ...
-func (r RateTriggerPeriodLength) ToGeneralData() GeneralData {
+func (r RateTriggerPeriod) ToGeneralData() GeneralData {
 	return GeneralData{
 		Key:   r.Key,
 		Value: strconv.FormatFloat(r.Value, 'f', -1, 64),
