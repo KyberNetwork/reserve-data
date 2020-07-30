@@ -86,7 +86,13 @@ func (bc *Blockchain) StandardGasPrice() float64 {
 
 // ListedTokens return listed tokens from pricing contract
 func (bc *Blockchain) ListedTokens() []ethereum.Address {
-	return bc.listedTokens
+	bc.mu.RLock()
+	defer bc.mu.RUnlock()
+	res := make([]ethereum.Address, 0, len(bc.listedTokens))
+	for _, a := range bc.listedTokens {
+		res = append(res, a)
+	}
+	return res
 }
 
 // CheckTokenIndices check if token is listed
@@ -344,9 +350,19 @@ func (bc *Blockchain) FetchRates(atBlock uint64, currentBlock uint64) (common.Al
 		return result, err
 	}
 	assets := commonv3.AssetsHaveSetRate(allAssets)
+	listTokens := bc.ListedTokens()
+	ltMap := make(map[ethereum.Address]struct{}, len(listTokens))
+	for _, v := range listTokens {
+		ltMap[v] = struct{}{}
+	}
 	for _, s := range assets {
+		_, isListed := ltMap[s.Address]
+		if !isListed {
+			bc.l.Errorw("token/asset not listed and will be ignore from get rate",
+				"asset", s.Symbol, "addr", s.Address.Hex())
+		}
 		// TODO: add a isETH method
-		if s.Symbol != "ETH" {
+		if s.Symbol != "ETH" && isListed {
 			tokenAddrs = append(tokenAddrs, s.Address)
 			validTokens = append(validTokens, s)
 		}
