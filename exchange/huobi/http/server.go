@@ -63,7 +63,7 @@ func NewHuobiHTTPServer(app Huobi) *Server {
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AddAllowHeaders("signed")
 	corsConfig.AllowAllOrigins = true
-	corsConfig.MaxAge = 5 * time.Minute
+	corsConfig.MaxAge = time.Minute * 5
 	r.Use(cors.New(corsConfig))
 
 	return &Server{

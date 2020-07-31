@@ -89,9 +89,7 @@ func (bc *Blockchain) ListedTokens() []ethereum.Address {
 	bc.mu.RLock()
 	defer bc.mu.RUnlock()
 	res := make([]ethereum.Address, 0, len(bc.listedTokens))
-	for _, a := range bc.listedTokens {
-		res = append(res, a)
-	}
+	res = append(res, bc.listedTokens...)
 	return res
 }
 
