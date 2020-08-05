@@ -35,8 +35,8 @@ func NewTransportRateLimiter(c *http.Client) *TransportRateLimiter {
 
 func nextMin() time.Time {
 	now := time.Now()
-	nextMin := now.Add(time.Second * time.Duration(60-now.Second()))
-	return nextMin.Truncate(time.Second)
+	nextMin := now.Add(time.Minute)
+	return nextMin.Truncate(time.Minute)
 }
 
 func (b *TransportRateLimiter) roundTripBinance(request *http.Request) (*http.Response, error) {
