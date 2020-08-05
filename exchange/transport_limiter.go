@@ -32,17 +32,34 @@ func NewTransportRateLimiter(c *http.Client) *TransportRateLimiter {
 		l: zap.S(),
 	}
 }
+
+func nextMin() time.Time {
+	now := time.Now()
+	nextMin := now.Add(time.Second * time.Duration(60-now.Second()))
+	return nextMin.Truncate(time.Second)
+}
+
 func (b *TransportRateLimiter) roundTripBinance(request *http.Request) (*http.Response, error) {
 	now := time.Now()
+
 	b.lock.RLock()
 	blockUntil := b.blockUntil
 	b.lock.RUnlock()
+
 	if now.Before(blockUntil) {
-		return &http.Response{StatusCode: http.StatusTeapot, Body: ioutil.NopCloser(bytes.NewBuffer(nil))}, fmt.Errorf("rate limit guard, until %s", blockUntil.String())
+		return nil, fmt.Errorf("rate limit guard, until %s", blockUntil.String())
 	}
 	resp, err := b.c.Do(request)
 	if err != nil {
 		return resp, err
+	}
+
+	if resp.StatusCode == http.StatusTooManyRequests {
+		blockUntil = nextMin()
+		b.lock.Lock()
+		b.blockUntil = blockUntil
+		b.lock.Unlock()
+		return nil, fmt.Errorf("rate limit guard, until %s", blockUntil.String())
 	}
 	if resp.StatusCode != http.StatusTeapot {
 		return resp, err
@@ -58,11 +75,21 @@ func (b *TransportRateLimiter) roundTripBinance(request *http.Request) (*http.Re
 	// I want to use timestamp in the message as it easier to calculate, but it may change in future
 	// so we handle both, use the greater value.
 
-	nextReq := now
+	retryAt := b.findRetryAt(resp, body)
+	b.l.Infow("set binance block until", "to", retryAt.String())
+	b.lock.Lock()
+	b.blockUntil = retryAt
+	b.lock.Unlock()
+
+	return nil, fmt.Errorf("rate limit guard, until %s", retryAt.String())
+}
+
+func (b *TransportRateLimiter) findRetryAt(resp *http.Response, body []byte) time.Time {
+	retryAt := time.Now()
 	after := resp.Header.Get("Retry-After")
 	if after != "" {
 		sec, _ := strconv.ParseInt(after, 10, 0)
-		nextReq = nextReq.Add(time.Second * time.Duration(sec))
+		retryAt = retryAt.Add(time.Second * time.Duration(sec))
 	}
 	allMatch := binance418.FindAllStringSubmatch(string(body), -1)
 	if len(allMatch) == 0 {
@@ -72,16 +99,11 @@ func (b *TransportRateLimiter) roundTripBinance(request *http.Request) (*http.Re
 		sec := until / 1000
 		ms := until - sec*1000
 		untilTime := time.Unix(sec, ms*1000000)
-		if untilTime.After(nextReq) {
-			nextReq = untilTime
+		if untilTime.After(retryAt) {
+			retryAt = untilTime
 		}
 	}
-	b.l.Infow("set binance block until", "to", nextReq.String())
-	b.lock.Lock()
-	b.blockUntil = nextReq
-	b.lock.Unlock()
-
-	return resp, fmt.Errorf("rate limit guard, until %s", nextReq.String())
+	return retryAt
 }
 func (b *TransportRateLimiter) RoundTrip(request *http.Request) (*http.Response, error) {
 	if request.URL.Host != "api.binance.com" {
