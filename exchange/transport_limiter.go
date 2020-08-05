@@ -55,6 +55,8 @@ func (b *TransportRateLimiter) roundTripBinance(request *http.Request) (*http.Re
 	}
 
 	if resp.StatusCode == http.StatusTooManyRequests {
+		// binance reset rate limiter on every new minute, 1200 request is allowed per minute
+		// so each time we get a StatusTooManyRequests, we should wait until the counter reset on next min.
 		blockUntil = nextMin()
 		b.lock.Lock()
 		b.blockUntil = blockUntil
