@@ -177,9 +177,9 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 				asset, err := s.GetAsset(assetID)
 				require.NoError(t, err)
 				found := false
-				for _, x := range asset.Exchanges {
-					if x.ExchangeID == huobi {
-						assetExchange = x
+				for _, ae := range asset.AssetExchanges {
+					if ae.ExchangeID == huobi {
+						assetExchange = ae
 						found = true
 						break
 					}
@@ -227,7 +227,7 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 								TransferThreshold:  34,
 								RebalanceThreshold: 1,
 							},
-							Exchanges: []common.AssetExchange{
+							AssetExchanges: []common.AssetExchange{
 								{
 									Symbol:      "KNC",
 									ExchangeID:  binance,
@@ -317,7 +317,7 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 								TransferThreshold:  34,
 								RebalanceThreshold: 1,
 							},
-							Exchanges: []common.AssetExchange{
+							AssetExchanges: []common.AssetExchange{
 								{
 									Symbol:      "OMG",
 									ExchangeID:  binance,
@@ -513,7 +513,7 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 								TransferThreshold:  34,
 								RebalanceThreshold: 1,
 							},
-							Exchanges: []common.AssetExchange{
+							AssetExchanges: []common.AssetExchange{
 								{
 									Symbol:      "SNT",
 									ExchangeID:  binance,
@@ -1323,9 +1323,9 @@ func TestCreateTradingPair(t *testing.T) {
 	assetResp, err := c.getAsset(id)
 	require.NoError(t, err)
 	found := false
-	for _, ex := range assetResp.Asset.Exchanges {
-		if ex.ExchangeID == binance {
-			for _, tp := range ex.TradingPairs {
+	for _, assetExchange := range assetResp.Asset.AssetExchanges {
+		if assetExchange.ExchangeID == binance {
+			for _, tp := range assetExchange.TradingPairs {
 				if tp.Quote == quote && tp.Base == id {
 					found = true
 					break

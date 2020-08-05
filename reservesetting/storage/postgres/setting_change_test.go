@@ -90,7 +90,7 @@ func initData(t *testing.T, s *Storage) {
 					PriceB: 15,
 					PriceC: 21,
 				},
-				Exchanges: []common.AssetExchange{
+				AssetExchanges: []common.AssetExchange{
 					{
 						ExchangeID:        binance,
 						Symbol:            "BTC",
@@ -166,7 +166,7 @@ func initData(t *testing.T, s *Storage) {
 					PriceB: 15,
 					PriceC: 21,
 				},
-				Exchanges: []common.AssetExchange{
+				AssetExchanges: []common.AssetExchange{
 					{
 						ExchangeID:        binance,
 						Symbol:            "KNC",
@@ -260,7 +260,7 @@ func TestStorage_SettingChangeCreate(t *testing.T) {
 							PWI:                   nil,
 							NormalUpdatePerPeriod: 0.5,
 							MaxImbalanceRatio:     0.6,
-							Exchanges: []common.AssetExchange{
+							AssetExchanges: []common.AssetExchange{
 								{
 									ID:                0,
 									AssetID:           0,
@@ -345,7 +345,7 @@ func TestStorage_SettingChangeCreate(t *testing.T) {
 							Rebalance:    true,
 							IsQuote:      false,
 							PWI:          nil,
-							Exchanges: []common.AssetExchange{
+							AssetExchanges: []common.AssetExchange{
 								{
 									ID:                0,
 									AssetID:           0,
@@ -393,7 +393,7 @@ func TestStorage_SettingChangeCreate(t *testing.T) {
 							Rebalance:    true,
 							IsQuote:      false,
 							PWI:          nil,
-							Exchanges: []common.AssetExchange{
+							AssetExchanges: []common.AssetExchange{
 								{
 									ExchangeID:        binance,
 									Symbol:            "DAI",
@@ -439,7 +439,7 @@ func TestStorage_SettingChangeCreate(t *testing.T) {
 							PWI:                   nil,
 							NormalUpdatePerPeriod: 0.5,
 							MaxImbalanceRatio:     0.6,
-							Exchanges: []common.AssetExchange{
+							AssetExchanges: []common.AssetExchange{
 								{
 									ExchangeID:        binance,
 									Symbol:            "DAI",
@@ -491,7 +491,7 @@ func TestStorage_SettingChangeCreate(t *testing.T) {
 								RebalanceThreshold: 0,
 								TransferThreshold:  0,
 							},
-							Exchanges: []common.AssetExchange{
+							AssetExchanges: []common.AssetExchange{
 								{
 									ExchangeID:        binance,
 									Symbol:            "DAI",

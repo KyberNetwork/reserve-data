@@ -79,9 +79,9 @@ func (h *Huobi) RealDepositAddress(tokenID string, asset commonv3.Asset) (ethere
 // deposited to an Intermediator address instead.
 func (h *Huobi) Address(asset commonv3.Asset) (ethereum.Address, bool) {
 	var exhSymbol string
-	for _, exchange := range asset.Exchanges {
-		if exchange.ExchangeID == uint64(common.Huobi) {
-			exhSymbol = exchange.Symbol
+	for _, assetExchange := range asset.AssetExchanges {
+		if assetExchange.ExchangeID == uint64(common.Huobi) {
+			exhSymbol = assetExchange.Symbol
 		}
 	}
 	result := h.blockchain.GetIntermediatorAddr()
@@ -291,8 +291,8 @@ func (h *Huobi) FetchEBalanceData(timepoint uint64) (common.EBalanceEntry, error
 			for _, b := range balances {
 				tokenSymbol := strings.ToUpper(b.Currency)
 				for _, asset := range assets {
-					for _, exchg := range asset.Exchanges {
-						if exchg.ExchangeID == uint64(common.Huobi) && exchg.Symbol == tokenSymbol {
+					for _, assetExchange := range asset.AssetExchanges {
+						if assetExchange.ExchangeID == uint64(common.Huobi) && assetExchange.Symbol == tokenSymbol {
 							balance, _ := strconv.ParseFloat(b.Balance, 64)
 							if b.Type == "trade" {
 								result.AvailableBalance[common.AssetID(asset.ID)] = balance
@@ -504,9 +504,9 @@ func (h *Huobi) process1stTx(id common.ActivityID, tx1Hash string, assetID uint6
 		}
 
 		var exhSymbol string
-		for _, exchg := range asset.Exchanges {
-			if exchg.ExchangeID == uint64(common.Huobi) {
-				exhSymbol = exchg.Symbol
+		for _, assetExchange := range asset.AssetExchanges {
+			if assetExchange.ExchangeID == uint64(common.Huobi) {
+				exhSymbol = assetExchange.Symbol
 			}
 		}
 

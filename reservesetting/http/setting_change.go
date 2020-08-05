@@ -59,7 +59,7 @@ func (s *Server) fillLiveInfoSettingChange(settingChange *common.SettingChange) 
 		switch o.Type {
 		case common.ChangeTypeCreateAsset:
 			asset := o.Data.(*common.CreateAssetEntry)
-			for _, assetExchange := range asset.Exchanges {
+			for _, assetExchange := range asset.AssetExchanges {
 				err = s.fillLiveInfoAssetExchange(assets, assetExchange.ExchangeID, assetExchange.TradingPairs, assetExchange.Symbol, assetExchange.AssetID)
 				if err != nil {
 					return fmt.Errorf("position %d, error: %v", i, err)
@@ -336,9 +336,9 @@ func (s *Server) checkCreateTradingPairParams(createEntry common.CreateTradingPa
 }
 
 func getAssetExchangeByExchangeID(asset common.Asset, exchangeID uint64) (common.AssetExchange, bool) {
-	for _, exchange := range asset.Exchanges {
-		if exchange.ExchangeID == exchangeID {
-			return exchange,
+	for _, assetExchange := range asset.AssetExchanges {
+		if assetExchange.ExchangeID == exchangeID {
+			return assetExchange,
 				true
 		}
 	}
@@ -372,9 +372,9 @@ func (s *Server) checkUpdateAssetParams(updateEntry common.UpdateAssetEntry) err
 	}
 
 	if updateEntry.Transferable != nil && *updateEntry.Transferable {
-		for _, exchange := range asset.Exchanges {
-			if common.IsZeroAddress(exchange.DepositAddress) {
-				return errors.Errorf("%v at asset id: %v and asset_exchange: %v", common.ErrDepositAddressMissing, updateEntry.AssetID, exchange.ID)
+		for _, assetExchange := range asset.AssetExchanges {
+			if common.IsZeroAddress(assetExchange.DepositAddress) {
+				return errors.Errorf("%v at asset id: %v and asset_exchange: %v", common.ErrDepositAddressMissing, updateEntry.AssetID, assetExchange.ID)
 			}
 		}
 	}
@@ -413,8 +413,8 @@ func (s *Server) checkCreateAssetExchangeParams(createEntry common.CreateAssetEx
 		return errors.Wrap(err, "exchange not found")
 	}
 
-	for _, exchange := range asset.Exchanges {
-		if exchange.ExchangeID == createEntry.ExchangeID {
+	for _, assetExchange := range asset.AssetExchanges {
+		if assetExchange.ExchangeID == createEntry.ExchangeID {
 			return common.ErrAssetExchangeAlreadyExist
 		}
 	}
@@ -457,7 +457,7 @@ func (s *Server) checkCreateAssetExchangeParams(createEntry common.CreateAssetEx
 func getAssetExchange(assets []common.Asset, assetID, exchangeID uint64) (common.AssetExchange, error) {
 	for _, asset := range assets {
 		if asset.ID == assetID {
-			for _, assetExchange := range asset.Exchanges {
+			for _, assetExchange := range asset.AssetExchanges {
 				if assetExchange.ExchangeID == exchangeID {
 					return assetExchange, nil
 				}
@@ -542,12 +542,12 @@ func (s *Server) checkCreateAssetParams(createEntry common.CreateAssetEntry) err
 		return err
 	}
 
-	for _, exchange := range createEntry.Exchanges {
-		if common.IsZeroAddress(exchange.DepositAddress) && createEntry.Transferable {
-			return errors.Wrapf(common.ErrDepositAddressMissing, "exchange %v", exchange.Symbol)
+	for _, assetExchange := range createEntry.AssetExchanges {
+		if common.IsZeroAddress(assetExchange.DepositAddress) && createEntry.Transferable {
+			return errors.Wrapf(common.ErrDepositAddressMissing, "exchange %v", assetExchange.Symbol)
 		}
 
-		for _, tradingPair := range exchange.TradingPairs {
+		for _, tradingPair := range assetExchange.TradingPairs {
 
 			if tradingPair.Base != 0 && tradingPair.Quote != 0 {
 				return errors.Wrapf(common.ErrBadTradingPairConfiguration, "base id:%v quote id:%v", tradingPair.Base, tradingPair.Quote)

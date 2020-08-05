@@ -791,16 +791,16 @@ func (s *Storage) getAssets(transferable *bool) ([]common.Asset, error) {
 
 		for _, assetExchangeResult := range allAssetExchanges {
 			if assetExchangeResult.AssetID == assetDBResult.ID {
-				exchange := assetExchangeResult.ToCommon()
+				assetExchange := assetExchangeResult.ToCommon()
 				for _, tradingBy := range allTradingBy {
 					if assetDBResult.ID == tradingBy.AssetID {
 						if tradingPair, ok := tradingPairMap[tradingBy.TradingPairID]; ok &&
-							tradingPair.ExchangeID == exchange.ExchangeID {
-							exchange.TradingPairs = append(exchange.TradingPairs, tradingPair.ToCommon())
+							tradingPair.ExchangeID == assetExchange.ExchangeID {
+							assetExchange.TradingPairs = append(assetExchange.TradingPairs, tradingPair.ToCommon())
 						}
 					}
 				}
-				result.Exchanges = append(result.Exchanges, exchange)
+				result.AssetExchanges = append(result.AssetExchanges, assetExchange)
 			}
 		}
 		feeds := make(common.FeedWeight)
@@ -823,7 +823,7 @@ func (s *Storage) GetAsset(id uint64) (common.Asset, error) {
 		assetDBResult        assetDB
 		assetExchangeResults []assetExchangeDB
 		tradingPairResults   []tradingPairDB
-		exchanges            []common.AssetExchange
+		assetExchanges       []common.AssetExchange
 		feedWeightResult     []feedWeightDB
 	)
 
@@ -840,7 +840,7 @@ func (s *Storage) GetAsset(id uint64) (common.Asset, error) {
 	}
 
 	for _, ae := range assetExchangeResults {
-		exchanges = append(exchanges, ae.ToCommon())
+		assetExchanges = append(assetExchanges, ae.ToCommon())
 	}
 
 	if err := tx.Stmtx(s.stmts.getTradingPair).Select(&tradingPairResults, id); err != nil {
@@ -848,9 +848,9 @@ func (s *Storage) GetAsset(id uint64) (common.Asset, error) {
 	}
 
 	for _, pair := range tradingPairResults {
-		for i := range exchanges {
-			if exchanges[i].ExchangeID == pair.ExchangeID {
-				exchanges[i].TradingPairs = append(exchanges[i].TradingPairs, pair.ToCommon())
+		for i := range assetExchanges {
+			if assetExchanges[i].ExchangeID == pair.ExchangeID {
+				assetExchanges[i].TradingPairs = append(assetExchanges[i].TradingPairs, pair.ToCommon())
 			}
 		}
 	}
@@ -874,7 +874,7 @@ func (s *Storage) GetAsset(id uint64) (common.Asset, error) {
 		if err != nil {
 			return common.Asset{}, fmt.Errorf("invalid database record for asset id=%d err=%s", assetDBResult.ID, err.Error())
 		}
-		result.Exchanges = exchanges
+		result.AssetExchanges = assetExchanges
 		result.FeedWeight = &feeds
 		return result, nil
 	default:

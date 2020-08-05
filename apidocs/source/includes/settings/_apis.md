@@ -45,7 +45,7 @@ curl -X GET "https://gateway.local/v3/asset/1"
             "price_b": 0.1235,
             "price_c": 0.1236
         },
-        "exchanges": [
+        "asset_exchanges": [
             {
                 "id": 2,
                 "asset_id": 1,
@@ -191,7 +191,7 @@ curl -X GET "https://gateway.local/v3/asset"
                 "price_b": 0.1235,
                 "price_c": 0.1236
             },
-            "exchanges": [
+            "asset_exchanges": [
                 {
                     "id": 2,
                     "asset_id": 1,
@@ -250,7 +250,7 @@ curl -X GET "https://gateway.local/v3/asset"
                 "price_b": 0.1235,
                 "price_c": 0.1236
             },
-            "exchanges": [
+            "asset_exchanges": [
                 {
                     "id": 3,
                     "asset_id": 2,

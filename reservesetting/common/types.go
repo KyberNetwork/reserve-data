@@ -142,7 +142,7 @@ type Asset struct {
 	IsQuote               bool                `json:"is_quote"`
 	PWI                   *AssetPWI           `json:"pwi,omitempty"`
 	RebalanceQuadratic    *RebalanceQuadratic `json:"rebalance_quadratic,omitempty"`
-	Exchanges             []AssetExchange     `json:"exchanges,omitempty" binding:"dive"`
+	AssetExchanges        []AssetExchange     `json:"asset_exchanges,omitempty" binding:"dive"`
 	Target                *AssetTarget        `json:"target,omitempty"`
 	StableParam           StableParam         `json:"stable_param"`
 	Created               time.Time           `json:"created"`
@@ -195,7 +195,7 @@ type CreateAssetEntry struct {
 	IsEnabled             bool                `json:"is_enabled"`
 	PWI                   *AssetPWI           `json:"pwi"`
 	RebalanceQuadratic    *RebalanceQuadratic `json:"rebalance_quadratic"`
-	Exchanges             []AssetExchange     `json:"exchanges" binding:"dive"`
+	AssetExchanges        []AssetExchange     `json:"asset_exchanges" binding:"dive"`
 	Target                *AssetTarget        `json:"target"`
 	StableParam           *StableParam        `json:"stable_param"`
 	FeedWeight            *FeedWeight         `json:"feed_weight,omitempty"`

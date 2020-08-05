@@ -51,9 +51,9 @@ func (bn *Binance) MarshalText() (text []byte, err error) {
 // Address returns the deposit address of given token.
 func (bn *Binance) Address(asset commonv3.Asset) (ethereum.Address, bool) {
 	var symbol string
-	for _, exchange := range asset.Exchanges {
-		if exchange.ExchangeID == uint64(bn.id) {
-			symbol = exchange.Symbol
+	for _, assetExchange := range asset.AssetExchanges {
+		if assetExchange.ExchangeID == uint64(bn.id) {
+			symbol = assetExchange.Symbol
 		}
 	}
 	liveAddress, err := bn.interf.GetDepositAddress(symbol)
@@ -276,8 +276,8 @@ func (bn *Binance) FetchEBalanceData(timepoint uint64) (common.EBalanceEntry, er
 			for _, b := range respData.Balances {
 				tokenSymbol := b.Asset
 				for _, asset := range assets {
-					for _, exchg := range asset.Exchanges {
-						if exchg.ExchangeID == uint64(bn.id) && exchg.Symbol == tokenSymbol {
+					for _, assetExchange := range asset.AssetExchanges {
+						if assetExchange.ExchangeID == uint64(bn.id) && assetExchange.Symbol == tokenSymbol {
 							avai, _ := strconv.ParseFloat(b.Free, 64)
 							locked, _ := strconv.ParseFloat(b.Locked, 64)
 							result.AvailableBalance[common.AssetID(asset.ID)] = avai

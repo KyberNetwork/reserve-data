@@ -86,25 +86,25 @@ func updateDepositAddress(assetStorage storage.Interface, be exchange.BinanceInt
 		return
 	}
 	for _, asset := range assets {
-		for _, ae := range asset.Exchanges {
-			switch ae.ExchangeID {
+		for _, assetExchange := range asset.AssetExchanges {
+			switch assetExchange.ExchangeID {
 			case uint64(common.Binance), uint64(common.Binance2):
 				l.Infow("updating deposit address for asset", "asset_id", asset.ID,
-					"exchange", common.Binance.String(), "symbol", ae.Symbol)
+					"exchange", common.Binance.String(), "symbol", assetExchange.Symbol)
 				if be == nil {
 					l.Warnw("abort updating deposit address due binance exchange disabled")
 					continue
 				}
-				depositAddress, err := be.GetDepositAddress(ae.Symbol)
+				depositAddress, err := be.GetDepositAddress(assetExchange.Symbol)
 				if err != nil {
 					l.Warnw("failed to get deposit address for asset",
 						"asset_id", asset.ID,
-						"exchange", common.Binance.String(), "symbol", ae.Symbol, "err", err.Error())
+						"exchange", common.Binance.String(), "symbol", assetExchange.Symbol, "err", err.Error())
 					continue
 				}
 				err = assetStorage.UpdateDepositAddress(
 					asset.ID,
-					ae.ExchangeID,
+					assetExchange.ExchangeID,
 					ethereum.HexToAddress(depositAddress.Address))
 				if err != nil {
 					l.Warnw("assetStorage.UpdateDepositAddress", "err", err.Error())
@@ -113,17 +113,17 @@ func updateDepositAddress(assetStorage storage.Interface, be exchange.BinanceInt
 			case uint64(common.Huobi):
 				l.Infow("updating deposit address for asset", "asset_id", asset.ID,
 					"exchange", common.Huobi.String(),
-					"symbol", ae.Symbol)
+					"symbol", assetExchange.Symbol)
 				if he == nil {
 					l.Warnw("abort updating deposit address due huobi exchange disabled")
 					continue
 				}
-				depositAddress, err := he.GetDepositAddress(ae.Symbol)
+				depositAddress, err := he.GetDepositAddress(assetExchange.Symbol)
 				if err != nil {
 					l.Warnw("failed to get deposit address for asset",
 						"asset_id", asset.ID,
 						"exchange", common.Huobi.String(),
-						"symbol", ae.Symbol, "err", err)
+						"symbol", assetExchange.Symbol, "err", err)
 					continue
 				}
 				if len(depositAddress.Data) != 0 {

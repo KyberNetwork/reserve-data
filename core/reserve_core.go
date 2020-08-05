@@ -610,9 +610,9 @@ func sanityCheckTrading(pair commonv3.TradingPairSymbols, rate, amount float64) 
 
 func sanityCheckAmount(exchange common.Exchange, asset commonv3.Asset, amount *big.Int) error {
 	var feeWithdrawing float64
-	for _, exchg := range asset.Exchanges {
-		if common.ExchangeID(exchg.ExchangeID).String() == exchange.ID().String() {
-			feeWithdrawing = exchg.WithdrawFee
+	for _, assetExchange := range asset.AssetExchanges {
+		if common.ExchangeID(assetExchange.ExchangeID).String() == exchange.ID().String() {
+			feeWithdrawing = assetExchange.WithdrawFee
 		}
 	}
 

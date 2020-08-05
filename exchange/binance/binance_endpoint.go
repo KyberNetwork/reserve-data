@@ -338,9 +338,9 @@ func (ep *Endpoint) OrderStatus(symbol string, id uint64) (exchange.Binaorder, e
 // Withdraw token from binance
 func (ep *Endpoint) Withdraw(asset commonv3.Asset, amount *big.Int, address ethereum.Address) (string, error) {
 	var symbol string
-	for _, exchg := range asset.Exchanges {
-		if exchg.ExchangeID == uint64(ep.exchangeID) {
-			symbol = exchg.Symbol
+	for _, assetExchange := range asset.AssetExchanges {
+		if assetExchange.ExchangeID == uint64(ep.exchangeID) {
+			symbol = assetExchange.Symbol
 		}
 	}
 	result := exchange.Binawithdraw{}

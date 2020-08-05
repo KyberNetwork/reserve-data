@@ -40,7 +40,7 @@ curl -X POST "https://gateway.local/v3/setting-change-main" \
                 "price_a": 0.1235,
                 "price_a": 0.1236
             },
-            "exchanges": [
+            "asset_exchanges": [
                 {
                     "id": 5,
                     "asset_id": 3,
