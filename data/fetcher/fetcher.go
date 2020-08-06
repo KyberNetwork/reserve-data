@@ -508,8 +508,10 @@ func (f *Fetcher) updateActivitywithExchangeStatus(activity *common.ActivityReco
 	f.l.Infof("In PersistSnapshot: exchange activity status for %+v: %+v", activity.ID, activityStatus)
 	if activity.IsExchangePending() {
 		activity.ExchangeStatus = activityStatus.ExchangeStatus
+		activity.Result[common.WithdrawFee] = activityStatus.Fee
 	} else if activityStatus.ExchangeStatus == common.ExchangeStatusFailed {
 		activity.ExchangeStatus = activityStatus.ExchangeStatus
+		activity.Result[common.WithdrawFee] = activityStatus.Fee
 	}
 
 	if resultTx, ok := activity.Result[common.ResultTx].(string); ok && resultTx == "" {
@@ -520,8 +522,10 @@ func (f *Fetcher) updateActivitywithExchangeStatus(activity *common.ActivityReco
 		snapshot.Valid = false
 		snapshot.Error = activityStatus.Error.Error()
 		activity.Result[common.ResultStatusError] = activityStatus.Error.Error()
+		activity.Result[common.WithdrawFee] = activityStatus.Fee
 	} else {
 		activity.Result[common.ResultStatusError] = ""
+		activity.Result[common.WithdrawFee] = activityStatus.Fee
 	}
 }
 
