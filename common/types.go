@@ -308,17 +308,19 @@ type ActivityStatus struct {
 	Tx             string
 	BlockNumber    uint64
 	MiningStatus   string
+	Fee            float64
 	Error          error
 }
 
 // NewActivityStatus creates a new ActivityStatus instance.
-func NewActivityStatus(exchangeStatus, tx string, blockNumber uint64, miningStatus string, err error) ActivityStatus {
+func NewActivityStatus(exchangeStatus, tx string, blockNumber uint64, miningStatus string, fee float64, err error) ActivityStatus {
 	return ActivityStatus{
 		ExchangeStatus: exchangeStatus,
 		Tx:             tx,
 		BlockNumber:    blockNumber,
 		MiningStatus:   miningStatus,
 		Error:          err,
+		Fee:            fee,
 	}
 }
 
