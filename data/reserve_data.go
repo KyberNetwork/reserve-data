@@ -375,7 +375,7 @@ func (rd ReserveData) ControlAuthDataSize() error {
 				case nPrunedRecords != nRecord:
 					rd.l.Warnw("DataPruner: Number of Exported Data is different from number of pruned data", "exportRecord", nRecord, "prunedRecord", nPrunedRecords)
 				default:
-					rd.l.Warnw("DataPruner: exported and pruned expired records from AuthData", "record", nRecord)
+					rd.l.Infow("DataPruner: exported and pruned expired records from AuthData", "record", nRecord)
 				}
 			}
 		}

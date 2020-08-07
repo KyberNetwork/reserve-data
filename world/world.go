@@ -65,22 +65,6 @@ func (tw *TheWorld) getPublic(url string, dst interface{}) error {
 	return nil
 }
 
-func (tw *TheWorld) getBinanceInfo(ep string) common.BinanceData {
-	var (
-		url    = ep
-		result = common.BinanceData{}
-	)
-
-	err := tw.getPublic(url, &result)
-	if err != nil {
-		result.Error = err.Error()
-		result.Valid = false
-	} else {
-		result.Valid = true
-	}
-	return result
-}
-
 func (tw *TheWorld) getOneForgeGoldUSDInfo() common.OneForgeGoldData {
 
 	url := tw.endpoint.OneForgeGoldUSDDataEndpoint()
@@ -173,4 +157,16 @@ func (tw *TheWorld) GetGoldInfo() (common.GoldData, error) {
 		Kraken:      tw.getKrakenGoldInfo(),
 		Gemini:      tw.getGeminiGoldInfo(),
 	}, nil
+}
+
+func (tw *TheWorld) getFeedInfo(url string) common.FeedProviderResponse {
+	var result common.FeedProviderResponse
+	err := tw.getPublic(url, &result)
+	if err != nil {
+		result.Error = err.Error()
+		result.Valid = false
+	} else {
+		result.Valid = true
+	}
+	return result
 }

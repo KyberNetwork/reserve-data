@@ -638,6 +638,7 @@ func (f *Fetcher) FetchAuthDataFromExchange(
 	var statuses map[common.ActivityID]common.ActivityStatus
 	var err error
 	var tokenAddress map[string]ethereum.Address
+	startCheck := time.Now()
 	for {
 		preStatuses := f.FetchStatusFromExchange(exchange, pendings, timepoint)
 		balances, err = exchange.FetchEBalanceData(timepoint)
@@ -673,6 +674,11 @@ func (f *Fetcher) FetchAuthDataFromExchange(
 		if unchanged(preStatuses, statuses) {
 			break
 		}
+	}
+	dur := time.Since(startCheck)
+	checkThreshold := 30.0
+	if dur.Seconds() > checkThreshold {
+		f.l.Errorw("AuthData - fetch status from blockchain", "duration", dur.String())
 	}
 	if err == nil {
 		allBalances.Store(exchange.ID(), balances)
@@ -738,7 +744,11 @@ func (f *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []common.A
 					continue
 				}
 				status, err = exchange.DepositStatus(id, txHash, currency, amount, timepoint)
-				f.l.Infof("Got deposit status for %v: (%s), error(%s)", activity, status, common.ErrorToString(err))
+				if err == nil {
+					f.l.Infof("Got deposit status for %v: (%s), error(%s)", activity, status, common.ErrorToString(err))
+				} else {
+					f.l.Errorf("Got deposit status for %v: (%s), error(%s)", activity, status, common.ErrorToString(err))
+				}
 			case common.ActionWithdraw:
 				amountStr, ok := activity.Params[common.ParamAmount].(string)
 				if !ok {
@@ -769,6 +779,7 @@ func (f *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []common.A
 				} else {
 					f.l.Warnf("Got withdraw status for %v: (%s), error(%s)", activity, status, common.ErrorToString(err))
 				}
+
 			default:
 				continue
 			}

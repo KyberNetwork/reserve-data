@@ -102,41 +102,38 @@
     "gemini_data": {
       "url": "https://api.gemini.com/v1/pubticker/ethusd"
     },
-    "coinbase_btc": {
-      "url": "https://api.pro.coinbase.com/products/eth-btc/ticker"
+    "coinbase_eth_btc_3": {
+      "url": "http://localhost:8003/feed/CoinbaseETHBTC3"
     },
-    "gemini_btc": {
-      "url": "https://api.gemini.com/v1/pubticker/ethbtc"
+    "binance_eth_btc_3": {
+      "url": "http://localhost:8003/feed/BinanceETHBTC3"
     },
-    "coinbase_usdc": {
-      "url": "https://api.pro.coinbase.com/products/eth-usdc/ticker"
+    "coinbase_eth_usdc_10000": {
+      "url": "http://localhost:8003/feed/CoinbaseETHUSDC10000"
     },
-    "binance_usdc": {
-      "url": "https://api.binance.com/api/v3/ticker/bookTicker?symbol=ETHUSDC"
+    "binance_eth_usdc_10000": {
+      "url": "http://localhost:8003/feed/BinanceETHUSDC10000"
     },
-    "coinbase_usd": {
-      "url": "https://api.pro.coinbase.com/products/eth-usd/ticker"
+    "coinbase_eth_usd_10000": {
+      "url": "http://localhost:8003/feed/CoinbaseETHUSD10000"
     },
-    "coinbase_dai": {
-      "url": "https://api.pro.coinbase.com/products/eth-dai/ticker"
+    "coinbase_eth_usd_dai_5000": {
+      "url": "http://localhost:8003/feed/CoinbaseETHUSDDAI5000"
     },
-    "hit_dai": {
-      "url": "https://api.hitbtc.com/api/2/public/ticker/ETHDAI"
+    "bitfinex_eth_usdt_10000": {
+      "url": "http://localhost:8003/feed/BitfinexETHUSDT10000"
     },
-    "bit_finex_usdt": {
-      "url": "https://api-pub.bitfinex.com/v2/ticker/tETHUSD"
+    "binance_eth_usdt_10000": {
+      "url": "http://localhost:8003/feed/BinanceETHUSDT10000"
     },
-    "binance_usdt": {
-      "url": "https://api.binance.com/api/v3/ticker/bookTicker?symbol=ETHUSDT"
-    },
-    "binance_pax": {
-      "url": "https://api.binance.com/api/v3/ticker/bookTicker?symbol=ETHPAX"
-    },
-    "binance_tusd": {
-      "url": "https://api.binance.com/api/v3/ticker/bookTicker?symbol=ETHTUSD"
+    "binance_eth_pax_5000": {
+      "url": "http://localhost:8003/feed/BinanceETHPAX5000"
     },
     "binance_busd_10000": {
       "url": "http://localhost:8003/feed/BinanceETHBUSD10000"
+    },
+    "gemini_eth_usd_10000": {
+      "url": "http://localhost:8003/feed/GeminiETHUSD10000"
     }
   }
 }

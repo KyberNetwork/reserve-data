@@ -759,3 +759,11 @@ type RunnerConfig struct {
 	BlockFetchingInterval      time.Duration
 	GlobalDataFetchingInterval time.Duration
 }
+
+// FeedProviderResponse ...
+type FeedProviderResponse struct {
+	Valid bool
+	Error string
+	Bid   float64 `json:"bid,string"`
+	Ask   float64 `json:"ask,string"`
+}

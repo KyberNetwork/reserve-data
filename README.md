@@ -3150,6 +3150,47 @@ curl -X "GET" "http://localhost:8000/cap-by-address/0x3baE9b9e1dca462Ad8827f62F4
 }
 ```
 
+### Transaction Processing
+
+There are 2 kind of actions that create transactions, **SetRate** and **Withdraw**
+
+#### SetRate
+
+SetRate transaction is created with follow step:
+
+1. Collect SetRate parameter, include tokens, buy/sell rates and build approxiate data as input for pricing contract.
+2. Get a list of pending SetRate transaction.
+
+    a. If there any, try to override transaction with new gas price, the new gas price is calculated 
+    with expression: `newGasPrice = init_price * (high_bound / init_price)^(step / 4)`
+
+    - *initGasPrice* = min gas price of pending SetRate transactions
+    - *step* = count(pending SetRate transaction)
+    - *high_bound* = upper limit of gas price, which is keep sync with *maxGasPrice* from [kyber network contract](https://etherscan.io/address/0x818E6FECD516Ecc3849DAf6845e3EC868087B755#readContract)
+    - when step > 4, *newGasPrice* will be set to `high_bound + (step - 4)`
+
+    b. If no, use gas price from [ethgasstation.info](https://ethgasstation.info/)(fast mode), node gas price also use as fallback for gasstation.
+3. Build and broadcast transaction.
+4. Create activity record for keep track transaction status.
+
+#### Withdraw
+
+1. Check if there's a pending withdraw transaction, because we allow 1 withdraw transaction at a time only,
+this will skip process if found a pending withdraw action.
+2. Do sanity check if this withdraw is valid.
+3. Build and broadcast transaction use gas price from gasstation, withdraw transaction does **not** support override
+like SetRate.
+4. Create activity record for keep track withdraw action(status=submitted)
+
+### Monitor transaction status
+
+A separate routine will monitor the list of pending action(SetRate and Withdraw).
+
+- Action is marked as mined if blockchain report status mined.
+- Action is marked as failed if blockchain report status failed.
+- Action also marked as failed if we can not verify it's status on blockchain for 15 mins
+
+
 ## Authentication
 All APIs that are marked with (signing required) must follow authentication mechanism below:
 
