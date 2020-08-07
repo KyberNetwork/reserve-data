@@ -790,17 +790,7 @@ func (f *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []common.A
 				}
 			}
 		} else {
-			timepoint, err1 := strconv.ParseUint(string(activity.Timestamp), 10, 64)
-			if err1 != nil {
-				f.l.Warnw("Activity has invalid timestamp", "activity", activity,
-					"err", err1, "timestamp", activity.Timestamp)
-			} else if activity.Destination == string(exchange.ID()) &&
-				activity.ExchangeStatus == common.ExchangeStatusDone &&
-				common.GetTimepoint()-timepoint > maxActivityLifeTime*uint64(time.Hour)/uint64(time.Millisecond) {
-				// the activity is still pending but its exchange status is done and it is stuck there for more than
-				// maxActivityLifeTime. This activity is considered failed.
-				result[activity.ID] = common.NewActivityStatus(common.ExchangeStatusFailed, "", 0, activity.MiningStatus, 0, nil)
-			}
+			f.l.Warn("The activity is pending but the exchange status is done, it should not come here", "activity status", activity.IsExchangePending(), "exchange status", activity.ExchangeStatus)
 		}
 	}
 	return result
