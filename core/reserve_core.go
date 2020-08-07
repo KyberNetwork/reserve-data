@@ -336,6 +336,7 @@ func (rc ReserveCore) Withdraw(
 			}, map[string]interface{}{
 				common.ResultError: common.ErrorToString(err),
 				common.ResultID:    id,
+				common.WithdrawFee: 0,
 				// this field will be updated with real tx when data fetcher can fetch it
 				// from exchanges
 				common.ResultTx: "",

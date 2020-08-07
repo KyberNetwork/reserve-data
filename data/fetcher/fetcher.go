@@ -398,6 +398,7 @@ func (f *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord) (m
 					txStr,
 					blockNum,
 					common.MiningStatusMined,
+					0, // default withdraw fee
 					err,
 				)
 			case common.MiningStatusFailed:
@@ -406,6 +407,7 @@ func (f *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord) (m
 					txStr,
 					blockNum,
 					common.MiningStatusFailed,
+					0, // default withdraw fee from exchange
 					err,
 				)
 			case common.MiningStatusLost:
@@ -431,6 +433,7 @@ func (f *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord) (m
 						txStr,
 						blockNum,
 						common.MiningStatusFailed,
+						0, // default withdraw fee from exchange
 						err,
 					)
 				}
@@ -505,8 +508,10 @@ func (f *Fetcher) updateActivitywithExchangeStatus(activity *common.ActivityReco
 	f.l.Infof("In PersistSnapshot: exchange activity status for %+v: %+v", activity.ID, activityStatus)
 	if activity.IsExchangePending() {
 		activity.ExchangeStatus = activityStatus.ExchangeStatus
+		activity.Result[common.WithdrawFee] = activityStatus.Fee
 	} else if activityStatus.ExchangeStatus == common.ExchangeStatusFailed {
 		activity.ExchangeStatus = activityStatus.ExchangeStatus
+		activity.Result[common.WithdrawFee] = activityStatus.Fee
 	}
 
 	if resultTx, ok := activity.Result[common.ResultTx].(string); ok && resultTx == "" {
@@ -517,8 +522,10 @@ func (f *Fetcher) updateActivitywithExchangeStatus(activity *common.ActivityReco
 		snapshot.Valid = false
 		snapshot.Error = activityStatus.Error.Error()
 		activity.Result[common.ResultStatusError] = activityStatus.Error.Error()
+		activity.Result[common.WithdrawFee] = activityStatus.Fee
 	} else {
 		activity.Result[common.ResultStatusError] = ""
+		activity.Result[common.WithdrawFee] = activityStatus.Fee
 	}
 }
 
@@ -673,14 +680,17 @@ func (f *Fetcher) FetchAuthDataFromExchange(
 	}
 }
 
+// FetchStatusFromExchange return activity status from exchange
 func (f *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []common.ActivityRecord, timepoint uint64) map[common.ActivityID]common.ActivityStatus {
 	result := map[common.ActivityID]common.ActivityStatus{}
 	for _, activity := range pendings {
 		if activity.IsExchangePending() && activity.Destination == string(exchange.ID()) {
-			var err error
-			var status string
-			var tx string
-			var blockNum uint64
+			var (
+				err        error
+				status, tx string
+				blockNum   uint64
+				fee        float64
+			)
 
 			id := activity.ID
 			//These type conversion errors can be ignore since if happens, it will be reflected in activity.error
@@ -756,7 +766,7 @@ func (f *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []common.A
 					f.l.Warnw("activity Result tx can't be converted to type string", common.ResultTx, fmt.Sprintf("%+v", txID))
 					continue
 				}
-				status, tx, err = exchange.WithdrawStatus(id.EID, currency, amount, timepoint)
+				status, tx, fee, err = exchange.WithdrawStatus(id.EID, currency, amount, timepoint)
 				if err == nil {
 					f.l.Infof("Got withdraw status for %v: (%s), error(%s)", activity, status, common.ErrorToString(err))
 				} else {
@@ -775,23 +785,13 @@ func (f *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []common.A
 					"err", err1, "timestamp", activity.Timestamp)
 			} else {
 				if common.GetTimepoint()-timepoint > maxActivityLifeTime*uint64(time.Hour)/uint64(time.Millisecond) {
-					result[id] = common.NewActivityStatus(common.ExchangeStatusFailed, tx, blockNum, activity.MiningStatus, err)
+					result[id] = common.NewActivityStatus(common.ExchangeStatusFailed, tx, blockNum, activity.MiningStatus, fee, err)
 				} else {
-					result[id] = common.NewActivityStatus(status, tx, blockNum, activity.MiningStatus, err)
+					result[id] = common.NewActivityStatus(status, tx, blockNum, activity.MiningStatus, fee, err)
 				}
 			}
 		} else {
-			timepoint, err1 := strconv.ParseUint(string(activity.Timestamp), 10, 64)
-			if err1 != nil {
-				f.l.Warnw("Activity has invalid timestamp", "activity", activity,
-					"err", err1, "timestamp", activity.Timestamp)
-			} else if activity.Destination == string(exchange.ID()) &&
-				activity.ExchangeStatus == common.ExchangeStatusDone &&
-				common.GetTimepoint()-timepoint > maxActivityLifeTime*uint64(time.Hour)/uint64(time.Millisecond) {
-				// the activity is still pending but its exchange status is done and it is stuck there for more than
-				// maxActivityLifeTime. This activity is considered failed.
-				result[activity.ID] = common.NewActivityStatus(common.ExchangeStatusFailed, "", 0, activity.MiningStatus, nil)
-			}
+			f.l.Warnw("Activity has strange status", "is exchange pending", activity.IsExchangePending(), "exchange status", activity.ExchangeStatus)
 		}
 	}
 	return result

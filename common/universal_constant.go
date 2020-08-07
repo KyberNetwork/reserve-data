@@ -29,6 +29,7 @@ const (
 	ResultStatusError = "status_error"
 	ResultBlockNumber = "blockNumber"
 	ResultCanceled    = "canceled"
+	WithdrawFee       = "withdraw_fee" // fee when withdraw from exchange
 	ParamBase         = "base"
 	ParamExchange     = "exchange"
 	ParamToken        = "token"
