@@ -770,15 +770,15 @@ func (h *Huobi) DepositStatus(id common.ActivityID, tx1Hash, currency string, se
 
 //WithdrawStatus return withdraw status from huobi
 func (h *Huobi) WithdrawStatus(
-	id, currency string, amount float64, timepoint uint64) (string, string, error) {
+	id, currency string, amount float64, timepoint uint64) (string, string, float64, error) {
 	withdrawID, _ := strconv.ParseUint(id, 10, 64)
 	tokens, err := h.setting.GetAllTokens()
 	if err != nil {
-		return "", "", pe.Wrap(err, "huobi Can't get list of token from setting")
+		return "", "", 0, pe.Wrap(err, "huobi Can't get list of token from setting")
 	}
 	withdraws, err := h.interf.WithdrawHistory(tokens)
 	if err != nil {
-		return "", "", pe.Wrap(err, "can't get withdraw history from huobi")
+		return "", "", 0, pe.Wrap(err, "can't get withdraw history from huobi")
 	}
 	h.l.Infof("Huobi Withdrawal id: %d", withdrawID)
 	for _, withdraw := range withdraws.Data {
@@ -790,13 +790,13 @@ func (h *Huobi) WithdrawStatus(
 			if withdraw.TxHash[0:2] != "0x" {
 				withdraw.TxHash = "0x" + withdraw.TxHash
 			}
-			return common.ExchangeStatusDone, withdraw.TxHash, nil
+			return common.ExchangeStatusDone, withdraw.TxHash, withdraw.Fee, nil
 		case "reject", "wallet-reject", "confirm-error":
-			return common.ExchangeStatusFailed, "", nil
+			return common.ExchangeStatusFailed, "", withdraw.Fee, nil
 		}
-		return "", withdraw.TxHash, nil
+		return "", withdraw.TxHash, withdraw.Fee, nil
 	}
-	return "", "", errors.New("huobi Withdrawal doesn't exist. This shouldn't happen unless tx returned from withdrawal from huobi and activity ID are not consistently designed")
+	return "", "", 0, errors.New("huobi Withdrawal doesn't exist. This shouldn't happen unless tx returned from withdrawal from huobi and activity ID are not consistently designed")
 }
 
 func (h *Huobi) OrderStatus(id string, base, quote string) (string, error) {
