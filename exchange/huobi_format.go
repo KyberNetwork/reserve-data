@@ -87,6 +87,7 @@ type HuobiWithdrawHistory struct {
 	State    string  `json:"state"`
 	TxHash   string  `json:"tx-hash"`
 	Address  string  `json:"address"`
+	Fee      float64 `json:"fee"`
 }
 
 // HuobiWithdraw represent a withdrawal from huobi

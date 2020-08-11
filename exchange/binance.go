@@ -394,27 +394,27 @@ func (bn *Binance) DepositStatus(id common.ActivityID, txHash string, assetID ui
 }
 
 // WithdrawStatus return status of a withdrawal on binance
-func (bn *Binance) WithdrawStatus(id string, assetID uint64, amount float64, timepoint uint64) (string, string, error) {
+func (bn *Binance) WithdrawStatus(id string, assetID uint64, amount float64, timepoint uint64) (string, string, float64, error) {
 	startTime := timepoint - 86400000
 	endTime := timepoint
 	withdraws, err := bn.interf.WithdrawHistory(startTime, endTime)
 	if err != nil || !withdraws.Success {
-		return "", "", err
+		return "", "", 0, err
 	}
 	for _, withdraw := range withdraws.Withdrawals {
 		if withdraw.ID == id {
 			if withdraw.Status == 3 || withdraw.Status == 5 { // 3 = rejected, 5 = failed
-				return common.ExchangeStatusFailed, withdraw.TxID, nil
+				return common.ExchangeStatusFailed, withdraw.TxID, withdraw.Fee, nil
 			}
 			if withdraw.Status == 6 { // 6 = success
-				return common.ExchangeStatusDone, withdraw.TxID, nil
+				return common.ExchangeStatusDone, withdraw.TxID, withdraw.Fee, nil
 			}
-			return "", withdraw.TxID, nil
+			return "", withdraw.TxID, withdraw.Fee, nil
 		}
 	}
 	bn.l.Warnw("Binance Withdrawal doesn't exist. This shouldn't happen unless tx returned from withdrawal from binance and activity ID are not consistently designed",
 		"id", id, "asset_id", assetID, "amount", amount, "timepoint", timepoint)
-	return "", "", nil
+	return "", "", 0, nil
 }
 
 // OrderStatus return status of an order on binance

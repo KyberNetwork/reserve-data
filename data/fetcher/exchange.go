@@ -16,6 +16,6 @@ type Exchange interface {
 
 	OrderStatus(id string, base, quote string) (string, error)
 	DepositStatus(id common.ActivityID, txHash string, assetID uint64, amount float64, timepoint uint64) (string, error)
-	WithdrawStatus(id string, assetID uint64, amount float64, timepoint uint64) (string, string, error)
+	WithdrawStatus(id string, assetID uint64, amount float64, timepoint uint64) (string, string, float64, error)
 	TokenAddresses() (map[common.AssetID]ethereum.Address, error)
 }

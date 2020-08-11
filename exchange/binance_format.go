@@ -178,6 +178,7 @@ type Binawithdrawals struct {
 	Withdrawals []Binawithdrawal `json:"withdrawList"`
 }
 
+// Binawithdrawal object for withdraw from binance
 type Binawithdrawal struct {
 	ID        string  `json:"id"`
 	Amount    float64 `json:"amount"`
@@ -185,6 +186,7 @@ type Binawithdrawal struct {
 	Asset     string  `json:"asset"`
 	TxID      string  `json:"txId"`
 	ApplyTime uint64  `json:"applyTime"`
+	Fee       float64 `json:"transactionFee"`
 	Status    int     `json:"status"`
 }
 

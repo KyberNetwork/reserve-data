@@ -358,6 +358,7 @@ func (f *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord) (m
 					txStr,
 					blockNum,
 					common.MiningStatusMined,
+					0,
 					err,
 				)
 			case common.MiningStatusFailed:
@@ -367,6 +368,7 @@ func (f *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord) (m
 					txStr,
 					blockNum,
 					common.MiningStatusFailed,
+					0,
 					err,
 				)
 			case common.MiningStatusLost:
@@ -392,6 +394,7 @@ func (f *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord) (m
 						txStr,
 						blockNum,
 						common.MiningStatusFailed,
+						0,
 						err,
 					)
 				}
@@ -468,6 +471,7 @@ func (f *Fetcher) updateActivitywithExchangeStatus(activity *common.ActivityReco
 		activity.ExchangeStatus = activityStatus.ExchangeStatus
 	} else if activityStatus.ExchangeStatus == common.ExchangeStatusFailed {
 		activity.ExchangeStatus = activityStatus.ExchangeStatus
+		activity.Result.WithdrawFee = activityStatus.WithdrawFee
 	}
 
 	if activity.Result.Tx == "" {
@@ -478,8 +482,10 @@ func (f *Fetcher) updateActivitywithExchangeStatus(activity *common.ActivityReco
 		snapshot.Valid = false
 		snapshot.Error = activityStatus.Error.Error()
 		activity.Result.StatusError = activityStatus.Error.Error()
+		activity.Result.WithdrawFee = activityStatus.WithdrawFee
 	} else {
 		activity.Result.StatusError = ""
+		activity.Result.WithdrawFee = activityStatus.WithdrawFee
 	}
 }
 
@@ -628,14 +634,17 @@ func (f *Fetcher) FetchAuthDataFromExchange(
 	}
 }
 
+// FetchStatusFromExchange return status of activity from exchange
 func (f *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []common.ActivityRecord, timepoint uint64) map[common.ActivityID]common.ActivityStatus {
 	result := map[common.ActivityID]common.ActivityStatus{}
 	for _, activity := range pendings {
 		if activity.IsExchangePending() && activity.Destination == exchange.ID().String() {
-			var err error
-			var status string
-			var tx string
-			var blockNum uint64
+			var (
+				err        error
+				status, tx string
+				blockNum   uint64
+				fee        float64
+			)
 
 			id := activity.ID
 			//These type conversion errors can be ignore since if happens, it will be reflected in activity.error
@@ -659,7 +668,7 @@ func (f *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []common.A
 				amount := activity.Params.Amount
 				assetID := activity.Params.Asset
 
-				status, tx, err = exchange.WithdrawStatus(id.EID, assetID, amount, timepoint)
+				status, tx, fee, err = exchange.WithdrawStatus(id.EID, assetID, amount, timepoint)
 				f.l.Infof("Got withdraw status for %v: (%s), error(%v)", activity, status, err)
 			default:
 				continue
@@ -672,22 +681,13 @@ func (f *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []common.A
 				f.l.Infof("Activity %+v has invalid timestamp. Just ignore it.", activity)
 			} else {
 				if common.NowInMillis()-timepoint > maxActivityLifeTime*uint64(time.Hour)/uint64(time.Millisecond) {
-					result[id] = common.NewActivityStatus(common.ExchangeStatusFailed, tx, blockNum, activity.MiningStatus, err)
+					result[id] = common.NewActivityStatus(common.ExchangeStatusFailed, tx, blockNum, activity.MiningStatus, fee, err)
 				} else {
-					result[id] = common.NewActivityStatus(status, tx, blockNum, activity.MiningStatus, err)
+					result[id] = common.NewActivityStatus(status, tx, blockNum, activity.MiningStatus, fee, err)
 				}
 			}
 		} else {
-			timepoint, err1 := strconv.ParseUint(string(activity.Timestamp), 10, 64)
-			if err1 != nil {
-				f.l.Infof("Activity %+v has invalid timestamp. Just ignore it.", activity)
-			} else if activity.Destination == exchange.ID().String() &&
-				activity.ExchangeStatus == common.ExchangeStatusDone &&
-				common.NowInMillis()-timepoint > maxActivityLifeTime*uint64(time.Hour)/uint64(time.Millisecond) {
-				// the activity is still pending but its exchange status is done and it is stuck there for more than
-				// maxActivityLifeTime. This activity is considered failed.
-				result[activity.ID] = common.NewActivityStatus(common.ExchangeStatusFailed, "", 0, activity.MiningStatus, nil)
-			}
+			f.l.Warnw("Activity should not come here", "is exchange pending", activity.IsExchangePending(), "is blockchain pending", activity.IsBlockchainPending)
 		}
 	}
 	return result

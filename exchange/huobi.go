@@ -609,16 +609,16 @@ func (h *Huobi) DepositStatus(id common.ActivityID, tx1Hash string, assetID uint
 
 //WithdrawStatus return withdraw status from huobi
 func (h *Huobi) WithdrawStatus(
-	id string, assetID uint64, amount float64, timepoint uint64) (string, string, error) {
+	id string, assetID uint64, amount float64, timepoint uint64) (string, string, float64, error) {
 	withdrawID, _ := strconv.ParseUint(id, 10, 64)
 	assets, err := h.sr.GetAssets()
 	if err != nil {
-		return "", "", fmt.Errorf("huobi Can't get list of assets from setting (%s)", err)
+		return "", "", 0, fmt.Errorf("huobi Can't get list of assets from setting (%s)", err)
 	}
 	// make sure the size is enough for storing all huobi withdrawal history
 	withdraws, err := h.interf.WithdrawHistory(len(assets) * 2)
 	if err != nil {
-		return "", "", fmt.Errorf("can't get withdraw history from huobi: %s", err.Error())
+		return "", "", 0, fmt.Errorf("can't get withdraw history from huobi: %s", err.Error())
 	}
 	h.l.Infof("Huobi Withdrawal id: %d", withdrawID)
 	for _, withdraw := range withdraws.Data {
@@ -630,13 +630,13 @@ func (h *Huobi) WithdrawStatus(
 			if withdraw.TxHash[0:2] != "0x" {
 				withdraw.TxHash = "0x" + withdraw.TxHash
 			}
-			return common.ExchangeStatusDone, withdraw.TxHash, nil
+			return common.ExchangeStatusDone, withdraw.TxHash, withdraw.Fee, nil
 		case "reject", "wallet-reject", "confirm-error":
-			return common.ExchangeStatusFailed, "", nil
+			return common.ExchangeStatusFailed, "", withdraw.Fee, nil
 		}
-		return "", withdraw.TxHash, nil
+		return "", withdraw.TxHash, withdraw.Fee, nil
 	}
-	return "", "", errors.New("huobi Withdrawal doesn't exist. This shouldn't happen unless tx returned from withdrawal from huobi and activity ID are not consistently designed")
+	return "", "", 0, errors.New("huobi Withdrawal doesn't exist. This shouldn't happen unless tx returned from withdrawal from huobi and activity ID are not consistently designed")
 }
 
 // OrderStatus return order status from Huobi
