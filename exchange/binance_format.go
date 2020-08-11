@@ -200,6 +200,7 @@ type Binawithdrawal struct {
 	TxID      string  `json:"txId"`
 	ApplyTime uint64  `json:"applyTime"`
 	Status    int     `json:"status"`
+	Fee       float64 `json:"transactionFee"`
 }
 
 type BinaServerTime struct {

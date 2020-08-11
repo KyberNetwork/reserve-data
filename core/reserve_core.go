@@ -336,6 +336,7 @@ func (rc ReserveCore) Withdraw(
 			}, map[string]interface{}{
 				common.ResultError: common.ErrorToString(err),
 				common.ResultID:    id,
+				common.WithdrawFee: 0, // default value
 				// this field will be updated with real tx when data fetcher can fetch it
 				// from exchanges
 				common.ResultTx: "",
@@ -536,6 +537,7 @@ func (rc ReserveCore) SetRates(
 
 	tx, err = rc.GetSetRateResult(tokens, buys, sells, afpMids, block)
 	if err != nil {
+		rc.l.Errorw("failed to get result set rate", "err", err)
 		miningStatus = common.MiningStatusFailed
 	} else {
 		miningStatus = common.MiningStatusSubmitted

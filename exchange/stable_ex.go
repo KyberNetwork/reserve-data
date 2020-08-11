@@ -175,9 +175,9 @@ func (se *StableEx) DepositStatus(id common.ActivityID, txHash, currency string,
 	return "", errors.New("not supported")
 }
 
-func (se *StableEx) WithdrawStatus(id, currency string, amount float64, timepoint uint64) (string, string, error) {
+func (se *StableEx) WithdrawStatus(id, currency string, amount float64, timepoint uint64) (string, string, float64, error) {
 	// TODO: checking id (id is the txhash) status
-	return "", "", errors.New("not supported")
+	return "", "", 0, errors.New("not supported")
 }
 
 func (se *StableEx) OrderStatus(id string, base, quote string) (string, error) {

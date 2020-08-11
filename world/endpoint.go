@@ -13,24 +13,18 @@ var (
 		"Kraken",
 		"Gemini",
 
-		"CoinbaseBTC",
-		"GeminiBTC", // this no longer use and replace by BinanceBTC below.
-		"BinanceBTC",
+		"CoinbaseETHBTC3",
+		"BinanceETHBTC3",
 
-		"CoinbaseUSD",
-		"BinanceUSD",
-
-		"CoinbaseUSDC",
-		"BinanceUSDC",
-
-		"CoinbaseDAI",
-		"HitDAI",
-
-		"BitFinexUSD",
-		"BinanceUSDT",
-		"BinancePAX",
-		"BinanceTUSD",
-		"BinanceBUSD10000",
+		"CoinbaseETHUSD10000",
+		"CoinbaseETHUSDC10000",
+		"BinanceETHUSDC10000",
+		"CoinbaseETHUSDDAI5000",
+		"BitfinexETHUSDT10000",
+		"BinanceETHUSDT10000",
+		"BinanceETHPAX5000",
+		"BinanceETHBUSD10000",
+		"GeminiETHUSD10000",
 	}
 	// remove unused feeds
 )
@@ -49,20 +43,18 @@ type Endpoint interface {
 	KrakenDataEndpoint() string
 	GeminiDataEndpoint() string
 
-	CoinbaseBTCEndpoint() string
+	BinanceETHBTC3Endpoint() string
+	CoinbaseETHBTC3Endpoint() string
 
-	CoinbaseUSDCEndpoint() string
-	BinanceUSDCEndpoint() string
-	CoinbaseUSDEndpoint() string
-	CoinbaseDAIEndpoint() string
-	HitDaiEndpoint() string
-
-	BitFinexUSDTEndpoint() string
-	BinanceUSDTEndpoint() string
-	BinancePAXEndpoint() string
-	BinanceTUSDEndpoint() string
-	BinanceBTCEndpoint() string
-	BinanceBUSD10000Endpoint() string
+	CoinbaseETHUSDC10000Endpoint() string
+	BinanceETHUSDC10000Endpoint() string
+	CoinbaseETHUSD10000Endpoint() string
+	CoinbaseETHUSDDAI5000Endpoint() string
+	BitfinexETHUSDT10000Endpoint() string
+	BinanceETHUSDT10000Endpoint() string
+	BinanceETHPAX5000Endpoint() string
+	BinanceETHBUSD10000Endpoint() string
+	GeminiETHUSD10000Endpoint() string
 }
 
 // Endpoints implement endpoint for testing in simulate.
@@ -75,45 +67,41 @@ func NewWorldEndpoint(eps config.WorldEndpoints) *Endpoints {
 	return &Endpoints{eps: eps}
 }
 
-func (ep Endpoints) BitFinexUSDTEndpoint() string {
-	return ep.eps.BitFinexUSDT.URL
+func (ep Endpoints) BitfinexETHUSDT10000Endpoint() string {
+	return ep.eps.BitfinexETHUSDT10000.URL
 }
 
-func (ep Endpoints) BinanceUSDTEndpoint() string {
-	return ep.eps.BinanceUSDT.URL
+func (ep Endpoints) GeminiETHUSD10000Endpoint() string {
+	return ep.eps.GeminiETHUSD10000.URL
 }
 
-func (ep Endpoints) BinancePAXEndpoint() string {
-	return ep.eps.BinancePAX.URL
+func (ep Endpoints) BinanceETHUSDT10000Endpoint() string {
+	return ep.eps.BinanceETHUSDT10000.URL
 }
 
-func (ep Endpoints) BinanceTUSDEndpoint() string {
-	return ep.eps.BinanceTUSD.URL
+func (ep Endpoints) BinanceETHPAX5000Endpoint() string {
+	return ep.eps.BinanceETHPAX5000.URL
 }
 
-func (ep Endpoints) BinanceBUSD10000Endpoint() string {
-	return ep.eps.BinanceBUSD10000.URL
+func (ep Endpoints) BinanceETHBUSD10000Endpoint() string {
+	return ep.eps.BinanceETHBUSD10000.URL
 }
 
-func (ep Endpoints) CoinbaseDAIEndpoint() string {
-	return ep.eps.CoinbaseDAI.URL
+func (ep Endpoints) CoinbaseETHUSDDAI5000Endpoint() string {
+	return ep.eps.CoinbaseETHUSDDAI5000.URL
 }
 
-func (ep Endpoints) HitDaiEndpoint() string {
-	return ep.eps.HitDai.URL
-}
-
-func (ep Endpoints) CoinbaseUSDEndpoint() string {
-	return ep.eps.CoinbaseUSD.URL
+func (ep Endpoints) CoinbaseETHUSD10000Endpoint() string {
+	return ep.eps.CoinbaseETHUSD10000.URL
 }
 
 // TODO: support simulation
-func (ep Endpoints) CoinbaseUSDCEndpoint() string {
-	return ep.eps.CoinbaseUSDC.URL
+func (ep Endpoints) CoinbaseETHUSDC10000Endpoint() string {
+	return ep.eps.CoinbaseETHUSDC10000.URL
 }
 
-func (ep Endpoints) BinanceUSDCEndpoint() string {
-	return ep.eps.BinanceUSDC.URL
+func (ep Endpoints) BinanceETHUSDC10000Endpoint() string {
+	return ep.eps.BinanceETHUSDC10000.URL
 }
 
 func (ep Endpoints) GoldDataEndpoint() string {
@@ -140,10 +128,10 @@ func (ep Endpoints) GeminiDataEndpoint() string {
 	return ep.eps.GeminiData.URL
 }
 
-func (ep Endpoints) CoinbaseBTCEndpoint() string {
-	return ep.eps.CoinbaseBTC.URL
+func (ep Endpoints) CoinbaseETHBTC3Endpoint() string {
+	return ep.eps.CoinbaseETHBTC3.URL
 }
 
-func (ep Endpoints) BinanceBTCEndpoint() string {
-	return ep.eps.BinanceBTC.URL
+func (ep Endpoints) BinanceETHBTC3Endpoint() string {
+	return ep.eps.BinanceETHBTC3.URL
 }
