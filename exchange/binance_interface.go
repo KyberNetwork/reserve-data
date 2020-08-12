@@ -41,4 +41,6 @@ type BinanceInterface interface {
 	WithdrawHistory(startTime, endTime uint64) (Binawithdrawals, error)
 
 	OrderStatus(symbol string, id uint64) (Binaorder, error)
+
+	GetAllAssetDetail() (map[string]BinanceAssetDetail, error)
 }

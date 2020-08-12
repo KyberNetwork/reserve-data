@@ -44,27 +44,28 @@ func (s *Storage) GetAssetExchange(id uint64) (common.AssetExchange, error) {
 }
 
 // GetAssetExchangeBySymbol return asset by its symbol
-func (s *Storage) GetAssetExchangeBySymbol(exchangeID uint64, symbol string) (common.Asset, error) {
+func (s *Storage) GetAssetExchangeBySymbol(exchangeID uint64, symbol string) (common.AssetExchange, error) {
 	var (
-		result common.Asset
+		result assetExchangeDB
+		logger = s.l.With("func", "GetAssetExchangeBySymbol", "symbol", symbol, "exchange", exchangeID)
 	)
 
 	tx, err := s.db.Beginx()
 	if err != nil {
-		return result, err
+		return common.AssetExchange{}, err
 	}
 	defer pgutil.RollbackUnlessCommitted(tx)
 
-	s.l.Infow("getting asset exchange", "symbol", symbol, "exchange", exchangeID)
+	logger.Info("getting asset exchange")
 	err = tx.Stmtx(s.stmts.getAssetExchangeBySymbol).Get(&result, exchangeID, symbol)
 	switch err {
 	case sql.ErrNoRows:
-		s.l.Infow("asset not found", "symbol", symbol)
-		return result, common.ErrNotFound
+		logger.Infow("asset exchange not found")
+		return common.AssetExchange{}, common.ErrNotFound
 	case nil:
-		return result, nil
+		return result.ToCommon(), nil
 	default:
-		return result, fmt.Errorf("failed to get asset from database symbol=%s err=%s", symbol, err.Error())
+		return common.AssetExchange{}, fmt.Errorf("failed to get asset from database symbol=%s err=%s", symbol, err.Error())
 	}
 }
 
@@ -86,4 +87,29 @@ func (s *Storage) deleteAssetExchange(tx *sqlx.Tx, assetExchangeID uint64) error
 		}
 		return err
 	}
+}
+
+// UpdateAssetExchangeWithdrawFee ...
+func (s *Storage) UpdateAssetExchangeWithdrawFee(withdrawFee float64, assetExchangeID uint64) error {
+	tx, err := s.db.Beginx()
+	if err != nil {
+		return errors.Wrap(err, "create transaction error")
+	}
+	defer pgutil.RollbackUnlessCommitted(tx)
+	var aeID uint64
+	if err := tx.NamedStmt(s.stmts.updateAssetExchange).Get(&aeID, struct {
+		ID                uint64   `db:"id"`
+		Symbol            *string  `db:"symbol"`
+		DepositAddress    *string  `db:"deposit_address"`
+		MinDeposit        *float64 `db:"min_deposit"`
+		WithdrawFee       *float64 `db:"withdraw_fee"`
+		TargetRecommended *float64 `db:"target_recommended"`
+		TargetRatio       *float64 `db:"target_ratio"`
+	}{
+		ID:          assetExchangeID,
+		WithdrawFee: common.FloatPointer(withdrawFee),
+	}); err != nil {
+		return err
+	}
+	return tx.Commit()
 }

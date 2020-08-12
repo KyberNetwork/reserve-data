@@ -419,6 +419,30 @@ func (ep *Endpoint) OpenOrdersForOnePair(pair commonv3.TradingPairSymbols) (exch
 	return result, nil
 }
 
+// GetAllAssetDetail ...
+func (ep *Endpoint) GetAllAssetDetail() ([]exchange.HuobiAssetDetail, error) {
+	result := struct {
+		Code int `json:"code"`
+		Data []exchange.HuobiAssetDetail
+	}{}
+	respBody, err := ep.GetResponse(
+		"GET",
+		ep.interf.PublicEndpoint()+"/v2/reference/currencies",
+		map[string]string{},
+		false,
+	)
+	if err != nil {
+		return nil, err
+	}
+	if err := json.Unmarshal(respBody, &result); err != nil {
+		return nil, err
+	}
+	if result.Code != 200 {
+		return nil, fmt.Errorf("receive unexpected code, code: %d", result.Code)
+	}
+	return result.Data, nil
+}
+
 //NewHuobiEndpoint return new endpoint instance
 func NewHuobiEndpoint(signer Signer, interf Interface, client *http.Client) *Endpoint {
 	return &Endpoint{signer: signer, interf: interf, l: zap.S(), client: client}

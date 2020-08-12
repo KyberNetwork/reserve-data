@@ -219,3 +219,12 @@ type BinaAccountTradeHistory []struct {
 	IsMaker         bool   `json:"isMaker"`
 	IsBestMatch     bool   `json:"isBestMatch"`
 }
+
+// BinanceAssetDetail ...
+type BinanceAssetDetail struct {
+	MinWithdrawAmount float64 `json:"minWithdrawAmount"`
+	DepositStatus     bool    `json:"depositStatus"`
+	WithdrawFee       float64 `json:"withdrawFee"`
+	WithdrawStatus    bool    `json:"withdrawStatus"`
+	DepositTip        string  `json:"depositTip"` // reason if deposit status is false
+}

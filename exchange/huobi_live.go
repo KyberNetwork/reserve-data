@@ -2,22 +2,77 @@ package exchange
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/KyberNetwork/reserve-data/common"
 	commonv3 "github.com/KyberNetwork/reserve-data/reservesetting/common"
+	"go.uber.org/zap"
 )
 
 // HuobiLive is LiveExchange for huobi
 type HuobiLive struct {
-	interf HuobiInterface
+	interf          HuobiInterface
+	sugar           *zap.SugaredLogger
+	mu              *sync.RWMutex
+	allAssetDetails map[string]HuobiChain
 }
 
 // NewHuobiLive return new HuobiLive instance
-func NewHuobiLive(interf HuobiInterface) *HuobiLive {
-	return &HuobiLive{
-		interf: interf,
+func NewHuobiLive(interf HuobiInterface, intervalUpdateWithdrawFee time.Duration) *HuobiLive {
+	hi := &HuobiLive{
+		sugar:           zap.S(),
+		interf:          interf,
+		mu:              &sync.RWMutex{},
+		allAssetDetails: make(map[string]HuobiChain),
 	}
+	go hi.runUpdateAssetDetails(intervalUpdateWithdrawFee)
+	return hi
+}
+
+// runUpdateAssetDetails just update asset info of eth and erc20 tokens
+// eth has chain is "ETH" and erc20 tokens has base chain is ETH
+func (hl *HuobiLive) runUpdateAssetDetails(interval time.Duration) {
+	t := time.NewTicker(interval)
+	for {
+		func() {
+			rawAllAssetDetails, err := hl.interf.GetAllAssetDetail()
+			if err != nil {
+				hl.sugar.Errorw("cannot get asset detail", "err", err)
+				return
+			}
+			allAssetDetails := make(map[string]HuobiChain)
+			for _, rawAssetDetail := range rawAllAssetDetails {
+				for _, c := range rawAssetDetail.Chains {
+					if c.Chain == "eth" || c.BaseChain == "ETH" {
+						allAssetDetails[strings.ToUpper(rawAssetDetail.Currency)] = c
+						break
+					}
+				}
+			}
+			hl.mu.Lock()
+			hl.allAssetDetails = allAssetDetails
+			hl.mu.Unlock()
+		}()
+		<-t.C
+	}
+}
+
+// GetLiveWithdrawFee ...
+func (hl *HuobiLive) GetLiveWithdrawFee(asset string) (float64, error) {
+	hl.mu.RLock()
+	defer hl.mu.RUnlock()
+	assetDetail, ok := hl.allAssetDetails[asset]
+	if !ok {
+		return 0, fmt.Errorf("asset detail is not available, asset: %s", asset)
+	}
+	withdrawFee, err := strconv.ParseFloat(assetDetail.TransactFeeWithdraw, 64)
+	if err != nil {
+		return 0, fmt.Errorf("withdraw fee from huobi api is not valid, asset: %s, fee: %s", asset, assetDetail.TransactFeeWithdraw)
+	}
+	return withdrawFee, nil
 }
 
 // GetLiveExchangeInfos querry the Exchange Endpoint for exchange precision and limit of a list of tokenPairIDs

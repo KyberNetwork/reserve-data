@@ -585,14 +585,18 @@ func assetExchangeStatements(db *sqlx.DB) (*sqlx.NamedStmt, *sqlx.NamedStmt, *sq
 		return nil, nil, nil, nil, nil, errors.Wrap(err, "failed to prepare getAssetExchange")
 	}
 
-	const getAssetExchangeBySymbolQuery = `SELECT
-		asset_exchanges.asset_id as id,
-		asset_exchanges.symbol as symbol,
-		a.decimals as decimals	
-	FROM asset_exchanges
-		LEFT JOIN assets a on asset_exchanges.asset_id = a.id
-	WHERE asset_exchanges.exchange_id = $1
-	AND asset_exchanges.symbol= $2`
+	const getAssetExchangeBySymbolQuery = `SELECT id,
+						exchange_id,
+						asset_id,
+						symbol,
+						deposit_address,
+						min_deposit,
+						withdraw_fee,
+						target_recommended,
+						target_ratio
+			FROM asset_exchanges
+			WHERE exchange_id = $1
+			AND symbol= $2`
 	getAssetExchangeBySymbol, err := db.Preparex(getAssetExchangeBySymbolQuery)
 	if err != nil {
 		return nil, nil, nil, nil, nil, errors.Wrap(err, "failed to prepare getAssetExchangeBySymbol")

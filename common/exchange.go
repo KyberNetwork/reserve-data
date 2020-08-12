@@ -57,6 +57,8 @@ type LiveExchange interface {
 	// GetLiveExchangeInfo querry the Exchange Endpoint for exchange precision and limit of a list of tokenPairIDs
 	// It return error if occurs.
 	GetLiveExchangeInfos([]common.TradingPairSymbols) (ExchangeInfo, error)
+	// GetLiveWithdrawFee return withdraw fee of asset
+	GetLiveWithdrawFee(asset string) (float64, error)
 }
 
 // SupportedExchanges map exchange id to its exchange

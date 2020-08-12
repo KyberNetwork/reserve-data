@@ -47,6 +47,10 @@ func (bi *binanceTestInterface) GetAccountTradeHistory(baseSymbol, quoteSymbol, 
 	panic("implement me")
 }
 
+func (bi *binanceTestInterface) GetAllAssetDetail() (map[string]BinanceAssetDetail, error) {
+	panic("implement me")
+}
+
 func (bi *binanceTestInterface) Withdraw(
 	asset commonv3.Asset,
 	amount *big.Int,

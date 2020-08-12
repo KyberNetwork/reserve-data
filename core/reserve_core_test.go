@@ -50,6 +50,11 @@ func (te testExchange) OpenOrders(pair commonv3.TradingPairSymbols) ([]common.Or
 	return nil, nil
 }
 
+// GetLiveWithdrawFee ...
+func (te testExchange) GetLiveWithdrawFee(asset string) (float64, error) {
+	return 0.1, nil
+}
+
 type testBlockchain struct {
 }
 

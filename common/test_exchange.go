@@ -56,6 +56,11 @@ func (te TestExchange) GetLiveExchangeInfos(pair []common.TradingPairSymbols) (E
 	return ExchangeInfo{}, nil
 }
 
+// GetLiveWithdrawFee ...
+func (te TestExchange) GetLiveWithdrawFee(asset string) (float64, error) {
+	return 0.1, nil
+}
+
 // OpenOrders mock open orders from binance
 func (te TestExchange) OpenOrders(pair common.TradingPairSymbols) ([]Order, error) {
 	return nil, nil

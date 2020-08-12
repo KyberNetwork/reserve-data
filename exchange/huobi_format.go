@@ -167,3 +167,27 @@ type HuobiTradeHistory struct {
 		FinishedAt uint64 `json:"finished-at"`
 	} `json:"data"`
 }
+
+// HuobiChain ...
+type HuobiChain struct {
+	Chain               string `json:"chain"`
+	DisplayName         string `json:"displayName"`
+	BaseChain           string `json:"baseChain"`
+	BaseChainProtocol   string `json:"baseChainProtocol"`
+	IsDynamic           bool   `json:"isDynamic"`
+	DepositStatus       string `json:"depositStatus"`
+	MinDepositAmt       string `json:"minDepositAmt"`
+	WithdrawStatus      string `json:"withdrawStatus"`
+	MinWithdrawAmt      string `json:"minWithdrawAmt"`
+	WithdrawPrecision   int    `json:"withdrawPrecision"`
+	MaxWithdrawAmt      string `json:"maxWithdrawAmt"`
+	WithdrawFeeType     string `json:"withdrawFeeType"`
+	TransactFeeWithdraw string `json:"transactFeeWithdraw"`
+}
+
+// HuobiAssetDetail ...
+type HuobiAssetDetail struct {
+	Currency   string       `json:"currency"`
+	Chains     []HuobiChain `json:"chains"`
+	InstStatus string       `json:"instStatus"` // delist or not
+}

@@ -5,21 +5,60 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/KyberNetwork/reserve-data/common"
 	commonv3 "github.com/KyberNetwork/reserve-data/reservesetting/common"
+	"go.uber.org/zap"
 )
 
 //BinanceLive implement live info for binance
 type BinanceLive struct {
-	interf BinanceInterface
+	sugar           *zap.SugaredLogger
+	mu              *sync.RWMutex
+	interf          BinanceInterface
+	allAssetDetails map[string]BinanceAssetDetail
 }
 
 // NewBinanceLive return new BinanceLive instance
-func NewBinanceLive(interf BinanceInterface) *BinanceLive {
-	return &BinanceLive{
-		interf: interf,
+func NewBinanceLive(interf BinanceInterface, intervalUpdateWithdrawFee time.Duration) *BinanceLive {
+	bi := &BinanceLive{
+		sugar:           zap.S(),
+		mu:              &sync.RWMutex{},
+		interf:          interf,
+		allAssetDetails: make(map[string]BinanceAssetDetail),
 	}
+	go bi.runUpdateAssetDetails(intervalUpdateWithdrawFee)
+	return bi
+}
+
+func (bl *BinanceLive) runUpdateAssetDetails(interval time.Duration) {
+	t := time.NewTicker(interval)
+	for {
+		func() {
+			allAssetDetails, err := bl.interf.GetAllAssetDetail()
+			if err != nil {
+				bl.sugar.Errorw("cannot get asset detail", "err", err)
+				return
+			}
+			bl.mu.Lock()
+			bl.allAssetDetails = allAssetDetails
+			bl.mu.Unlock()
+		}()
+		<-t.C
+	}
+}
+
+// GetLiveWithdrawFee ...
+func (bl *BinanceLive) GetLiveWithdrawFee(asset string) (float64, error) {
+	bl.mu.RLock()
+	defer bl.mu.RUnlock()
+	assetDetail, ok := bl.allAssetDetails[asset]
+	if !ok {
+		return 0, fmt.Errorf("asset detail of token is not available, asset: %s", asset)
+	}
+	return assetDetail.WithdrawFee, nil
 }
 
 // GetLiveExchangeInfos queries the Exchange Endpoint for exchange precision and limit of a certain pair ID

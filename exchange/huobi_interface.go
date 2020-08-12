@@ -39,4 +39,6 @@ type HuobiInterface interface {
 	OrderStatus(symbol string, id uint64) (HuobiOrder, error)
 
 	OpenOrdersForOnePair(pair commonv3.TradingPairSymbols) (HuobiOpenOrders, error)
+
+	GetAllAssetDetail() ([]HuobiAssetDetail, error)
 }

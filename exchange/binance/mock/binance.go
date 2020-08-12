@@ -77,3 +77,8 @@ func (bte *BinanceTestExchange) GetLiveExchangeInfos(tokenPairIDs []commonv3.Tra
 	}
 	return result, nil
 }
+
+// GetLiveWithdrawFee ...
+func (bte *BinanceTestExchange) GetLiveWithdrawFee(asset string) (float64, error) {
+	return 0.1, nil
+}
