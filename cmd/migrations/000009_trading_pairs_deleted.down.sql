@@ -1,0 +1,1 @@
+DROP TABLE trading_pairs_deleted;

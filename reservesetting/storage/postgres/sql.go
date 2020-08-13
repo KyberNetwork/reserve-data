@@ -327,8 +327,10 @@ func tradingPairStatements(db *sqlx.DB) (*tradingPairStmts, error) {
 		return nil, errors.Wrap(err, "failed to prepare getTradingPairSymbols")
 	}
 
-	const deleteTradingPairQuery = `DELETE FROM trading_pairs
-									WHERE id=$1 RETURNING id;`
+	const deleteTradingPairQuery = `WITH aa AS ( 
+INSERT INTO trading_pairs_deleted
+SELECT NOW() AS deleted_at,* FROM trading_pairs WHERE id=$1
+) DELETE FROM trading_pairs WHERE id=$1 RETURNING id`
 	deleteStmt, err := db.Preparex(deleteTradingPairQuery)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to prepare deleteTradingPairQuery")

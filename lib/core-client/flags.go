@@ -57,5 +57,8 @@ func NewCoreClientFromContext(c *cli.Context) (*Client, error) {
 	if !checkCoreEndpoint(coreEndpoint) {
 		return nil, errors.New("core endpoint is required")
 	}
+	if coreEndpoint == "" {
+		return nil, nil
+	}
 	return NewCoreClient(coreEndpoint), nil
 }
