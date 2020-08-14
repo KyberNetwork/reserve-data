@@ -22,5 +22,6 @@ func TestUpdateAssetExchange(t *testing.T) {
 	err = s.UpdateAssetExchangeWithdrawFee(0.004, ae.ID)
 	assert.NoError(t, err)
 	newAE, err := s.GetAssetExchangeBySymbol(binance, "ETH")
+	assert.NoError(t, err)
 	assert.Equal(t, ae, newAE)
 }

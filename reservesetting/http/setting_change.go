@@ -59,10 +59,17 @@ func (s *Server) fillLiveInfoSettingChange(settingChange *common.SettingChange) 
 		switch o.Type {
 		case common.ChangeTypeCreateAsset:
 			asset := o.Data.(*common.CreateAssetEntry)
-			for _, assetExchange := range asset.Exchanges {
+			for index, assetExchange := range asset.Exchanges {
 				err = s.fillLiveInfoAssetExchange(assets, assetExchange.ExchangeID, assetExchange.TradingPairs, assetExchange.Symbol, assetExchange.AssetID)
 				if err != nil {
 					return fmt.Errorf("position %d, error: %v", i, err)
+				}
+				if assetExchange.WithdrawFee == 0 {
+					withdrawFee, err := s.withdrawFeeFromExchange(assetExchange.ExchangeID, assetExchange.Symbol)
+					if err != nil {
+						return fmt.Errorf("position %d, error: %v", i, err)
+					}
+					asset.Exchanges[index].WithdrawFee = withdrawFee
 				}
 			}
 		case common.ChangeTypeCreateTradingPair:
@@ -98,9 +105,25 @@ func (s *Server) fillLiveInfoSettingChange(settingChange *common.SettingChange) 
 			if err != nil {
 				return fmt.Errorf("position %d, error: %v", i, err)
 			}
+			if assetExchange.WithdrawFee == 0 {
+				withdrawFee, err := s.withdrawFeeFromExchange(assetExchange.ExchangeID, assetExchange.Symbol)
+				if err != nil {
+					return fmt.Errorf("position %d, error: %v", i, err)
+				}
+				assetExchange.WithdrawFee = withdrawFee
+			}
 		}
 	}
 	return nil
+}
+
+func (s *Server) withdrawFeeFromExchange(exchangeID uint64, assetSymbol string) (float64, error) {
+	exhID := v1common.ExchangeID(exchangeID)
+	centralExh, ok := s.supportedExchanges[exhID]
+	if !ok {
+		return 0, errors.Errorf("exchange %s not supported", exhID)
+	}
+	return centralExh.GetLiveWithdrawFee(assetSymbol)
 }
 
 func (s *Server) fillLiveInfoAssetExchange(assets []common.Asset, exchangeID uint64, tradingPairs []common.TradingPair, assetSymbol string, assetID uint64) error {
