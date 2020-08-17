@@ -422,8 +422,8 @@ func (ep *Endpoint) OpenOrdersForOnePair(pair commonv3.TradingPairSymbols) (exch
 // GetAllAssetDetail ...
 func (ep *Endpoint) GetAllAssetDetail() ([]exchange.HuobiAssetDetail, error) {
 	result := struct {
-		Code int `json:"code"`
-		Data []exchange.HuobiAssetDetail
+		Code int                         `json:"code"`
+		Data []exchange.HuobiAssetDetail `json:"data"`
 	}{}
 	respBody, err := ep.GetResponse(
 		"GET",
@@ -435,10 +435,10 @@ func (ep *Endpoint) GetAllAssetDetail() ([]exchange.HuobiAssetDetail, error) {
 		return nil, err
 	}
 	if err := json.Unmarshal(respBody, &result); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot unmarshal asset info data from huobi, err = %s", err)
 	}
 	if result.Code != 200 {
-		return nil, fmt.Errorf("receive unexpected code, code: %d", result.Code)
+		return nil, fmt.Errorf("receive unexpected code from huobi, code: %d", result.Code)
 	}
 	return result.Data, nil
 }

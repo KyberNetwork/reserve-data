@@ -21,24 +21,33 @@ type HuobiLive struct {
 }
 
 // NewHuobiLive return new HuobiLive instance
-func NewHuobiLive(interf HuobiInterface, intervalUpdateWithdrawFee time.Duration) *HuobiLive {
-	hi := &HuobiLive{
+func NewHuobiLive(interf HuobiInterface) *HuobiLive {
+	return &HuobiLive{
 		sugar:           zap.S(),
 		interf:          interf,
 		mu:              &sync.RWMutex{},
 		allAssetDetails: make(map[string]HuobiChain),
 	}
-	go hi.runUpdateAssetDetails(intervalUpdateWithdrawFee)
-	return hi
 }
 
-// runUpdateAssetDetails just update asset info of eth and erc20 tokens
+// RunUpdateAssetDetails just update asset info of eth and erc20 tokens
 // eth has chain is "ETH" and erc20 tokens has base chain is ETH
-func (hl *HuobiLive) runUpdateAssetDetails(interval time.Duration) {
+func (hl *HuobiLive) RunUpdateAssetDetails(interval time.Duration) {
 	t := time.NewTicker(interval)
 	for {
 		func() {
-			rawAllAssetDetails, err := hl.interf.GetAllAssetDetail()
+			var (
+				rawAllAssetDetails []HuobiAssetDetail
+				err                error
+			)
+			for i := 0; i < 2; i++ {
+				rawAllAssetDetails, err = hl.interf.GetAllAssetDetail()
+				if err != nil {
+					time.Sleep(3 * time.Second)
+					continue
+				}
+				break
+			}
 			if err != nil {
 				hl.sugar.Errorw("cannot get asset detail", "err", err)
 				return

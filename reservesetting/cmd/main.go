@@ -30,8 +30,8 @@ import (
 const (
 	defaultDB = "reserve_data"
 
-	binanceAPIKeyFlag = "binance-api-key"
-	binanceSecKeyFlag = "binance-sec-key"
+	binanceAPIKeyFlag    = "binance-api-key"
+	binanceSecretKeyFlag = "binance-secret-key"
 
 	intervalUpdateWithdrawFeeDBFlag      = "interval-update-withdraw-fee-db"
 	defaultIntervalUpdateWithdrawFeeDB   = 10 * time.Minute
@@ -62,9 +62,9 @@ func main() {
 			EnvVar: "BINANCE_API_KEY",
 		},
 		cli.StringFlag{
-			Name:   binanceSecKeyFlag,
-			Usage:  "binance sec key",
-			EnvVar: "BINANCE_SEC_KEY",
+			Name:   binanceSecretKeyFlag,
+			Usage:  "binance secret key",
+			EnvVar: "BINANCE_SECRET_KEY",
 		},
 		cli.DurationFlag{
 			Name:   intervalUpdateWithdrawFeeDBFlag,
@@ -118,7 +118,7 @@ func run(c *cli.Context) error {
 	// QUESTION: should we keep using flag for this config or move it to config file?
 	bi := configuration.NewBinanceInterfaceFromContext(c)
 
-	binanceSigner := binance.NewSigner(c.String(binanceAPIKeyFlag), c.String(binanceSecKeyFlag))
+	binanceSigner := binance.NewSigner(c.String(binanceAPIKeyFlag), c.String(binanceSecretKeyFlag))
 	httpClient := &http.Client{Timeout: time.Second * 30}
 	binanceEndpoint := binance.NewBinanceEndpoint(binanceSigner, bi, dpl, httpClient, v1common.Binance, "", "", "")
 	hi := configuration.NewhuobiInterfaceFromContext(c)
@@ -171,10 +171,12 @@ func getLiveExchanges(enabledExchanges []v1common.ExchangeID,
 	for _, exchangeID := range enabledExchanges {
 		switch exchangeID {
 		case v1common.Binance, v1common.Binance2:
-			binanceLive := exchange.NewBinanceLive(bi, intervalUpdateWithdrawFee)
+			binanceLive := exchange.NewBinanceLive(bi)
+			go binanceLive.RunUpdateAssetDetails(intervalUpdateWithdrawFee)
 			liveExchanges[exchangeID] = binanceLive
 		case v1common.Huobi:
-			huobiLive := exchange.NewHuobiLive(hi, intervalUpdateWithdrawFee)
+			huobiLive := exchange.NewHuobiLive(hi)
+			go huobiLive.RunUpdateAssetDetails(intervalUpdateWithdrawFee)
 			liveExchanges[exchangeID] = huobiLive
 		}
 	}

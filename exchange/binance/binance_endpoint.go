@@ -448,7 +448,6 @@ func (ep *Endpoint) GetAllAssetDetail() (map[string]exchange.BinanceAssetDetail,
 		Msg         string                                 `json:"msg"`
 		AssetDetail map[string]exchange.BinanceAssetDetail `json:"assetDetail"`
 	}{}
-	var raw map[string]exchange.BinanceAssetDetail
 	respBody, err := ep.GetResponse(
 		"GET",
 		ep.interf.AuthenticatedEndpoint()+"/wapi/v3/assetDetail.html",
@@ -457,13 +456,13 @@ func (ep *Endpoint) GetAllAssetDetail() (map[string]exchange.BinanceAssetDetail,
 		common.NowInMillis(),
 	)
 	if err != nil {
-		return raw, err
+		return nil, err
 	}
 	if err := json.Unmarshal(respBody, &resp); err != nil {
-		return raw, err
+		return nil, fmt.Errorf("cannot unmarshal asset info data from binance, err = %s", err)
 	}
 	if !resp.Success {
-		return raw, fmt.Errorf("failed to get asset detail, msg: %s", resp.Msg)
+		return nil, fmt.Errorf("failed to get asset detail, msg: %s", resp.Msg)
 	}
 	return resp.AssetDetail, nil
 }

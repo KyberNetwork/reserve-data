@@ -168,7 +168,7 @@ type HuobiTradeHistory struct {
 	} `json:"data"`
 }
 
-// HuobiChain ...
+// HuobiChain info of asset on specific chain
 type HuobiChain struct {
 	Chain               string `json:"chain"`
 	DisplayName         string `json:"displayName"`
