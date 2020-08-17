@@ -9,7 +9,7 @@ import (
 func (s *Server) getAsset(c *gin.Context) {
 
 	var input struct {
-		ID uint64 `uri:"id" binding:"required"`
+		ID uint64 `uri:"id,string" binding:"required"`
 	}
 	if err := c.ShouldBindUri(&input); err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))

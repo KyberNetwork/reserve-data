@@ -8,7 +8,7 @@ import (
 
 // AssetPriceFactor present for price factor from set side
 type AssetPriceFactor struct {
-	AssetID uint64  `json:"id"`
+	AssetID uint64  `json:"id,string"`
 	AfpMid  float64 `json:"afp_mid"`
 	Spread  float64 `json:"spread"`
 }
@@ -52,7 +52,7 @@ type AssetPriceFactorResponse struct {
 
 // AssetPriceFactorListResponse present for price factor list of an asset.
 type AssetPriceFactorListResponse struct {
-	AssetID uint64                     `json:"id"`
+	AssetID uint64                     `json:"id,string"`
 	Data    []AssetPriceFactorResponse `json:"data"`
 }
 

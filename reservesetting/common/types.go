@@ -8,7 +8,7 @@ import (
 
 // Exchange represents a centralized exchange in database.
 type Exchange struct {
-	ID              uint64  `json:"id"`
+	ID              uint64  `json:"id,string"`
 	Name            string  `json:"name"`
 	TradingFeeMaker float64 `json:"trading_fee_maker"`
 	TradingFeeTaker float64 `json:"trading_fee_taker"`
@@ -34,9 +34,9 @@ const (
 
 // TradingPair is a trading in an exchange.
 type TradingPair struct {
-	ID              uint64  `json:"id"`
-	Base            uint64  `json:"base"`
-	Quote           uint64  `json:"quote"`
+	ID              uint64  `json:"id,string"`
+	Base            uint64  `json:"base,string"`
+	Quote           uint64  `json:"quote,string"`
 	PricePrecision  uint64  `json:"price_precision"`
 	AmountPrecision uint64  `json:"amount_precision"`
 	AmountLimitMin  float64 `json:"amount_limit_min"`
@@ -49,8 +49,8 @@ type TradingPair struct {
 
 // TradingBy is a struct hold trading pair and its asset
 type TradingBy struct {
-	TradingPairID uint64 `json:"trading_pair_id"`
-	AssetID       uint64 `json:"asset_id"`
+	TradingPairID uint64 `json:"trading_pair_id,string"`
+	AssetID       uint64 `json:"asset_id,string"`
 }
 
 // TradingPairSymbols is a pair of token trading
@@ -62,9 +62,9 @@ type TradingPairSymbols struct {
 
 // AssetExchange is the configuration of an asset for a specific exchange.
 type AssetExchange struct {
-	ID                uint64           `json:"id"`
-	AssetID           uint64           `json:"asset_id"`
-	ExchangeID        uint64           `json:"exchange_id"`
+	ID                uint64           `json:"id,string"`
+	AssetID           uint64           `json:"asset_id,string"`
+	ExchangeID        uint64           `json:"exchange_id,string"`
 	Symbol            string           `json:"symbol" binding:"required"`
 	DepositAddress    ethereum.Address `json:"deposit_address"`
 	MinDeposit        float64          `json:"min_deposit"`
@@ -130,7 +130,7 @@ type FeedWeight map[string]float64
 
 // Asset represents an asset in centralized exchange, eg: ETH, KNC, Bitcoin...
 type Asset struct {
-	ID                    uint64              `json:"id"`
+	ID                    uint64              `json:"id,string"`
 	Symbol                string              `json:"symbol" binding:"required"`
 	Name                  string              `json:"name"`
 	Address               ethereum.Address    `json:"address"`
@@ -157,8 +157,8 @@ type Asset struct {
 // CreateAssetExchangeEntry is the configuration of an asset for a specific exchange.
 type CreateAssetExchangeEntry struct {
 	settingChangeMarker
-	AssetID           uint64           `json:"asset_id"`
-	ExchangeID        uint64           `json:"exchange_id"`
+	AssetID           uint64           `json:"asset_id,string"`
+	ExchangeID        uint64           `json:"exchange_id,string"`
 	Symbol            string           `json:"symbol" binding:"required"`
 	DepositAddress    ethereum.Address `json:"deposit_address"`
 	MinDeposit        float64          `json:"min_deposit"`
@@ -171,7 +171,7 @@ type CreateAssetExchangeEntry struct {
 // UpdateAssetExchangeEntry is the configuration of an asset for a specific exchange to be update
 type UpdateAssetExchangeEntry struct {
 	settingChangeMarker
-	ID                uint64            `json:"id"`
+	ID                uint64            `json:"id,string"`
 	Symbol            *string           `json:"symbol"`
 	DepositAddress    *ethereum.Address `json:"deposit_address"`
 	MinDeposit        *float64          `json:"min_deposit"`
@@ -206,7 +206,7 @@ type CreateAssetEntry struct {
 // UpdateAssetEntry entry object for update asset
 type UpdateAssetEntry struct {
 	settingChangeMarker
-	AssetID               uint64              `json:"asset_id" binding:"required"`
+	AssetID               uint64              `json:"asset_id,string" binding:"required"`
 	Symbol                *string             `json:"symbol"`
 	Name                  *string             `json:"name"`
 	Address               *ethereum.Address   `json:"address"`
@@ -227,7 +227,7 @@ type UpdateAssetEntry struct {
 
 type UpdateExchangeEntry struct {
 	settingChangeMarker
-	ExchangeID      uint64   `json:"exchange_id"`
+	ExchangeID      uint64   `json:"exchange_id,string"`
 	TradingFeeMaker *float64 `json:"trading_fee_maker"`
 	TradingFeeTaker *float64 `json:"trading_fee_taker"`
 	Disable         *bool    `json:"disable"`
@@ -238,14 +238,14 @@ type UpdateExchangeEntry struct {
 type CreateTradingPairEntry struct {
 	settingChangeMarker
 	TradingPair
-	AssetID    uint64 `json:"asset_id"`
-	ExchangeID uint64 `json:"exchange_id"`
+	AssetID    uint64 `json:"asset_id,string"`
+	ExchangeID uint64 `json:"exchange_id,string"`
 }
 
 // ChangeAssetAddressEntry present data to create a change asset address
 type ChangeAssetAddressEntry struct {
 	settingChangeMarker
-	ID      uint64           `json:"id" binding:"required"`
+	ID      uint64           `json:"id,string" binding:"required"`
 	Address ethereum.Address `json:"address" binding:"required"`
 }
 
@@ -345,13 +345,13 @@ type SettingChangeResponse struct {
 // DeleteTradingPairEntry hold data to delete a trading pair entry
 type DeleteTradingPairEntry struct {
 	settingChangeMarker
-	TradingPairID uint64 `json:"id"`
+	TradingPairID uint64 `json:"id,string"`
 }
 
 // DeleteAssetExchangeEntry presents data to delete an asset exchange
 type DeleteAssetExchangeEntry struct {
 	settingChangeMarker
-	AssetExchangeID uint64 `json:"id"`
+	AssetExchangeID uint64 `json:"id,string"`
 }
 
 // UpdateStableTokenParamsEntry ...

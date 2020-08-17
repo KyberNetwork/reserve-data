@@ -2,6 +2,7 @@ package common
 
 import (
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"math/big"
 	"strconv"
@@ -254,8 +255,8 @@ type AssetRateTrigger struct {
 // ActivityParams is params for activity
 type ActivityParams struct {
 	// deposit, withdraw params
-	Exchange  ExchangeID `json:"exchange,omitempty"`
-	Asset     uint64     `json:"asset,omitempty"`
+	Exchange  ExchangeID `json:"exchange,string,omitempty"`
+	Asset     uint64     `json:"asset,string,omitempty"`
 	Amount    float64    `json:"amount,omitempty"`
 	Timepoint uint64     `json:"timepoint,omitempty"`
 	// SetRates params
@@ -271,6 +272,83 @@ type ActivityParams struct {
 	Quote    string  `json:"quote,omitempty"`
 	Rate     float64 `json:"rate,omitempty"`
 	Triggers []bool  `json:"triggers,omitempty"`
+}
+type AP struct {
+	// deposit, withdraw params
+	Exchange  ExchangeID `json:"exchange,string,omitempty"`
+	Asset     uint64     `json:"asset,string,omitempty"`
+	Amount    float64    `json:"amount,omitempty"`
+	Timepoint uint64     `json:"timepoint,omitempty"`
+	// SetRates params
+	Assets []string   `json:"assets,omitempty"` // list of asset id
+	Buys   []*big.Int `json:"buys,omitempty"`
+	Sells  []*big.Int `json:"sells,omitempty"`
+	Block  *big.Int   `json:"block,omitempty"`
+	AFPMid []*big.Int `json:"afpMid,omitempty"`
+	Msgs   []string   `json:"msgs,omitempty"`
+	// Trade params
+	Type     string  `json:"type,omitempty"`
+	Base     string  `json:"base,omitempty"`
+	Quote    string  `json:"quote,omitempty"`
+	Rate     float64 `json:"rate,omitempty"`
+	Triggers []bool  `json:"triggers,omitempty"`
+}
+
+// MarshalJSON custom marshal activity params
+func (ap *ActivityParams) MarshalJSON() ([]byte, error) {
+	newAP := AP{
+		Exchange:  ap.Exchange,
+		Asset:     ap.Asset,
+		Amount:    ap.Amount,
+		Timepoint: ap.Timepoint,
+		Buys:      ap.Buys,
+		Sells:     ap.Sells,
+		Block:     ap.Block,
+		AFPMid:    ap.AFPMid,
+		Msgs:      ap.Msgs,
+		Type:      ap.Type,
+		Base:      ap.Base,
+		Quote:     ap.Quote,
+		Rate:      ap.Rate,
+		Triggers:  ap.Triggers,
+	}
+	assetIDs := []string{}
+	for _, asset := range ap.Assets {
+		assetIDs = append(assetIDs, strconv.FormatUint(asset, 10))
+	}
+	newAP.Assets = assetIDs
+	return json.Marshal(newAP)
+}
+
+func (ap *ActivityParams) UnmarshalJSON(data []byte) error {
+	var newAP AP
+	if err := json.Unmarshal(data, &newAP); err != nil {
+		return err
+	}
+	ap = &ActivityParams{
+		Exchange:  newAP.Exchange,
+		Asset:     newAP.Asset,
+		Amount:    newAP.Amount,
+		Timepoint: newAP.Timepoint,
+		Buys:      newAP.Buys,
+		Sells:     newAP.Sells,
+		Block:     newAP.Block,
+		AFPMid:    newAP.AFPMid,
+		Msgs:      newAP.Msgs,
+		Type:      newAP.Type,
+		Base:      newAP.Base,
+		Quote:     newAP.Quote,
+		Rate:      newAP.Rate,
+		Triggers:  newAP.Triggers,
+	}
+	for _, asset := range newAP.Assets {
+		id, err := strconv.ParseUint(asset, 10, 64)
+		if err != nil {
+			return err
+		}
+		ap.Assets = append(ap.Assets, id)
+	}
+	return nil
 }
 
 // ActivityResult is result of an activity
@@ -678,7 +756,7 @@ func NewTradeHistory(id string, price, qty float64, typ string, timestamp uint64
 	}
 }
 
-type ExchangeTradeHistory map[uint64][]TradeHistory
+type ExchangeTradeHistory map[uint64][]TradeHistory // map trading pari and its slice of trade
 
 type AllTradeHistory struct {
 	Timestamp Timestamp                           `json:"timestamp"`
