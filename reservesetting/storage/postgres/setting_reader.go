@@ -16,13 +16,13 @@ func (s *Storage) GetTransferableAssets() ([]common.Asset, error) {
 }
 
 // GetTradingPair return trading pair by trading pair id
-func (s *Storage) GetTradingPair(id uint64) (common.TradingPairSymbols, error) {
+func (s *Storage) GetTradingPair(id uint64, withDeleted bool) (common.TradingPairSymbols, error) {
 	var (
 		tradingPairDB tradingPairDB
 		result        common.TradingPairSymbols
 	)
 
-	if err := s.stmts.getTradingPairByID.Get(&tradingPairDB, id); err != nil {
+	if err := s.stmts.getTradingPairByID.Get(&tradingPairDB, id, withDeleted); err != nil {
 		if err == sql.ErrNoRows {
 			return result, common.ErrNotFound
 		}

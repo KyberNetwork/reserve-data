@@ -56,7 +56,7 @@ func TestStorage_GetTradingPair(t *testing.T) {
 	require.NoError(t, err)
 
 	initData(t, s)
-	_, err = s.GetTradingPair(1)
+	_, err = s.GetTradingPair(1, false)
 	require.NoError(t, err)
 }
 

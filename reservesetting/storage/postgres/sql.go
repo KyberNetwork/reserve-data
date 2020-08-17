@@ -279,7 +279,12 @@ func tradingPairStatements(db *sqlx.DB) (*tradingPairStmts, error) {
 		return nil, errors.Wrap(err, "failed to prepare updateTradingPair")
 	}
 
-	const getTradingPairByIDQuery = `SELECT DISTINCT tp.id,
+	const getTradingPairByIDQuery = `WITH selected AS (
+	SELECT tp.id,tp.exchange_id, tp.base_id,tp.quote_id, tp.price_precision, tp.amount_precision, tp.amount_limit_min,tp.amount_limit_max,
+	tp.price_limit_min, tp.price_limit_max, tp.min_notional	FROM trading_pairs tp WHERE tp.id=$1
+	UNION ALL SELECT tpd.id,tpd.exchange_id, tpd.base_id,tpd.quote_id, tpd.price_precision, tpd.amount_precision, tpd.amount_limit_min,tpd.amount_limit_max,
+	tpd.price_limit_min, tpd.price_limit_max, tpd.min_notional FROM trading_pairs_deleted tpd WHERE tpd.id=$1 and $2 IS TRUE
+) SELECT DISTINCT tp.id,
 									                tp.exchange_id,
 									                tp.base_id,
 									                tp.quote_id,
@@ -292,12 +297,12 @@ func tradingPairStatements(db *sqlx.DB) (*tradingPairStmts, error) {
 									                tp.min_notional,
 									                bae.symbol AS base_symbol,
 									                qae.symbol AS quote_symbol
-									FROM trading_pairs AS tp
+									FROM selected AS tp
 									         INNER JOIN assets AS ba ON tp.base_id = ba.id
 									         INNER JOIN asset_exchanges AS bae ON ba.id = bae.asset_id
 									         INNER JOIN assets AS qa ON tp.quote_id = qa.id
 									         INNER JOIN asset_exchanges AS qae ON qa.id = qae.asset_id
-									WHERE tp.exchange_id = bae.exchange_id AND tp.exchange_id = qae.exchange_id AND tp.id = $1;`
+									WHERE tp.exchange_id = bae.exchange_id AND tp.exchange_id = qae.exchange_id`
 	getTradingPairByID, err := db.Preparex(getTradingPairByIDQuery)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to prepare getTradingPairByID")

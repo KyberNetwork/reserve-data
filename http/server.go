@@ -86,7 +86,7 @@ func (s *Server) AllPrices(c *gin.Context) {
 
 	var responseData []price
 	for tp, onePrice := range data.Data {
-		pair, err := s.settingStorage.GetTradingPair(tp)
+		pair, err := s.settingStorage.GetTradingPair(tp, false)
 		if err != nil {
 			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
@@ -210,7 +210,7 @@ func (s *Server) Trade(c *gin.Context) {
 		return
 	}
 	var pair v3common.TradingPairSymbols
-	pair, err = s.settingStorage.GetTradingPair(request.Pair)
+	pair, err = s.settingStorage.GetTradingPair(request.Pair, false)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -273,7 +273,7 @@ func (s *Server) OpenOrders(c *gin.Context) {
 	}
 	if query.Pair != 0 {
 		logger.Infow("query pair", "pair", query.Pair)
-		pair, err = s.settingStorage.GetTradingPair(query.Pair)
+		pair, err = s.settingStorage.GetTradingPair(query.Pair, false)
 		if err != nil {
 			logger.Errorw("failed to get trading token pair from setting data base", "err", err)
 			httputil.ResponseFailure(c, httputil.WithError(err))

@@ -20,7 +20,7 @@ func TestStorage_UpdateTradingPair(t *testing.T) {
 	require.NoError(t, err)
 
 	initData(t, s)
-	tp, err := s.GetTradingPair(1)
+	tp, err := s.GetTradingPair(1, false)
 	require.NoError(t, err)
 	expectedTradingPair := tp
 	expectedTradingPair.PricePrecision = 1
@@ -41,7 +41,7 @@ func TestStorage_UpdateTradingPair(t *testing.T) {
 		MinNotional:     common.FloatPointer(0.1),
 	})
 	require.NoError(t, err)
-	updatedTradingPair, err := s.GetTradingPair(1)
+	updatedTradingPair, err := s.GetTradingPair(1, false)
 	require.NoError(t, err)
 	require.Equal(t, expectedTradingPair, updatedTradingPair)
 	require.Equal(t, binance, updatedTradingPair.ExchangeID)

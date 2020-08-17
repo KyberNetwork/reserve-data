@@ -369,8 +369,13 @@ curl -X GET "https://gateway.local/v3/exchange"
 
 ## Get trading pair by id
 
+Params | Type | Required | Default | Description
+------ | ---- | -------- | ------- | -----------
+including_deleted | bool | false | false | include deleted object in result
+
+
 ```shell
-curl -X GET "https://gateway.local/v3/trading-pair/1"
+curl -X GET "https://gateway.local/v3/trading-pair/1?including_deleted=false"
 ```
 
 > sample response

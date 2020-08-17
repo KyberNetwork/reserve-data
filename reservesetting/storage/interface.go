@@ -38,7 +38,7 @@ type SettingReader interface {
 	GetExchange(id uint64) (v3.Exchange, error)
 	GetExchangeByName(name string) (v3.Exchange, error)
 	GetExchanges() ([]v3.Exchange, error)
-	GetTradingPair(id uint64) (v3.TradingPairSymbols, error)
+	GetTradingPair(id uint64, withDeleted bool) (v3.TradingPairSymbols, error)
 	GetTradingPairs(exchangeID uint64) ([]v3.TradingPairSymbols, error)
 	GetTradingBy(tradingByID uint64) (v3.TradingBy, error)
 	// TODO: check usages of this method to see if it should be replaced with GetDepositAddress(exchangeID, tokenID)

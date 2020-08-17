@@ -659,3 +659,31 @@ func TestStorage_GetDepositAddresses(t *testing.T) {
 		t.Logf("symbol=%v deposit address=%v", symbol, addr.Hex())
 	}
 }
+func TestStorage_DeleteTradingPair(t *testing.T) {
+	db, tearDown := testutil.MustNewDevelopmentDB(migrationPath)
+	defer func() {
+		assert.NoError(t, tearDown())
+	}()
+	s, err := NewStorage(db)
+	assert.NoError(t, err)
+	initData(t, s)
+
+	_, err = s.GetTradingPair(1, false)
+	require.NoError(t, err)
+	c, err := s.CreateSettingChange(common.ChangeCatalogMain, common.SettingChange{
+		ChangeList: []common.SettingChangeEntry{
+			{
+				Type: common.ChangeTypeDeleteTradingPair,
+				Data: common.DeleteTradingPairEntry{TradingPairID: 1},
+			},
+		},
+		Message: "delete trading pair",
+	})
+	require.NoError(t, err)
+	err = s.ConfirmSettingChange(c, true)
+	require.NoError(t, err)
+	_, err = s.GetTradingPair(1, false)
+	require.Error(t, common.ErrNotFound)
+	_, err = s.GetTradingPair(1, true)
+	require.NoError(t, err)
+}
