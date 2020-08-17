@@ -325,7 +325,7 @@ func (ap *ActivityParams) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &newAP); err != nil {
 		return err
 	}
-	ap = &ActivityParams{
+	*ap = ActivityParams{
 		Exchange:  newAP.Exchange,
 		Asset:     newAP.Asset,
 		Amount:    newAP.Amount,
