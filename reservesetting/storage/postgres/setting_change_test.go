@@ -683,7 +683,7 @@ func TestStorage_DeleteTradingPair(t *testing.T) {
 	err = s.ConfirmSettingChange(c, true)
 	require.NoError(t, err)
 	_, err = s.GetTradingPair(1, false)
-	require.Error(t, common.ErrNotFound)
+	require.Error(t, err, common.ErrNotFound)
 	_, err = s.GetTradingPair(1, true)
 	require.NoError(t, err)
 }
