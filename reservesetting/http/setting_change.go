@@ -64,13 +64,11 @@ func (s *Server) fillLiveInfoSettingChange(settingChange *common.SettingChange) 
 				if err != nil {
 					return fmt.Errorf("position %d, error: %v", i, err)
 				}
-				if assetExchange.WithdrawFee == 0 {
-					withdrawFee, err := s.withdrawFeeFromExchange(assetExchange.ExchangeID, assetExchange.Symbol)
-					if err != nil {
-						return fmt.Errorf("position %d, error: %v", i, err)
-					}
-					asset.Exchanges[index].WithdrawFee = withdrawFee
+				withdrawFee, err := s.withdrawFeeFromExchange(assetExchange.ExchangeID, assetExchange.Symbol)
+				if err != nil {
+					return fmt.Errorf("position %d, error: %v", i, err)
 				}
+				asset.Exchanges[index].WithdrawFee = withdrawFee
 			}
 		case common.ChangeTypeCreateTradingPair:
 			entry := o.Data.(*common.CreateTradingPairEntry)
@@ -105,13 +103,11 @@ func (s *Server) fillLiveInfoSettingChange(settingChange *common.SettingChange) 
 			if err != nil {
 				return fmt.Errorf("position %d, error: %v", i, err)
 			}
-			if assetExchange.WithdrawFee == 0 {
-				withdrawFee, err := s.withdrawFeeFromExchange(assetExchange.ExchangeID, assetExchange.Symbol)
-				if err != nil {
-					return fmt.Errorf("position %d, error: %v", i, err)
-				}
-				assetExchange.WithdrawFee = withdrawFee
+			withdrawFee, err := s.withdrawFeeFromExchange(assetExchange.ExchangeID, assetExchange.Symbol)
+			if err != nil {
+				return fmt.Errorf("position %d, error: %v", i, err)
 			}
+			assetExchange.WithdrawFee = withdrawFee
 		}
 	}
 	return nil

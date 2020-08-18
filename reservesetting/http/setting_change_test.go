@@ -154,7 +154,6 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 							ID:             2,
 							DepositAddress: common.AddressPointer(eth.HexToAddress("0x0000000000001")),
 							MinDeposit:     common.FloatPointer(6.0),
-							WithdrawFee:    common.FloatPointer(9.0),
 						},
 					},
 				},
@@ -172,7 +171,6 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 				assetExchange, err := s.GetAssetExchange(2)
 				require.NoError(t, err)
 				require.Equal(t, 6.0, assetExchange.MinDeposit)
-				require.Equal(t, 9.0, assetExchange.WithdrawFee)
 				//check create asset exchange
 				asset, err := s.GetAsset(assetID)
 				require.NoError(t, err)

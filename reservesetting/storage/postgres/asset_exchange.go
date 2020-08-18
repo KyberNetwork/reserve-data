@@ -97,18 +97,7 @@ func (s *Storage) UpdateAssetExchangeWithdrawFee(withdrawFee float64, assetExcha
 	}
 	defer pgutil.RollbackUnlessCommitted(tx)
 	var aeID uint64
-	if err := tx.NamedStmt(s.stmts.updateAssetExchange).Get(&aeID, struct {
-		ID                uint64   `db:"id"`
-		Symbol            *string  `db:"symbol"`
-		DepositAddress    *string  `db:"deposit_address"`
-		MinDeposit        *float64 `db:"min_deposit"`
-		WithdrawFee       *float64 `db:"withdraw_fee"`
-		TargetRecommended *float64 `db:"target_recommended"`
-		TargetRatio       *float64 `db:"target_ratio"`
-	}{
-		ID:          assetExchangeID,
-		WithdrawFee: common.FloatPointer(withdrawFee),
-	}); err != nil {
+	if err := tx.Stmtx(s.stmts.updateAssetExchangeWithdrawFee).Get(&aeID, assetExchangeID, withdrawFee); err != nil {
 		return err
 	}
 	return tx.Commit()

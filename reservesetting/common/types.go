@@ -175,7 +175,6 @@ type UpdateAssetExchangeEntry struct {
 	Symbol            *string           `json:"symbol"`
 	DepositAddress    *ethereum.Address `json:"deposit_address"`
 	MinDeposit        *float64          `json:"min_deposit"`
-	WithdrawFee       *float64          `json:"withdraw_fee"`
 	TargetRecommended *float64          `json:"target_recommended"`
 	TargetRatio       *float64          `json:"target_ratio"`
 }

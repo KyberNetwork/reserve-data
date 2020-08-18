@@ -49,7 +49,6 @@ func TestServer_UpdateAssetExchange(t *testing.T) {
 		Symbol:            common.StringPointer("XYZ"),
 		DepositAddress:    common.AddressPointer(eth.HexToAddress("0x232425")),
 		MinDeposit:        common.FloatPointer(3.1),
-		WithdrawFee:       common.FloatPointer(3.2),
 		TargetRecommended: common.FloatPointer(3.3),
 		TargetRatio:       common.FloatPointer(3.4),
 	}
@@ -73,7 +72,6 @@ func TestServer_UpdateAssetExchange(t *testing.T) {
 		if x.ID == selectAssetExchange.ID {
 			found = true
 			assert.Equal(t, *updateAxe.MinDeposit, x.MinDeposit)
-			assert.Equal(t, *updateAxe.WithdrawFee, x.WithdrawFee)
 			assert.Equal(t, *updateAxe.TargetRecommended, x.TargetRecommended)
 			assert.Equal(t, *updateAxe.TargetRatio, x.TargetRatio)
 			assert.Equal(t, *updateAxe.DepositAddress, x.DepositAddress)

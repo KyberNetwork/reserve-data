@@ -6,18 +6,19 @@ import (
 )
 
 type preparedStmts struct {
-	getExchanges        *sqlx.Stmt
-	getExchange         *sqlx.Stmt
-	getExchangeByName   *sqlx.Stmt
-	updateExchange      *sqlx.NamedStmt
-	newAsset            *sqlx.NamedStmt
-	newAssetExchange    *sqlx.NamedStmt
-	updateAssetExchange *sqlx.NamedStmt
-	deleteAssetExchange *sqlx.Stmt
-	newTradingPair      *sqlx.NamedStmt
-	newFeedWeight       *sqlx.NamedStmt
-	getFeedWeight       *sqlx.Stmt
-	deleteFeedWeight    *sqlx.Stmt
+	getExchanges                   *sqlx.Stmt
+	getExchange                    *sqlx.Stmt
+	getExchangeByName              *sqlx.Stmt
+	updateExchange                 *sqlx.NamedStmt
+	newAsset                       *sqlx.NamedStmt
+	newAssetExchange               *sqlx.NamedStmt
+	updateAssetExchange            *sqlx.NamedStmt
+	updateAssetExchangeWithdrawFee *sqlx.Stmt
+	deleteAssetExchange            *sqlx.Stmt
+	newTradingPair                 *sqlx.NamedStmt
+	newFeedWeight                  *sqlx.NamedStmt
+	getFeedWeight                  *sqlx.Stmt
+	deleteFeedWeight               *sqlx.Stmt
 
 	getAsset                 *sqlx.Stmt
 	getAssetBySymbol         *sqlx.Stmt
@@ -70,7 +71,7 @@ func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
 		return nil, err
 	}
 
-	newAssetExchange, updateAssetExchange, getAssetExchange, getAssetExchangeBySymbol, deleteAssetExchangeStmt, err := assetExchangeStatements(db)
+	newAssetExchange, updateAssetExchange, updateAssetExchangeWithdrawFee, getAssetExchange, getAssetExchangeBySymbol, deleteAssetExchangeStmt, err := assetExchangeStatements(db)
 	if err != nil {
 		return nil, err
 	}
@@ -167,17 +168,18 @@ func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
 	}
 
 	return &preparedStmts{
-		getExchanges:        getExchanges,
-		getExchange:         getExchange,
-		getExchangeByName:   getExchangeByName,
-		updateExchange:      updateExchange,
-		newAsset:            newAsset,
-		newAssetExchange:    newAssetExchange,
-		updateAssetExchange: updateAssetExchange,
-		deleteAssetExchange: deleteAssetExchangeStmt,
-		newFeedWeight:       newFeedWeight,
-		getFeedWeight:       getFeedWeight,
-		deleteFeedWeight:    deleteFeedWeight,
+		getExchanges:                   getExchanges,
+		getExchange:                    getExchange,
+		getExchangeByName:              getExchangeByName,
+		updateExchange:                 updateExchange,
+		newAsset:                       newAsset,
+		newAssetExchange:               newAssetExchange,
+		updateAssetExchange:            updateAssetExchange,
+		updateAssetExchangeWithdrawFee: updateAssetExchangeWithdrawFee,
+		deleteAssetExchange:            deleteAssetExchangeStmt,
+		newFeedWeight:                  newFeedWeight,
+		getFeedWeight:                  getFeedWeight,
+		deleteFeedWeight:               deleteFeedWeight,
 
 		newTradingPair:  tradingPairStmts.newStmt,
 		newTradingBy:    newTradingBy,
@@ -533,7 +535,7 @@ func assetStatements(db *sqlx.DB) (*sqlx.NamedStmt, *sqlx.Stmt, *sqlx.NamedStmt,
 	return newAsset, getAsset, updateAsset, getAssetBySymbol, nil
 }
 
-func assetExchangeStatements(db *sqlx.DB) (*sqlx.NamedStmt, *sqlx.NamedStmt, *sqlx.NamedStmt, *sqlx.Stmt, *sqlx.Stmt, error) {
+func assetExchangeStatements(db *sqlx.DB) (*sqlx.NamedStmt, *sqlx.NamedStmt, *sqlx.Stmt, *sqlx.NamedStmt, *sqlx.Stmt, *sqlx.Stmt, error) {
 	const newAssetExchangeQuery string = `INSERT INTO asset_exchanges(exchange_id,
 		                            asset_id,
 		                            symbol,
@@ -552,19 +554,26 @@ func assetExchangeStatements(db *sqlx.DB) (*sqlx.NamedStmt, *sqlx.NamedStmt, *sq
 		        :target_ratio) RETURNING id`
 	newAssetExchange, err := db.PrepareNamed(newAssetExchangeQuery)
 	if err != nil {
-		return nil, nil, nil, nil, nil, errors.Wrap(err, "failed to prepare newAssetExchange")
+		return nil, nil, nil, nil, nil, nil, errors.Wrap(err, "failed to prepare newAssetExchange")
 	}
 	const updateAssetExchangeQuery string = `UPDATE "asset_exchanges"
 		SET symbol = COALESCE(:symbol, symbol),
 		    deposit_address = COALESCE(:deposit_address, deposit_address),
 		    min_deposit           = COALESCE(:min_deposit, min_deposit),
-			withdraw_fee = coalesce(:withdraw_fee, withdraw_fee),
 		    target_recommended = coalesce(:target_recommended,target_recommended),
 		    target_ratio = coalesce(:target_ratio, target_ratio)
 		WHERE id = :id RETURNING id;`
 	updateAssetExchange, err := db.PrepareNamed(updateAssetExchangeQuery)
 	if err != nil {
-		return nil, nil, nil, nil, nil, errors.Wrap(err, "failed to prepare updateAssetExchange")
+		return nil, nil, nil, nil, nil, nil, errors.Wrap(err, "failed to prepare updateAssetExchange")
+	}
+
+	const updateAssetExchangeWithdrawFeeQuery string = `UPDATE "asset_exchanges"
+	SET withdraw_fee=$2
+	WHERE id = $1 RETURNING id;`
+	updateAssetExchangeWithdrawFee, err := db.Preparex(updateAssetExchangeWithdrawFeeQuery)
+	if err != nil {
+		return nil, nil, nil, nil, nil, nil, errors.Wrap(err, "failed to prepare updateAssetExchangeWithdrawFee")
 	}
 
 	const getAssetExchangeQuery = `SELECT id,
@@ -582,7 +591,7 @@ func assetExchangeStatements(db *sqlx.DB) (*sqlx.NamedStmt, *sqlx.NamedStmt, *sq
 			AND exchange_id= coalesce(:exchange_id, exchange_id)`
 	getAssetExchange, err := db.PrepareNamed(getAssetExchangeQuery)
 	if err != nil {
-		return nil, nil, nil, nil, nil, errors.Wrap(err, "failed to prepare getAssetExchange")
+		return nil, nil, nil, nil, nil, nil, errors.Wrap(err, "failed to prepare getAssetExchange")
 	}
 
 	const getAssetExchangeBySymbolQuery = `SELECT id,
@@ -599,16 +608,16 @@ func assetExchangeStatements(db *sqlx.DB) (*sqlx.NamedStmt, *sqlx.NamedStmt, *sq
 			AND symbol= $2`
 	getAssetExchangeBySymbol, err := db.Preparex(getAssetExchangeBySymbolQuery)
 	if err != nil {
-		return nil, nil, nil, nil, nil, errors.Wrap(err, "failed to prepare getAssetExchangeBySymbol")
+		return nil, nil, nil, nil, nil, nil, errors.Wrap(err, "failed to prepare getAssetExchangeBySymbol")
 	}
 
 	const deleteAssetExchangeQuery = `SELECT * FROM delete_asset_exchange($1)`
 	deleteAssetExchangeStmt, err := db.Preparex(deleteAssetExchangeQuery)
 	if err != nil {
-		return nil, nil, nil, nil, nil, errors.Wrap(err, "failed to prepare deleteAssetExchangeStmt")
+		return nil, nil, nil, nil, nil, nil, errors.Wrap(err, "failed to prepare deleteAssetExchangeStmt")
 	}
 
-	return newAssetExchange, updateAssetExchange, getAssetExchange,
+	return newAssetExchange, updateAssetExchange, updateAssetExchangeWithdrawFee, getAssetExchange,
 		getAssetExchangeBySymbol, deleteAssetExchangeStmt, nil
 }
 

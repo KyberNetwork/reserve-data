@@ -212,9 +212,6 @@ func (s *Storage) updateAssetExchange(tx *sqlx.Tx, id uint64, updateOpts storage
 	if updateOpts.MinDeposit != nil {
 		updateMsgs = append(updateMsgs, fmt.Sprintf("min_deposit=%f", *updateOpts.MinDeposit))
 	}
-	if updateOpts.WithdrawFee != nil {
-		updateMsgs = append(updateMsgs, fmt.Sprintf("withdraw_fee=%f", *updateOpts.WithdrawFee))
-	}
 	if updateOpts.TargetRecommended != nil {
 		updateMsgs = append(updateMsgs, fmt.Sprintf("target_recommended=%f", *updateOpts.TargetRecommended))
 	}
@@ -235,7 +232,6 @@ func (s *Storage) updateAssetExchange(tx *sqlx.Tx, id uint64, updateOpts storage
 			Symbol            *string  `db:"symbol"`
 			DepositAddress    *string  `db:"deposit_address"`
 			MinDeposit        *float64 `db:"min_deposit"`
-			WithdrawFee       *float64 `db:"withdraw_fee"`
 			TargetRecommended *float64 `db:"target_recommended"`
 			TargetRatio       *float64 `db:"target_ratio"`
 		}{
@@ -243,7 +239,6 @@ func (s *Storage) updateAssetExchange(tx *sqlx.Tx, id uint64, updateOpts storage
 			Symbol:            updateOpts.Symbol,
 			DepositAddress:    addressParam,
 			MinDeposit:        updateOpts.MinDeposit,
-			WithdrawFee:       updateOpts.WithdrawFee,
 			TargetRecommended: updateOpts.TargetRecommended,
 			TargetRatio:       updateOpts.TargetRatio,
 		},

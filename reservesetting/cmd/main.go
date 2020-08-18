@@ -192,12 +192,11 @@ func runUpdateWithdrawFee(sugar *zap.SugaredLogger, exchanges map[v1common.Excha
 	for _, asset := range assets {
 		for _, ae := range asset.Exchanges {
 			if le, ok := exchanges[v1common.ExchangeID(ae.ExchangeID)]; ok {
-				withdrawFee, err := le.GetLiveWithdrawFee(asset.Symbol)
+				withdrawFee, err := le.GetLiveWithdrawFee(ae.Symbol)
 				if err != nil {
-					sugar.Errorw("cannot get live withdraw fee", "err", err, "asset", asset.Symbol)
-					return
+					sugar.Warnw("cannot get live withdraw fee", "err", err, "exchange symbol", ae.Symbol, "token symbol", asset.Symbol)
+					continue
 				}
-				sugar.Infow("withdraw fee", "fee", withdrawFee, "symbol", asset.Symbol)
 				if err := s.UpdateAssetExchangeWithdrawFee(withdrawFee, ae.ID); err != nil {
 					sugar.Errorw("cannot update asset exchange", "err", err)
 					return
