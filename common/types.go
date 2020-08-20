@@ -756,7 +756,7 @@ func NewTradeHistory(id string, price, qty float64, typ string, timestamp uint64
 	}
 }
 
-type ExchangeTradeHistory map[uint64][]TradeHistory // map trading pari and its slice of trade
+type ExchangeTradeHistory map[uint64][]TradeHistory // map trading pair id and its slice of trade
 
 type AllTradeHistory struct {
 	Timestamp Timestamp                           `json:"timestamp"`
