@@ -11,14 +11,15 @@ import (
 
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/blockchain"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	commonv3 "github.com/KyberNetwork/reserve-data/reservesetting/common"
 )
 
 type testExchange struct {
 }
 
-func (te testExchange) ID() common.ExchangeID {
-	return common.Binance
+func (te testExchange) ID() rtypes.ExchangeID {
+	return rtypes.Binance
 }
 
 func (te testExchange) Address(_ commonv3.Asset) (address ethereum.Address, supported bool) {
@@ -129,7 +130,7 @@ func (tas testActivityStorage) Record(
 	return nil
 }
 
-func (tas testActivityStorage) GetActivity(exchangeID common.ExchangeID, id string) (common.ActivityRecord, error) {
+func (tas testActivityStorage) GetActivity(exchangeID rtypes.ExchangeID, id string) (common.ActivityRecord, error) {
 	return common.ActivityRecord{}, nil
 }
 

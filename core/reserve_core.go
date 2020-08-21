@@ -16,6 +16,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/common/blockchain"
 	"github.com/KyberNetwork/reserve-data/data/storage"
 	"github.com/KyberNetwork/reserve-data/lib/caller"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	commonv3 "github.com/KyberNetwork/reserve-data/reservesetting/common"
 )
 
@@ -604,7 +605,7 @@ func (rc ReserveCore) SetRates(assets []commonv3.Asset, buys, sells []*big.Int, 
 		txprice = tx.GasPrice().Text(10)
 	}
 	uid := timebasedID(txhex)
-	assetsID := []uint64{}
+	assetsID := []rtypes.AssetID{}
 	for _, asset := range assets {
 		assetsID = append(assetsID, asset.ID)
 	}
@@ -684,7 +685,7 @@ func sanityCheckTrading(pair commonv3.TradingPairSymbols, rate, amount float64) 
 func sanityCheckAmount(exchange common.Exchange, asset commonv3.Asset, amount *big.Int) error {
 	var feeWithdrawing float64
 	for _, exchg := range asset.Exchanges {
-		if common.ExchangeID(exchg.ExchangeID).String() == exchange.ID().String() {
+		if exchg.ExchangeID == exchange.ID() {
 			feeWithdrawing = exchg.WithdrawFee
 		}
 	}

@@ -8,17 +8,18 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/KyberNetwork/reserve-data/http/httputil"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	v3common "github.com/KyberNetwork/reserve-data/reservesetting/common"
 )
 
 // RateRequest is request for a rate
 type RateRequest struct {
-	AssetID uint64 `json:"asset_id"`
-	Buy     string `json:"buy"`
-	Sell    string `json:"sell"`
-	Mid     string `json:"mid"`
-	Msg     string `json:"msg"`
-	Trigger bool   `json:"trigger"`
+	AssetID rtypes.AssetID `json:"asset_id"`
+	Buy     string         `json:"buy"`
+	Sell    string         `json:"sell"`
+	Mid     string         `json:"mid"`
+	Msg     string         `json:"msg"`
+	Trigger bool           `json:"trigger"`
 }
 
 // SetRateEntry is input for set rate request

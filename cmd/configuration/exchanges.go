@@ -6,6 +6,7 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/KyberNetwork/reserve-data/common"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 )
 
 const (
@@ -22,8 +23,8 @@ func NewExchangeCliFlag() cli.Flag {
 }
 
 // NewExchangesFromContext returns configured exchanges from cli context.
-func NewExchangesFromContext(c *cli.Context) ([]common.ExchangeID, error) {
-	var exchanges []common.ExchangeID
+func NewExchangesFromContext(c *cli.Context) ([]rtypes.ExchangeID, error) {
+	var exchanges []rtypes.ExchangeID
 
 	for _, exchangeName := range c.GlobalStringSlice(exchangesFlag) {
 		exchange, ok := common.ValidExchangeNames[exchangeName]

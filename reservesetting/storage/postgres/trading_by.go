@@ -7,11 +7,12 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	"github.com/KyberNetwork/reserve-data/reservesetting/common"
 )
 
-func (s *Storage) createTradingBy(tx *sqlx.Tx, assetID, tradingPairID uint64) (uint64, error) {
-	var tradingByID uint64
+func (s *Storage) createTradingBy(tx *sqlx.Tx, assetID rtypes.AssetID, tradingPairID rtypes.TradingPairID) (rtypes.TradingByID, error) {
+	var tradingByID rtypes.TradingByID
 	err := tx.Stmtx(s.stmts.newTradingBy).Get(&tradingByID, assetID, tradingPairID)
 	if err != nil {
 		pErr, ok := err.(*pq.Error)
@@ -29,7 +30,7 @@ func (s *Storage) createTradingBy(tx *sqlx.Tx, assetID, tradingPairID uint64) (u
 }
 
 // GetTradingBy get a trading by with a given ID
-func (s *Storage) GetTradingBy(tradingByID uint64) (common.TradingBy, error) {
+func (s *Storage) GetTradingBy(tradingByID rtypes.TradingByID) (common.TradingBy, error) {
 	var (
 		result tradingByDB
 	)

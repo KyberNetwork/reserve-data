@@ -11,6 +11,7 @@ import (
 	ethereum "github.com/ethereum/go-ethereum/common"
 
 	"github.com/KyberNetwork/reserve-data/common/archive"
+	rtypes "github.com/KyberNetwork/reserve-data/lib/rtypes"
 )
 
 // Version indicate fetched data version
@@ -89,13 +90,13 @@ type ExchangePrecisionLimit struct {
 }
 
 // ExchangeInfo is written and read concurrently
-type ExchangeInfo map[uint64]ExchangePrecisionLimit
+type ExchangeInfo map[rtypes.TradingPairID]ExchangePrecisionLimit
 
 func NewExchangeInfo() ExchangeInfo {
-	return ExchangeInfo(make(map[uint64]ExchangePrecisionLimit))
+	return ExchangeInfo(make(map[rtypes.TradingPairID]ExchangePrecisionLimit))
 }
 
-func (ei ExchangeInfo) Get(pair uint64) (ExchangePrecisionLimit, error) {
+func (ei ExchangeInfo) Get(pair rtypes.TradingPairID) (ExchangePrecisionLimit, error) {
 	info, exist := ei[pair]
 	if !exist {
 		return info, fmt.Errorf("token pair is not existed")
@@ -104,8 +105,8 @@ func (ei ExchangeInfo) Get(pair uint64) (ExchangePrecisionLimit, error) {
 
 }
 
-func (ei ExchangeInfo) GetData() map[uint64]ExchangePrecisionLimit {
-	data := map[uint64]ExchangePrecisionLimit(ei)
+func (ei ExchangeInfo) GetData() map[rtypes.TradingPairID]ExchangePrecisionLimit {
+	data := map[rtypes.TradingPairID]ExchangePrecisionLimit(ei)
 	return data
 }
 
@@ -247,24 +248,24 @@ type ActivityRecord struct {
 
 // AssetRateTrigger keep result of calculate token rate trigger
 type AssetRateTrigger struct {
-	AssetID AssetID `json:"asset_id"`
-	Count   int     `json:"count"`
+	AssetID rtypes.AssetID `json:"asset_id"`
+	Count   int            `json:"count"`
 }
 
 // ActivityParams is params for activity
 type ActivityParams struct {
 	// deposit, withdraw params
-	Exchange  ExchangeID `json:"exchange,omitempty"`
-	Asset     uint64     `json:"asset,omitempty"`
-	Amount    float64    `json:"amount,omitempty"`
-	Timepoint uint64     `json:"timepoint,omitempty"`
+	Exchange  rtypes.ExchangeID `json:"exchange,omitempty"`
+	Asset     rtypes.AssetID    `json:"asset,omitempty"`
+	Amount    float64           `json:"amount,omitempty"`
+	Timepoint uint64            `json:"timepoint,omitempty"`
 	// SetRates params
-	Assets []uint64   `json:"assets,omitempty"` // list of asset id
-	Buys   []*big.Int `json:"buys,omitempty"`
-	Sells  []*big.Int `json:"sells,omitempty"`
-	Block  *big.Int   `json:"block,omitempty"`
-	AFPMid []*big.Int `json:"afpMid,omitempty"`
-	Msgs   []string   `json:"msgs,omitempty"`
+	Assets []rtypes.AssetID `json:"assets,omitempty"` // list of asset id
+	Buys   []*big.Int       `json:"buys,omitempty"`
+	Sells  []*big.Int       `json:"sells,omitempty"`
+	Block  *big.Int         `json:"block,omitempty"`
+	AFPMid []*big.Int       `json:"afpMid,omitempty"`
+	Msgs   []string         `json:"msgs,omitempty"`
 	// Trade params
 	Type     string  `json:"type,omitempty"`
 	Base     string  `json:"base,omitempty"`
@@ -388,14 +389,14 @@ func NewPriceEntry(quantity, rate float64) PriceEntry {
 
 type AllPriceEntry struct {
 	Block uint64
-	Data  map[uint64]OnePrice
+	Data  map[rtypes.TradingPairID]OnePrice
 }
 
 type AllPriceResponse struct {
 	Version    Version
 	Timestamp  Timestamp
 	ReturnTime Timestamp
-	Data       map[uint64]OnePrice
+	Data       map[rtypes.TradingPairID]OnePrice
 	Block      uint64
 }
 
@@ -407,7 +408,7 @@ type OnePriceResponse struct {
 	Block      uint64
 }
 
-type OnePrice map[ExchangeID]ExchangePrice
+type OnePrice map[rtypes.ExchangeID]ExchangePrice
 
 type ExchangePrice struct {
 	Valid      bool
@@ -499,7 +500,7 @@ type OrderEntry struct {
 	Data       []Order
 }
 
-type AllOrderEntry map[ExchangeID]OrderEntry
+type AllOrderEntry map[rtypes.ExchangeID]OrderEntry
 
 type AllOrderResponse struct {
 	Version    Version
@@ -507,15 +508,14 @@ type AllOrderResponse struct {
 	ReturnTime Timestamp
 	Data       AllOrderEntry
 }
-type AssetID uint64
 type EBalanceEntry struct {
 	Valid            bool
 	Error            string
 	Timestamp        Timestamp
 	ReturnTime       Timestamp
-	AvailableBalance map[AssetID]float64
-	LockedBalance    map[AssetID]float64
-	DepositBalance   map[AssetID]float64
+	AvailableBalance map[rtypes.AssetID]float64
+	LockedBalance    map[rtypes.AssetID]float64
+	DepositBalance   map[rtypes.AssetID]float64
 	Status           bool
 }
 
@@ -523,19 +523,19 @@ type AllEBalanceResponse struct {
 	Version    Version
 	Timestamp  Timestamp
 	ReturnTime Timestamp
-	Data       map[ExchangeID]EBalanceEntry
+	Data       map[rtypes.ExchangeID]EBalanceEntry
 }
 
 // AuthDataSnapshot object
 type AuthDataSnapshot struct {
-	Valid             bool                         `json:"valid,omitempty"`
-	Error             string                       `json:"error,omitempty"`
-	Timestamp         Timestamp                    `json:"timestamp,omitempty"`
-	ReturnTime        Timestamp                    `json:"return_time,omitempty"`
-	ExchangeBalances  map[ExchangeID]EBalanceEntry `json:"exchange_balances,omitempty"`
-	ReserveBalances   map[AssetID]BalanceEntry     `json:"reserve_balances,omitempty"`
-	PendingActivities []ActivityRecord             `json:"pending_activities,omitempty"`
-	Block             uint64                       `json:"block,omitempty"`
+	Valid             bool                                `json:"valid,omitempty"`
+	Error             string                              `json:"error,omitempty"`
+	Timestamp         Timestamp                           `json:"timestamp,omitempty"`
+	ReturnTime        Timestamp                           `json:"return_time,omitempty"`
+	ExchangeBalances  map[rtypes.ExchangeID]EBalanceEntry `json:"exchange_balances,omitempty"`
+	ReserveBalances   map[rtypes.AssetID]BalanceEntry     `json:"reserve_balances,omitempty"`
+	PendingActivities []ActivityRecord                    `json:"pending_activities,omitempty"`
+	Block             uint64                              `json:"block,omitempty"`
 }
 
 // deprecated
@@ -554,17 +554,17 @@ func NewAuthDataRecord(timestamp Timestamp, data AuthDataSnapshot) AuthDataRecor
 
 // ExchangeBalance is balance of a token of an exchange
 type ExchangeBalance struct {
-	ExchangeID uint64  `json:"exchange_id"`
-	Available  float64 `json:"available"`
-	Locked     float64 `json:"locked"`
-	Name       string  `json:"name"`
-	Error      string  `json:"error"`
+	ExchangeID rtypes.ExchangeID `json:"exchange_id"`
+	Available  float64           `json:"available"`
+	Locked     float64           `json:"locked"`
+	Name       string            `json:"name"`
+	Error      string            `json:"error"`
 }
 
 // AuthdataBalance is balance for a token in reservesetting authata
 type AuthdataBalance struct {
 	Valid        bool              `json:"valid"`
-	AssetID      uint64            `json:"asset_id"`
+	AssetID      rtypes.AssetID    `json:"asset_id"`
 	Exchanges    []ExchangeBalance `json:"exchanges"`
 	Reserve      float64           `json:"reserve"`
 	ReserveError string            `json:"reserve_error"`
@@ -608,7 +608,7 @@ func NewRateEntry(baseBuy *big.Int, compactBuy int8, baseSell *big.Int, compactS
 type TXEntry struct {
 	Hash           string
 	Exchange       string
-	AssetID        uint64
+	AssetID        rtypes.AssetID
 	MiningStatus   string
 	ExchangeStatus string
 	Amount         float64
@@ -616,7 +616,7 @@ type TXEntry struct {
 }
 
 // NewTXEntry creates new instance of TXEntry.
-func NewTXEntry(hash, exchange string, assetID uint64, miningStatus, exchangeStatus string, amount float64, timestamp Timestamp) TXEntry {
+func NewTXEntry(hash, exchange string, assetID rtypes.AssetID, miningStatus, exchangeStatus string, amount float64, timestamp Timestamp) TXEntry {
 	return TXEntry{
 		Hash:           hash,
 		Exchange:       exchange,
@@ -644,18 +644,18 @@ type RateResponse struct {
 type AllRateEntry struct {
 	Timestamp   Timestamp
 	ReturnTime  Timestamp
-	Data        map[uint64]RateEntry
+	Data        map[rtypes.AssetID]RateEntry
 	BlockNumber uint64
 }
 
 // AllRateResponse is the response to query all rates.
 type AllRateResponse struct {
-	Version       Version                 `json:"version"`
-	Timestamp     Timestamp               `json:"timestamp"`
-	ReturnTime    Timestamp               `json:"return_time"`
-	Data          map[uint64]RateResponse `json:"data"`
-	BlockNumber   uint64                  `json:"block_number"`
-	ToBlockNumber uint64                  `json:"to_block_number"`
+	Version       Version                         `json:"version"`
+	Timestamp     Timestamp                       `json:"timestamp"`
+	ReturnTime    Timestamp                       `json:"return_time"`
+	Data          map[rtypes.AssetID]RateResponse `json:"data"`
+	BlockNumber   uint64                          `json:"block_number"`
+	ToBlockNumber uint64                          `json:"to_block_number"`
 }
 
 type TradeHistory struct {
@@ -678,11 +678,12 @@ func NewTradeHistory(id string, price, qty float64, typ string, timestamp uint64
 	}
 }
 
-type ExchangeTradeHistory map[uint64][]TradeHistory
+// type TradingPairID uint64  TODO: update trading pair
+type ExchangeTradeHistory map[rtypes.TradingPairID][]TradeHistory
 
 type AllTradeHistory struct {
-	Timestamp Timestamp                           `json:"timestamp"`
-	Data      map[ExchangeID]ExchangeTradeHistory `json:"data"`
+	Timestamp Timestamp                                  `json:"timestamp"`
+	Data      map[rtypes.ExchangeID]ExchangeTradeHistory `json:"data"`
 }
 
 type ExStatus struct {

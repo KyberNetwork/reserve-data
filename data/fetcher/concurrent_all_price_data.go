@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/KyberNetwork/reserve-data/common"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 )
 
 type ConcurrentAllPriceData struct {
@@ -15,7 +16,7 @@ func NewConcurrentAllPriceData() *ConcurrentAllPriceData {
 	return &ConcurrentAllPriceData{
 		mu: sync.RWMutex{},
 		data: common.AllPriceEntry{
-			Data:  map[uint64]common.OnePrice{},
+			Data:  map[rtypes.TradingPairID]common.OnePrice{},
 			Block: 0,
 		},
 	}
@@ -28,8 +29,8 @@ func (cap *ConcurrentAllPriceData) SetBlockNumber(block uint64) {
 }
 
 func (cap *ConcurrentAllPriceData) SetOnePrice(
-	exchange common.ExchangeID,
-	pair uint64,
+	exchange rtypes.ExchangeID,
+	pair rtypes.TradingPairID,
 	d common.ExchangePrice) {
 	cap.mu.Lock()
 	defer cap.mu.Unlock()

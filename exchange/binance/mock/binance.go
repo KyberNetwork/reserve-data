@@ -7,11 +7,12 @@ import (
 	ethereum "github.com/ethereum/go-ethereum/common"
 
 	"github.com/KyberNetwork/reserve-data/common"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	commonv3 "github.com/KyberNetwork/reserve-data/reservesetting/common"
 )
 
 func init() {
-	common.SupportedExchanges[common.Binance] = &BinanceTestExchange{}
+	common.SupportedExchanges[rtypes.Binance] = &BinanceTestExchange{}
 }
 
 // BinanceTestExchange is the mock implementation of binance exchange, for testing purpose.
@@ -48,8 +49,8 @@ func (bte *BinanceTestExchange) OpenOrders(pair commonv3.TradingPairSymbols) ([]
 }
 
 // ID return binance exchange id
-func (bte *BinanceTestExchange) ID() common.ExchangeID {
-	return common.Binance
+func (bte *BinanceTestExchange) ID() rtypes.ExchangeID {
+	return rtypes.Binance
 }
 
 // GetLiveExchangeInfos of TestExchangeForSetting return a valid result for

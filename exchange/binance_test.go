@@ -7,14 +7,14 @@ import (
 	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 
-	"github.com/KyberNetwork/reserve-data/common"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	commonv3 "github.com/KyberNetwork/reserve-data/reservesetting/common"
 )
 
 func TestBinance(t *testing.T) {
 
 	binanceEndpoint := &binanceTestInterface{}
-	binance, err := NewBinance(common.Binance, binanceEndpoint, nil, nil)
+	binance, err := NewBinance(rtypes.Binance, binanceEndpoint, nil, nil)
 	require.NoError(t, err)
 	t.Log(binance.ID())
 }

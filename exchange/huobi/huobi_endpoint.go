@@ -18,6 +18,7 @@ import (
 
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/exchange"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	commonv3 "github.com/KyberNetwork/reserve-data/reservesetting/common"
 )
 
@@ -280,7 +281,7 @@ func (ep *Endpoint) OrderStatus(symbol string, id uint64) (exchange.HuobiOrder, 
 func (ep *Endpoint) Withdraw(asset commonv3.Asset, amount *big.Int, address ethereum.Address) (string, error) {
 	var symbol string
 	for _, exchg := range asset.Exchanges {
-		if exchg.ExchangeID == uint64(common.Huobi) {
+		if exchg.ExchangeID == rtypes.Huobi {
 			symbol = exchg.Symbol
 		}
 	}

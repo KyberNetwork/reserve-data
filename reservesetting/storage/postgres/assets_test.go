@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/KyberNetwork/reserve-data/common/testutil"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	"github.com/KyberNetwork/reserve-data/reservesetting/common"
 )
 
@@ -22,7 +23,7 @@ func TestUpdateAsset(t *testing.T) {
 	s, err := NewStorage(db)
 	assert.NoError(t, err)
 	initData(t, s)
-	assetID := uint64(1)
+	assetID := rtypes.AssetID(1)
 	target := &common.AssetTarget{
 		Total:              100.0,
 		Reserve:            101.0,

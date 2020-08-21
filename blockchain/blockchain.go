@@ -14,6 +14,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/common/blockchain"
 	"github.com/KyberNetwork/reserve-data/common/gasstation"
 	huobiblockchain "github.com/KyberNetwork/reserve-data/exchange/huobi/blockchain"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	commonv3 "github.com/KyberNetwork/reserve-data/reservesetting/common"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage"
 )
@@ -287,8 +288,8 @@ func (bc *Blockchain) Send(
 //====================== Readonly calls ============================
 
 // FetchBalanceData return token balance on reserve
-func (bc *Blockchain) FetchBalanceData(reserve ethereum.Address, atBlock uint64) (map[common.AssetID]common.BalanceEntry, error) {
-	result := map[common.AssetID]common.BalanceEntry{}
+func (bc *Blockchain) FetchBalanceData(reserve ethereum.Address, atBlock uint64) (map[rtypes.AssetID]common.BalanceEntry, error) {
+	result := map[rtypes.AssetID]common.BalanceEntry{}
 	tokens := []ethereum.Address{}
 	allAssets, err := bc.sr.GetAssets()
 	if err != nil {
@@ -305,7 +306,7 @@ func (bc *Blockchain) FetchBalanceData(reserve ethereum.Address, atBlock uint64)
 	bc.l.Infow("Fetcher ------> balances", "balances", balances, "err", err)
 	if err != nil {
 		for _, token := range assets {
-			result[common.AssetID(token.ID)] = common.BalanceEntry{
+			result[token.ID] = common.BalanceEntry{
 				Valid:      false,
 				Error:      err.Error(),
 				Timestamp:  timestamp,
@@ -317,7 +318,7 @@ func (bc *Blockchain) FetchBalanceData(reserve ethereum.Address, atBlock uint64)
 			if balances[i].Cmp(Big0) == 0 || balances[i].Cmp(BigMax) > 0 {
 				bc.l.Infow("balances of token is invalid", "token_symbol", asset.Symbol, "balances",
 					balances[i].String(), "asset_id", asset.ID)
-				result[common.AssetID(asset.ID)] = common.BalanceEntry{
+				result[asset.ID] = common.BalanceEntry{
 					Valid:      false,
 					Error:      "Got strange balances from node. It equals to 0 or is bigger than 10^33",
 					Timestamp:  timestamp,
@@ -325,7 +326,7 @@ func (bc *Blockchain) FetchBalanceData(reserve ethereum.Address, atBlock uint64)
 					Balance:    common.RawBalance(*balances[i]),
 				}
 			} else {
-				result[common.AssetID(asset.ID)] = common.BalanceEntry{
+				result[asset.ID] = common.BalanceEntry{
 					Valid:      true,
 					Timestamp:  timestamp,
 					ReturnTime: returnTime,
@@ -378,7 +379,7 @@ func (bc *Blockchain) FetchRates(atBlock uint64, currentBlock uint64) (common.Al
 	result.ReturnTime = returnTime
 	result.BlockNumber = currentBlock
 
-	result.Data = map[uint64]common.RateEntry{}
+	result.Data = map[rtypes.AssetID]common.RateEntry{}
 	for i, token := range validTokens {
 		result.Data[token.ID] = common.NewRateEntry(
 			baseBuys[i],

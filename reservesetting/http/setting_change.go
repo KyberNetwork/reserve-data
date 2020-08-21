@@ -9,9 +9,9 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/pkg/errors"
 
-	v1common "github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/feed"
 	"github.com/KyberNetwork/reserve-data/http/httputil"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	"github.com/KyberNetwork/reserve-data/reservesetting/common"
 )
 
@@ -79,8 +79,8 @@ func (s *Server) fillLiveInfoSettingChange(settingChange *common.SettingChange) 
 			tradingPairSymbol := common.TradingPairSymbols{TradingPair: entry.TradingPair}
 			tradingPairSymbol.BaseSymbol = baseSymbol
 			tradingPairSymbol.QuoteSymbol = quoteSymbol
-			tradingPairSymbol.ID = uint64(1) // mock one
-			exhID := v1common.ExchangeID(entry.ExchangeID)
+			tradingPairSymbol.ID = rtypes.TradingPairID(1) // mock one
+			exhID := entry.ExchangeID
 			centralExh, ok := s.supportedExchanges[exhID]
 			if !ok {
 				return errors.Errorf("position %d, exchange %s not supported", i, exhID)
@@ -113,8 +113,8 @@ func (s *Server) fillLiveInfoSettingChange(settingChange *common.SettingChange) 
 	return nil
 }
 
-func (s *Server) withdrawFeeFromExchange(exchangeID uint64, assetSymbol string) (float64, error) {
-	exhID := v1common.ExchangeID(exchangeID)
+func (s *Server) withdrawFeeFromExchange(exchangeID rtypes.ExchangeID, assetSymbol string) (float64, error) {
+	exhID := exchangeID
 	centralExh, ok := s.supportedExchanges[exhID]
 	if !ok {
 		return 0, errors.Errorf("exchange %s not supported", exhID)
@@ -122,14 +122,14 @@ func (s *Server) withdrawFeeFromExchange(exchangeID uint64, assetSymbol string) 
 	return centralExh.GetLiveWithdrawFee(assetSymbol)
 }
 
-func (s *Server) fillLiveInfoAssetExchange(assets []common.Asset, exchangeID uint64, tradingPairs []common.TradingPair, assetSymbol string, assetID uint64) error {
-	exhID := v1common.ExchangeID(exchangeID)
+func (s *Server) fillLiveInfoAssetExchange(assets []common.Asset, exchangeID rtypes.ExchangeID, tradingPairs []common.TradingPair, assetSymbol string, assetID rtypes.AssetID) error {
+	exhID := exchangeID
 	centralExh, ok := s.supportedExchanges[exhID]
 	if !ok {
 		return errors.Errorf("exchange %s not supported", exhID)
 	}
 	var tps []common.TradingPairSymbols
-	index := uint64(1)
+	index := rtypes.TradingPairID(1)
 	for idx, tradingPair := range tradingPairs {
 		tradingPairSymbol := common.TradingPairSymbols{TradingPair: tradingPair}
 		tradingPairSymbol.ID = index
@@ -162,7 +162,7 @@ func (s *Server) fillLiveInfoAssetExchange(assets []common.Asset, exchangeID uin
 	if err != nil {
 		return err
 	}
-	tradingPairID := uint64(1)
+	tradingPairID := rtypes.TradingPairID(1)
 	for idx := range tradingPairs {
 		if info, ok := exchangeInfo[tradingPairID]; ok {
 			tradingPairs[idx].MinNotional = info.MinNotional
@@ -241,7 +241,7 @@ func (s *Server) getSettingChange(c *gin.Context) {
 		return
 	}
 
-	result, err := s.storage.GetSettingChange(input.ID)
+	result, err := s.storage.GetSettingChange(rtypes.SettingChangeID(input.ID))
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -295,7 +295,7 @@ func (s *Server) rejectSettingChange(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
-	err := s.storage.RejectSettingChange(input.ID)
+	err := s.storage.RejectSettingChange(rtypes.SettingChangeID(input.ID))
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -311,7 +311,7 @@ func (s *Server) confirmSettingChange(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
-	err := s.storage.ConfirmSettingChange(input.ID, true)
+	err := s.storage.ConfirmSettingChange(rtypes.SettingChangeID(input.ID), true)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -354,7 +354,7 @@ func (s *Server) checkCreateTradingPairParams(createEntry common.CreateTradingPa
 	return baseAssetEx.Symbol, quoteAssetEx.Symbol, nil
 }
 
-func getAssetExchangeByExchangeID(asset common.Asset, exchangeID uint64) (common.AssetExchange, bool) {
+func getAssetExchangeByExchangeID(asset common.Asset, exchangeID rtypes.ExchangeID) (common.AssetExchange, bool) {
 	for _, exchange := range asset.Exchanges {
 		if exchange.ExchangeID == exchangeID {
 			return exchange,
@@ -473,7 +473,7 @@ func (s *Server) checkCreateAssetExchangeParams(createEntry common.CreateAssetEx
 	return nil
 }
 
-func getAssetExchange(assets []common.Asset, assetID, exchangeID uint64) (common.AssetExchange, error) {
+func getAssetExchange(assets []common.Asset, assetID rtypes.AssetID, exchangeID rtypes.ExchangeID) (common.AssetExchange, error) {
 	for _, asset := range assets {
 		if asset.ID == assetID {
 			for _, assetExchange := range asset.Exchanges {

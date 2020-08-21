@@ -5,6 +5,7 @@ import (
 
 	ethereum "github.com/ethereum/go-ethereum/common"
 
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	"github.com/KyberNetwork/reserve-data/reservesetting/common"
 )
 
@@ -13,8 +14,8 @@ type TestExchange struct {
 }
 
 // ID return exchange id
-func (te TestExchange) ID() ExchangeID {
-	return Binance
+func (te TestExchange) ID() rtypes.ExchangeID {
+	return rtypes.Binance
 }
 
 //Address function for test

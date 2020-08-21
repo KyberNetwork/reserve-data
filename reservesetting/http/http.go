@@ -12,6 +12,7 @@ import (
 	v1common "github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/gasstation"
 	coreclient "github.com/KyberNetwork/reserve-data/lib/core-client"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	"github.com/KyberNetwork/reserve-data/reservesetting/common"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage"
 )
@@ -21,14 +22,14 @@ type Server struct {
 	storage            storage.Interface
 	r                  *gin.Engine
 	host               string
-	supportedExchanges map[v1common.ExchangeID]v1common.LiveExchange
+	supportedExchanges map[rtypes.ExchangeID]v1common.LiveExchange
 	l                  *zap.SugaredLogger
 	coreClient         *coreclient.Client
 	gasStation         *gasstation.Client
 }
 
 // NewServer creates new HTTP server for reservesetting APIs.
-func NewServer(storage storage.Interface, host string, supportedExchanges map[v1common.ExchangeID]v1common.LiveExchange,
+func NewServer(storage storage.Interface, host string, supportedExchanges map[rtypes.ExchangeID]v1common.LiveExchange,
 	sentryDSN string, coreClient *coreclient.Client, gasStation *gasstation.Client) *Server {
 	l := zap.S()
 	r := gin.Default()

@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 
 	pgutil "github.com/KyberNetwork/reserve-data/common/postgres"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	"github.com/KyberNetwork/reserve-data/reservesetting/common"
 )
 
@@ -19,8 +20,8 @@ const (
 )
 
 // CreateSettingChange creates an setting change in database and return id
-func (s *Storage) CreateSettingChange(cat common.ChangeCatalog, obj common.SettingChange) (uint64, error) {
-	var id uint64
+func (s *Storage) CreateSettingChange(cat common.ChangeCatalog, obj common.SettingChange) (rtypes.SettingChangeID, error) {
+	var id rtypes.SettingChangeID
 	jsonData, err := json.Marshal(obj)
 	if err != nil {
 		return 0, errors.Wrapf(err, "failed to parse json data %+v", obj)
@@ -51,9 +52,9 @@ func (s *Storage) CreateSettingChange(cat common.ChangeCatalog, obj common.Setti
 }
 
 type settingChangeDB struct {
-	ID      uint64    `db:"id"`
-	Created time.Time `db:"created"`
-	Data    []byte    `db:"data"`
+	ID      rtypes.SettingChangeID `db:"id"`
+	Created time.Time              `db:"created"`
+	Data    []byte                 `db:"data"`
 }
 
 func (objDB settingChangeDB) ToCommon() (common.SettingChangeResponse, error) {
@@ -70,11 +71,11 @@ func (objDB settingChangeDB) ToCommon() (common.SettingChangeResponse, error) {
 }
 
 // GetSettingChange returns a object with a given id
-func (s *Storage) GetSettingChange(id uint64) (common.SettingChangeResponse, error) {
+func (s *Storage) GetSettingChange(id rtypes.SettingChangeID) (common.SettingChangeResponse, error) {
 	return s.getSettingChange(nil, id)
 }
 
-func (s *Storage) getSettingChange(tx *sqlx.Tx, id uint64) (common.SettingChangeResponse, error) {
+func (s *Storage) getSettingChange(tx *sqlx.Tx, id rtypes.SettingChangeID) (common.SettingChangeResponse, error) {
 	var dbResult settingChangeDB
 	sts := s.stmts.getSettingChange
 	if tx != nil {
@@ -118,7 +119,7 @@ func (s *Storage) GetSettingChanges(cat common.ChangeCatalog, status common.Chan
 }
 
 // RejectSettingChange delete setting change with a given id
-func (s *Storage) RejectSettingChange(id uint64) error {
+func (s *Storage) RejectSettingChange(id rtypes.SettingChangeID) error {
 	var returnedID uint64
 	tx, err := s.db.Beginx()
 	if err != nil {
@@ -220,7 +221,7 @@ func (s *Storage) applyChange(tx *sqlx.Tx, i int, entry common.SettingChangeEntr
 }
 
 // ConfirmSettingChange apply setting change with a given id
-func (s *Storage) ConfirmSettingChange(id uint64, commit bool) error {
+func (s *Storage) ConfirmSettingChange(id rtypes.SettingChangeID, commit bool) error {
 	tx, err := s.db.Beginx()
 	if err != nil {
 		return errors.Wrap(err, "create transaction error")

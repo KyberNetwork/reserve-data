@@ -9,6 +9,7 @@ import (
 	v1common "github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/feed"
 	"github.com/KyberNetwork/reserve-data/common/testutil"
+	rtypes "github.com/KyberNetwork/reserve-data/lib/rtypes"
 	"github.com/KyberNetwork/reserve-data/reservesetting/common"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage/postgres"
 )
@@ -20,7 +21,7 @@ func TestCheckFeedConfiguration(t *testing.T) {
 	}()
 	s, err := postgres.NewStorage(db)
 	require.NoError(t, err)
-	supportedExchanges := make(map[v1common.ExchangeID]v1common.LiveExchange)
+	supportedExchanges := make(map[rtypes.ExchangeID]v1common.LiveExchange)
 	server := NewServer(s, "", supportedExchanges, "", nil, nil)
 
 	feedConfigurationEntryNotSupportedTest := common.SetFeedConfigurationEntry{

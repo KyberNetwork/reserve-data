@@ -16,12 +16,13 @@ import (
 	"github.com/KyberNetwork/reserve-data/common/feed"
 	"github.com/KyberNetwork/reserve-data/common/testutil"
 	"github.com/KyberNetwork/reserve-data/http/httputil"
+	rtypes "github.com/KyberNetwork/reserve-data/lib/rtypes"
 	"github.com/KyberNetwork/reserve-data/reservesetting/common"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage/postgres"
 )
 
-func createSampleAsset(store *postgres.Storage) (uint64, error) {
+func createSampleAsset(store *postgres.Storage) (rtypes.AssetID, error) {
 	_, err := store.CreateAssetExchange(binance, 1, "ETH", eth.HexToAddress("0x00"), 10,
 		0.2, 5.0, 0.3, nil)
 	if err != nil {
@@ -103,11 +104,11 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 	)
 
 	var (
-		supportedExchanges = make(map[v1common.ExchangeID]v1common.LiveExchange)
+		supportedExchanges = make(map[rtypes.ExchangeID]v1common.LiveExchange)
 	)
 
 	//create map of test exchange
-	for _, exchangeID := range []v1common.ExchangeID{v1common.Binance, v1common.Huobi} {
+	for _, exchangeID := range []rtypes.ExchangeID{rtypes.Binance, rtypes.Huobi} {
 		exchange := v1common.TestExchange{}
 		supportedExchanges[exchangeID] = exchange
 	}
@@ -567,11 +568,11 @@ func TestHTTPServerAssetExchangeWithOptionalTradingPair(t *testing.T) {
 		settingChangePath = "/v3/setting-change-main"
 	)
 	var (
-		supportedExchanges = make(map[v1common.ExchangeID]v1common.LiveExchange)
+		supportedExchanges = make(map[rtypes.ExchangeID]v1common.LiveExchange)
 	)
 
 	//create map of test exchange
-	for _, exchangeID := range []v1common.ExchangeID{v1common.Binance, v1common.Huobi} {
+	for _, exchangeID := range []rtypes.ExchangeID{rtypes.Binance, rtypes.Huobi} {
 		exchange := v1common.TestExchange{}
 		supportedExchanges[exchangeID] = exchange
 	}
@@ -587,7 +588,7 @@ func TestHTTPServerAssetExchangeWithOptionalTradingPair(t *testing.T) {
 	assetID, err := createSampleAsset(s)
 	require.NoError(t, err)
 
-	_, err = s.CreateAssetExchange(2, 1, "ETH",
+	_, err = s.CreateAssetExchange(rtypes.ExchangeID(2), rtypes.AssetID(1), "ETH",
 		eth.HexToAddress("0x8cacc5bf46ea076a09febb2ae213dc4da6384e74"),
 		0.001,
 		0.001,
@@ -853,7 +854,7 @@ func TestHTTPServer_SettingChangeUpdateExchange(t *testing.T) {
 	s, err := postgres.NewStorage(db)
 	require.NoError(t, err)
 
-	exchangeID := uint64(1)
+	exchangeID := rtypes.ExchangeID(1)
 	// pre-insert exchange
 	server := NewServer(s, "", nil, "", nil, nil)
 	const updateExchange = "/v3/setting-change-update-exchange"
@@ -974,11 +975,11 @@ func TestHTTPServer_ChangeAssetAddress(t *testing.T) {
 		assert.NoError(t, tearDown())
 	}()
 	var (
-		supportedExchanges = make(map[v1common.ExchangeID]v1common.LiveExchange)
+		supportedExchanges = make(map[rtypes.ExchangeID]v1common.LiveExchange)
 	)
 
 	//create map of test exchange
-	for _, exchangeID := range []v1common.ExchangeID{v1common.Binance, v1common.Huobi} {
+	for _, exchangeID := range []rtypes.ExchangeID{rtypes.Binance, rtypes.Huobi} {
 		exchange := v1common.TestExchange{}
 		supportedExchanges[exchangeID] = exchange
 	}
@@ -1069,11 +1070,11 @@ func TestHTTPServer_DeleteTradingPair(t *testing.T) {
 		assert.NoError(t, tearDown())
 	}()
 	var (
-		supportedExchanges = make(map[v1common.ExchangeID]v1common.LiveExchange)
+		supportedExchanges = make(map[rtypes.ExchangeID]v1common.LiveExchange)
 	)
 
 	//create map of test exchange
-	for _, exchangeID := range []v1common.ExchangeID{v1common.Binance, v1common.Huobi} {
+	for _, exchangeID := range []rtypes.ExchangeID{rtypes.Binance, rtypes.Huobi} {
 		exchange := v1common.TestExchange{}
 		supportedExchanges[exchangeID] = exchange
 	}
@@ -1158,11 +1159,11 @@ func TestHTTPServer_DeleteAssetExchange(t *testing.T) {
 	}()
 
 	var (
-		supportedExchanges = make(map[v1common.ExchangeID]v1common.LiveExchange)
+		supportedExchanges = make(map[rtypes.ExchangeID]v1common.LiveExchange)
 	)
 
 	//create map of test exchange
-	for _, exchangeID := range []v1common.ExchangeID{v1common.Binance, v1common.Huobi} {
+	for _, exchangeID := range []rtypes.ExchangeID{rtypes.Binance, rtypes.Huobi} {
 		exchange := v1common.TestExchange{}
 		supportedExchanges[exchangeID] = exchange
 	}
@@ -1278,11 +1279,11 @@ func TestHTTPServer_DeleteAssetExchange(t *testing.T) {
 
 func TestCreateTradingPair(t *testing.T) {
 	var (
-		supportedExchanges = make(map[v1common.ExchangeID]v1common.LiveExchange)
+		supportedExchanges = make(map[rtypes.ExchangeID]v1common.LiveExchange)
 	)
 
 	// create map of test exchange
-	for _, exchangeID := range []v1common.ExchangeID{v1common.Binance, v1common.Huobi} {
+	for _, exchangeID := range []rtypes.ExchangeID{rtypes.Binance, rtypes.Huobi} {
 		exchange := v1common.TestExchange{}
 		supportedExchanges[exchangeID] = exchange
 	}
@@ -1298,7 +1299,7 @@ func TestCreateTradingPair(t *testing.T) {
 	require.NoError(t, err)
 	server := NewServer(s, "", supportedExchanges, "", nil, nil)
 	c := apiClient{s: server}
-	quote := uint64(1) // ETH
+	quote := rtypes.AssetID(1) // ETH
 	postRes, err := c.createSettingChange(common.SettingChange{
 		ChangeList: []common.SettingChangeEntry{
 			{
@@ -1341,7 +1342,7 @@ func TestSetFeedConfiguration(t *testing.T) {
 	}()
 	s, err := postgres.NewStorage(db)
 	require.NoError(t, err)
-	supportedExchanges := make(map[v1common.ExchangeID]v1common.LiveExchange)
+	supportedExchanges := make(map[rtypes.ExchangeID]v1common.LiveExchange)
 	server := NewServer(s, "", supportedExchanges, "", nil, nil)
 	var (
 		setFeedConfigurationEndpoint = "/v3/setting-change-feed-configuration"

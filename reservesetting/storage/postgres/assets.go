@@ -11,6 +11,7 @@ import (
 	"github.com/lib/pq"
 
 	pgutil "github.com/KyberNetwork/reserve-data/common/postgres"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	"github.com/KyberNetwork/reserve-data/reservesetting/common"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage"
 )
@@ -81,7 +82,7 @@ func (s *Storage) CreateAsset(
 	stableParam *common.StableParam,
 	feedWeight *common.FeedWeight,
 	normalUpdatePerPeriod, maxImbalanceRatio float64,
-) (uint64, error) {
+) (rtypes.AssetID, error) {
 	tx, err := s.db.Beginx()
 	if err != nil {
 		return 0, err
@@ -102,7 +103,7 @@ func (s *Storage) CreateAsset(
 }
 
 // CreateAssetExchange create a new asset exchange (asset support by exchange)
-func (s *Storage) CreateAssetExchange(exchangeID, assetID uint64, symbol string, depositAddress ethereum.Address,
+func (s *Storage) CreateAssetExchange(exchangeID rtypes.ExchangeID, assetID rtypes.AssetID, symbol string, depositAddress ethereum.Address,
 	minDeposit, withdrawFee, targetRecommended, targetRatio float64, tps []common.TradingPair) (uint64, error) {
 
 	tx, err := s.db.Beginx()
@@ -123,7 +124,7 @@ func (s *Storage) CreateAssetExchange(exchangeID, assetID uint64, symbol string,
 	return id, nil
 }
 
-func (s *Storage) createAssetExchange(tx *sqlx.Tx, exchangeID, assetID uint64, symbol string,
+func (s *Storage) createAssetExchange(tx *sqlx.Tx, exchangeID rtypes.ExchangeID, assetID rtypes.AssetID, symbol string,
 	depositAddress ethereum.Address, minDeposit, withdrawFee, targetRecommended, targetRatio float64, tps []common.TradingPair) (uint64, error) {
 	var assetExchangeID uint64
 	var depositAddressParam *string
@@ -135,14 +136,14 @@ func (s *Storage) createAssetExchange(tx *sqlx.Tx, exchangeID, assetID uint64, s
 		depositAddressParam = &depositAddressHex
 	}
 	err := tx.NamedStmt(s.stmts.newAssetExchange).Get(&assetExchangeID, struct {
-		ExchangeID        uint64  `db:"exchange_id"`
-		AssetID           uint64  `db:"asset_id"`
-		Symbol            string  `db:"symbol"`
-		DepositAddress    *string `db:"deposit_address"`
-		MinDeposit        float64 `db:"min_deposit"`
-		WithdrawFee       float64 `db:"withdraw_fee"`
-		TargetRecommended float64 `db:"target_recommended"`
-		TargetRatio       float64 `db:"target_ratio"`
+		ExchangeID        rtypes.ExchangeID `db:"exchange_id"`
+		AssetID           rtypes.AssetID    `db:"asset_id"`
+		Symbol            string            `db:"symbol"`
+		DepositAddress    *string           `db:"deposit_address"`
+		MinDeposit        float64           `db:"min_deposit"`
+		WithdrawFee       float64           `db:"withdraw_fee"`
+		TargetRecommended float64           `db:"target_recommended"`
+		TargetRatio       float64           `db:"target_ratio"`
 	}{
 		ExchangeID:        exchangeID,
 		AssetID:           assetID,
@@ -195,7 +196,7 @@ func (s *Storage) createAssetExchange(tx *sqlx.Tx, exchangeID, assetID uint64, s
 	return assetExchangeID, err
 }
 
-func (s *Storage) updateAssetExchange(tx *sqlx.Tx, id uint64, updateOpts storage.UpdateAssetExchangeOpts) error {
+func (s *Storage) updateAssetExchange(tx *sqlx.Tx, id rtypes.AssetExchangeID, updateOpts storage.UpdateAssetExchangeOpts) error {
 	var (
 		addressParam *string
 	)
@@ -226,14 +227,18 @@ func (s *Storage) updateAssetExchange(tx *sqlx.Tx, id uint64, updateOpts storage
 
 	s.l.Infow("updating asset_exchange", "id", id, "fields", strings.Join(updateMsgs, " "))
 	var updatedID uint64
-	err := s.stmts.updateAssetExchange.Get(&updatedID,
+	updateQuery := s.stmts.updateAssetExchange
+	if tx != nil {
+		updateQuery = tx.NamedStmt(updateQuery)
+	}
+	err := updateQuery.Get(&updatedID,
 		struct {
-			ID                uint64   `db:"id"`
-			Symbol            *string  `db:"symbol"`
-			DepositAddress    *string  `db:"deposit_address"`
-			MinDeposit        *float64 `db:"min_deposit"`
-			TargetRecommended *float64 `db:"target_recommended"`
-			TargetRatio       *float64 `db:"target_ratio"`
+			ID                rtypes.AssetExchangeID `db:"id"`
+			Symbol            *string                `db:"symbol"`
+			DepositAddress    *string                `db:"deposit_address"`
+			MinDeposit        *float64               `db:"min_deposit"`
+			TargetRecommended *float64               `db:"target_recommended"`
+			TargetRatio       *float64               `db:"target_ratio"`
 		}{
 			ID:                id,
 			Symbol:            updateOpts.Symbol,
@@ -267,9 +272,9 @@ func (s *Storage) createAsset(
 	stableParam *common.StableParam,
 	feedWeight *common.FeedWeight,
 	normalUpdatePerPeriod, maxImbalanceRatio float64,
-) (uint64, error) {
+) (rtypes.AssetID, error) {
 	// create new asset
-	var assetID uint64
+	var assetID rtypes.AssetID
 
 	if transferable && common.IsZeroAddress(address) {
 		return 0, common.ErrAddressMissing
@@ -387,7 +392,7 @@ func (s *Storage) createAsset(
 	// create new asset exchange
 	for _, exchange := range exchanges {
 		var (
-			assetExchangeID     uint64
+			assetExchangeID     rtypes.AssetExchangeID
 			depositAddressParam *string
 		)
 		if !common.IsZeroAddress(exchange.DepositAddress) {
@@ -395,14 +400,14 @@ func (s *Storage) createAsset(
 			depositAddressParam = &depositAddressHex
 		}
 		err := tx.NamedStmt(s.stmts.newAssetExchange).Get(&assetExchangeID, struct {
-			ExchangeID        uint64  `db:"exchange_id"`
-			AssetID           uint64  `db:"asset_id"`
-			Symbol            string  `db:"symbol"`
-			DepositAddress    *string `db:"deposit_address"`
-			MinDeposit        float64 `db:"min_deposit"`
-			WithdrawFee       float64 `db:"withdraw_fee"`
-			TargetRecommended float64 `db:"target_recommended"`
-			TargetRatio       float64 `db:"target_ratio"`
+			ExchangeID        rtypes.ExchangeID `db:"exchange_id"`
+			AssetID           rtypes.AssetID    `db:"asset_id"`
+			Symbol            string            `db:"symbol"`
+			DepositAddress    *string           `db:"deposit_address"`
+			MinDeposit        float64           `db:"min_deposit"`
+			WithdrawFee       float64           `db:"withdraw_fee"`
+			TargetRecommended float64           `db:"target_recommended"`
+			TargetRatio       float64           `db:"target_ratio"`
 		}{
 			ExchangeID:        exchange.ExchangeID,
 			AssetID:           assetID,
@@ -422,7 +427,7 @@ func (s *Storage) createAsset(
 		// create new trading pair
 		for _, pair := range exchange.TradingPairs {
 			var (
-				tradingPairID uint64
+				tradingPairID rtypes.TradingPairID
 				baseID        = pair.Base
 				quoteID       = pair.Quote
 			)
@@ -442,16 +447,16 @@ func (s *Storage) createAsset(
 			err = tx.NamedStmt(s.stmts.newTradingPair).Get(
 				&tradingPairID,
 				struct {
-					ExchangeID      uint64  `db:"exchange_id"`
-					Base            uint64  `db:"base_id"`
-					Quote           uint64  `db:"quote_id"`
-					PricePrecision  uint64  `db:"price_precision"`
-					AmountPrecision uint64  `db:"amount_precision"`
-					AmountLimitMin  float64 `db:"amount_limit_min"`
-					AmountLimitMax  float64 `db:"amount_limit_max"`
-					PriceLimitMin   float64 `db:"price_limit_min"`
-					PriceLimitMax   float64 `db:"price_limit_max"`
-					MinNotional     float64 `db:"min_notional"`
+					ExchangeID      rtypes.ExchangeID `db:"exchange_id"`
+					Base            rtypes.AssetID    `db:"base_id"`
+					Quote           rtypes.AssetID    `db:"quote_id"`
+					PricePrecision  uint64            `db:"price_precision"`
+					AmountPrecision uint64            `db:"amount_precision"`
+					AmountLimitMin  float64           `db:"amount_limit_min"`
+					AmountLimitMax  float64           `db:"amount_limit_max"`
+					PriceLimitMin   float64           `db:"price_limit_min"`
+					PriceLimitMax   float64           `db:"price_limit_max"`
+					MinNotional     float64           `db:"min_notional"`
 				}{
 					ExchangeID:      exchange.ExchangeID,
 					Base:            baseID,
@@ -509,7 +514,7 @@ func (s *Storage) createAsset(
 	return assetID, nil
 }
 
-func (s Storage) createNewFeedWeight(tx *sqlx.Tx, assetID uint64, feedWeight *common.FeedWeight) error {
+func (s Storage) createNewFeedWeight(tx *sqlx.Tx, assetID rtypes.AssetID, feedWeight *common.FeedWeight) error {
 	if feedWeight == nil {
 		return nil
 	}
@@ -520,9 +525,9 @@ func (s Storage) createNewFeedWeight(tx *sqlx.Tx, assetID uint64, feedWeight *co
 		)
 		if err := tx.NamedStmt(s.stmts.newFeedWeight).Get(&feedWeightID,
 			struct {
-				AssetID uint64  `db:"asset_id"`
-				Feed    string  `db:"feed"`
-				Weight  float64 `db:"weight"`
+				AssetID rtypes.AssetID `db:"asset_id"`
+				Feed    string         `db:"feed"`
+				Weight  float64        `db:"weight"`
 			}{
 				AssetID: assetID,
 				Feed:    feed,
@@ -538,19 +543,19 @@ func (s Storage) createNewFeedWeight(tx *sqlx.Tx, assetID uint64, feedWeight *co
 }
 
 type tradingPairDB struct {
-	ID              uint64  `db:"id"`
-	ExchangeID      uint64  `db:"exchange_id"`
-	BaseID          uint64  `db:"base_id"`
-	QuoteID         uint64  `db:"quote_id"`
-	PricePrecision  uint64  `db:"price_precision"`
-	AmountPrecision uint64  `db:"amount_precision"`
-	AmountLimitMin  float64 `db:"amount_limit_min"`
-	AmountLimitMax  float64 `db:"amount_limit_max"`
-	PriceLimitMin   float64 `db:"price_limit_min"`
-	PriceLimitMax   float64 `db:"price_limit_max"`
-	MinNotional     float64 `db:"min_notional"`
-	BaseSymbol      string  `db:"base_symbol"`
-	QuoteSymbol     string  `db:"quote_symbol"`
+	ID              rtypes.TradingPairID `db:"id"`
+	ExchangeID      rtypes.ExchangeID    `db:"exchange_id"`
+	BaseID          rtypes.AssetID       `db:"base_id"`
+	QuoteID         rtypes.AssetID       `db:"quote_id"`
+	PricePrecision  uint64               `db:"price_precision"`
+	AmountPrecision uint64               `db:"amount_precision"`
+	AmountLimitMin  float64              `db:"amount_limit_min"`
+	AmountLimitMax  float64              `db:"amount_limit_max"`
+	PriceLimitMin   float64              `db:"price_limit_min"`
+	PriceLimitMax   float64              `db:"price_limit_max"`
+	MinNotional     float64              `db:"min_notional"`
+	BaseSymbol      string               `db:"base_symbol"`
+	QuoteSymbol     string               `db:"quote_symbol"`
 }
 
 func (tpd *tradingPairDB) ToCommon() common.TradingPair {
@@ -570,7 +575,7 @@ func (tpd *tradingPairDB) ToCommon() common.TradingPair {
 }
 
 type assetDB struct {
-	ID           uint64         `db:"id"`
+	ID           rtypes.AssetID `db:"id"`
 	Symbol       string         `db:"symbol"`
 	Name         string         `db:"name"`
 	Address      sql.NullString `db:"address"`
@@ -714,9 +719,9 @@ func (s *Storage) GetAssets() ([]common.Asset, error) {
 }
 
 type tradingByDB struct {
-	ID            uint64 `db:"id"`
-	AssetID       uint64 `db:"asset_id"`
-	TradingPairID uint64 `db:"trading_pair_id"`
+	ID            rtypes.TradingByID   `db:"id"`
+	AssetID       rtypes.AssetID       `db:"asset_id"`
+	TradingPairID rtypes.TradingPairID `db:"trading_pair_id"`
 }
 
 func (db *tradingByDB) ToCommon() common.TradingBy {
@@ -726,8 +731,8 @@ func (db *tradingByDB) ToCommon() common.TradingBy {
 	}
 }
 
-func toTradingPairMap(tps []tradingPairDB) map[uint64]tradingPairDB {
-	res := make(map[uint64]tradingPairDB)
+func toTradingPairMap(tps []tradingPairDB) map[rtypes.TradingPairID]tradingPairDB {
+	res := make(map[rtypes.TradingPairID]tradingPairDB)
 	for _, tp := range tps {
 		res[tp.ID] = tp
 	}
@@ -735,10 +740,10 @@ func toTradingPairMap(tps []tradingPairDB) map[uint64]tradingPairDB {
 }
 
 type feedWeightDB struct {
-	ID      uint64  `db:"id"`
-	AssetID uint64  `db:"asset_id"`
-	Feed    string  `db:"feed"`
-	Weight  float64 `db:"weight"`
+	ID      rtypes.FeedWeightID `db:"id"`
+	AssetID rtypes.AssetID      `db:"asset_id"`
+	Feed    string              `db:"feed"`
+	Weight  float64             `db:"weight"`
 }
 
 func (s *Storage) getAssets(transferable *bool) ([]common.Asset, error) {
@@ -813,7 +818,7 @@ func (s *Storage) getAssets(transferable *bool) ([]common.Asset, error) {
 }
 
 // GetAsset get a single asset by id
-func (s *Storage) GetAsset(id uint64) (common.Asset, error) {
+func (s *Storage) GetAsset(id rtypes.AssetID) (common.Asset, error) {
 	var (
 		assetDBResult        assetDB
 		assetExchangeResults []assetExchangeDB
@@ -902,16 +907,16 @@ func (s *Storage) GetAssetBySymbol(symbol string) (common.Asset, error) {
 }
 
 type updateAssetParam struct {
-	ID           uint64  `db:"id"`
-	Symbol       *string `db:"symbol"`
-	Name         *string `db:"name"`
-	Address      *string `db:"address"`
-	Decimals     *uint64 `db:"decimals"`
-	Transferable *bool   `db:"transferable"`
-	SetRate      *string `db:"set_rate"`
-	Rebalance    *bool   `db:"rebalance"`
-	IsQuote      *bool   `db:"is_quote"`
-	IsEnabled    *bool   `db:"is_enabled"`
+	ID           rtypes.AssetID `db:"id"`
+	Symbol       *string        `db:"symbol"`
+	Name         *string        `db:"name"`
+	Address      *string        `db:"address"`
+	Decimals     *uint64        `db:"decimals"`
+	Transferable *bool          `db:"transferable"`
+	SetRate      *string        `db:"set_rate"`
+	Rebalance    *bool          `db:"rebalance"`
+	IsQuote      *bool          `db:"is_quote"`
+	IsEnabled    *bool          `db:"is_enabled"`
 
 	AskA                   *float64 `db:"ask_a"`
 	AskB                   *float64 `db:"ask_b"`
@@ -945,7 +950,7 @@ type updateAssetParam struct {
 	MaxImbalanceRatio     *float64 `db:"max_imbalance_ratio"`
 }
 
-func (s *Storage) updateAsset(tx *sqlx.Tx, id uint64, uo storage.UpdateAssetOpts) error {
+func (s *Storage) updateAsset(tx *sqlx.Tx, id rtypes.AssetID, uo storage.UpdateAssetOpts) error {
 	arg := updateAssetParam{
 		ID:                    id,
 		Symbol:                uo.Symbol,
@@ -1108,7 +1113,7 @@ func (s *Storage) updateAsset(tx *sqlx.Tx, id uint64, uo storage.UpdateAssetOpts
 }
 
 // ChangeAssetAddress change address of an asset
-func (s *Storage) ChangeAssetAddress(id uint64, address ethereum.Address) error {
+func (s *Storage) ChangeAssetAddress(id rtypes.AssetID, address ethereum.Address) error {
 
 	err := s.changeAssetAddress(nil, id, address)
 	if err != nil {
@@ -1119,7 +1124,7 @@ func (s *Storage) ChangeAssetAddress(id uint64, address ethereum.Address) error 
 	return nil
 }
 
-func (s *Storage) changeAssetAddress(tx *sqlx.Tx, id uint64, address ethereum.Address) error {
+func (s *Storage) changeAssetAddress(tx *sqlx.Tx, id rtypes.AssetID, address ethereum.Address) error {
 	s.l.Infow("changing address", "asset_id", id, "new_address", address.String())
 	sts := s.stmts.changeAssetAddress
 	if tx != nil {
@@ -1148,7 +1153,7 @@ func (s *Storage) changeAssetAddress(tx *sqlx.Tx, id uint64, address ethereum.Ad
 }
 
 // UpdateDepositAddress update deposit addresss for an AssetExchange
-func (s *Storage) UpdateDepositAddress(assetID, exchangeID uint64, address ethereum.Address) error {
+func (s *Storage) UpdateDepositAddress(assetID rtypes.AssetID, exchangeID rtypes.ExchangeID, address ethereum.Address) error {
 	var updated uint64
 	err := s.stmts.updateDepositAddress.Get(&updated, assetID, exchangeID, address.Hex())
 	switch err {

@@ -13,6 +13,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/archive"
 	"github.com/KyberNetwork/reserve-data/data/datapruner"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	v3 "github.com/KyberNetwork/reserve-data/reservesetting/common"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage"
 )
@@ -101,7 +102,7 @@ func (rd ReserveData) GetAllPrices(timepoint uint64) (common.AllPriceResponse, e
 }
 
 // GetOnePrice return price of one pair tokens
-func (rd ReserveData) GetOnePrice(pairID uint64, timepoint uint64) (common.OnePriceResponse, error) {
+func (rd ReserveData) GetOnePrice(pairID rtypes.TradingPairID, timepoint uint64) (common.OnePriceResponse, error) {
 	timestamp := common.GetTimestamp()
 	version, err := rd.storage.CurrentPriceVersion(timepoint)
 	if err != nil {
@@ -153,7 +154,7 @@ func (rd ReserveData) GetAuthData(timepoint uint64) (common.AuthDataResponseV3, 
 	result.PendingActivities.Withdraw = pendingWithdraw
 	result.PendingActivities.Deposit = pendingDeposit
 	// map of token
-	assets := make(map[common.AssetID]v3.Asset)
+	assets := make(map[rtypes.AssetID]v3.Asset)
 	exchanges := make(map[string]v3.Exchange)
 	// get id from exchange balance asset name
 	for exchangeID, balances := range data.ExchangeBalances {
@@ -164,20 +165,20 @@ func (rd ReserveData) GetAuthData(timepoint uint64) (common.AuthDataResponseV3, 
 		exchanges[exchangeID.String()] = exchange
 		for assetID := range balances.AvailableBalance {
 			//* cos symbol of token in an exchange can be different then we need to use GetAssetExchangeBySymbol
-			token, err := rd.settingStorage.GetAsset(uint64(assetID))
+			token, err := rd.settingStorage.GetAsset(assetID)
 			//* it seems this token have balance in exchange but have not configured
 			//* in core, just ignore it
 			if err != nil {
 				rd.l.Warnw("failed to get token by name", "symbol", assetID, "err", err)
 				continue
 			}
-			assets[common.AssetID(token.ID)] = token
+			assets[token.ID] = token
 		}
 	}
 
 	for assetID := range data.ReserveBalances {
 		if _, exist := assets[assetID]; !exist {
-			token, err := rd.settingStorage.GetAsset(uint64(assetID))
+			token, err := rd.settingStorage.GetAsset(assetID)
 			//* it seems this token have balance in exchange but have not configured
 			//* in core, just ignore it
 			if err != nil {
@@ -197,7 +198,7 @@ func (rd ReserveData) GetAuthData(timepoint uint64) (common.AuthDataResponseV3, 
 		tokenBalance.Symbol = token.Symbol
 		var exchangeBalances []common.ExchangeBalance
 		for exchangeID, balances := range data.ExchangeBalances {
-			if _, exist := balances.AvailableBalance[common.AssetID(token.ID)]; !exist {
+			if _, exist := balances.AvailableBalance[token.ID]; !exist {
 				continue
 			}
 
@@ -210,8 +211,8 @@ func (rd ReserveData) GetAuthData(timepoint uint64) (common.AuthDataResponseV3, 
 				tokenBalance.Valid = false
 			}
 			exchangeBalance.ExchangeID = exchanges[exchangeID.String()].ID
-			exchangeBalance.Available = balances.AvailableBalance[common.AssetID(token.ID)]
-			exchangeBalance.Locked = balances.LockedBalance[common.AssetID(token.ID)]
+			exchangeBalance.Available = balances.AvailableBalance[token.ID]
+			exchangeBalance.Locked = balances.LockedBalance[token.ID]
 			exchangeBalances = append(exchangeBalances, exchangeBalance)
 
 		}
@@ -230,7 +231,7 @@ func (rd ReserveData) GetAuthData(timepoint uint64) (common.AuthDataResponseV3, 
 	return result, err
 }
 
-func isDuplicated(oldData, newData map[uint64]common.RateResponse) bool {
+func isDuplicated(oldData, newData map[rtypes.AssetID]common.RateResponse) bool {
 	if len(oldData) != len(newData) {
 		return false
 	}
@@ -258,9 +259,9 @@ func isDuplicated(oldData, newData map[uint64]common.RateResponse) bool {
 	return true
 }
 
-func getOneRateData(rate common.AllRateEntry) map[uint64]common.RateResponse {
+func getOneRateData(rate common.AllRateEntry) map[rtypes.AssetID]common.RateResponse {
 	//get data from rate object and return the data.
-	data := map[uint64]common.RateResponse{}
+	data := map[rtypes.AssetID]common.RateResponse{}
 	for tokenID, r := range rate.Data {
 		data[tokenID] = common.RateResponse{
 			Timestamp:   rate.Timestamp,
@@ -276,12 +277,12 @@ func getOneRateData(rate common.AllRateEntry) map[uint64]common.RateResponse {
 }
 
 // GetAssetRateTriggers query count of setRate with trigger=true, for each asset
-func (rd ReserveData) GetAssetRateTriggers(fromTime uint64, toTime uint64) (map[common.AssetID]int, error) {
+func (rd ReserveData) GetAssetRateTriggers(fromTime uint64, toTime uint64) (map[rtypes.AssetID]int, error) {
 	triggers, err := rd.storage.GetAssetRateTriggers(fromTime, toTime)
 	if err != nil {
 		return nil, err
 	}
-	res := make(map[common.AssetID]int)
+	res := make(map[rtypes.AssetID]int)
 	for _, t := range triggers {
 		res[t.AssetID] = t.Count
 	}
@@ -339,7 +340,7 @@ func (rd ReserveData) GetRate(timepoint uint64) (common.AllRateResponse, error) 
 	result.Version = version
 	result.Timestamp = timestamp
 	result.ReturnTime = returnTime
-	data := map[uint64]common.RateResponse{}
+	data := map[rtypes.AssetID]common.RateResponse{}
 	for tokenID, rate := range rates.Data {
 		data[tokenID] = common.RateResponse{
 			Timestamp:   rates.Timestamp,
@@ -444,7 +445,7 @@ func (rd ReserveData) ControlAuthDataSize() error {
 // GetTradeHistory return trade history
 func (rd ReserveData) GetTradeHistory(fromTime, toTime uint64) (common.AllTradeHistory, error) {
 	data := common.AllTradeHistory{}
-	data.Data = map[common.ExchangeID]common.ExchangeTradeHistory{}
+	data.Data = map[rtypes.ExchangeID]common.ExchangeTradeHistory{}
 	for _, ex := range rd.exchanges {
 		history, err := ex.GetTradeHistory(fromTime, toTime)
 		if err != nil {

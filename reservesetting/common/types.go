@@ -4,15 +4,17 @@ import (
 	"time"
 
 	ethereum "github.com/ethereum/go-ethereum/common"
+
+	rtypes "github.com/KyberNetwork/reserve-data/lib/rtypes"
 )
 
 // Exchange represents a centralized exchange in database.
 type Exchange struct {
-	ID              uint64  `json:"id"`
-	Name            string  `json:"name"`
-	TradingFeeMaker float64 `json:"trading_fee_maker"`
-	TradingFeeTaker float64 `json:"trading_fee_taker"`
-	Disable         bool    `json:"disable"`
+	ID              rtypes.ExchangeID `json:"id"`
+	Name            string            `json:"name"`
+	TradingFeeMaker float64           `json:"trading_fee_maker"`
+	TradingFeeTaker float64           `json:"trading_fee_taker"`
+	Disable         bool              `json:"disable"`
 }
 
 // SetRate ..
@@ -34,23 +36,23 @@ const (
 
 // TradingPair is a trading in an exchange.
 type TradingPair struct {
-	ID              uint64  `json:"id"`
-	Base            uint64  `json:"base"`
-	Quote           uint64  `json:"quote"`
-	PricePrecision  uint64  `json:"price_precision"`
-	AmountPrecision uint64  `json:"amount_precision"`
-	AmountLimitMin  float64 `json:"amount_limit_min"`
-	AmountLimitMax  float64 `json:"amount_limit_max"`
-	PriceLimitMin   float64 `json:"price_limit_min"`
-	PriceLimitMax   float64 `json:"price_limit_max"`
-	MinNotional     float64 `json:"min_notional"`
-	ExchangeID      uint64  `json:"-"`
+	ID              rtypes.TradingPairID `json:"id"`
+	Base            rtypes.AssetID       `json:"base"`
+	Quote           rtypes.AssetID       `json:"quote"`
+	PricePrecision  uint64               `json:"price_precision"`
+	AmountPrecision uint64               `json:"amount_precision"`
+	AmountLimitMin  float64              `json:"amount_limit_min"`
+	AmountLimitMax  float64              `json:"amount_limit_max"`
+	PriceLimitMin   float64              `json:"price_limit_min"`
+	PriceLimitMax   float64              `json:"price_limit_max"`
+	MinNotional     float64              `json:"min_notional"`
+	ExchangeID      rtypes.ExchangeID    `json:"-"`
 }
 
 // TradingBy is a struct hold trading pair and its asset
 type TradingBy struct {
-	TradingPairID uint64 `json:"trading_pair_id"`
-	AssetID       uint64 `json:"asset_id"`
+	TradingPairID rtypes.TradingPairID `json:"trading_pair_id"`
+	AssetID       rtypes.AssetID       `json:"asset_id"`
 }
 
 // TradingPairSymbols is a pair of token trading
@@ -62,16 +64,16 @@ type TradingPairSymbols struct {
 
 // AssetExchange is the configuration of an asset for a specific exchange.
 type AssetExchange struct {
-	ID                uint64           `json:"id"`
-	AssetID           uint64           `json:"asset_id"`
-	ExchangeID        uint64           `json:"exchange_id"`
-	Symbol            string           `json:"symbol" binding:"required"`
-	DepositAddress    ethereum.Address `json:"deposit_address"`
-	MinDeposit        float64          `json:"min_deposit"`
-	WithdrawFee       float64          `json:"withdraw_fee"`
-	TargetRecommended float64          `json:"target_recommended"`
-	TargetRatio       float64          `json:"target_ratio"`
-	TradingPairs      []TradingPair    `json:"trading_pairs,omitempty" binding:"dive"`
+	ID                rtypes.AssetExchangeID `json:"id"`
+	AssetID           rtypes.AssetID         `json:"asset_id"`
+	ExchangeID        rtypes.ExchangeID      `json:"exchange_id"`
+	Symbol            string                 `json:"symbol" binding:"required"`
+	DepositAddress    ethereum.Address       `json:"deposit_address"`
+	MinDeposit        float64                `json:"min_deposit"`
+	WithdrawFee       float64                `json:"withdraw_fee"`
+	TargetRecommended float64                `json:"target_recommended"`
+	TargetRatio       float64                `json:"target_ratio"`
+	TradingPairs      []TradingPair          `json:"trading_pairs,omitempty" binding:"dive"`
 }
 
 // AssetTarget is the target setting of an asset.
@@ -130,7 +132,7 @@ type FeedWeight map[string]float64
 
 // Asset represents an asset in centralized exchange, eg: ETH, KNC, Bitcoin...
 type Asset struct {
-	ID                    uint64              `json:"id"`
+	ID                    rtypes.AssetID      `json:"id"`
 	Symbol                string              `json:"symbol" binding:"required"`
 	Name                  string              `json:"name"`
 	Address               ethereum.Address    `json:"address"`
@@ -157,26 +159,26 @@ type Asset struct {
 // CreateAssetExchangeEntry is the configuration of an asset for a specific exchange.
 type CreateAssetExchangeEntry struct {
 	settingChangeMarker
-	AssetID           uint64           `json:"asset_id"`
-	ExchangeID        uint64           `json:"exchange_id"`
-	Symbol            string           `json:"symbol" binding:"required"`
-	DepositAddress    ethereum.Address `json:"deposit_address"`
-	MinDeposit        float64          `json:"min_deposit"`
-	WithdrawFee       float64          `json:"withdraw_fee"`
-	TargetRecommended float64          `json:"target_recommended"`
-	TargetRatio       float64          `json:"target_ratio"`
-	TradingPairs      []TradingPair    `json:"trading_pairs"`
+	AssetID           rtypes.AssetID    `json:"asset_id"`
+	ExchangeID        rtypes.ExchangeID `json:"exchange_id"`
+	Symbol            string            `json:"symbol" binding:"required"`
+	DepositAddress    ethereum.Address  `json:"deposit_address"`
+	MinDeposit        float64           `json:"min_deposit"`
+	WithdrawFee       float64           `json:"withdraw_fee"`
+	TargetRecommended float64           `json:"target_recommended"`
+	TargetRatio       float64           `json:"target_ratio"`
+	TradingPairs      []TradingPair     `json:"trading_pairs"`
 }
 
 // UpdateAssetExchangeEntry is the configuration of an asset for a specific exchange to be update
 type UpdateAssetExchangeEntry struct {
 	settingChangeMarker
-	ID                uint64            `json:"id"`
-	Symbol            *string           `json:"symbol"`
-	DepositAddress    *ethereum.Address `json:"deposit_address"`
-	MinDeposit        *float64          `json:"min_deposit"`
-	TargetRecommended *float64          `json:"target_recommended"`
-	TargetRatio       *float64          `json:"target_ratio"`
+	ID                rtypes.AssetExchangeID `json:"id"`
+	Symbol            *string                `json:"symbol"`
+	DepositAddress    *ethereum.Address      `json:"deposit_address"`
+	MinDeposit        *float64               `json:"min_deposit"`
+	TargetRecommended *float64               `json:"target_recommended"`
+	TargetRatio       *float64               `json:"target_ratio"`
 }
 
 // CreateAssetEntry represents an asset in centralized exchange, eg: ETH, KNC, Bitcoin...
@@ -205,7 +207,7 @@ type CreateAssetEntry struct {
 // UpdateAssetEntry entry object for update asset
 type UpdateAssetEntry struct {
 	settingChangeMarker
-	AssetID               uint64              `json:"asset_id" binding:"required"`
+	AssetID               rtypes.AssetID      `json:"asset_id" binding:"required"`
 	Symbol                *string             `json:"symbol"`
 	Name                  *string             `json:"name"`
 	Address               *ethereum.Address   `json:"address"`
@@ -226,10 +228,10 @@ type UpdateAssetEntry struct {
 
 type UpdateExchangeEntry struct {
 	settingChangeMarker
-	ExchangeID      uint64   `json:"exchange_id"`
-	TradingFeeMaker *float64 `json:"trading_fee_maker"`
-	TradingFeeTaker *float64 `json:"trading_fee_taker"`
-	Disable         *bool    `json:"disable"`
+	ExchangeID      rtypes.ExchangeID `json:"exchange_id"`
+	TradingFeeMaker *float64          `json:"trading_fee_maker"`
+	TradingFeeTaker *float64          `json:"trading_fee_taker"`
+	Disable         *bool             `json:"disable"`
 }
 
 // CreateTradingPairEntry represents an trading pair in central exchange.
@@ -237,14 +239,14 @@ type UpdateExchangeEntry struct {
 type CreateTradingPairEntry struct {
 	settingChangeMarker
 	TradingPair
-	AssetID    uint64 `json:"asset_id"`
-	ExchangeID uint64 `json:"exchange_id"`
+	AssetID    rtypes.AssetID    `json:"asset_id"`
+	ExchangeID rtypes.ExchangeID `json:"exchange_id"`
 }
 
 // ChangeAssetAddressEntry present data to create a change asset address
 type ChangeAssetAddressEntry struct {
 	settingChangeMarker
-	ID      uint64           `json:"id" binding:"required"`
+	ID      rtypes.AssetID   `json:"id" binding:"required"`
 	Address ethereum.Address `json:"address" binding:"required"`
 }
 
@@ -336,21 +338,21 @@ type SettingChange struct {
 
 // SettingChangeResponse setting change response
 type SettingChangeResponse struct {
-	ID         uint64               `json:"id"`
-	Created    time.Time            `json:"created"`
-	ChangeList []SettingChangeEntry `json:"change_list"`
+	ID         rtypes.SettingChangeID `json:"id"`
+	Created    time.Time              `json:"created"`
+	ChangeList []SettingChangeEntry   `json:"change_list"`
 }
 
 // DeleteTradingPairEntry hold data to delete a trading pair entry
 type DeleteTradingPairEntry struct {
 	settingChangeMarker
-	TradingPairID uint64 `json:"id"`
+	TradingPairID rtypes.TradingPairID `json:"id"`
 }
 
 // DeleteAssetExchangeEntry presents data to delete an asset exchange
 type DeleteAssetExchangeEntry struct {
 	settingChangeMarker
-	AssetExchangeID uint64 `json:"id"`
+	AssetExchangeID rtypes.AssetExchangeID `json:"id"`
 }
 
 // UpdateStableTokenParamsEntry ...

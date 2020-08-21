@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"os"
 	"strconv"
 
@@ -12,6 +13,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/KyberNetwork/reserve-data/common"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	commonv3 "github.com/KyberNetwork/reserve-data/reservesetting/common"
 )
 
@@ -20,6 +22,7 @@ const (
 	activityTable  = "activity"
 	// data type constant
 
+	authDataExpiredDuration uint64 = 10 * 86400000 //10day in milisec
 )
 
 //go:generate enumer -type=fetchDataType -linecomment -json=true -sql=true
@@ -148,7 +151,7 @@ func (ps *PostgresStorage) GetAllPrices(v common.Version) (common.AllPriceEntry,
 }
 
 // GetOnePrice return one price
-func (ps *PostgresStorage) GetOnePrice(pairID uint64, v common.Version) (common.OnePrice, error) {
+func (ps *PostgresStorage) GetOnePrice(pairID rtypes.TradingPairID, v common.Version) (common.OnePrice, error) {
 	allPrices, err := ps.GetAllPrices(v)
 	if err != nil {
 		return common.OnePrice{}, err
@@ -310,7 +313,7 @@ func (ps *PostgresStorage) GetAllRecords(fromTime, toTime uint64) ([]common.Acti
 }
 
 type assetRateTriggerDB struct {
-	AssetID common.AssetID `db:"asset_id"`
+	AssetID rtypes.AssetID `db:"asset_id"`
 	Count   int            `db:"count"`
 }
 
@@ -391,7 +394,7 @@ func (ps *PostgresStorage) UpdateActivity(id common.ActivityID, act common.Activ
 }
 
 // GetActivity return activity record by id
-func (ps *PostgresStorage) GetActivity(exchangeID common.ExchangeID, id string) (common.ActivityRecord, error) {
+func (ps *PostgresStorage) GetActivity(exchangeID rtypes.ExchangeID, id string) (common.ActivityRecord, error) {
 	var (
 		activityRecord common.ActivityRecord
 		data           []byte
@@ -407,6 +410,57 @@ func (ps *PostgresStorage) GetActivity(exchangeID common.ExchangeID, id string) 
 		return common.ActivityRecord{}, err
 	}
 	return activityRecord, nil
+}
+func getFirstAndCountPendingAction(
+	l *zap.SugaredLogger,
+	pendings []common.ActivityRecord,
+	minedNonce uint64, activityType string) (*common.ActivityRecord, uint64, error) {
+	var minNonce uint64 = math.MaxUint64
+	var minPrice uint64 = math.MaxUint64
+	var result *common.ActivityRecord
+	var count uint64
+	for i, act := range pendings {
+		if act.Action == activityType {
+			l.Infof("looking for pending (%s): %+v", activityType, act)
+			nonce := act.Result.Nonce
+			if nonce < minedNonce {
+				l.Infof("NONCE_ISSUE: stalled pending %s transaction, pending: %d, mined: %d",
+					activityType, nonce, minedNonce)
+				continue
+			} else if nonce-minedNonce > 1 {
+				l.Infof("NONCE_ISSUE: pending %s transaction for inconsecutive nonce, mined nonce: %d, request nonce: %d",
+					activityType, minedNonce, nonce)
+			}
+
+			gasPrice, err := strconv.ParseUint(act.Result.GasPrice, 10, 64)
+			if err != nil {
+				return nil, 0, err
+			}
+			if nonce == minNonce {
+				if gasPrice < minPrice {
+					minNonce = nonce
+					result = &pendings[i]
+					minPrice = gasPrice
+				}
+				count++
+			} else if nonce < minNonce {
+				minNonce = nonce
+				result = &pendings[i]
+				minPrice = gasPrice
+				count = 1
+			}
+		}
+	}
+
+	if result == nil {
+		l.Infof("NONCE_ISSUE: found no pending %s transaction with nonce newer than equal to mined nonce: %d",
+			activityType, minedNonce)
+	} else {
+		l.Infof("NONCE_ISSUE: un-mined pending %s, nonce: %d, count: %d, mined nonce: %d",
+			activityType, result.Result.Nonce, count, minedNonce)
+	}
+
+	return result, count, nil
 }
 
 // PendingActivityForAction return pending set rate activity

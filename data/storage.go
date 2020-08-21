@@ -2,13 +2,14 @@ package data
 
 import (
 	"github.com/KyberNetwork/reserve-data/common"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 )
 
 // Storage is the interface that wraps all database operations of ReserveData.
 type Storage interface {
 	CurrentPriceVersion(timepoint uint64) (common.Version, error)
 	GetAllPrices(common.Version) (common.AllPriceEntry, error)
-	GetOnePrice(uint64, common.Version) (common.OnePrice, error)
+	GetOnePrice(rtypes.TradingPairID, common.Version) (common.OnePrice, error)
 
 	CurrentAuthDataVersion(timepoint uint64) (common.Version, error)
 	GetAuthData(common.Version) (common.AuthDataSnapshot, error)

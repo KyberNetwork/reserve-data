@@ -4,12 +4,13 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/KyberNetwork/reserve-data/http/httputil"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	"github.com/KyberNetwork/reserve-data/reservesetting/common"
 )
 
 func (s *Server) getTradingPair(c *gin.Context) {
 	var input struct {
-		ID uint64 `uri:"id" binding:"required"`
+		ID rtypes.TradingPairID `uri:"id" binding:"required"`
 	}
 	var filter struct {
 		IncludingDeleted bool `form:"including_deleted" json:"including_deleted"`

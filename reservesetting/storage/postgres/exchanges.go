@@ -8,16 +8,17 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	"github.com/KyberNetwork/reserve-data/reservesetting/common"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage"
 )
 
 type exchangeDB struct {
-	ID              int             `db:"id"`
-	Name            string          `db:"name"`
-	TradingFeeMaker sql.NullFloat64 `db:"trading_fee_maker"`
-	TradingFeeTaker sql.NullFloat64 `db:"trading_fee_taker"`
-	Disable         bool            `db:"disable"`
+	ID              rtypes.ExchangeID `db:"id"`
+	Name            string            `db:"name"`
+	TradingFeeMaker sql.NullFloat64   `db:"trading_fee_maker"`
+	TradingFeeTaker sql.NullFloat64   `db:"trading_fee_taker"`
+	Disable         bool              `db:"disable"`
 }
 
 func (s *Storage) GetExchanges() ([]common.Exchange, error) {
@@ -32,7 +33,7 @@ func (s *Storage) GetExchanges() ([]common.Exchange, error) {
 
 	for _, qResult := range qResults {
 		result := common.Exchange{
-			ID:      uint64(qResult.ID),
+			ID:      qResult.ID,
 			Name:    qResult.Name,
 			Disable: qResult.Disable,
 		}
@@ -48,7 +49,7 @@ func (s *Storage) GetExchanges() ([]common.Exchange, error) {
 	return results, nil
 }
 
-func (s *Storage) GetExchange(id uint64) (common.Exchange, error) {
+func (s *Storage) GetExchange(id rtypes.ExchangeID) (common.Exchange, error) {
 	var (
 		qResult = exchangeDB{}
 		result  common.Exchange
@@ -62,7 +63,7 @@ func (s *Storage) GetExchange(id uint64) (common.Exchange, error) {
 		return common.Exchange{}, err
 	}
 	result = common.Exchange{
-		ID:      uint64(qResult.ID),
+		ID:      qResult.ID,
 		Name:    qResult.Name,
 		Disable: qResult.Disable,
 	}
@@ -88,7 +89,7 @@ func (s *Storage) GetExchangeByName(name string) (common.Exchange, error) {
 		}
 	}
 	result = common.Exchange{
-		ID:      uint64(qResult.ID),
+		ID:      qResult.ID,
 		Name:    qResult.Name,
 		Disable: qResult.Disable,
 	}
@@ -101,11 +102,11 @@ func (s *Storage) GetExchangeByName(name string) (common.Exchange, error) {
 	return result, nil
 }
 
-func (s *Storage) UpdateExchange(id uint64, updateOpts storage.UpdateExchangeOpts) error {
+func (s *Storage) UpdateExchange(id rtypes.ExchangeID, updateOpts storage.UpdateExchangeOpts) error {
 	return s.updateExchange(nil, id, updateOpts)
 }
 
-func (s *Storage) updateExchange(tx *sqlx.Tx, id uint64, updateOpts storage.UpdateExchangeOpts) error {
+func (s *Storage) updateExchange(tx *sqlx.Tx, id rtypes.ExchangeID, updateOpts storage.UpdateExchangeOpts) error {
 
 	var updateMsgs []string
 	if updateOpts.TradingFeeMaker != nil {
@@ -126,10 +127,10 @@ func (s *Storage) updateExchange(tx *sqlx.Tx, id uint64, updateOpts storage.Upda
 	var updatedID uint64
 	err := sts.Get(&updatedID,
 		struct {
-			ID              uint64   `db:"id"`
-			TradingFeeMaker *float64 `db:"trading_fee_maker"`
-			TradingFeeTaker *float64 `db:"trading_fee_taker"`
-			Disable         *bool    `db:"disable"`
+			ID              rtypes.ExchangeID `db:"id"`
+			TradingFeeMaker *float64          `db:"trading_fee_maker"`
+			TradingFeeTaker *float64          `db:"trading_fee_taker"`
+			Disable         *bool             `db:"disable"`
 		}{
 			ID:              id,
 			TradingFeeMaker: updateOpts.TradingFeeMaker,

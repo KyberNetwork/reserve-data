@@ -8,6 +8,7 @@ import (
 
 	v1common "github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/testutil"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	"github.com/KyberNetwork/reserve-data/reservesetting/common"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage/postgres"
@@ -15,11 +16,11 @@ import (
 
 func TestExchanges(t *testing.T) {
 	var (
-		supportedExchanges = make(map[v1common.ExchangeID]v1common.LiveExchange)
+		supportedExchanges = make(map[rtypes.ExchangeID]v1common.LiveExchange)
 	)
 
 	// create map of test exchange
-	for _, exchangeID := range []v1common.ExchangeID{v1common.Binance, v1common.Huobi} {
+	for _, exchangeID := range []rtypes.ExchangeID{rtypes.Binance, rtypes.Huobi} {
 		exchange := v1common.TestExchange{}
 		supportedExchanges[exchangeID] = exchange
 	}
@@ -35,7 +36,7 @@ func TestExchanges(t *testing.T) {
 
 	ex, err := c.getExchange(binance)
 	require.NoError(t, err)
-	assert.Equal(t, ex.Exchange.Name, v1common.Binance.String())
+	assert.Equal(t, ex.Exchange.Name, rtypes.Binance.String())
 	exs, err := c.getExchanges()
 	require.NoError(t, err)
 	assert.Len(t, exs.Exchanges, 3)
@@ -47,11 +48,11 @@ func TestExchanges(t *testing.T) {
 
 func TestUpdateExchangeStatus(t *testing.T) {
 	var (
-		supportedExchanges = make(map[v1common.ExchangeID]v1common.LiveExchange)
+		supportedExchanges = make(map[rtypes.ExchangeID]v1common.LiveExchange)
 	)
 
 	// create map of test exchange
-	for _, exchangeID := range []v1common.ExchangeID{v1common.Binance} {
+	for _, exchangeID := range []rtypes.ExchangeID{rtypes.Binance} {
 		exchange := v1common.TestExchange{}
 		supportedExchanges[exchangeID] = exchange
 	}

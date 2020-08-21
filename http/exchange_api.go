@@ -6,11 +6,12 @@ import (
 
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/http/httputil"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 )
 
 type cancelAllOrderRequest struct {
-	ExchangeID uint64 `json:"exchange_id"`
-	Symbol     string `json:"symbol" binding:"required"`
+	ExchangeID rtypes.ExchangeID `json:"exchange_id"`
+	Symbol     string            `json:"symbol" binding:"required"`
 }
 
 // CancelAllOrders cancel all orders
@@ -21,7 +22,7 @@ func (s *Server) CancelAllOrders(c *gin.Context) {
 	if err := c.ShouldBindJSON(&query); err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 	}
-	exchange, ok := common.SupportedExchanges[common.ExchangeID(query.ExchangeID)]
+	exchange, ok := common.SupportedExchanges[query.ExchangeID]
 	if !ok {
 		httputil.ResponseFailure(c, httputil.WithError(errors.Errorf("exchange %v is not supported", query.ExchangeID)))
 		return

@@ -18,6 +18,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/exchange"
 	"github.com/KyberNetwork/reserve-data/lib/caller"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	commonv3 "github.com/KyberNetwork/reserve-data/reservesetting/common"
 )
 
@@ -30,7 +31,7 @@ type Endpoint struct {
 	interf             Interface
 	timeDelta          int64
 	l                  *zap.SugaredLogger
-	exchangeID         common.ExchangeID
+	exchangeID         rtypes.ExchangeID
 	client             *http.Client
 	marketDataBaseURL  string
 	accountDataBaseURL string
@@ -341,7 +342,7 @@ func (ep *Endpoint) OrderStatus(symbol string, id uint64) (exchange.Binaorder, e
 func (ep *Endpoint) Withdraw(asset commonv3.Asset, amount *big.Int, address ethereum.Address) (string, error) {
 	var symbol string
 	for _, exchg := range asset.Exchanges {
-		if exchg.ExchangeID == uint64(ep.exchangeID) {
+		if exchg.ExchangeID == ep.exchangeID {
 			symbol = exchg.Symbol
 		}
 	}
@@ -517,7 +518,7 @@ func (ep *Endpoint) UpdateTimeDelta() error {
 }
 
 //NewBinanceEndpoint return new endpoint instance for using binance
-func NewBinanceEndpoint(signer Signer, interf Interface, dpl deployment.Deployment, client *http.Client, exparam common.ExchangeID,
+func NewBinanceEndpoint(signer Signer, interf Interface, dpl deployment.Deployment, client *http.Client, exparam rtypes.ExchangeID,
 	marketDataBaseURL, accountDataBaseURL, accountID string) *Endpoint {
 	l := zap.S()
 	endpoint := &Endpoint{

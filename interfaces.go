@@ -4,6 +4,7 @@ import (
 	"math/big"
 
 	"github.com/KyberNetwork/reserve-data/common"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	commonv3 "github.com/KyberNetwork/reserve-data/reservesetting/common"
 )
 
@@ -12,7 +13,7 @@ import (
 type Data interface {
 	CurrentPriceVersion(timestamp uint64) (common.Version, error)
 	GetAllPrices(timestamp uint64) (common.AllPriceResponse, error)
-	GetOnePrice(id uint64, timestamp uint64) (common.OnePriceResponse, error)
+	GetOnePrice(id rtypes.TradingPairID, timestamp uint64) (common.OnePriceResponse, error)
 
 	CurrentAuthDataVersion(timestamp uint64) (common.Version, error)
 	GetAuthData(timestamp uint64) (common.AuthDataResponseV3, error)
@@ -34,7 +35,7 @@ type Data interface {
 	Run() error
 	RunStorageController() error
 	Stop() error
-	GetAssetRateTriggers(fromTime uint64, toTime uint64) (map[common.AssetID]int, error)
+	GetAssetRateTriggers(fromTime uint64, toTime uint64) (map[rtypes.AssetID]int, error)
 }
 
 // Core is the interface that wrap around all interactions

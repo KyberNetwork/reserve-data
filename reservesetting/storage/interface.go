@@ -3,7 +3,7 @@ package storage
 import (
 	ethereum "github.com/ethereum/go-ethereum/common"
 
-	common2 "github.com/KyberNetwork/reserve-data/common"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	v3 "github.com/KyberNetwork/reserve-data/reservesetting/common"
 )
 
@@ -11,44 +11,44 @@ import (
 type Interface interface {
 	SettingReader
 	ControlInfoInterface
-	UpdateDepositAddress(assetID, exchangeID uint64, address ethereum.Address) error
-	UpdateTradingPair(id uint64, opts UpdateTradingPairOpts) error
+	UpdateDepositAddress(assetID rtypes.AssetID, exchangeID rtypes.ExchangeID, address ethereum.Address) error
+	UpdateTradingPair(id rtypes.TradingPairID, opts UpdateTradingPairOpts) error
 
-	CreateSettingChange(v3.ChangeCatalog, v3.SettingChange) (uint64, error)
-	GetSettingChange(uint64) (v3.SettingChangeResponse, error)
+	CreateSettingChange(v3.ChangeCatalog, v3.SettingChange) (rtypes.SettingChangeID, error)
+	GetSettingChange(id rtypes.SettingChangeID) (v3.SettingChangeResponse, error)
 	GetSettingChanges(catalog v3.ChangeCatalog, status v3.ChangeStatus) ([]v3.SettingChangeResponse, error)
-	RejectSettingChange(uint64) error
-	ConfirmSettingChange(uint64, bool) error
+	RejectSettingChange(id rtypes.SettingChangeID) error
+	ConfirmSettingChange(rtypes.SettingChangeID, bool) error
 
 	CreatePriceFactor(v3.PriceFactorAtTime) (uint64, error)
 	GetPriceFactors(uint64, uint64) ([]v3.PriceFactorAtTime, error)
 
-	UpdateExchange(id uint64, updateOpts UpdateExchangeOpts) error
+	UpdateExchange(id rtypes.ExchangeID, updateOpts UpdateExchangeOpts) error
 	UpdateFeedStatus(name string, setRate v3.SetRate, enabled bool) error
 
 	SetGeneralData(data v3.GeneralData) (uint64, error)
 
-	UpdateAssetExchangeWithdrawFee(withdrawFee float64, assetExchangeID uint64) error
+	UpdateAssetExchangeWithdrawFee(withdrawFee float64, assetExchangeID rtypes.AssetExchangeID) error
 }
 
 // SettingReader is the common interface for reading exchanges, assets configuration.
 type SettingReader interface {
-	GetAsset(id uint64) (v3.Asset, error)
+	GetAsset(id rtypes.AssetID) (v3.Asset, error)
 	GetAssetBySymbol(symbol string) (v3.Asset, error)
-	GetAssetExchangeBySymbol(exchangeID uint64, symbol string) (v3.AssetExchange, error)
-	GetAssetExchange(id uint64) (v3.AssetExchange, error)
-	GetExchange(id uint64) (v3.Exchange, error)
+	GetAssetExchangeBySymbol(exchangeID rtypes.ExchangeID, symbol string) (v3.AssetExchange, error)
+	GetAssetExchange(id rtypes.AssetExchangeID) (v3.AssetExchange, error)
+	GetExchange(id rtypes.ExchangeID) (v3.Exchange, error)
 	GetExchangeByName(name string) (v3.Exchange, error)
 	GetExchanges() ([]v3.Exchange, error)
-	GetTradingPair(id uint64, withDeleted bool) (v3.TradingPairSymbols, error)
-	GetTradingPairs(exchangeID uint64) ([]v3.TradingPairSymbols, error)
-	GetTradingBy(tradingByID uint64) (v3.TradingBy, error)
+	GetTradingPair(id rtypes.TradingPairID, withDeleted bool) (v3.TradingPairSymbols, error)
+	GetTradingPairs(exchangeID rtypes.ExchangeID) ([]v3.TradingPairSymbols, error)
+	GetTradingBy(tradingByID rtypes.TradingByID) (v3.TradingBy, error)
 	// TODO: check usages of this method to see if it should be replaced with GetDepositAddress(exchangeID, tokenID)
-	GetDepositAddresses(exchangeID uint64) (map[common2.AssetID]ethereum.Address, error)
+	GetDepositAddresses(exchangeID rtypes.ExchangeID) (map[rtypes.AssetID]ethereum.Address, error)
 	GetAssets() ([]v3.Asset, error)
 	// GetTransferableAssets returns all assets that the set rate strategy is not not_set.
 	GetTransferableAssets() ([]v3.Asset, error)
-	GetMinNotional(exchangeID, baseID, quoteID uint64) (float64, error)
+	GetMinNotional(exchangeID rtypes.ExchangeID, baseID, quoteID rtypes.AssetID) (float64, error)
 	GetStableTokenParams() (map[string]interface{}, error)
 	// GetFeedConfigurations return all feed configuration
 	GetFeedConfigurations() ([]v3.FeedConfiguration, error)
@@ -78,12 +78,12 @@ type UpdateAssetOpts = v3.UpdateAssetEntry
 
 // UpdateTradingPairOpts ...
 type UpdateTradingPairOpts struct {
-	ID              uint64   `json:"id"`
-	PricePrecision  *uint64  `json:"price_precision"`
-	AmountPrecision *uint64  `json:"amount_precision"`
-	AmountLimitMin  *float64 `json:"amount_limit_min"`
-	AmountLimitMax  *float64 `json:"amount_limit_max"`
-	PriceLimitMin   *float64 `json:"price_limit_min"`
-	PriceLimitMax   *float64 `json:"price_limit_max"`
-	MinNotional     *float64 `json:"min_notional"`
+	ID              rtypes.TradingPairID `json:"id"`
+	PricePrecision  *uint64              `json:"price_precision"`
+	AmountPrecision *uint64              `json:"amount_precision"`
+	AmountLimitMin  *float64             `json:"amount_limit_min"`
+	AmountLimitMax  *float64             `json:"amount_limit_max"`
+	PriceLimitMin   *float64             `json:"price_limit_min"`
+	PriceLimitMax   *float64             `json:"price_limit_max"`
+	MinNotional     *float64             `json:"min_notional"`
 }

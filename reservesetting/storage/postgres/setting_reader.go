@@ -5,7 +5,7 @@ import (
 
 	ethereum "github.com/ethereum/go-ethereum/common"
 
-	common2 "github.com/KyberNetwork/reserve-data/common"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	"github.com/KyberNetwork/reserve-data/reservesetting/common"
 )
 
@@ -16,7 +16,7 @@ func (s *Storage) GetTransferableAssets() ([]common.Asset, error) {
 }
 
 // GetTradingPair return trading pair by trading pair id
-func (s *Storage) GetTradingPair(id uint64, withDeleted bool) (common.TradingPairSymbols, error) {
+func (s *Storage) GetTradingPair(id rtypes.TradingPairID, withDeleted bool) (common.TradingPairSymbols, error) {
 	var (
 		tradingPairDB tradingPairDB
 		result        common.TradingPairSymbols
@@ -39,7 +39,7 @@ func (s *Storage) GetTradingPair(id uint64, withDeleted bool) (common.TradingPai
 }
 
 // GetTradingPairs return list of trading pairs by exchangeID
-func (s *Storage) GetTradingPairs(id uint64) ([]common.TradingPairSymbols, error) {
+func (s *Storage) GetTradingPairs(id rtypes.ExchangeID) ([]common.TradingPairSymbols, error) {
 	var (
 		tradingPairs []tradingPairDB
 		result       []common.TradingPairSymbols
@@ -57,10 +57,10 @@ func (s *Storage) GetTradingPairs(id uint64) ([]common.TradingPairSymbols, error
 	return result, nil
 }
 
-func (s *Storage) GetDepositAddresses(exchangeID uint64) (map[common2.AssetID]ethereum.Address, error) {
+func (s *Storage) GetDepositAddresses(exchangeID rtypes.ExchangeID) (map[rtypes.AssetID]ethereum.Address, error) {
 	var (
 		dbResult []assetExchangeDB
-		results  = make(map[common2.AssetID]ethereum.Address)
+		results  = make(map[rtypes.AssetID]ethereum.Address)
 	)
 	err := s.stmts.getAssetExchange.Select(&dbResult, assetExchangeCondition{
 		ExchangeID: &exchangeID,
@@ -70,16 +70,16 @@ func (s *Storage) GetDepositAddresses(exchangeID uint64) (map[common2.AssetID]et
 	}
 	for _, r := range dbResult {
 		if r.DepositAddress.Valid {
-			results[common2.AssetID(r.AssetID)] = ethereum.HexToAddress(r.DepositAddress.String)
+			results[r.AssetID] = ethereum.HexToAddress(r.DepositAddress.String)
 		} else {
-			results[common2.AssetID(r.AssetID)] = ethereum.HexToAddress("0x0")
+			results[r.AssetID] = ethereum.HexToAddress("0x0")
 		}
 	}
 	return results, nil
 }
 
 // GetMinNotional return min notional
-func (s *Storage) GetMinNotional(exchangeID, baseID, quoteID uint64) (float64, error) {
+func (s *Storage) GetMinNotional(exchangeID rtypes.ExchangeID, baseID, quoteID rtypes.AssetID) (float64, error) {
 	var minNotional float64
 	s.l.Infow("getting min notional", "exchange", exchangeID, "base", baseID, "quote", quoteID)
 	if err := s.stmts.getMinNotional.Get(&minNotional,

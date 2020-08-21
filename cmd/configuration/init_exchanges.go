@@ -23,17 +23,18 @@ import (
 	binanceStorage "github.com/KyberNetwork/reserve-data/exchange/binance/storage"
 	"github.com/KyberNetwork/reserve-data/exchange/huobi"
 	huobiStorage "github.com/KyberNetwork/reserve-data/exchange/huobi/storage"
+	rtypes "github.com/KyberNetwork/reserve-data/lib/rtypes"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage"
 )
 
 type ExchangePool struct {
-	Exchanges map[common.ExchangeID]interface{}
+	Exchanges map[rtypes.ExchangeID]interface{}
 	l         *zap.SugaredLogger
 }
 
 func updateTradingPairConf(
 	assetStorage storage.Interface,
-	ex common.Exchange, exchangeID uint64) {
+	ex common.Exchange, exchangeID rtypes.ExchangeID) {
 	l := zap.S()
 	pairs, err := assetStorage.GetTradingPairs(exchangeID)
 	if err != nil {
@@ -90,9 +91,9 @@ func updateDepositAddress(assetStorage storage.Interface, be exchange.BinanceInt
 	for _, asset := range assets {
 		for _, ae := range asset.Exchanges {
 			switch ae.ExchangeID {
-			case uint64(common.Binance), uint64(common.Binance2):
+			case rtypes.Binance, rtypes.Binance2:
 				l.Infow("updating deposit address for asset", "asset_id", asset.ID,
-					"exchange", common.Binance.String(), "symbol", ae.Symbol)
+					"exchange", ae.ExchangeID.String(), "symbol", ae.Symbol)
 				if be == nil {
 					l.Warnw("abort updating deposit address due binance exchange disabled")
 					continue
@@ -101,7 +102,7 @@ func updateDepositAddress(assetStorage storage.Interface, be exchange.BinanceInt
 				if err != nil {
 					l.Warnw("failed to get deposit address for asset",
 						"asset_id", asset.ID,
-						"exchange", common.Binance.String(), "symbol", ae.Symbol, "err", err.Error())
+						"exchange", ae.ExchangeID.String(), "symbol", ae.Symbol, "err", err.Error())
 					continue
 				}
 				err = assetStorage.UpdateDepositAddress(
@@ -112,9 +113,9 @@ func updateDepositAddress(assetStorage storage.Interface, be exchange.BinanceInt
 					l.Warnw("assetStorage.UpdateDepositAddress", "err", err.Error())
 					continue
 				}
-			case uint64(common.Huobi):
+			case rtypes.Huobi:
 				l.Infow("updating deposit address for asset", "asset_id", asset.ID,
-					"exchange", common.Huobi.String(),
+					"exchange", ae.ExchangeID.String(),
 					"symbol", ae.Symbol)
 				if he == nil {
 					l.Warnw("abort updating deposit address due huobi exchange disabled")
@@ -124,14 +125,14 @@ func updateDepositAddress(assetStorage storage.Interface, be exchange.BinanceInt
 				if err != nil {
 					l.Warnw("failed to get deposit address for asset",
 						"asset_id", asset.ID,
-						"exchange", common.Huobi.String(),
+						"exchange", ae.ExchangeID.String(),
 						"symbol", ae.Symbol, "err", err)
 					continue
 				}
 				if len(depositAddress.Data) != 0 {
 					err = assetStorage.UpdateDepositAddress(
 						asset.ID,
-						uint64(common.Huobi),
+						rtypes.Huobi,
 						ethereum.HexToAddress(depositAddress.Data[0].Address))
 					if err != nil {
 						l.Warnw("assetStorage.UpdateDepositAddress", "err", err.Error())
@@ -154,7 +155,7 @@ func NewExchangePool(
 	gasClient *gasstation.Client,
 	gasLimiter core.GasPriceLimiter,
 ) (*ExchangePool, error) {
-	exchanges := map[common.ExchangeID]interface{}{}
+	exchanges := map[rtypes.ExchangeID]interface{}{}
 	var (
 		be      exchange.BinanceInterface
 		he      exchange.HuobiInterface
@@ -174,10 +175,10 @@ func NewExchangePool(
 	httpClient := &http.Client{Transport: exchange.NewTransportRateLimiter(&http.Client{Timeout: time.Second * 30})}
 	for _, exparam := range enabledExchanges {
 		switch exparam {
-		case common.Binance, common.Binance2:
+		case rtypes.Binance, rtypes.Binance2:
 			accountID := rcf.BinanceAccountID
 			binanceSigner := binance.NewSigner(rcf.BinanceKey, rcf.BinanceSecret)
-			if exparam == common.Binance2 {
+			if exparam == rtypes.Binance2 {
 				accountID = rcf.BinanceAccount2ID
 				binanceSigner = binance.NewSigner(rcf.Binance2Key, rcf.Binance2Secret)
 			}
@@ -198,7 +199,7 @@ func NewExchangePool(
 				return nil, fmt.Errorf("cannot create exchange Binance: (%s)", err.Error())
 			}
 			exchanges[bin.ID()] = bin
-		case common.Huobi:
+		case rtypes.Huobi:
 			huobiSigner := huobi.NewSigner(rcf.HoubiKey, rcf.HoubiSecret)
 			he = huobi.NewHuobiEndpoint(huobiSigner, hi, httpClient)
 			huobistorage, err := huobiStorage.NewPostgresStorage(db)
@@ -225,14 +226,14 @@ func NewExchangePool(
 	}
 
 	go updateDepositAddress(assetStorage, be, he)
-	if bin, ok := exchanges[common.Binance].(*exchange.Binance); ok {
-		go updateTradingPairConf(assetStorage, bin, uint64(bin.ID()))
+	if bin, ok := exchanges[rtypes.Binance].(*exchange.Binance); ok {
+		go updateTradingPairConf(assetStorage, bin, bin.ID())
 	}
-	if bin2, ok := exchanges[common.Binance2].(*exchange.Binance); ok {
-		go updateTradingPairConf(assetStorage, bin2, uint64(bin2.ID()))
+	if bin2, ok := exchanges[rtypes.Binance2].(*exchange.Binance); ok {
+		go updateTradingPairConf(assetStorage, bin2, bin2.ID())
 	}
 	if hb != nil {
-		go updateTradingPairConf(assetStorage, hb, uint64(common.Huobi))
+		go updateTradingPairConf(assetStorage, hb, rtypes.Huobi)
 	}
 	return &ExchangePool{
 		Exchanges: exchanges,

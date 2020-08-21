@@ -6,6 +6,8 @@ import (
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/postgres"
 	"github.com/KyberNetwork/reserve-data/exchange"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
+
 	_ "github.com/golang-migrate/migrate/v4/source/file" // driver for migration
 )
 
@@ -54,12 +56,12 @@ func (s *postgresStorage) prepareStmts() error {
 }
 
 type exchangeTradeHistoryDB struct {
-	PairID  uint64  `db:"pair_id"`
-	TradeID string  `db:"trade_id"`
-	Price   float64 `db:"price"`
-	Qty     float64 `db:"qty"`
-	Type    string  `db:"type"`
-	Time    uint64  `db:"time"`
+	PairID  rtypes.TradingPairID `db:"pair_id"`
+	TradeID string               `db:"trade_id"`
+	Price   float64              `db:"price"`
+	Qty     float64              `db:"qty"`
+	Type    string               `db:"type"`
+	Time    uint64               `db:"time"`
 }
 
 // StoreTradeHistory implements exchange.BinanceStorage and store trade history
@@ -93,7 +95,7 @@ func (s *postgresStorage) StoreTradeHistory(data common.ExchangeTradeHistory) er
 }
 
 // GetTradeHistory implements exchange.BinanceStorage and get trade history within a time period
-func (s *postgresStorage) GetTradeHistory(exchangeID, fromTime, toTime uint64) (common.ExchangeTradeHistory, error) {
+func (s *postgresStorage) GetTradeHistory(exchangeID rtypes.ExchangeID, fromTime, toTime uint64) (common.ExchangeTradeHistory, error) {
 	var result = make(common.ExchangeTradeHistory)
 	var records []exchangeTradeHistoryDB
 	err := s.stmts.getHistoryStmt.Select(&records, exchangeID, fromTime, toTime)
@@ -115,7 +117,7 @@ func (s *postgresStorage) GetTradeHistory(exchangeID, fromTime, toTime uint64) (
 }
 
 // GetLastIDTradeHistory implements exchange.BinanceStorage and get the last ID with a correspond pairID
-func (s *postgresStorage) GetLastIDTradeHistory(pairID uint64) (string, error) {
+func (s *postgresStorage) GetLastIDTradeHistory(pairID rtypes.TradingPairID) (string, error) {
 	var record exchangeTradeHistoryDB
 	err := s.stmts.getLastIDHistoryStmt.Get(&record, pairID)
 	if err != nil {

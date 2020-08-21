@@ -6,32 +6,20 @@ import (
 
 	ethereum "github.com/ethereum/go-ethereum/common"
 
+	rtypes "github.com/KyberNetwork/reserve-data/lib/rtypes"
 	"github.com/KyberNetwork/reserve-data/reservesetting/common"
 )
 
-// ExchangeID is the name of exchanges of which core will use to rebalance.
-//go:generate stringer -type=ExchangeID -linecomment
-type ExchangeID int
-
-const (
-	//Binance is the enumerated key for binance
-	Binance ExchangeID = iota + 1 //binance
-	//Huobi is the enumerated key for huobi
-	Huobi //huobi
-	// Binance2 is second binance exchange
-	Binance2 // binance_2
-)
-
 // ValidExchangeNames returns all valid exchange names.
-var ValidExchangeNames = map[string]ExchangeID{
-	Binance.String():  Binance,
-	Huobi.String():    Huobi,
-	Binance2.String(): Binance2,
+var ValidExchangeNames = map[string]rtypes.ExchangeID{
+	rtypes.Binance.String():  rtypes.Binance,
+	rtypes.Huobi.String():    rtypes.Huobi,
+	rtypes.Binance2.String(): rtypes.Binance2,
 }
 
 // Exchange represents a centralized exchange like Binance, Huobi...
 type Exchange interface {
-	ID() ExchangeID
+	ID() rtypes.ExchangeID
 	// Address return the deposit address of an asset and return true
 	// if token is supported in the exchange, otherwise return false.
 	// This function will prioritize live address from exchange above the current stored address.
@@ -62,7 +50,7 @@ type LiveExchange interface {
 }
 
 // SupportedExchanges map exchange id to its exchange
-var SupportedExchanges = map[ExchangeID]Exchange{}
+var SupportedExchanges = map[rtypes.ExchangeID]Exchange{}
 
 // GetExchange return exchange by its name
 func GetExchange(name string) (Exchange, error) {

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	"github.com/KyberNetwork/reserve-data/reservesetting/common"
 )
 
@@ -45,7 +46,7 @@ type exchangesResponse struct {
 	Exchanges []common.Exchange `json:"data"`
 }
 
-func (c *apiClient) getAsset(id uint64) (assetResponse, error) {
+func (c *apiClient) getAsset(id rtypes.AssetID) (assetResponse, error) {
 	req, err := createRequest(http.MethodGet, fmt.Sprintf("/v3/asset/%d", id), nil)
 	if err != nil {
 		return assetResponse{}, err
@@ -111,7 +112,7 @@ func (c *apiClient) confirmSettingChange(id uint64) (commonResponse, error) {
 	return status, err
 }
 
-func (c *apiClient) getExchange(id uint64) (exchangeResponse, error) {
+func (c *apiClient) getExchange(id rtypes.ExchangeID) (exchangeResponse, error) {
 	req, err := createRequest(http.MethodGet, fmt.Sprintf("/v3/exchange/%d", id), nil)
 	if err != nil {
 		return exchangeResponse{}, err
@@ -154,7 +155,7 @@ func createRequest(method, url string, data interface{}) (*http.Request, error) 
 	return http.NewRequest(method, url, bytes.NewBuffer(body))
 }
 
-func (c *apiClient) updateExchangeStatus(id uint64, exs exchangeEnabledEntry) (commonResponse, error) {
+func (c *apiClient) updateExchangeStatus(id rtypes.ExchangeID, exs exchangeEnabledEntry) (commonResponse, error) {
 	req, err := createRequest(http.MethodPut, fmt.Sprintf("/v3/set-exchange-enabled/%d", id), exs)
 	if err != nil {
 		return commonResponse{}, err

@@ -12,6 +12,7 @@ import (
 	v1common "github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/testutil"
 	"github.com/KyberNetwork/reserve-data/http/httputil"
+	rtypes "github.com/KyberNetwork/reserve-data/lib/rtypes"
 	"github.com/KyberNetwork/reserve-data/reservesetting/common"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage/postgres"
 )
@@ -23,11 +24,11 @@ func TestServer_StableTokenParams(t *testing.T) {
 		getParamsPath     = "/v3/stable-token-params"
 	)
 	var (
-		supportedExchanges = make(map[v1common.ExchangeID]v1common.LiveExchange)
+		supportedExchanges = make(map[rtypes.ExchangeID]v1common.LiveExchange)
 	)
 
 	//create map of test exchange
-	for _, exchangeID := range []v1common.ExchangeID{v1common.Binance, v1common.Huobi} {
+	for _, exchangeID := range []rtypes.ExchangeID{rtypes.Binance, rtypes.Huobi} {
 		exchange := v1common.TestExchange{}
 		supportedExchanges[exchangeID] = exchange
 	}

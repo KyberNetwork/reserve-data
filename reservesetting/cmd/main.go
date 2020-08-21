@@ -23,6 +23,7 @@ import (
 	coreclient "github.com/KyberNetwork/reserve-data/lib/core-client"
 	"github.com/KyberNetwork/reserve-data/lib/httputil"
 	"github.com/KyberNetwork/reserve-data/lib/migration"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	settinghttp "github.com/KyberNetwork/reserve-data/reservesetting/http"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage/postgres"
@@ -127,7 +128,7 @@ func run(c *cli.Context) error {
 
 	binanceSigner := binance.NewSigner(c.String(binanceAPIKeyFlag), c.String(binanceSecretKeyFlag))
 	httpClient := &http.Client{Timeout: time.Second * 30}
-	binanceEndpoint := binance.NewBinanceEndpoint(binanceSigner, bi, dpl, httpClient, v1common.Binance, "", "", "")
+	binanceEndpoint := binance.NewBinanceEndpoint(binanceSigner, bi, dpl, httpClient, rtypes.Binance, "", "", "")
 	hi := configuration.NewhuobiInterfaceFromContext(c)
 
 	// dummy signer as live infos does not need to sign
@@ -169,20 +170,20 @@ func run(c *cli.Context) error {
 	return nil
 }
 
-func getLiveExchanges(enabledExchanges []v1common.ExchangeID,
+func getLiveExchanges(enabledExchanges []rtypes.ExchangeID,
 	bi exchange.BinanceInterface,
 	hi exchange.HuobiInterface,
-	intervalUpdateWithdrawFee time.Duration) (map[v1common.ExchangeID]v1common.LiveExchange, error) {
+	intervalUpdateWithdrawFee time.Duration) (map[rtypes.ExchangeID]v1common.LiveExchange, error) {
 	var (
-		liveExchanges = make(map[v1common.ExchangeID]v1common.LiveExchange)
+		liveExchanges = make(map[rtypes.ExchangeID]v1common.LiveExchange)
 	)
 	for _, exchangeID := range enabledExchanges {
 		switch exchangeID {
-		case v1common.Binance, v1common.Binance2:
+		case rtypes.Binance, rtypes.Binance2:
 			binanceLive := exchange.NewBinanceLive(bi)
 			go binanceLive.RunUpdateAssetDetails(intervalUpdateWithdrawFee)
 			liveExchanges[exchangeID] = binanceLive
-		case v1common.Huobi:
+		case rtypes.Huobi:
 			huobiLive := exchange.NewHuobiLive(hi)
 			go huobiLive.RunUpdateAssetDetails(intervalUpdateWithdrawFee)
 			liveExchanges[exchangeID] = huobiLive
@@ -191,7 +192,7 @@ func getLiveExchanges(enabledExchanges []v1common.ExchangeID,
 	return liveExchanges, nil
 }
 
-func runUpdateWithdrawFee(sugar *zap.SugaredLogger, exchanges map[v1common.ExchangeID]v1common.LiveExchange, s storage.Interface) {
+func runUpdateWithdrawFee(sugar *zap.SugaredLogger, exchanges map[rtypes.ExchangeID]v1common.LiveExchange, s storage.Interface) {
 	assets, err := s.GetAssets()
 	if err != nil {
 		sugar.Errorw("cannot get assets", "err", err)
@@ -199,7 +200,7 @@ func runUpdateWithdrawFee(sugar *zap.SugaredLogger, exchanges map[v1common.Excha
 	}
 	for _, asset := range assets {
 		for _, ae := range asset.Exchanges {
-			if le, ok := exchanges[v1common.ExchangeID(ae.ExchangeID)]; ok {
+			if le, ok := exchanges[ae.ExchangeID]; ok {
 				withdrawFee, err := le.GetLiveWithdrawFee(ae.Symbol)
 				if err != nil {
 					sugar.Warnw("cannot get live withdraw fee", "err", err, "exchange symbol", ae.Symbol, "token symbol", asset.Symbol)

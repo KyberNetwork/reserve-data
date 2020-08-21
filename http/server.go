@@ -21,6 +21,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/http/httputil"
 	"github.com/KyberNetwork/reserve-data/lib/caller"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	v3common "github.com/KyberNetwork/reserve-data/reservesetting/common"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage"
 )
@@ -68,9 +69,9 @@ func (s *Server) AllPricesVersion(c *gin.Context) {
 }
 
 type price struct {
-	Base     uint64              `json:"base"`
-	Quote    uint64              `json:"quote"`
-	Exchange uint64              `json:"exchange"`
+	Base     rtypes.AssetID      `json:"base"`
+	Quote    rtypes.AssetID      `json:"quote"`
+	Exchange rtypes.ExchangeID   `json:"exchange"`
 	Bids     []common.PriceEntry `json:"bids"`
 	Asks     []common.PriceEntry `json:"asks"`
 }
@@ -95,7 +96,7 @@ func (s *Server) AllPrices(c *gin.Context) {
 			responseData = append(responseData, price{
 				Base:     pair.Base,
 				Quote:    pair.Quote,
-				Exchange: uint64(exchangeID),
+				Exchange: exchangeID,
 				Bids:     exchangePrice.Bids,
 				Asks:     exchangePrice.Asks,
 			})
@@ -195,10 +196,10 @@ func (s *Server) GetRate(c *gin.Context) {
 
 // TradeRequest form
 type TradeRequest struct {
-	Pair   uint64  `json:"pair"`
-	Amount float64 `json:"amount"`
-	Rate   float64 `json:"rate"`
-	Type   string  `json:"type"`
+	Pair   rtypes.TradingPairID `json:"pair"`
+	Amount float64              `json:"amount"`
+	Rate   float64              `json:"rate"`
+	Type   string               `json:"type"`
 }
 
 // Trade create an order in cexs
@@ -221,7 +222,7 @@ func (s *Server) Trade(c *gin.Context) {
 		return
 	}
 
-	exchange, ok := common.SupportedExchanges[common.ExchangeID(pair.ExchangeID)]
+	exchange, ok := common.SupportedExchanges[pair.ExchangeID]
 	if !ok {
 		httputil.ResponseFailure(c, httputil.WithError(errors.Errorf("exchange %v is not supported", pair.ExchangeID)))
 		return
@@ -243,8 +244,8 @@ func (s *Server) Trade(c *gin.Context) {
 
 // OpenOrdersRequest request for open orders
 type OpenOrdersRequest struct {
-	ExchangeID uint64 `form:"exchange_id"`
-	Pair       uint64 `form:"pair"`
+	ExchangeID rtypes.ExchangeID    `form:"exchange_id"`
+	Pair       rtypes.TradingPairID `form:"pair"`
 }
 
 // OpenOrders request for open orders
@@ -260,14 +261,14 @@ func (s *Server) OpenOrders(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
-	getExchange := make(map[common.ExchangeID]common.Exchange)
+	getExchange := make(map[rtypes.ExchangeID]common.Exchange)
 	if query.ExchangeID != 0 {
-		exchange, ok := common.SupportedExchanges[common.ExchangeID(query.ExchangeID)]
+		exchange, ok := common.SupportedExchanges[query.ExchangeID]
 		if !ok {
 			httputil.ResponseFailure(c, httputil.WithError(errors.Errorf("exchange %v is not supported", query.ExchangeID)))
 			return
 		}
-		getExchange[common.ExchangeID(query.ExchangeID)] = exchange
+		getExchange[query.ExchangeID] = exchange
 	} else {
 		getExchange = common.SupportedExchanges
 	}
@@ -283,7 +284,7 @@ func (s *Server) OpenOrders(c *gin.Context) {
 	} else {
 		logger.Info("pair id not provide, getting open orders for all supported pairs")
 	}
-	result := make(map[common.ExchangeID][]common.Order)
+	result := make(map[rtypes.ExchangeID][]common.Order)
 	for exchangeID, exchange := range getExchange {
 		openOrders, err := exchange.OpenOrders(pair)
 		if err != nil {
@@ -303,7 +304,7 @@ func (s *Server) OpenOrders(c *gin.Context) {
 
 // CancelOrderRequest type
 type CancelOrderRequest struct {
-	ExchangeID uint64                `json:"exchange_id"`
+	ExchangeID rtypes.ExchangeID     `json:"exchange_id"`
 	Orders     []common.RequestOrder `json:"orders"`
 }
 
@@ -315,7 +316,7 @@ func (s *Server) CancelOrder(c *gin.Context) {
 		return
 	}
 
-	exchange, ok := common.SupportedExchanges[common.ExchangeID(request.ExchangeID)]
+	exchange, ok := common.SupportedExchanges[request.ExchangeID]
 	if !ok {
 		httputil.ResponseFailure(c, httputil.WithError(errors.Errorf("exchange %v is not supported", request.ExchangeID)))
 		return
@@ -327,9 +328,9 @@ func (s *Server) CancelOrder(c *gin.Context) {
 
 // WithdrawRequest type
 type WithdrawRequest struct {
-	ExchangeID uint64   `json:"exchange"`
-	Asset      uint64   `json:"asset"`
-	Amount     *big.Int `json:"amount"`
+	ExchangeID rtypes.ExchangeID `json:"exchange"`
+	Asset      rtypes.AssetID    `json:"asset"`
+	Amount     *big.Int          `json:"amount"`
 }
 
 // Withdraw asset to reserve from cex
@@ -340,7 +341,7 @@ func (s *Server) Withdraw(c *gin.Context) {
 		return
 	}
 
-	exchange, ok := common.SupportedExchanges[common.ExchangeID(request.ExchangeID)]
+	exchange, ok := common.SupportedExchanges[request.ExchangeID]
 	if !ok {
 		httputil.ResponseFailure(c, httputil.WithError(errors.Errorf("exchange %v is not supported", request.ExchangeID)))
 		return
@@ -363,9 +364,9 @@ func (s *Server) Withdraw(c *gin.Context) {
 
 // DepositRequest type
 type DepositRequest struct {
-	ExchangeID uint64   `json:"exchange"`
-	Amount     *big.Int `json:"amount"`
-	Asset      uint64   `json:"asset"`
+	ExchangeID rtypes.ExchangeID `json:"exchange"`
+	Amount     *big.Int          `json:"amount"`
+	Asset      rtypes.AssetID    `json:"asset"`
 }
 
 // Deposit asset into cex
@@ -376,7 +377,7 @@ func (s *Server) Deposit(c *gin.Context) {
 		return
 	}
 
-	exchange, ok := common.SupportedExchanges[common.ExchangeID(request.ExchangeID)]
+	exchange, ok := common.SupportedExchanges[request.ExchangeID]
 	if !ok {
 		httputil.ResponseFailure(c, httputil.WithError(errors.Errorf("exchange %v is not supported", request.ExchangeID)))
 		return

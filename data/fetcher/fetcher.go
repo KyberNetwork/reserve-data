@@ -11,6 +11,7 @@ import (
 
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/blockchain"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 )
 
 // maxActivityLifeTime is the longest time of an activity. If the
@@ -187,12 +188,12 @@ func (f *Fetcher) FetchAllAuthData(timepoint uint64) {
 	snapshot := common.AuthDataSnapshot{
 		Valid:             true,
 		Timestamp:         common.GetTimestamp(),
-		ExchangeBalances:  map[common.ExchangeID]common.EBalanceEntry{},
-		ReserveBalances:   map[common.AssetID]common.BalanceEntry{},
+		ExchangeBalances:  map[rtypes.ExchangeID]common.EBalanceEntry{},
+		ReserveBalances:   map[rtypes.AssetID]common.BalanceEntry{},
 		PendingActivities: []common.ActivityRecord{},
 		Block:             0,
 	}
-	bbalances := map[common.AssetID]common.BalanceEntry{}
+	bbalances := map[rtypes.AssetID]common.BalanceEntry{}
 	ebalances := sync.Map{}
 	estatuses := sync.Map{}
 	bstatuses := sync.Map{}
@@ -247,7 +248,7 @@ func (f *Fetcher) FetchAllAuthData(timepoint uint64) {
 }
 
 func (f *Fetcher) FetchAuthDataFromBlockchain(
-	allBalances map[common.AssetID]common.BalanceEntry,
+	allBalances map[rtypes.AssetID]common.BalanceEntry,
 	allStatuses *sync.Map,
 	pendings []common.ActivityRecord) error {
 	// we apply double check strategy to mitigate race condition on exchange side like this:
@@ -261,7 +262,7 @@ func (f *Fetcher) FetchAuthDataFromBlockchain(
 		activities update(eg, some txs become complete) can make balances result looks wrong
 		so, we verify activities status before and after we collect balances, make sure it does not change.
 	*/
-	var balances map[common.AssetID]common.BalanceEntry
+	var balances map[rtypes.AssetID]common.BalanceEntry
 	var preStatuses, statuses map[common.ActivityID]common.ActivityStatus
 	var err error
 	for {
@@ -303,7 +304,7 @@ func (f *Fetcher) FetchCurrentBlock(timepoint uint64) {
 	}
 }
 
-func (f *Fetcher) FetchBalanceFromBlockchain() (map[common.AssetID]common.BalanceEntry, error) {
+func (f *Fetcher) FetchBalanceFromBlockchain() (map[rtypes.AssetID]common.BalanceEntry, error) {
 	return f.blockchain.FetchBalanceData(f.contractAddressConf.Reserve, 0)
 }
 
@@ -492,14 +493,14 @@ func (f *Fetcher) updateActivitywithExchangeStatus(activity *common.ActivityReco
 // PersistSnapshot save a authdata snapshot into db
 func (f *Fetcher) PersistSnapshot(
 	ebalances *sync.Map,
-	bbalances map[common.AssetID]common.BalanceEntry,
+	bbalances map[rtypes.AssetID]common.BalanceEntry,
 	estatuses *sync.Map,
 	bstatuses *sync.Map,
 	pendings []common.ActivityRecord,
 	snapshot *common.AuthDataSnapshot,
 	timepoint uint64) error {
 
-	allEBalances := map[common.ExchangeID]common.EBalanceEntry{}
+	allEBalances := map[rtypes.ExchangeID]common.EBalanceEntry{}
 	ebalances.Range(func(key, value interface{}) bool {
 		//if type conversion went wrong, continue to the next record
 		v, ok := value.(common.EBalanceEntry)
@@ -507,7 +508,7 @@ func (f *Fetcher) PersistSnapshot(
 			f.l.Errorw("ERROR: value cannot be asserted to common.EbalanceEntry", "value", v)
 			return true
 		}
-		exID, ok := key.(common.ExchangeID)
+		exID, ok := key.(rtypes.ExchangeID)
 		if !ok {
 			f.l.Errorw("key cannot be asserted to common.ExchangeID", "key", key)
 			return true
@@ -589,7 +590,7 @@ func (f *Fetcher) FetchAuthDataFromExchange(
 	var balances common.EBalanceEntry
 	var statuses map[common.ActivityID]common.ActivityStatus
 	var err error
-	var tokenAddress map[common.AssetID]ethereum.Address
+	var tokenAddress map[rtypes.AssetID]ethereum.Address
 	for {
 		preStatuses := f.FetchStatusFromExchange(exchange, pendings, timepoint)
 		balances, err = exchange.FetchEBalanceData(timepoint)

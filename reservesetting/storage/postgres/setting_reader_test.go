@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/KyberNetwork/reserve-data/common/testutil"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	// "github.com/KyberNetwork/reserve-data/reservesetting/common"
 	// "github.com/KyberNetwork/reserve-data/reservesetting/storage"
 )
@@ -83,7 +84,7 @@ func TestStorage_GetMinNotional(t *testing.T) {
 	require.NoError(t, err)
 
 	initData(t, s)
-	minNotional, err := s.GetMinNotional(binance, 2, 1)
+	minNotional, err := s.GetMinNotional(rtypes.Binance, 2, 1)
 	require.NoError(t, err)
 	require.Equal(t, float64(0), minNotional)
 }

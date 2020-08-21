@@ -2,6 +2,7 @@ package core
 
 import (
 	"github.com/KyberNetwork/reserve-data/common"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	commonv3 "github.com/KyberNetwork/reserve-data/reservesetting/common"
 )
 
@@ -18,7 +19,7 @@ type ActivityStorage interface {
 		timepoint uint64) error
 	HasPendingDeposit(token commonv3.Asset, exchange common.Exchange) (bool, error)
 
-	GetActivity(exchangeID common.ExchangeID, orderID string) (common.ActivityRecord, error)
+	GetActivity(exchangeID rtypes.ExchangeID, orderID string) (common.ActivityRecord, error)
 
 	// PendingActivityForAction return the last pending set rate and number of pending
 	// transactions.

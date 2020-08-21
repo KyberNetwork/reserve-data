@@ -10,6 +10,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/testutil"
 	"github.com/KyberNetwork/reserve-data/exchange"
+	rtypes "github.com/KyberNetwork/reserve-data/lib/rtypes"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage/postgres"
 )
 
@@ -53,7 +54,7 @@ func Test_BinancePostgres(t *testing.T) {
 	var tradeHistory common.ExchangeTradeHistory
 	fromTime := uint64(1528934400000)
 	toTime := uint64(1529020800000)
-	tradeHistory, err = storage.GetTradeHistory(uint64(common.Binance), fromTime, toTime)
+	tradeHistory, err = storage.GetTradeHistory(rtypes.Binance, fromTime, toTime)
 	if err != nil {
 		t.Fatal(err)
 	}

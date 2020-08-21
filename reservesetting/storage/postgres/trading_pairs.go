@@ -8,27 +8,28 @@ import (
 	"github.com/lib/pq"
 
 	pgutil "github.com/KyberNetwork/reserve-data/common/postgres"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	"github.com/KyberNetwork/reserve-data/reservesetting/common"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage"
 )
 
-func (s *Storage) createTradingPair(tx *sqlx.Tx, exchangeID, baseID, quoteID, pricePrecision, amountPrecision uint64,
-	amountLimitMin, amountLimitMax, priceLimitMin, priceLimitMax, minNotional float64, tradingByAssetID uint64) (uint64, error) {
+func (s *Storage) createTradingPair(tx *sqlx.Tx, exchangeID rtypes.ExchangeID, baseID, quoteID rtypes.AssetID, pricePrecision, amountPrecision uint64,
+	amountLimitMin, amountLimitMax, priceLimitMin, priceLimitMax, minNotional float64, assetID rtypes.AssetID) (rtypes.TradingPairID, error) {
 
-	var tradingPairID uint64
+	var tradingPairID rtypes.TradingPairID
 	err := tx.NamedStmt(s.stmts.newTradingPair).Get(
 		&tradingPairID,
 		struct {
-			ExchangeID      uint64  `db:"exchange_id"`
-			Base            uint64  `db:"base_id"`
-			Quote           uint64  `db:"quote_id"`
-			PricePrecision  uint64  `db:"price_precision"`
-			AmountPrecision uint64  `db:"amount_precision"`
-			AmountLimitMin  float64 `db:"amount_limit_min"`
-			AmountLimitMax  float64 `db:"amount_limit_max"`
-			PriceLimitMin   float64 `db:"price_limit_min"`
-			PriceLimitMax   float64 `db:"price_limit_max"`
-			MinNotional     float64 `db:"min_notional"`
+			ExchangeID      rtypes.ExchangeID `db:"exchange_id"`
+			Base            rtypes.AssetID    `db:"base_id"`
+			Quote           rtypes.AssetID    `db:"quote_id"`
+			PricePrecision  uint64            `db:"price_precision"`
+			AmountPrecision uint64            `db:"amount_precision"`
+			AmountLimitMin  float64           `db:"amount_limit_min"`
+			AmountLimitMax  float64           `db:"amount_limit_max"`
+			PriceLimitMin   float64           `db:"price_limit_min"`
+			PriceLimitMax   float64           `db:"price_limit_max"`
+			MinNotional     float64           `db:"min_notional"`
 		}{
 			ExchangeID:      exchangeID,
 			Base:            baseID,
@@ -62,7 +63,7 @@ func (s *Storage) createTradingPair(tx *sqlx.Tx, exchangeID, baseID, quoteID, pr
 			pErr.Message,
 		)
 	}
-	_, err = s.createTradingBy(tx, tradingByAssetID, tradingPairID)
+	_, err = s.createTradingBy(tx, assetID, tradingPairID)
 	if err != nil {
 		s.l.Infow("create trading pair failed on create tradingBy", "err", err)
 		return 0, err
@@ -72,7 +73,7 @@ func (s *Storage) createTradingPair(tx *sqlx.Tx, exchangeID, baseID, quoteID, pr
 }
 
 // UpdateTradingPair update a trading pair information
-func (s *Storage) UpdateTradingPair(id uint64, updateOpts storage.UpdateTradingPairOpts) error {
+func (s *Storage) UpdateTradingPair(id rtypes.TradingPairID, updateOpts storage.UpdateTradingPairOpts) error {
 	tx, err := s.db.Beginx()
 	if err != nil {
 		return err
@@ -90,17 +91,17 @@ func (s *Storage) UpdateTradingPair(id uint64, updateOpts storage.UpdateTradingP
 	return nil
 }
 
-func (s *Storage) updateTradingPair(tx *sqlx.Tx, id uint64, opts storage.UpdateTradingPairOpts) error {
+func (s *Storage) updateTradingPair(tx *sqlx.Tx, id rtypes.TradingPairID, opts storage.UpdateTradingPairOpts) error {
 	var updatedID uint64
 	err := tx.NamedStmt(s.stmts.updateTradingPair).Get(&updatedID, struct {
-		ID              uint64   `db:"id"`
-		PricePrecision  *uint64  `db:"price_precision"`
-		AmountPrecision *uint64  `db:"amount_precision"`
-		AmountLimitMin  *float64 `db:"amount_limit_min"`
-		AmountLimitMax  *float64 `db:"amount_limit_max"`
-		PriceLimitMin   *float64 `db:"price_limit_min"`
-		PriceLimitMax   *float64 `db:"price_limit_max"`
-		MinNotional     *float64 `db:"min_notional"`
+		ID              rtypes.TradingPairID `db:"id"`
+		PricePrecision  *uint64              `db:"price_precision"`
+		AmountPrecision *uint64              `db:"amount_precision"`
+		AmountLimitMin  *float64             `db:"amount_limit_min"`
+		AmountLimitMax  *float64             `db:"amount_limit_max"`
+		PriceLimitMin   *float64             `db:"price_limit_min"`
+		PriceLimitMax   *float64             `db:"price_limit_max"`
+		MinNotional     *float64             `db:"min_notional"`
 	}{
 		ID:              id,
 		PricePrecision:  opts.PricePrecision,
@@ -120,7 +121,7 @@ func (s *Storage) updateTradingPair(tx *sqlx.Tx, id uint64, opts storage.UpdateT
 	return nil
 }
 
-func (s *Storage) deleteTradingPair(tx *sqlx.Tx, id uint64) error {
+func (s *Storage) deleteTradingPair(tx *sqlx.Tx, id rtypes.TradingPairID) error {
 	var returnedID uint64
 	row := tx.Stmt(s.stmts.deleteTradingPair.Stmt).QueryRow(id)
 	err := row.Scan(&returnedID)

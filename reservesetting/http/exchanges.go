@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/KyberNetwork/reserve-data/http/httputil"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	"github.com/KyberNetwork/reserve-data/reservesetting/common"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage"
 )
@@ -20,7 +21,7 @@ func (s *Server) getExchanges(c *gin.Context) {
 func (s *Server) getExchange(c *gin.Context) {
 
 	var input struct {
-		ID uint64 `uri:"id" binding:"required"`
+		ID rtypes.ExchangeID `uri:"id" binding:"required"`
 	}
 	if err := c.ShouldBindUri(&input); err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
@@ -40,7 +41,7 @@ type exchangeEnabledEntry struct {
 
 func (s *Server) setExchangeEnabled(c *gin.Context) {
 	var input struct {
-		ID uint64 `uri:"id" binding:"required"`
+		ID rtypes.ExchangeID `uri:"id" binding:"required"`
 	}
 	if err := c.ShouldBindUri(&input); err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))

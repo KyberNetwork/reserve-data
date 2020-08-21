@@ -1,15 +1,16 @@
 package fetcher
 
 import (
-	"io/ioutil"
-	"os"
-	"path"
 	"sync"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/KyberNetwork/reserve-data/common"
+	"github.com/KyberNetwork/reserve-data/common/testutil"
 	"github.com/KyberNetwork/reserve-data/data/fetcher/httprunner"
 	"github.com/KyberNetwork/reserve-data/data/storage"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	"github.com/KyberNetwork/reserve-data/world"
 )
 
@@ -77,23 +78,20 @@ func TestUnchangedFunc(t *testing.T) {
 	}
 }
 
-func TestExchangeDown(t *testing.T) {
-	// mock fetcher
-	tmpDir, err := ioutil.TempDir("", "test_fetcher")
-	if err != nil {
-		t.Fatal(err)
-	}
-	testFetcherStoragePath := path.Join(tmpDir, "test_fetcher.db")
+const (
+	migrationPath = "../../cmd/migrations"
+)
 
-	fstorage, err := storage.NewBoltStorage(testFetcherStoragePath)
+func TestExchangeDown(t *testing.T) {
+	db, teardown := testutil.MustNewDevelopmentDB(migrationPath)
+	defer func() {
+		require.NoError(t, teardown())
+	}()
+
+	fstorage, err := storage.NewPostgresStorage(db)
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	defer func() {
-		if rErr := os.RemoveAll(tmpDir); rErr != nil {
-			t.Error(rErr)
-		}
-	}()
 	runner, err := httprunner.NewHTTPRunner(httprunner.WithPort(9000))
 	if err != nil {
 		t.Fatal(err)
@@ -102,7 +100,7 @@ func TestExchangeDown(t *testing.T) {
 	addressConf := &common.ContractAddressConfiguration{}
 
 	fetcher := NewFetcher(fstorage, fstorage, &world.TheWorld{}, runner, true, addressConf)
-	var KNC = common.AssetID(1)
+	var KNC = rtypes.AssetID(1)
 	// mock normal data
 	var estatuses, bstatuses sync.Map
 	ebalanceValue := common.EBalanceEntry{
@@ -110,15 +108,15 @@ func TestExchangeDown(t *testing.T) {
 		Error:      "",
 		Timestamp:  common.GetTimestamp(),
 		ReturnTime: common.GetTimestamp(),
-		AvailableBalance: map[common.AssetID]float64{
+		AvailableBalance: map[rtypes.AssetID]float64{
 			KNC: 500,
 		},
-		LockedBalance:  map[common.AssetID]float64{},
-		DepositBalance: map[common.AssetID]float64{},
+		LockedBalance:  map[rtypes.AssetID]float64{},
+		DepositBalance: map[rtypes.AssetID]float64{},
 		Status:         true,
 	}
 	ebalance := sync.Map{}
-	ebalance.Store(common.Binance, ebalanceValue)
+	ebalance.Store(rtypes.Binance, ebalanceValue)
 
 	rawBalance := common.RawBalance{}
 	tokenBalance := common.BalanceEntry{
@@ -129,7 +127,7 @@ func TestExchangeDown(t *testing.T) {
 		Balance:    rawBalance,
 	}
 
-	bbalance := map[common.AssetID]common.BalanceEntry{
+	bbalance := map[rtypes.AssetID]common.BalanceEntry{
 		KNC: tokenBalance,
 	}
 
@@ -151,18 +149,19 @@ func TestExchangeDown(t *testing.T) {
 		Error:            "Connection time out",
 		Timestamp:        common.GetTimestamp(),
 		ReturnTime:       common.GetTimestamp(),
-		AvailableBalance: map[common.AssetID]float64{},
-		LockedBalance:    map[common.AssetID]float64{},
-		DepositBalance:   map[common.AssetID]float64{},
+		AvailableBalance: map[rtypes.AssetID]float64{},
+		LockedBalance:    map[rtypes.AssetID]float64{},
+		DepositBalance:   map[rtypes.AssetID]float64{},
 		Status:           false, // exchange status false - down, true - up
 	}
-	ebalance.Store(common.Binance, ebalanceValue)
+	timepoint = timepoint + 1000
+	ebalance.Store(rtypes.Binance, ebalanceValue)
 	err = fetcher.PersistSnapshot(&ebalance, bbalance, &estatuses, &bstatuses, pendings, &snapshot, timepoint)
 	if err != nil {
 		t.Fatalf("Cannot persist snapshot: %s", err.Error())
 	}
 	// check if snapshot store latest data instead of empty
-	version, err := fetcher.storage.CurrentAuthDataVersion(common.NowInMillis())
+	version, err := fetcher.storage.CurrentAuthDataVersion(timepoint + 1000)
 	if err != nil {
 		t.Fatalf("Snapshot did not saved: %s", err.Error())
 	}
@@ -170,12 +169,12 @@ func TestExchangeDown(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Cannot get snapshot: %s", err.Error())
 	}
-	exchangeBalance := authData.ExchangeBalances[common.Binance]
+	exchangeBalance := authData.ExchangeBalances[rtypes.Binance]
 	if exchangeBalance.AvailableBalance[KNC] != 500 {
 		t.Fatalf("Snapshot did not get the latest auth data instead")
 	}
 
 	if exchangeBalance.Error != "Connection time out" {
-		t.Fatalf("Snapshot did not save exchange error")
+		t.Fatalf("Snapshot did not save exchange error, err=%+v", err)
 	}
 }

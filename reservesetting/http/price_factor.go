@@ -5,6 +5,7 @@ import (
 
 	common2 "github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/http/httputil"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	"github.com/KyberNetwork/reserve-data/reservesetting/common"
 )
 
@@ -31,7 +32,7 @@ type getPriceFactorParams struct {
 }
 
 func convertToPriceFactorResponse(in []common.PriceFactorAtTime) []*common.AssetPriceFactorListResponse {
-	var assetToPriceList = map[uint64]*common.AssetPriceFactorListResponse{}
+	var assetToPriceList = map[rtypes.AssetID]*common.AssetPriceFactorListResponse{}
 	var res = make([]*common.AssetPriceFactorListResponse, 0)
 	for _, assetList := range in {
 		for _, asset := range assetList.Data {

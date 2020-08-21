@@ -8,14 +8,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	common2 "github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/testutil"
+	rtypes "github.com/KyberNetwork/reserve-data/lib/rtypes"
 	"github.com/KyberNetwork/reserve-data/reservesetting/common"
 )
 
 var (
-	binance = uint64(common2.Binance)
-	huobi   = uint64(common2.Huobi)
+	binance = rtypes.Binance
+	huobi   = rtypes.Huobi
 )
 
 func initData(t *testing.T, s *Storage) {
@@ -213,7 +213,7 @@ func TestStorage_SettingChangeCreate(t *testing.T) {
 	var tests = []struct {
 		msg      string
 		data     common.SettingChange
-		assertFn func(*testing.T, uint64, error)
+		assertFn func(*testing.T, rtypes.SettingChangeID, error)
 	}{
 		{
 			msg: fmt.Sprintf("test missing PWI when SetRate != %s", common.SetRateNotSet),
@@ -237,7 +237,7 @@ func TestStorage_SettingChangeCreate(t *testing.T) {
 					},
 				},
 			},
-			assertFn: func(t *testing.T, u uint64, e error) {
+			assertFn: func(t *testing.T, u rtypes.SettingChangeID, e error) {
 				assert.Equal(t, common.ErrPWIMissing, e)
 				assert.NoError(t, s.RejectSettingChange(u))
 			},
@@ -283,7 +283,7 @@ func TestStorage_SettingChangeCreate(t *testing.T) {
 					},
 				},
 			},
-			assertFn: func(t *testing.T, u uint64, e error) {
+			assertFn: func(t *testing.T, u rtypes.SettingChangeID, e error) {
 				assert.Equal(t, common.ErrRebalanceQuadraticMissing, e)
 				assert.NoError(t, s.RejectSettingChange(u))
 			},
@@ -324,7 +324,7 @@ func TestStorage_SettingChangeCreate(t *testing.T) {
 					},
 				},
 			},
-			assertFn: func(t *testing.T, u uint64, e error) {
+			assertFn: func(t *testing.T, u rtypes.SettingChangeID, e error) {
 				assert.Equal(t, common.ErrAssetExchangeMissing, e)
 				assert.NoError(t, s.RejectSettingChange(u))
 			},
@@ -372,7 +372,7 @@ func TestStorage_SettingChangeCreate(t *testing.T) {
 					},
 				},
 			},
-			assertFn: func(t *testing.T, u uint64, e error) {
+			assertFn: func(t *testing.T, u rtypes.SettingChangeID, e error) {
 				assert.Equal(t, common.ErrAssetTargetMissing, e)
 				assert.NoError(t, s.RejectSettingChange(u))
 			},
@@ -386,7 +386,7 @@ func TestStorage_SettingChangeCreate(t *testing.T) {
 						Data: common.CreateAssetEntry{
 							Symbol: "DAI",
 							Name:   "DAI",
-							//Address:      common3.HexToAddress("0x00"),
+							// Address:      common3.HexToAddress("0x00"),
 							Decimals:     18,
 							Transferable: true,
 							SetRate:      common.SetRateNotSet,
@@ -416,7 +416,7 @@ func TestStorage_SettingChangeCreate(t *testing.T) {
 					},
 				},
 			},
-			assertFn: func(t *testing.T, u uint64, e error) {
+			assertFn: func(t *testing.T, u rtypes.SettingChangeID, e error) {
 				assert.Equal(t, common.ErrAddressMissing, e)
 				assert.NoError(t, s.RejectSettingChange(u))
 			},
@@ -462,7 +462,7 @@ func TestStorage_SettingChangeCreate(t *testing.T) {
 					},
 				},
 			},
-			assertFn: func(t *testing.T, u uint64, e error) {
+			assertFn: func(t *testing.T, u rtypes.SettingChangeID, e error) {
 				assert.Equal(t, common.ErrDepositAddressMissing, e)
 				assert.NoError(t, s.RejectSettingChange(u))
 			},
@@ -519,7 +519,7 @@ func TestStorage_SettingChangeCreate(t *testing.T) {
 					},
 				},
 			},
-			assertFn: func(t *testing.T, u uint64, e error) {
+			assertFn: func(t *testing.T, u rtypes.SettingChangeID, e error) {
 				assert.Equal(t, common.ErrQuoteAssetInvalid, e)
 				assert.NoError(t, s.RejectSettingChange(u))
 			},
@@ -548,7 +548,7 @@ func TestStorage_SettingChangeCreate(t *testing.T) {
 				},
 			},
 
-			assertFn: func(t *testing.T, u uint64, e error) {
+			assertFn: func(t *testing.T, u rtypes.SettingChangeID, e error) {
 				assert.Equal(t, common.ErrDepositAddressMissing, e)
 				assert.NoError(t, s.RejectSettingChange(u))
 			},
@@ -567,7 +567,7 @@ func TestStorage_SettingChangeCreate(t *testing.T) {
 				},
 			},
 
-			assertFn: func(t *testing.T, u uint64, e error) {
+			assertFn: func(t *testing.T, u rtypes.SettingChangeID, e error) {
 				assert.NoError(t, e)
 				asset, err := s.GetAsset(2)
 				assert.NoError(t, err)
@@ -588,7 +588,7 @@ func TestStorage_SettingChangeCreate(t *testing.T) {
 				},
 			},
 
-			assertFn: func(t *testing.T, u uint64, e error) {
+			assertFn: func(t *testing.T, u rtypes.SettingChangeID, e error) {
 				assert.Error(t, e)
 				assert.NoError(t, s.RejectSettingChange(u))
 			},
@@ -607,7 +607,7 @@ func TestStorage_SettingChangeCreate(t *testing.T) {
 				},
 			},
 
-			assertFn: func(t *testing.T, u uint64, e error) {
+			assertFn: func(t *testing.T, u rtypes.SettingChangeID, e error) {
 				assert.NoError(t, e)
 				asset, err := s.GetAsset(2)
 				assert.NoError(t, err)
@@ -628,7 +628,7 @@ func TestStorage_SettingChangeCreate(t *testing.T) {
 				},
 			},
 
-			assertFn: func(t *testing.T, u uint64, e error) {
+			assertFn: func(t *testing.T, u rtypes.SettingChangeID, e error) {
 				assert.Error(t, e)
 				assert.NoError(t, s.RejectSettingChange(u))
 			},

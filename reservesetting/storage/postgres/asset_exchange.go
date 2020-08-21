@@ -9,11 +9,12 @@ import (
 	"github.com/pkg/errors"
 
 	pgutil "github.com/KyberNetwork/reserve-data/common/postgres"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	"github.com/KyberNetwork/reserve-data/reservesetting/common"
 )
 
 // GetAssetExchange return asset exchange by its id
-func (s *Storage) GetAssetExchange(id uint64) (common.AssetExchange, error) {
+func (s *Storage) GetAssetExchange(id rtypes.AssetExchangeID) (common.AssetExchange, error) {
 	var (
 		result assetExchangeDB
 	)
@@ -44,7 +45,7 @@ func (s *Storage) GetAssetExchange(id uint64) (common.AssetExchange, error) {
 }
 
 // GetAssetExchangeBySymbol return asset by its symbol
-func (s *Storage) GetAssetExchangeBySymbol(exchangeID uint64, symbol string) (common.AssetExchange, error) {
+func (s *Storage) GetAssetExchangeBySymbol(exchangeID rtypes.ExchangeID, symbol string) (common.AssetExchange, error) {
 	var (
 		result assetExchangeDB
 		logger = s.l.With("func", "GetAssetExchangeBySymbol", "symbol", symbol, "exchange", exchangeID)
@@ -69,7 +70,7 @@ func (s *Storage) GetAssetExchangeBySymbol(exchangeID uint64, symbol string) (co
 	}
 }
 
-func (s *Storage) deleteAssetExchange(tx *sqlx.Tx, assetExchangeID uint64) error {
+func (s *Storage) deleteAssetExchange(tx *sqlx.Tx, assetExchangeID rtypes.AssetExchangeID) error {
 	var returnedID uint64
 	err := tx.Stmtx(s.stmts.deleteAssetExchange.Stmt).Get(&returnedID, assetExchangeID)
 	switch err {
@@ -90,7 +91,7 @@ func (s *Storage) deleteAssetExchange(tx *sqlx.Tx, assetExchangeID uint64) error
 }
 
 // UpdateAssetExchangeWithdrawFee ...
-func (s *Storage) UpdateAssetExchangeWithdrawFee(withdrawFee float64, assetExchangeID uint64) error {
+func (s *Storage) UpdateAssetExchangeWithdrawFee(withdrawFee float64, assetExchangeID rtypes.AssetExchangeID) error {
 	tx, err := s.db.Beginx()
 	if err != nil {
 		return errors.Wrap(err, "create transaction error")

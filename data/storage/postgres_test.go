@@ -9,6 +9,7 @@ import (
 
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/testutil"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	commonv3 "github.com/KyberNetwork/reserve-data/reservesetting/common"
 )
 
@@ -29,7 +30,7 @@ func TestRate(t *testing.T) {
 	baseBuy, _ := big.NewInt(0).SetString("940916409070162411520", 10)
 	baseSell, _ := big.NewInt(0).SetString("1051489536265074", 10)
 	rateData := common.AllRateEntry{
-		Data: map[uint64]common.RateEntry{
+		Data: map[rtypes.AssetID]common.RateEntry{
 			2: {
 				Block:       8539892,
 				BaseBuy:     baseBuy,
@@ -76,9 +77,9 @@ func TestPrice(t *testing.T) {
 
 	// test store data
 	priceData := common.AllPriceEntry{
-		Data: map[uint64]common.OnePrice{
+		Data: map[rtypes.TradingPairID]common.OnePrice{
 			2: {
-				common.ExchangeID(1): common.ExchangePrice{
+				rtypes.Binance: common.ExchangePrice{
 					Asks: []common.PriceEntry{
 						{
 							Rate:     0.001062,
@@ -150,7 +151,7 @@ func TestActivity(t *testing.T) {
 		Destination: "binance",
 		Params: &common.ActivityParams{
 			Amount:    39811.443679,
-			Exchange:  common.Binance,
+			Exchange:  rtypes.Binance,
 			Timepoint: uint64(1568622125860),
 			Asset:     2, // KNC id
 		},
@@ -189,7 +190,7 @@ func TestActivity(t *testing.T) {
 	assert.False(t, hasPending)
 
 	// test get activity
-	activity, err := ps.GetActivity(common.Binance, testID.EID)
+	activity, err := ps.GetActivity(rtypes.Binance, testID.EID)
 	assert.NoError(t, err)
 	assert.Equal(t, activityTest, activity)
 }
@@ -203,36 +204,36 @@ func TestAuthData(t *testing.T) {
 	ps, err := NewPostgresStorage(db)
 	require.NoError(t, err)
 	var (
-		ETH = common.AssetID(1)
-		KNC = common.AssetID(2)
+		ETH = rtypes.AssetID(1)
+		KNC = rtypes.AssetID(2)
 	)
 	authDataTest := common.AuthDataSnapshot{
 		Valid:      true,
 		Error:      "",
 		Timestamp:  "1568705819377",
 		ReturnTime: "1568705821452",
-		ExchangeBalances: map[common.ExchangeID]common.EBalanceEntry{
-			common.Binance: {
+		ExchangeBalances: map[rtypes.ExchangeID]common.EBalanceEntry{
+			rtypes.Binance: {
 				Valid:      true,
 				Error:      "",
 				Timestamp:  "1568705819377",
 				ReturnTime: "1568705819461",
-				AvailableBalance: map[common.AssetID]float64{
+				AvailableBalance: map[rtypes.AssetID]float64{
 					ETH: 177.72330689,
 					KNC: 3851.21689913,
 				},
-				LockedBalance: map[common.AssetID]float64{
+				LockedBalance: map[rtypes.AssetID]float64{
 					ETH: 0,
 					KNC: 0,
 				},
-				DepositBalance: map[common.AssetID]float64{
+				DepositBalance: map[rtypes.AssetID]float64{
 					ETH: 0,
 					KNC: 0,
 				},
 				Status: true,
 			},
 		},
-		ReserveBalances: map[common.AssetID]common.BalanceEntry{
+		ReserveBalances: map[rtypes.AssetID]common.BalanceEntry{
 			ETH: {
 				Valid:      true,
 				Error:      "",

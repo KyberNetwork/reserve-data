@@ -8,6 +8,7 @@ import (
 
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/testutil"
+	rtypes "github.com/KyberNetwork/reserve-data/lib/rtypes"
 	commonv3 "github.com/KyberNetwork/reserve-data/reservesetting/common"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage"
 )
@@ -33,7 +34,7 @@ func TestStorage_UpdateExchange(t *testing.T) {
 	}
 
 	// exchange should not be allowed to enable if trading fees are not all set
-	err = s.UpdateExchange(uint64(common.Huobi),
+	err = s.UpdateExchange(rtypes.Huobi,
 		storage.UpdateExchangeOpts{
 			TradingFeeTaker: commonv3.FloatPointer(0.02),
 			Disable:         commonv3.BoolPointer(false),
@@ -41,7 +42,7 @@ func TestStorage_UpdateExchange(t *testing.T) {
 	assert.Error(t, err)
 	assert.Equal(t, commonv3.ErrExchangeFeeMissing, err)
 
-	err = s.UpdateExchange(uint64(common.Huobi), storage.UpdateExchangeOpts{
+	err = s.UpdateExchange(rtypes.Huobi, storage.UpdateExchangeOpts{
 		TradingFeeMaker: commonv3.FloatPointer(0.01),
 		TradingFeeTaker: commonv3.FloatPointer(0.02),
 	},
@@ -53,18 +54,18 @@ func TestStorage_UpdateExchange(t *testing.T) {
 
 	for _, exchange := range exchanges {
 		switch exchange.ID {
-		case uint64(common.Huobi):
+		case rtypes.Huobi:
 			assert.Equal(t, 0.01, exchange.TradingFeeMaker)
 			assert.Equal(t, 0.02, exchange.TradingFeeTaker)
 			assert.True(t, exchange.Disable)
-		case uint64(common.Binance):
+		case rtypes.Binance:
 			assert.Zero(t, exchange.TradingFeeMaker)
 			assert.Zero(t, exchange.TradingFeeTaker)
 			assert.True(t, exchange.Disable)
 		}
 	}
 
-	err = s.UpdateExchange(uint64(common.Huobi),
+	err = s.UpdateExchange(rtypes.Huobi,
 		storage.UpdateExchangeOpts{
 			TradingFeeMaker: commonv3.FloatPointer(0.01),
 			TradingFeeTaker: commonv3.FloatPointer(0.02),
@@ -75,14 +76,14 @@ func TestStorage_UpdateExchange(t *testing.T) {
 	exchanges, err = s.GetExchanges()
 	require.NoError(t, err)
 	for _, exchange := range exchanges {
-		if exchange.ID == uint64(common.Huobi) {
+		if exchange.ID == rtypes.Huobi {
 			assert.Equal(t, 0.01, exchange.TradingFeeMaker)
 			assert.Equal(t, 0.02, exchange.TradingFeeTaker)
 			assert.False(t, exchange.Disable)
 		}
 	}
 
-	huobiExchange, err := s.GetExchange(uint64(common.Huobi))
+	huobiExchange, err := s.GetExchange(rtypes.Huobi)
 	require.NoError(t, err)
 	assert.Equal(t, 0.01, huobiExchange.TradingFeeMaker)
 	assert.Equal(t, 0.02, huobiExchange.TradingFeeTaker)

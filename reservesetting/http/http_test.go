@@ -8,12 +8,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	common2 "github.com/KyberNetwork/reserve-data/common"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 )
 
 const (
-	binance           = uint64(common2.Binance)
-	huobi             = uint64(common2.Huobi)
+	binance           = rtypes.Binance
+	huobi             = rtypes.Huobi
 	settingChangePath = "/v3/setting-change-main"
 )
 

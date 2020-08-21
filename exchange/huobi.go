@@ -21,6 +21,7 @@ import (
 	huobiblockchain "github.com/KyberNetwork/reserve-data/exchange/huobi/blockchain"
 	huobihttp "github.com/KyberNetwork/reserve-data/exchange/huobi/http"
 	"github.com/KyberNetwork/reserve-data/lib/caller"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	commonv3 "github.com/KyberNetwork/reserve-data/reservesetting/common"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage"
 )
@@ -42,8 +43,8 @@ type Huobi struct {
 }
 
 // TokenAddresses return deposit of all token supported by Huobi
-func (h *Huobi) TokenAddresses() (map[common.AssetID]ethereum.Address, error) {
-	result, err := h.sr.GetDepositAddresses(uint64(common.Huobi))
+func (h *Huobi) TokenAddresses() (map[rtypes.AssetID]ethereum.Address, error) {
+	result, err := h.sr.GetDepositAddresses(rtypes.Huobi)
 	if err != nil {
 		return nil, err
 	}
@@ -65,11 +66,11 @@ func (h *Huobi) RealDepositAddress(tokenID string, asset commonv3.Asset) (ethere
 		} else {
 			h.l.Warnw("Get Huobi live deposit address for token failed: the replied address is empty. Check the currently available address instead", "tokenID", tokenID)
 		}
-		addrs, uErr := h.sr.GetDepositAddresses(uint64(common.Huobi))
+		addrs, uErr := h.sr.GetDepositAddresses(rtypes.Huobi)
 		if uErr != nil {
 			return ethereum.Address{}, uErr
 		}
-		result, supported := addrs[common.AssetID(asset.ID)]
+		result, supported := addrs[asset.ID]
 		if !supported || commonv3.IsZeroAddress(result) {
 			return result, fmt.Errorf("real deposit address of token %s is not available", tokenID)
 		}
@@ -84,7 +85,7 @@ func (h *Huobi) RealDepositAddress(tokenID string, asset commonv3.Asset) (ethere
 func (h *Huobi) Address(asset commonv3.Asset) (ethereum.Address, bool) {
 	var exhSymbol string
 	for _, exchange := range asset.Exchanges {
-		if exchange.ExchangeID == uint64(common.Huobi) {
+		if exchange.ExchangeID == rtypes.Huobi {
 			exhSymbol = exchange.Symbol
 		}
 	}
@@ -99,7 +100,7 @@ func (h *Huobi) Address(asset commonv3.Asset) (ethereum.Address, bool) {
 
 // TokenPairs return all token pair support by Huobi
 func (h *Huobi) TokenPairs() ([]commonv3.TradingPairSymbols, error) {
-	pairs, err := h.sr.GetTradingPairs(uint64(common.Huobi))
+	pairs, err := h.sr.GetTradingPairs(rtypes.Huobi)
 	if err != nil {
 		return nil, err
 	}
@@ -277,9 +278,9 @@ func (h *Huobi) FetchEBalanceData(timepoint uint64) (common.EBalanceEntry, error
 		result.Error = err.Error()
 		result.Status = false
 	} else {
-		result.AvailableBalance = map[common.AssetID]float64{}
-		result.LockedBalance = map[common.AssetID]float64{}
-		result.DepositBalance = map[common.AssetID]float64{}
+		result.AvailableBalance = map[rtypes.AssetID]float64{}
+		result.LockedBalance = map[rtypes.AssetID]float64{}
+		result.DepositBalance = map[rtypes.AssetID]float64{}
 		result.Status = true
 		if respData.Status != "ok" {
 			result.Valid = false
@@ -296,14 +297,14 @@ func (h *Huobi) FetchEBalanceData(timepoint uint64) (common.EBalanceEntry, error
 				tokenSymbol := strings.ToUpper(b.Currency)
 				for _, asset := range assets {
 					for _, exchg := range asset.Exchanges {
-						if exchg.ExchangeID == uint64(common.Huobi) && exchg.Symbol == tokenSymbol {
+						if exchg.ExchangeID == rtypes.Huobi && exchg.Symbol == tokenSymbol {
 							balance, _ := strconv.ParseFloat(b.Balance, 64)
 							if b.Type == "trade" {
-								result.AvailableBalance[common.AssetID(asset.ID)] = balance
+								result.AvailableBalance[asset.ID] = balance
 							} else {
-								result.LockedBalance[common.AssetID(asset.ID)] = balance
+								result.LockedBalance[asset.ID] = balance
 							}
-							result.DepositBalance[common.AssetID(asset.ID)] = 0
+							result.DepositBalance[asset.ID] = 0
 						}
 					}
 				}
@@ -353,7 +354,7 @@ func (h *Huobi) FetchTradeHistory() {
 		return
 	}
 	var (
-		result = map[uint64][]common.TradeHistory{}
+		result = map[rtypes.TradingPairID][]common.TradeHistory{}
 		guard  = &sync.Mutex{}
 		wait   = &sync.WaitGroup{}
 	)
@@ -476,7 +477,7 @@ func (h *Huobi) FindTx2(id common.ActivityID) (tx2 common.TXEntry, found bool) {
 	return tx2, found
 }
 
-func (h *Huobi) exchangeDepositStatus(id common.ActivityID, tx2Entry common.TXEntry, assetID uint64, sentAmount float64) (string, error) {
+func (h *Huobi) exchangeDepositStatus(id common.ActivityID, tx2Entry common.TXEntry, assetID rtypes.AssetID, sentAmount float64) (string, error) {
 	assets, err := h.sr.GetAssets()
 	if err != nil {
 		h.l.Warnw("Huobi ERROR: Can not get list of assets from setting", "err", err)
@@ -520,7 +521,7 @@ func (h *Huobi) exchangeDepositStatus(id common.ActivityID, tx2Entry common.TXEn
 	return "", nil
 }
 
-func (h *Huobi) process1stTx(id common.ActivityID, tx1Hash string, assetID uint64, sentAmount float64) (string, error) {
+func (h *Huobi) process1stTx(id common.ActivityID, tx1Hash string, assetID rtypes.AssetID, sentAmount float64) (string, error) {
 	status, blockno, err := h.blockchain.TxStatus(ethereum.HexToHash(tx1Hash))
 	if err != nil {
 		h.l.Warnw("Huobi Can not get TX status", "err", err, "tx", tx1Hash)
@@ -538,7 +539,7 @@ func (h *Huobi) process1stTx(id common.ActivityID, tx1Hash string, assetID uint6
 
 		var exhSymbol string
 		for _, exchg := range asset.Exchanges {
-			if exchg.ExchangeID == uint64(common.Huobi) {
+			if exchg.ExchangeID == rtypes.Huobi {
 				exhSymbol = exchg.Symbol
 			}
 		}
@@ -573,7 +574,7 @@ func (h *Huobi) process1stTx(id common.ActivityID, tx1Hash string, assetID uint6
 }
 
 // DepositStatus return status of a deposit
-func (h *Huobi) DepositStatus(id common.ActivityID, tx1Hash string, assetID uint64, sentAmount float64, timepoint uint64) (string, error) {
+func (h *Huobi) DepositStatus(id common.ActivityID, tx1Hash string, assetID rtypes.AssetID, sentAmount float64, timepoint uint64) (string, error) {
 	var data common.TXEntry
 	tx2Entry, found := h.FindTx2(id)
 	//if not found, meaning there is no tx2 yet, process 1st Tx and send 2nd Tx.
@@ -690,8 +691,8 @@ func (h *Huobi) OrderStatus(id string, base, quote string) (string, error) {
 }
 
 // ID return exchange ID
-func (h *Huobi) ID() common.ExchangeID {
-	return common.Huobi
+func (h *Huobi) ID() rtypes.ExchangeID {
+	return rtypes.Huobi
 }
 
 // OpenOrders get open orders from binance

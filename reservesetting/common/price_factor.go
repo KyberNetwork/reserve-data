@@ -4,13 +4,15 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 )
 
 // AssetPriceFactor present for price factor from set side
 type AssetPriceFactor struct {
-	AssetID uint64  `json:"id"`
-	AfpMid  float64 `json:"afp_mid"`
-	Spread  float64 `json:"spread"`
+	AssetID rtypes.AssetID `json:"id"`
+	AfpMid  float64        `json:"afp_mid"`
+	Spread  float64        `json:"spread"`
 }
 
 // AssetPriceFactorList is a list of price factor that set side will send to server
@@ -52,7 +54,7 @@ type AssetPriceFactorResponse struct {
 
 // AssetPriceFactorListResponse present for price factor list of an asset.
 type AssetPriceFactorListResponse struct {
-	AssetID uint64                     `json:"id"`
+	AssetID rtypes.AssetID             `json:"id"`
 	Data    []AssetPriceFactorResponse `json:"data"`
 }
 
