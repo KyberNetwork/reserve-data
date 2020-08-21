@@ -154,7 +154,7 @@ func TestExchangeDown(t *testing.T) {
 		DepositBalance:   map[rtypes.AssetID]float64{},
 		Status:           false, // exchange status false - down, true - up
 	}
-	timepoint = timepoint + 1000
+	timepoint += 1000
 	ebalance.Store(rtypes.Binance, ebalanceValue)
 	err = fetcher.PersistSnapshot(&ebalance, bbalance, &estatuses, &bstatuses, pendings, &snapshot, timepoint)
 	if err != nil {
