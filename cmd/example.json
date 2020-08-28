@@ -22,6 +22,7 @@
     "prefer_use_gas_station": true,
     "fetch_max_gas_cache_seconds": 300
   },
+  "etherscan_api_key": "adfsd",
   "aws_config": {
     "aws_access_key_id": "aa222",
     "aws_secret_access_key": "bbcc",
