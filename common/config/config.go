@@ -133,6 +133,7 @@ type AppConfig struct {
 	HTTPAPIAddr          string         `json:"http_api_addr"`
 	SimulationRunnerAddr string         `json:"http_simulation_runner_addr"`
 	GasConfig            GasConfig      `json:"gas_config"`
+	EtherscanAPIKey      string         `json:"etherscan_api_key"`
 
 	ExchangeEndpoints   ExchangeEndpoints               `json:"exchange_endpoints"`
 	WorldEndpoints      WorldEndpoints                  `json:"world_endpoints"`

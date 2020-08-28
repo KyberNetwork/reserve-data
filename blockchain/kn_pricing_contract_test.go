@@ -13,6 +13,7 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 
 	"github.com/KyberNetwork/reserve-data/common"
 	baseblockchain "github.com/KyberNetwork/reserve-data/common/blockchain"
@@ -92,7 +93,7 @@ func TestGeneratedGetListedTokens(t *testing.T) {
 	blockchain, err := NewBlockchain(baseBlockchain, setting, config.GasConfig{
 		PreferUseGasStation:     false,
 		FetchMaxGasCacheSeconds: 10,
-	}, gasstation.New(&http.Client{}, ""))
+	}, gasstation.New(&http.Client{}, "", "", zap.L().Sugar()))
 	require.NoError(t, err)
 
 	opts := blockchain.GetCallOpts(0)

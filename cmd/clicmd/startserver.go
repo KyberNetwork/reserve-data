@@ -85,7 +85,7 @@ func serverStart(_ *cobra.Command, _ []string) {
 		log.Panicf("cannot create network proxy client, err %+v", err)
 	}
 	gasPriceLimiter := core.NewNetworkGasPriceLimiter(kyberNetworkProxy, ac.GasConfig.FetchMaxGasCacheSeconds)
-	gasstationClient := gasstation.New(&http.Client{}, ac.GasConfig.GasStationAPIKey)
+	gasstationClient := gasstation.New(&http.Client{}, ac.GasConfig.GasStationAPIKey, ac.EtherscanAPIKey, s)
 
 	appState := configuration.InitAppState(!noAuthEnable, ac, mainNode, backupNodes, gasstationClient, gasPriceLimiter)
 	//backup other log daily
