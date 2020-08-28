@@ -784,6 +784,7 @@ type RawConfig struct {
 	Nodes             Nodes             `json:"nodes"`
 	FetcherDelay      FetcherDelay      `json:"fetcher_delay"`
 	GasConfig         GasConfig         `json:"gas_config"`
+	EtherscanAPIKey   string            `json:"etherscan_api_key"`
 
 	HTTPAPIAddr string `json:"http_api_addr"`
 

@@ -5,6 +5,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
+
+	"github.com/KyberNetwork/reserve-data/lib/caller"
+	"go.uber.org/zap"
 )
 
 // ETHGas ...
@@ -24,29 +28,27 @@ type ETHGas struct {
 
 // Client represent for gasStation client
 type Client struct {
-	client  *http.Client
-	baseURL string
-	apiKey  string
+	client          *http.Client
+	baseURL         string
+	apiKey          string
+	etherscanAPIKey string
+	sugar           *zap.SugaredLogger
 }
 
 // New create a new Client object
-func New(c *http.Client, apiKey string) *Client {
+func New(c *http.Client, apiKey, etherscanAPIKey string, sugar *zap.SugaredLogger) *Client {
 	return &Client{
 		client:  c,
 		apiKey:  apiKey,
 		baseURL: "https://ethgasstation.info",
+		sugar:   sugar,
 	}
 }
 
-func (c *Client) doRequest(method, path string, response interface{}) error {
-	req, err := http.NewRequest(method, c.baseURL+path, nil)
+func (c *Client) doRequest(method, endpoint string, response interface{}) error {
+	req, err := http.NewRequest(method, endpoint, nil)
 	if err != nil {
 		return err
-	}
-	if c.apiKey != "" {
-		q := req.URL.Query()
-		q.Set("api-key", c.apiKey)
-		req.URL.RawQuery = q.Encode()
 	}
 	resp, err := c.client.Do(req)
 	if err != nil {
@@ -66,9 +68,63 @@ func (c *Client) doRequest(method, path string, response interface{}) error {
 	return nil
 }
 
+// EtherscanGas gas price from etherscan gas tracker
+type EtherscanGas struct {
+	Status  string `json:"status"`
+	Message string `json:"message"`
+	Result  struct {
+		LastBlock       string `json:"LastBlock"`
+		SafeGasPrice    string `json:"SafeGasPrice"`
+		ProposeGasPrice string `json:"ProposeGasPrice"`
+		FastGasPrice    string `json:"FastGasPrice"`
+	} `json:"result"`
+}
+
+func (c *Client) getGasFromEtherscan() (EtherscanGas, error) {
+	var res EtherscanGas
+	endpoint := fmt.Sprintf("https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=%s", c.etherscanAPIKey)
+	err := c.doRequest(http.MethodGet, endpoint, &res)
+	return res, err
+}
+
 // ETHGas get gasstation gas data
 func (c *Client) ETHGas() (ETHGas, error) {
-	var res ETHGas
-	err := c.doRequest(http.MethodGet, "/json/ethgasAPI.json", &res)
+	var (
+		res       ETHGas
+		logger    = c.sugar.With("func", caller.GetCurrentFunctionName())
+		gasConfig EtherscanGas
+	)
+	endpoint := fmt.Sprintf("%s/json/ethgasAPI.json", c.baseURL)
+	if c.apiKey != "" {
+		endpoint += "?api-key=" + c.apiKey
+	}
+	err := c.doRequest(http.MethodGet, endpoint, &res)
+	if err != nil {
+		logger.Warnw("failed to get gas price from ethgasstation, fallback using etherscan api", "error", err)
+		gasConfig, err = c.getGasFromEtherscan()
+		if err != nil {
+			return res, err
+		}
+		fast, err := strconv.ParseFloat(gasConfig.Result.FastGasPrice, 64)
+		if err != nil {
+			logger.Errorw("failed to parse fast gas from etherscan", "error", err)
+			return res, err
+		}
+		safe, err := strconv.ParseFloat(gasConfig.Result.SafeGasPrice, 64)
+		if err != nil {
+			logger.Errorw("failed to parse safe gas from etherscan", "error", err)
+			return res, err
+		}
+		propose, err := strconv.ParseFloat(gasConfig.Result.ProposeGasPrice, 64)
+		if err != nil {
+			logger.Errorw("failed to parse propose gas from etherscan", "error", err)
+			return res, err
+		}
+		res = ETHGas{
+			Fast:    fast,
+			SafeLow: safe,
+			Average: propose,
+		}
+	}
 	return res, err
 }

@@ -92,7 +92,7 @@ func run(c *cli.Context) error {
 		log.Panicf("cannot create network proxy client, err %+v", err)
 	}
 	gasPriceLimiter := core.NewNetworkGasPriceLimiter(kyberNetworkProxy, rcf.GasConfig.FetchMaxGasCacheSeconds)
-	gasstationClient := gasstation.New(&http.Client{}, rcf.GasConfig.GasStationAPIKey)
+	gasstationClient := gasstation.New(&http.Client{}, rcf.GasConfig.GasStationAPIKey, rcf.EtherscanAPIKey, l)
 
 	conf, err := configuration.NewConfigurationFromContext(c, rcf, l, mainNode, backupNodes, gasstationClient, gasPriceLimiter)
 	if err != nil {

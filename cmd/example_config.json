@@ -36,6 +36,7 @@
     "prefer_use_gas_station": true,
     "fetch_max_gas_cache_seconds": 120
   },
+  "etherscan_api_key": "",
   "world_endpoints": {
     "one_forge_gold_eth": {
       "url": "https://api.1forge.com/convert?from=XAU&to=ETH&quantity=1&api_key=mykey"

@@ -35,6 +35,7 @@ const (
 	binanceAPIKeyFlag    = "binance-api-key"
 	binanceSecretKeyFlag = "binance-secret-key"
 	gasStationKeyFlag    = "gas-station-key"
+	etherscanKeyFlag     = "etherscan-key"
 
 	intervalUpdateWithdrawFeeDBFlag      = "interval-update-withdraw-fee-db"
 	defaultIntervalUpdateWithdrawFeeDB   = 10 * time.Minute
@@ -85,6 +86,11 @@ func main() {
 			Name:   gasStationKeyFlag,
 			Usage:  "gas station api key",
 			EnvVar: "GAS_STATION_KEY",
+		},
+		cli.StringFlag{
+			Name:   etherscanKeyFlag,
+			Usage:  "etherescan api key",
+			EnvVar: "ETHERSCAN_KEY",
 		},
 	)
 
@@ -159,7 +165,7 @@ func run(c *cli.Context) error {
 			}
 		}()
 	}
-	gasStation := gasstation.New(httpClient, c.String(gasStationKeyFlag))
+	gasStation := gasstation.New(httpClient, c.String(gasStationKeyFlag), c.String(etherscanKeyFlag), sugar)
 
 	sentryDSN := libapp.SentryDSNFromFlag(c)
 	server := settinghttp.NewServer(sr, host, liveExchanges, sentryDSN, coreClient, gasStation)
