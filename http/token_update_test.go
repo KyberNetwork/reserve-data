@@ -345,7 +345,7 @@ func TestHTTPServerUpdateToken(t *testing.T) {
 
 	testServer := Server{
 		app:         data.NewReserveData(nil, nil, nil, nil, nil, nil, setting),
-		core:        core.NewReserveCore(nil, nil, setting, core.ConstGasPriceLimiter{}),
+		core:        core.NewReserveCore(nil, nil, setting, nil),
 		metric:      testStorage,
 		authEnabled: false,
 		r:           gin.Default(),

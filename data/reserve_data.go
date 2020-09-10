@@ -119,7 +119,12 @@ func (rd ReserveData) SetGasThreshold(v common.GasThreshold) error {
 func (rd ReserveData) GetGasThreshold() (common.GasThreshold, error) {
 	return rd.globalStorage.GetGasThreshold()
 }
-
+func (rd ReserveData) SetPreferGasSource(v common.PreferGasSource) error {
+	return rd.globalStorage.SetPreferGasSource(v)
+}
+func (rd ReserveData) GetPreferGasSource() (common.PreferGasSource, error) {
+	return rd.globalStorage.GetPreferGasSource()
+}
 func (rd ReserveData) GetOnePrice(pairID common.TokenPairID, timepoint uint64) (common.OnePriceResponse, error) {
 	timestamp := common.GetTimestamp()
 	version, err := rd.storage.CurrentPriceVersion(timepoint)

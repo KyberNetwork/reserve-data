@@ -6,9 +6,15 @@ import (
 	"github.com/KyberNetwork/reserve-data/common"
 )
 
+type GasConfig interface {
+	SetPreferGasSource(v common.PreferGasSource) error
+	GetPreferGasSource() (common.PreferGasSource, error)
+}
+
 // Data is the interface of of all data query methods.
 // All methods' implementations must support concurrency.
 type Data interface {
+	GasConfig
 	CurrentPriceVersion(timestamp uint64) (common.Version, error)
 	GetAllPrices(timestamp uint64) (common.AllPriceResponse, error)
 	GetOnePrice(id common.TokenPairID, timestamp uint64) (common.OnePriceResponse, error)

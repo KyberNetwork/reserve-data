@@ -13,8 +13,6 @@ import (
 
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/blockchain"
-	"github.com/KyberNetwork/reserve-data/common/config"
-	"github.com/KyberNetwork/reserve-data/common/gasstation"
 	huobiblockchain "github.com/KyberNetwork/reserve-data/exchange/huobi/blockchain"
 	"github.com/KyberNetwork/reserve-data/settings"
 )
@@ -60,35 +58,13 @@ type Blockchain struct {
 	localSetRateNonce, localDepositNonce         uint64
 	setRateNonceTimestamp, depositNonceTimestamp uint64
 
-	setting   Setting
-	l         *zap.SugaredLogger
-	gasConfig config.GasConfig
-	gsClient  *gasstation.Client
+	setting Setting
+	l       *zap.SugaredLogger
 }
 
 //ListedTokens return listed tokens
 func (b *Blockchain) ListedTokens() []ethereum.Address {
 	return b.listedTokens
-}
-
-// StandardGasPrice return standard gas price
-func (b *Blockchain) StandardGasPrice() float64 {
-	if b.gasConfig.PreferUseGasStation {
-		gss, err := b.gsClient.ETHGas()
-		if err == nil { // TODO: we can make decision to use gss.Fast to other if some one ask.
-			res := gss.Fast / 10.0
-			b.l.Infow("use gas_price from gasstation", "value", res)
-			return res // gas return by gas station is *10, so we need to divide it here
-		}
-		b.l.Errorw("receive gas price from gasstation failed, failed back to node suggest", "err", err)
-	}
-	price, err := b.RecommendedGasPriceFromNode()
-	if err != nil {
-		return 0
-	}
-	res := common.BigToFloat(price, 9)
-	b.l.Infow("use gas_price from node", "value", res)
-	return res
 }
 
 // CheckTokenIndices check token indices
@@ -449,7 +425,7 @@ func (b *Blockchain) GetMinedNonceWithOP(op string) (uint64, error) {
 }
 
 // NewBlockchain return new blockchain object
-func NewBlockchain(base *blockchain.BaseBlockchain, setting Setting, gasConfig config.GasConfig, gss *gasstation.Client) (*Blockchain, error) {
+func NewBlockchain(base *blockchain.BaseBlockchain, setting Setting) (*Blockchain, error) {
 	wrapperAddr, err := setting.GetAddress(settings.Wrapper)
 	if err != nil {
 		return nil, err
@@ -486,8 +462,6 @@ func NewBlockchain(base *blockchain.BaseBlockchain, setting Setting, gasConfig c
 		reserve:        reserve,
 		setting:        setting,
 		l:              l,
-		gasConfig:      gasConfig,
-		gsClient:       gss,
 	}, nil
 }
 

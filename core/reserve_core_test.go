@@ -6,9 +6,12 @@ import (
 	"math/big"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/blockchain"
+	"github.com/KyberNetwork/reserve-data/common/gasinfo"
+	gaspricedataclient "github.com/KyberNetwork/reserve-data/common/gaspricedata-client"
 	"github.com/KyberNetwork/reserve-data/settings"
 	"github.com/KyberNetwork/reserve-data/settings/storage"
 	ethereum "github.com/ethereum/go-ethereum/common"
@@ -192,7 +195,35 @@ func getTestCore(hasPendingDeposit bool) *ReserveCore {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return NewReserveCore(testBlockchain{}, testActivityStorage{hasPendingDeposit}, setting, &ConstGasPriceLimiter{})
+	return NewReserveCore(testBlockchain{}, testActivityStorage{hasPendingDeposit}, setting,
+		gasinfo.NewGasPriceInfo(&gasinfo.ConstGasPriceLimiter{}, &ExampleGasConfig{}, &ExampleGasClient{}))
+}
+
+type ExampleGasConfig struct {
+}
+
+func (e ExampleGasConfig) SetPreferGasSource(v common.PreferGasSource) error {
+	panic("implement me")
+}
+
+func (e ExampleGasConfig) GetPreferGasSource() (common.PreferGasSource, error) {
+	return common.PreferGasSource{Name: "ethgasstation"}, nil
+}
+
+type ExampleGasClient struct {
+}
+
+func (e ExampleGasClient) GetGas() (gaspricedataclient.GasResult, error) {
+	return gaspricedataclient.GasResult{
+		"ethgasstation": gaspricedataclient.SourceData{
+			Value: gaspricedataclient.Data{
+				Fast:     100,
+				Standard: 80,
+				Slow:     50,
+			},
+			Timestamp: time.Now().Unix() * 1000,
+		},
+	}, nil
 }
 
 func TestNotAllowDeposit(t *testing.T) {

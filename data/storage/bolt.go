@@ -180,7 +180,7 @@ func (bs *BoltStorage) GetGoldInfo(version common.Version) (common.GoldData, err
 		b := tx.Bucket([]byte(goldBucket))
 		data := b.Get(boltutil.Uint64ToBytes(uint64(version)))
 		if data == nil {
-			err = fmt.Errorf("version %s doesn't exist", string(version))
+			err = fmt.Errorf("version %d doesn't exist", version)
 		} else {
 			err = json.Unmarshal(data, &result)
 		}
@@ -231,31 +231,52 @@ func (bs *BoltStorage) CurrentUSDInfoVersion(timepoint uint64) (common.Version, 
 	return common.Version(result), err
 }
 
-var gasThresholdKey = []byte(`gas_threshold`)
+var gasThresholdKey = `gas_threshold`
 
 func (bs *BoltStorage) SetGasThreshold(v common.GasThreshold) error {
-	data, err := json.Marshal(v)
+	return bs.saveGeneralBucket(gasThresholdKey, v)
+}
+
+func (bs *BoltStorage) GetGasThreshold() (common.GasThreshold, error) {
+	var res common.GasThreshold
+	err := bs.getGeneralBucket(gasThresholdKey, &res)
+	return res, err
+}
+
+var preferGasSourceKey = `prefer_gas_source`
+
+func (bs *BoltStorage) SetPreferGasSource(v common.PreferGasSource) error {
+	return bs.saveGeneralBucket(preferGasSourceKey, v)
+}
+
+func (bs *BoltStorage) GetPreferGasSource() (common.PreferGasSource, error) {
+	var res common.PreferGasSource
+	err := bs.getGeneralBucket(preferGasSourceKey, &res)
+	return res, err
+}
+
+func (bs *BoltStorage) saveGeneralBucket(key string, value interface{}) error {
+	data, err := json.Marshal(value)
 	if err != nil {
 		return err
 	}
 	return bs.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(generalBucket))
-		return b.Put(gasThresholdKey, data)
+		return b.Put([]byte(key), data)
 	})
 }
 
-func (bs *BoltStorage) GetGasThreshold() (common.GasThreshold, error) {
-	var res common.GasThreshold
+func (bs *BoltStorage) getGeneralBucket(key string, value interface{}) error {
 	err := bs.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(generalBucket))
-		d := b.Get(gasThresholdKey)
+		d := b.Get([]byte(key))
 		if d == nil {
 			return errors.New("entry not found in storage")
 		}
-		return json.Unmarshal(d, &res)
+		return json.Unmarshal(d, value)
 	})
 
-	return res, err
+	return err
 }
 
 func (bs *BoltStorage) UpdateFeedConfiguration(name string, enabled bool) error {
@@ -459,7 +480,7 @@ func (bs *BoltStorage) GetBTCInfo(version common.Version) (common.BTCData, error
 		b := tx.Bucket([]byte(btcBucket))
 		data := b.Get(boltutil.Uint64ToBytes(uint64(version)))
 		if data == nil {
-			return fmt.Errorf("version %s doesn't exist", string(version))
+			return fmt.Errorf("version %d doesn't exist", version)
 		}
 		return json.Unmarshal(data, &result)
 	})
@@ -476,7 +497,7 @@ func (bs *BoltStorage) GetUSDInfo(version common.Version) (common.USDData, error
 		b := tx.Bucket([]byte(usdBucket))
 		data := b.Get(boltutil.Uint64ToBytes(uint64(version)))
 		if data == nil {
-			return fmt.Errorf("version %s doesn't exist", string(version))
+			return fmt.Errorf("version %d doesn't exist", version)
 		}
 		return json.Unmarshal(data, &result)
 	})
@@ -636,7 +657,7 @@ func (bs *BoltStorage) GetAllPrices(version common.Version) (common.AllPriceEntr
 		b := tx.Bucket([]byte(priceBucket))
 		data := b.Get(boltutil.Uint64ToBytes(uint64(version)))
 		if data == nil {
-			err = fmt.Errorf("version %s doesn't exist", string(version))
+			err = fmt.Errorf("version %d doesn't exist", version)
 		} else {
 			err = json.Unmarshal(data, &result)
 		}
@@ -652,7 +673,7 @@ func (bs *BoltStorage) GetOnePrice(pair common.TokenPairID, version common.Versi
 		b := tx.Bucket([]byte(priceBucket))
 		data := b.Get(boltutil.Uint64ToBytes(uint64(version)))
 		if data == nil {
-			err = fmt.Errorf("version %s doesn't exist", string(version))
+			err = fmt.Errorf("version %d doesn't exist", version)
 		} else {
 			err = json.Unmarshal(data, &result)
 		}
@@ -710,7 +731,7 @@ func (bs *BoltStorage) GetAuthData(version common.Version) (common.AuthDataSnaps
 		b := tx.Bucket([]byte(authDataBucket))
 		data := b.Get(boltutil.Uint64ToBytes(uint64(version)))
 		if data == nil {
-			err = fmt.Errorf("version %s doesn't exist", string(version))
+			err = fmt.Errorf("version %d doesn't exist", version)
 		} else {
 			err = json.Unmarshal(data, &result)
 		}
@@ -764,7 +785,7 @@ func (bs *BoltStorage) GetRate(version common.Version) (common.AllRateEntry, err
 		b := tx.Bucket([]byte(rateBucket))
 		data := b.Get(boltutil.Uint64ToBytes(uint64(version)))
 		if data == nil {
-			err = fmt.Errorf("version %s doesn't exist", string(version))
+			err = fmt.Errorf("version %d doesn't exist", version)
 		} else {
 			err = json.Unmarshal(data, &result)
 		}

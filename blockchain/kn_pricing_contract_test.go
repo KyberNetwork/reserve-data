@@ -3,7 +3,6 @@ package blockchain
 import (
 	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 	"path/filepath"
 	"testing"
@@ -16,8 +15,6 @@ import (
 
 	"github.com/KyberNetwork/reserve-data/common"
 	baseblockchain "github.com/KyberNetwork/reserve-data/common/blockchain"
-	"github.com/KyberNetwork/reserve-data/common/config"
-	"github.com/KyberNetwork/reserve-data/common/gasstation"
 	"github.com/KyberNetwork/reserve-data/settings"
 	settingsstorage "github.com/KyberNetwork/reserve-data/settings/storage"
 )
@@ -89,10 +86,7 @@ func TestGeneratedGetListedTokens(t *testing.T) {
 		}
 	}()
 
-	blockchain, err := NewBlockchain(baseBlockchain, setting, config.GasConfig{
-		PreferUseGasStation:     false,
-		FetchMaxGasCacheSeconds: 10,
-	}, gasstation.New(&http.Client{}, ""))
+	blockchain, err := NewBlockchain(baseBlockchain, setting)
 	require.NoError(t, err)
 
 	opts := blockchain.GetCallOpts(0)

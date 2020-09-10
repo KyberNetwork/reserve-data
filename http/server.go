@@ -22,7 +22,8 @@ import (
 
 	"github.com/KyberNetwork/reserve-data"
 	"github.com/KyberNetwork/reserve-data/common"
-	"github.com/KyberNetwork/reserve-data/common/gasstation"
+	"github.com/KyberNetwork/reserve-data/common/gasinfo"
+	gaspricedataclient "github.com/KyberNetwork/reserve-data/common/gaspricedata-client"
 	"github.com/KyberNetwork/reserve-data/http/httputil"
 	"github.com/KyberNetwork/reserve-data/metric"
 )
@@ -50,7 +51,7 @@ type Server struct {
 	blockchain     Blockchain
 	setting        Setting
 	l              *zap.SugaredLogger
-	gasStation     *gasstation.Client
+	gasInfo        *gasinfo.GasPriceInfo
 }
 
 func getTimePoint(c *gin.Context, useDefault bool) uint64 {
@@ -589,15 +590,10 @@ func (s *Server) GetActivities(c *gin.Context) {
 	}
 }
 
-type GsGas struct {
-	Fast     float64 `json:"fast"`
-	Standard float64 `json:"standard"`
-	Slow     float64 `json:"slow"`
-}
 type gasStatusResult struct {
-	GasStation    GsGas   `json:"eth_gas_station"`
-	HighThreshold float64 `json:"high"`
-	LowThreshold  float64 `json:"low"`
+	GasPrice      gaspricedataclient.GasResult `json:"gas_price"`
+	HighThreshold float64                      `json:"high"`
+	LowThreshold  float64                      `json:"low"`
 }
 
 func (s *Server) GetGasStatus(c *gin.Context) {
@@ -605,9 +601,9 @@ func (s *Server) GetGasStatus(c *gin.Context) {
 	if !ok {
 		return
 	}
-	gasPrice, err := s.gasStation.ETHGas()
+	gasPrice, err := s.gasInfo.AllSourceGas()
 	if err != nil {
-		s.l.Errorw("query gasstation failed", "err", err)
+		s.l.Errorw("query gas price failed", "err", err)
 		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
 		return
 	}
@@ -618,11 +614,7 @@ func (s *Server) GetGasStatus(c *gin.Context) {
 		return
 	}
 	result := gasStatusResult{
-		GasStation: GsGas{
-			Fast:     gasPrice.Fast / 10.0,
-			Standard: gasPrice.Average / 10.0,
-			Slow:     gasPrice.SafeLow / 10.0,
-		},
+		GasPrice:      gasPrice,
 		HighThreshold: gasThreshold.High,
 		LowThreshold:  gasThreshold.Low,
 	}
@@ -655,6 +647,36 @@ func (s *Server) SetGasThreshold(c *gin.Context) {
 		return
 	}
 	httputil.ResponseSuccess(c)
+}
+
+func (s *Server) SetPreferGasSource(c *gin.Context) {
+	name := c.Request.FormValue("name")
+	_, ok := s.Authenticated(c, []string{"name"}, []Permission{ConfirmConfPermission})
+	if !ok {
+		return
+	}
+	if name == "" {
+		httputil.ResponseFailure(c, httputil.WithReason("name is required"))
+	}
+	if err := s.app.SetPreferGasSource(common.PreferGasSource{Name: name}); err != nil {
+		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		return
+	}
+	httputil.ResponseSuccess(c)
+}
+
+func (s *Server) GetPreferGasSource(c *gin.Context) {
+	_, ok := s.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
+	if !ok {
+		return
+	}
+	preferredGasSource, err := s.app.GetPreferGasSource()
+	if err != nil {
+		s.l.Errorw("failed to get prefered gas source", "err", err)
+		httputil.ResponseFailure(c, httputil.WithReason(err.Error()))
+		return
+	}
+	httputil.ResponseSuccess(c, httputil.WithData(preferredGasSource))
 }
 
 // StopFetcher request to stop fetcher
@@ -1343,6 +1365,8 @@ func (s *Server) register() {
 		s.r.GET("/version", s.getVersion)
 		s.r.GET("/gas-threshold", s.GetGasStatus)
 		s.r.POST("/gas-threshold", s.SetGasThreshold)
+		s.r.GET("/gas-source", s.GetPreferGasSource)
+		s.r.POST("/gas-source", s.SetPreferGasSource)
 	}
 }
 
@@ -1359,7 +1383,7 @@ func (s *Server) Run() {
 
 // NewHTTPServer create new server instance
 func NewHTTPServer(app reserve.Data, core reserve.Core, metric metric.Storage, bindAddr string, enableAuth bool,
-	profilerPrefix string, authEngine Authentication, env string, bc Blockchain, setting Setting, client *gasstation.Client) *Server {
+	profilerPrefix string, authEngine Authentication, env string, bc Blockchain, setting Setting, client *gasinfo.GasPriceInfo) *Server {
 	r := gin.Default()
 	sentryCli, err := raven.NewWithTags(
 		"https://bf15053001464a5195a81bc41b644751:eff41ac715114b20b940010208271b13@sentry.io/228067",
@@ -1392,7 +1416,7 @@ func NewHTTPServer(app reserve.Data, core reserve.Core, metric metric.Storage, b
 		blockchain:     bc,
 		setting:        setting,
 		l:              zap.S(),
-		gasStation:     client,
+		gasInfo:        client,
 	}
 
 	return s

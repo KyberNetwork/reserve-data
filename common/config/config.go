@@ -120,9 +120,8 @@ type FetcherDelay struct {
 
 // GasConfig ...
 type GasConfig struct {
-	PreferUseGasStation     bool   `json:"prefer_use_gas_station"`
 	FetchMaxGasCacheSeconds int64  `json:"fetch_max_gas_cache_seconds"`
-	GasStationAPIKey        string `json:"gas_station_api_key"`
+	GasPriceURL             string `json:"gas_price_url"`
 }
 
 // AppConfig represnet for app configuration

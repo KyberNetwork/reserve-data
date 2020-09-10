@@ -20,6 +20,6 @@ linters:
     - interfacer
     - unconvert
     - goconst
-    - goimports
+    - gofmt
     - scopelint
     - gocritic

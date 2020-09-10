@@ -762,3 +762,8 @@ type GasThreshold struct {
 	High float64 `json:"high"`
 	Low  float64 `json:"low"`
 }
+
+// PreferGasSource keep prefer gas source name
+type PreferGasSource struct {
+	Name string `json:"name"`
+}

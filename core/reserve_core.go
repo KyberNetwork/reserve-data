@@ -14,6 +14,7 @@ import (
 
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/blockchain"
+	"github.com/KyberNetwork/reserve-data/common/gasinfo"
 	"github.com/KyberNetwork/reserve-data/settings"
 )
 
@@ -31,18 +32,18 @@ type ReserveCore struct {
 	activityStorage ActivityStorage
 	setting         Setting
 	l               *zap.SugaredLogger
-	gasPriceLimiter GasPriceLimiter
+	gasPriceInfo    *gasinfo.GasPriceInfo
 }
 
 // NewReserveCore create new core instance
-func NewReserveCore(blockchain Blockchain, storage ActivityStorage, setting Setting, gasPriceLimiter GasPriceLimiter) *ReserveCore {
+func NewReserveCore(blockchain Blockchain, storage ActivityStorage, setting Setting, gasPriceInfo *gasinfo.GasPriceInfo) *ReserveCore {
 
 	return &ReserveCore{
 		blockchain:      blockchain,
 		activityStorage: storage,
 		setting:         setting,
 		l:               zap.S(),
-		gasPriceLimiter: gasPriceLimiter,
+		gasPriceInfo:    gasPriceInfo,
 	}
 }
 
@@ -237,7 +238,7 @@ func (rc ReserveCore) Deposit(exchange common.Exchange, token common.Token, amou
 }
 func (rc ReserveCore) maxGasPrice() float64 {
 	// MaxGasPrice will fetch gasPrice from kyber network contract(with cache for configurable seconds)
-	max, err := rc.gasPriceLimiter.MaxGasPrice()
+	max, err := rc.gasPriceInfo.MaxGas()
 	if err != nil {
 		rc.l.Errorw("failed to receive maxGasPrice from network, fallback to hard code value",
 			"err", err, "maxGasPrice", maxGasPrice)
@@ -296,7 +297,10 @@ func (rc ReserveCore) doDeposit(exchange common.Exchange, token common.Token, am
 		return tx, err
 	}*/
 
-	recommendedPrice := rc.blockchain.StandardGasPrice()
+	recommendedPrice, err := rc.gasPriceInfo.GetCurrentGas()
+	if err != nil {
+		rc.l.Errorw("failed to get gas price, use default", "err", err)
+	}
 	highBoundGasPrice := rc.maxGasPrice()
 	if recommendedPrice == 0 || recommendedPrice > highBoundGasPrice {
 		initPrice = common.GweiToWei(10)
@@ -571,7 +575,10 @@ func (rc ReserveCore) GetSetRateResult(tokens []common.Token,
 		return tx, err
 	}
 
-	recommendedPrice := rc.blockchain.StandardGasPrice()
+	recommendedPrice, err := rc.gasPriceInfo.GetCurrentGas()
+	if err != nil {
+		rc.l.Errorw("failed to get gas price, use default", "err", err)
+	}
 	if recommendedPrice == 0 || recommendedPrice > highBoundGasPrice {
 		initPrice = common.GweiToWei(10)
 	} else {

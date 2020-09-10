@@ -104,10 +104,10 @@ func TestHTTPServerRebalanceQuadratic(t *testing.T) {
 		}
 	}()
 
-	if uErr := setting.UpdateToken(common.NewToken("KNC", "KyberNetwork", "xxx", 18, true, true, 0), 0); err != nil {
+	if uErr := setting.UpdateToken(common.NewToken("KNC", "KyberNetwork", "xxx", 18, true, true, 0), 0); uErr != nil {
 		t.Fatal(uErr)
 	}
-	if uErr := setting.UpdateToken(common.NewToken("ETH", "Etherium", "xxx", 18, true, true, 0), 0); err != nil {
+	if uErr := setting.UpdateToken(common.NewToken("ETH", "Etherium", "xxx", 18, true, true, 0), 0); uErr != nil {
 		t.Error(uErr)
 	}
 	rqStorage, err := storage.NewBoltStorage(filepath.Join(tmpDir, "test.db"))
@@ -117,7 +117,7 @@ func TestHTTPServerRebalanceQuadratic(t *testing.T) {
 
 	s := Server{
 		app:         data.NewReserveData(rqStorage, nil, nil, nil, nil, nil, setting),
-		core:        core.NewReserveCore(nil, rqStorage, setting, core.ConstGasPriceLimiter{}),
+		core:        core.NewReserveCore(nil, rqStorage, setting, nil),
 		metric:      rqStorage,
 		authEnabled: false,
 		r:           gin.Default(),

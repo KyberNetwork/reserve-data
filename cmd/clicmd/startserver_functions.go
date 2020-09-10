@@ -19,13 +19,7 @@ import (
 
 	"github.com/KyberNetwork/reserve-data/blockchain"
 	"github.com/KyberNetwork/reserve-data/cmd/configuration"
-	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/archive"
-	"github.com/KyberNetwork/reserve-data/common/blockchain/nonce"
-	"github.com/KyberNetwork/reserve-data/common/gasstation"
-	"github.com/KyberNetwork/reserve-data/core"
-	"github.com/KyberNetwork/reserve-data/data"
-	"github.com/KyberNetwork/reserve-data/data/fetcher"
 )
 
 const (
@@ -175,8 +169,8 @@ func configLog(stdoutLog bool) io.Writer {
 }
 
 // CreateBlockchain create new blockchain instance
-func CreateBlockchain(config *configuration.AppState, client *gasstation.Client) (bc *blockchain.Blockchain, err error) {
-	bc, err = blockchain.NewBlockchain(config.Blockchain, config.Setting, config.AppConfig.GasConfig, client)
+func CreateBlockchain(config *configuration.AppState) (bc *blockchain.Blockchain, err error) {
+	bc, err = blockchain.NewBlockchain(config.Blockchain, config.Setting)
 
 	if err != nil {
 		panic(err)
@@ -188,36 +182,4 @@ func CreateBlockchain(config *configuration.AppState, client *gasstation.Client)
 		log.Panicf("Can't load and set token indices: %s", err)
 	}
 	return
-}
-
-func CreateDataCore(config *configuration.AppState, kyberENV string, bc *blockchain.Blockchain, gasPriceLimiter core.GasPriceLimiter) (*data.ReserveData, *core.ReserveCore) {
-	//get fetcher based on config and ENV == simulation.
-	dataFetcher := fetcher.NewFetcher(
-		config.FetcherStorage,
-		config.FetcherGlobalStorage,
-		config.World,
-		config.FetcherRunner,
-		kyberENV == common.SimulationMode,
-		config.Setting,
-	)
-	for _, ex := range config.FetcherExchanges {
-		dataFetcher.AddExchange(ex)
-	}
-	nonceCorpus := nonce.NewTimeWindow(config.BlockchainSigner.GetAddress(), 2000)
-	nonceDeposit := nonce.NewTimeWindow(config.DepositSigner.GetAddress(), 10000)
-	bc.RegisterPricingOperator(config.BlockchainSigner, nonceCorpus)
-	bc.RegisterDepositOperator(config.DepositSigner, nonceDeposit)
-	dataFetcher.SetBlockchain(bc)
-	rData := data.NewReserveData(
-		config.DataStorage,
-		dataFetcher,
-		config.DataControllerRunner,
-		config.Archive,
-		config.DataGlobalStorage,
-		config.Exchanges,
-		config.Setting,
-	)
-
-	rCore := core.NewReserveCore(bc, config.ActivityStorage, config.Setting, gasPriceLimiter)
-	return rData, rCore
 }

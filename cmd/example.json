@@ -18,8 +18,7 @@
     "kn_confirm_configuration": "confirmkey"
   },
   "gas_config": {
-    "gas_station_api_key": "abcd",
-    "prefer_use_gas_station": true,
+    "gas_price_url": "http://example.com/api/v1/gas",
     "fetch_max_gas_cache_seconds": 300
   },
   "aws_config": {

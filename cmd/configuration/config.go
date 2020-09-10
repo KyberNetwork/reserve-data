@@ -8,7 +8,6 @@ import (
 	"github.com/KyberNetwork/reserve-data/common/archive"
 	"github.com/KyberNetwork/reserve-data/common/blockchain"
 	"github.com/KyberNetwork/reserve-data/common/config"
-	"github.com/KyberNetwork/reserve-data/common/gasstation"
 	"github.com/KyberNetwork/reserve-data/core"
 	"github.com/KyberNetwork/reserve-data/data"
 	"github.com/KyberNetwork/reserve-data/data/datapruner"
@@ -48,8 +47,6 @@ type AppState struct {
 	Setting        *settings.Settings
 	AddressSetting *settings.AddressSetting
 	AppConfig      config.AppConfig
-	gasClient      *gasstation.Client
-	gasLimiter     core.GasPriceLimiter
 }
 
 func (c *AppState) AddCoreConfig(appc config.AppConfig) {
@@ -98,8 +95,6 @@ func (c *AppState) AddCoreConfig(appc config.AppConfig) {
 	exchangePool, err := NewExchangePool(appc,
 		c.Blockchain,
 		c.Setting,
-		c.gasClient,
-		c.gasLimiter,
 	)
 	if err != nil {
 		log.Panicf("Can not create exchangePool: %+v", err)

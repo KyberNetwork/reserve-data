@@ -162,7 +162,7 @@ func TestHTTPServerTargetQtyV2(t *testing.T) {
 	}
 	s := Server{
 		app:         data.NewReserveData(st, nil, nil, nil, nil, nil, setting),
-		core:        core.NewReserveCore(nil, st, setting, core.ConstGasPriceLimiter{}),
+		core:        core.NewReserveCore(nil, st, setting, nil),
 		metric:      st,
 		authEnabled: false,
 		r:           gin.Default(),

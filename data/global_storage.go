@@ -28,4 +28,7 @@ type GlobalStorage interface {
 
 	SetGasThreshold(v common.GasThreshold) error
 	GetGasThreshold() (common.GasThreshold, error)
+
+	SetPreferGasSource(v common.PreferGasSource) error
+	GetPreferGasSource() (common.PreferGasSource, error)
 }

@@ -10,13 +10,16 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 
-	"github.com/KyberNetwork/reserve-data"
 	"github.com/KyberNetwork/reserve-data/blockchain"
 	"github.com/KyberNetwork/reserve-data/cmd/configuration"
 	"github.com/KyberNetwork/reserve-data/common"
+	"github.com/KyberNetwork/reserve-data/common/blockchain/nonce"
 	"github.com/KyberNetwork/reserve-data/common/config"
-	"github.com/KyberNetwork/reserve-data/common/gasstation"
+	"github.com/KyberNetwork/reserve-data/common/gasinfo"
+	"github.com/KyberNetwork/reserve-data/common/gaspricedata-client"
 	"github.com/KyberNetwork/reserve-data/core"
+	"github.com/KyberNetwork/reserve-data/data"
+	"github.com/KyberNetwork/reserve-data/data/fetcher"
 	apphttp "github.com/KyberNetwork/reserve-data/http"
 )
 
@@ -74,6 +77,7 @@ func serverStart(_ *cobra.Command, _ []string) {
 	if err = config.LoadConfig(secretFile, &ac); err != nil {
 		s.Panicw("failed to load secret file", "err", err, "file", secretFile)
 	}
+	httpClient := &http.Client{}
 
 	mainNode, backupNodes, err := initEthClient(ac)
 	if err != nil {
@@ -84,26 +88,19 @@ func serverStart(_ *cobra.Command, _ []string) {
 	if err != nil {
 		log.Panicf("cannot create network proxy client, err %+v", err)
 	}
-	gasPriceLimiter := core.NewNetworkGasPriceLimiter(kyberNetworkProxy, ac.GasConfig.FetchMaxGasCacheSeconds)
-	gasstationClient := gasstation.New(&http.Client{}, ac.GasConfig.GasStationAPIKey)
 
-	appState := configuration.InitAppState(!noAuthEnable, ac, mainNode, backupNodes, gasstationClient, gasPriceLimiter)
-	//backup other log daily
+	appState := configuration.InitAppState(!noAuthEnable, ac, mainNode, backupNodes)
+	// backup other log daily
 	backupLog(appState.Archive, "@daily", "core.+\\.log")
-	//backup core.log every 2 hour
+	// backup core.log every 2 hour
 	backupLog(appState.Archive, "@every 2h", "core\\.log")
 
-	var (
-		rData reserve.Data
-		rCore reserve.Core
-		bc    *blockchain.Blockchain
-	)
-	bc, err = CreateBlockchain(appState, gasstationClient)
+	bc, err := CreateBlockchain(appState)
 	if err != nil {
 		log.Panicf("Can not create blockchain: (%s)", err)
 	}
-
-	rData, rCore = CreateDataCore(appState, kyberENV, bc, gasPriceLimiter)
+	rData, gasInfo, rCore := initReserveComponents(appState, kyberENV, bc, kyberNetworkProxy, ac, httpClient)
+	gasinfo.SetGlobal(gasInfo)
 	if !dryRun {
 		if kyberENV != common.SimulationMode {
 			if err = rData.RunStorageController(); err != nil {
@@ -127,7 +124,7 @@ func serverStart(_ *cobra.Command, _ []string) {
 		appState.AuthEngine,
 		kyberENV,
 		bc, appState.Setting,
-		gasstationClient,
+		gasInfo,
 	)
 
 	if !dryRun {
@@ -135,4 +132,40 @@ func serverStart(_ *cobra.Command, _ []string) {
 	} else {
 		s.Infof("Dry run finished. All configs are corrected")
 	}
+}
+
+func initReserveComponents(appState *configuration.AppState, kyberENV string, bc *blockchain.Blockchain,
+	kyberNetworkProxy *blockchain.NetworkProxy, ac config.AppConfig, httpClient *http.Client) (*data.ReserveData, *gasinfo.GasPriceInfo, *core.ReserveCore) {
+	// get fetcher based on config and ENV == simulation.
+	dataFetcher := fetcher.NewFetcher(
+		appState.FetcherStorage,
+		appState.FetcherGlobalStorage,
+		appState.World,
+		appState.FetcherRunner,
+		kyberENV == common.SimulationMode,
+		appState.Setting,
+	)
+	for _, ex := range appState.FetcherExchanges {
+		dataFetcher.AddExchange(ex)
+	}
+	nonceCorpus := nonce.NewTimeWindow(appState.BlockchainSigner.GetAddress(), 2000)
+	nonceDeposit := nonce.NewTimeWindow(appState.DepositSigner.GetAddress(), 10000)
+	bc.RegisterPricingOperator(appState.BlockchainSigner, nonceCorpus)
+	bc.RegisterDepositOperator(appState.DepositSigner, nonceDeposit)
+	dataFetcher.SetBlockchain(bc)
+	rData := data.NewReserveData(
+		appState.DataStorage,
+		dataFetcher,
+		appState.DataControllerRunner,
+		appState.Archive,
+		appState.DataGlobalStorage,
+		appState.Exchanges,
+		appState.Setting,
+	)
+
+	gasPriceLimiter := gasinfo.NewNetworkGasPriceLimiter(kyberNetworkProxy, ac.GasConfig.FetchMaxGasCacheSeconds)
+	gasInfo := gasinfo.NewGasPriceInfo(gasPriceLimiter, rData, gaspricedataclient.New(httpClient, ac.GasConfig.GasPriceURL))
+
+	rCore := core.NewReserveCore(bc, appState.ActivityStorage, appState.Setting, gasInfo)
+	return rData, gasInfo, rCore
 }

@@ -8,8 +8,6 @@ import (
 	"github.com/KyberNetwork/reserve-data/common/archive"
 	"github.com/KyberNetwork/reserve-data/common/blockchain"
 	ccfg "github.com/KyberNetwork/reserve-data/common/config"
-	"github.com/KyberNetwork/reserve-data/common/gasstation"
-	"github.com/KyberNetwork/reserve-data/core"
 	"github.com/KyberNetwork/reserve-data/http"
 	"github.com/KyberNetwork/reserve-data/settings"
 	settingstorage "github.com/KyberNetwork/reserve-data/settings/storage"
@@ -46,8 +44,7 @@ func newTheWorld(exp ccfg.WorldEndpoints) (*world.TheWorld, error) {
 	return world.NewTheWorld(endpoint, zap.S()), nil
 }
 
-func InitAppState(authEnbl bool, ac ccfg.AppConfig, mainNode *common.EthClient, backupNodes []*common.EthClient,
-	client *gasstation.Client, limiter core.GasPriceLimiter) *AppState {
+func InitAppState(authEnbl bool, ac ccfg.AppConfig, mainNode *common.EthClient, backupNodes []*common.EthClient) *AppState {
 	l := zap.S()
 	theWorld, err := newTheWorld(ac.WorldEndpoints)
 	if err != nil {
@@ -91,8 +88,6 @@ func InitAppState(authEnbl bool, ac ccfg.AppConfig, mainNode *common.EthClient, 
 		World:                   theWorld,
 		AddressSetting:          addressSetting,
 		AppConfig:               ac,
-		gasClient:               client,
-		gasLimiter:              limiter,
 	}
 
 	l.Infof("configured endpoint: %s, backup: %v", aps.EthereumEndpoint, aps.BackupEthereumEndpoints)

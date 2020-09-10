@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/core"
 	"github.com/KyberNetwork/reserve-data/data"
@@ -15,7 +17,6 @@ import (
 	"github.com/KyberNetwork/reserve-data/http/httputil"
 	"github.com/KyberNetwork/reserve-data/settings"
 	settingsstorage "github.com/KyberNetwork/reserve-data/settings/storage"
-	"github.com/gin-gonic/gin"
 )
 
 func TestHTTPServerPWIEquationV2(t *testing.T) {
@@ -204,7 +205,7 @@ func TestHTTPServerPWIEquationV2(t *testing.T) {
 	}
 	s := Server{
 		app:         data.NewReserveData(st, nil, nil, nil, nil, nil, setting),
-		core:        core.NewReserveCore(nil, st, setting, core.ConstGasPriceLimiter{}),
+		core:        core.NewReserveCore(nil, st, setting, nil),
 		metric:      st,
 		authEnabled: false,
 		r:           gin.Default(),
