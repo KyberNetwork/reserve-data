@@ -140,6 +140,7 @@ func (rd ReserveData) GetAuthData(timepoint uint64) (common.AuthDataResponseV3, 
 	pendingSetRate := []common.ActivityRecord{}
 	pendingWithdraw := []common.ActivityRecord{}
 	pendingDeposit := []common.ActivityRecord{}
+	pendingTrades := []common.ActivityRecord{}
 	for _, activity := range data.PendingActivities {
 		switch activity.Action {
 		case common.ActionSetRate:
@@ -148,11 +149,14 @@ func (rd ReserveData) GetAuthData(timepoint uint64) (common.AuthDataResponseV3, 
 			pendingDeposit = append(pendingDeposit, activity)
 		case common.ActionWithdraw:
 			pendingWithdraw = append(pendingWithdraw, activity)
+		case common.ActionTrade:
+			pendingTrades = append(pendingTrades, activity)
 		}
 	}
 	result.PendingActivities.SetRates = pendingSetRate
 	result.PendingActivities.Withdraw = pendingWithdraw
 	result.PendingActivities.Deposit = pendingDeposit
+	result.PendingActivities.Trades = pendingTrades
 	// map of token
 	assets := make(map[rtypes.AssetID]v3.Asset)
 	exchanges := make(map[string]v3.Exchange)

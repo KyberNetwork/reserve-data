@@ -577,6 +577,7 @@ type PendingActivities struct {
 	SetRates []ActivityRecord `json:"set_rates"`
 	Withdraw []ActivityRecord `json:"withdraw"`
 	Deposit  []ActivityRecord `json:"deposit"`
+	Trades   []ActivityRecord `json:"trades"`
 }
 
 // AuthDataResponseV3 is auth data format for reservesetting

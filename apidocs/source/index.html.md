@@ -185,8 +185,32 @@ curl -X GET "https://gateway.local/v3/authdata"
                     "mining_status": "mined",
                     "error": ""
                 }
+            ],
+            "trades": [
+                {
+                    "action": "trade",
+                    "id": "1600254671157255169|106845707",
+                    "eid": "",
+                    "destination": "binance",
+                    "params": {
+                        "exchange": 1,
+                        "amount": 32,
+                        "timepoint": 1600254670913,
+                        "type": "buy",
+                        "base": "KNC",
+                        "quote": "ETH",
+                        "rate": 0.0031299
+                    },
+                    "result": {
+                        "id": "106845707",
+                        "remaining": 32
+                    },
+                    "exchange_status": "done",
+                    "timestamp": "1600254670913",
+                    "actionDetail": "buy KNC-ETH"
+                }
             ]
-        },
+        }
     },
     "success": true,
     "version": 1553164294136
