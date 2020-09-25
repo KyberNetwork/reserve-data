@@ -8,7 +8,7 @@ services:
   - postgresql
 
 addons:
-  postgresql: "10"
+  postgresql: "12"
 
 env:
   global:
@@ -19,11 +19,10 @@ env:
 install:
   - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b ${TRAVIS_HOME}/bin v${GOLANGCI_LINT_VERSION}
 before_install:
-  - sudo apt-get update
-  - sudo apt-get --yes remove postgresql\*
-  - sudo apt-get install -y postgresql-12 postgresql-client-12
-  - sudo cp /etc/postgresql/{10,12}/main/pg_hba.conf
+  - whoami
+  - sudo sed -i 's/port = 5433/port = 5432/' /etc/postgresql/12/main/postgresql.conf
   - sudo service postgresql restart 12
+  - ls -la /var/run/postgresql/
 before_script:
   - psql -c "CREATE DATABASE reserve_data;" -U postgres
   - psql -c "CREATE USER reserve_data WITH PASSWORD 'reserve_data';" -U postgres
