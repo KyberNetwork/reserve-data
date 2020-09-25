@@ -23,6 +23,7 @@ before_install:
   - sudo apt-get --yes remove postgresql\*
   - sudo apt-get install -y postgresql-12 postgresql-client-12
   - sudo cp /etc/postgresql/{10,12}/main/pg_hba.conf
+  - sudo sed -i 's/port = 5433/port = 5432/' /etc/postgresql/12/main/postgresql.conf
   - sudo service postgresql restart 12
 before_script:
   - psql -c "CREATE DATABASE reserve_data;" -U postgres
