@@ -720,6 +720,8 @@ func (f *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []common.A
 				f.l.Infof("Activity %+v has invalid timestamp. Just ignore it.", activity)
 				continue
 			}
+			f.l.Warnw("activity with exchange done but still in pending list",
+				"activity", activity.ID, "EID", activity.EID, "activityTime", common.MillisToTime(timepoint))
 			if activity.ExchangeStatus == common.ExchangeStatusDone &&
 				common.NowInMillis()-timepoint > maxActivityLifeTime*uint64(time.Hour)/uint64(time.Millisecond) {
 				// the activity is still pending but its exchange status is done and it is stuck there for more than
