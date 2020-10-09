@@ -418,7 +418,7 @@ func (f *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord) (m
 						blockNum,
 						common.MiningStatusFailed,
 						0,
-						err,
+						fmt.Errorf("tx not found"),
 					)
 				}
 			default:
