@@ -5,9 +5,8 @@ import (
 )
 
 const (
-	tradeTypeBuy       = "buy"
-	tradeTypeSell      = "sell"
-	exchangeStatusDone = "done"
+	tradeTypeBuy  = "buy"
+	tradeTypeSell = "sell"
 )
 
 func remainingQty(orgQty, executedQty string) (float64, error) {

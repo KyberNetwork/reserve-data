@@ -6,8 +6,10 @@ const (
 	MiningStatusSubmitted   = "submitted"
 	MiningStatusLost        = "lost"
 	MiningStatusPending     = "pending"
+	MiningStatusNA          = "" // status when we can determine blockchain status
 	ExchangeStatusDone      = "done"
-	ExchangeStatusPending   = "pending"
+	ExchangeStatusNA        = ""        // status when we can determine exchange status
+	ExchangeStatusPending   = "pending" // status use in withdraw/order, when exchange confirm explicit status
 	ExchangeStatusFailed    = "failed"
 	ExchangeStatusSubmitted = "submitted"
 	ExchangeStatusCancelled = "cancelled"

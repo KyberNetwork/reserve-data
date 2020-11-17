@@ -383,19 +383,21 @@ func (bn *Binance) DepositStatus(id common.ActivityID, txHash string, assetID rt
 	endTime := timepoint
 	deposits, err := bn.interf.DepositHistory(startTime, endTime)
 	if err != nil || !deposits.Success {
-		return "", err
+		return common.ExchangeStatusNA, err
 	}
 	for _, deposit := range deposits.Deposits {
 		if deposit.TxID == txHash {
 			if deposit.Status == 1 {
 				return common.ExchangeStatusDone, nil
 			}
-			return "", nil
+			bn.l.Debugw("got binance deposit status", "status", deposit.Status,
+				"deposit_tx", deposit.TxID, "tx_hash", txHash)
+			return common.ExchangeStatusNA, nil
 		}
 	}
 	bn.l.Warnw("Binance Deposit is not found in deposit list returned from Binance. " +
 		"This might cause by wrong start/end time, please check again.")
-	return "", nil
+	return common.ExchangeStatusNA, nil
 }
 
 const (
@@ -418,7 +420,7 @@ func (bn *Binance) WithdrawStatus(id string, assetID rtypes.AssetID, amount floa
 	endTime := timepoint
 	withdraws, err := bn.interf.WithdrawHistory(startTime, endTime)
 	if err != nil || !withdraws.Success {
-		return "", "", 0, err
+		return common.ExchangeStatusNA, "", 0, err
 	}
 	for _, withdraw := range withdraws.Withdrawals {
 		if withdraw.ID == id {
@@ -430,25 +432,29 @@ func (bn *Binance) WithdrawStatus(id string, assetID rtypes.AssetID, amount floa
 			case binanceCancelled: // 1 = cancelled
 				return common.ExchangeStatusCancelled, withdraw.TxID, withdraw.Fee, nil
 			case binanceAwaitingApproval, binanceProcessing: // no action, just leave it as pending
+				return common.ExchangeStatusPending, withdraw.TxID, withdraw.Fee, nil
+			default:
+				bn.l.Errorw("got unexpected withdraw status", "status", withdraw.Status,
+					"withdrawID", id, "assetID", assetID, "amount", amount)
+				return common.ExchangeStatusNA, withdraw.TxID, withdraw.Fee, nil
 			}
-			return "", withdraw.TxID, withdraw.Fee, nil
 		}
 	}
 	bn.l.Warnw("Binance Withdrawal doesn't exist. This shouldn't happen unless tx returned from withdrawal from binance and activity ID are not consistently designed",
 		"id", id, "asset_id", assetID, "amount", amount, "timepoint", timepoint)
-	return "", "", 0, nil
+	return common.ExchangeStatusNA, "", 0, nil
 }
 
 // OrderStatus return status of an order on binance
 func (bn *Binance) OrderStatus(id, base, quote string) (string, float64, error) {
 	orderID, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
-		return "", 0, fmt.Errorf("can not parse orderID (val %s) to uint", id)
+		return common.ExchangeStatusNA, 0, fmt.Errorf("can not parse orderID (val %s) to uint", id)
 	}
 	symbol := base + quote
 	order, err := bn.interf.OrderStatus(symbol, orderID)
 	if err != nil {
-		return "", 0, err
+		return common.ExchangeStatusNA, 0, err
 	}
 	qtyLeft, err := remainingQty(order.OrigQty, order.ExecutedQty)
 	if err != nil {
@@ -458,7 +464,7 @@ func (bn *Binance) OrderStatus(id, base, quote string) (string, float64, error) 
 	case "CANCELED":
 		return common.ExchangeStatusCancelled, qtyLeft, nil
 	case "NEW", "PARTIALLY_FILLED", "PENDING_CANCEL":
-		return "", qtyLeft, nil
+		return common.ExchangeStatusPending, qtyLeft, nil
 	default:
 		return common.ExchangeStatusDone, qtyLeft, nil
 	}

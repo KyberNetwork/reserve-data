@@ -375,7 +375,11 @@ func (f *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord) (m
 	nonceValidator := f.newNonceValidator()
 
 	for _, activity := range pendings {
-		if activity.IsBlockchainPending() && (activity.Action == common.ActionSetRate || activity.Action == common.ActionDeposit || activity.Action == common.ActionWithdraw || activity.Action == common.ActionCancelSetRate) {
+		if activity.IsBlockchainPending() &&
+			(activity.Action == common.ActionSetRate ||
+				activity.Action == common.ActionDeposit ||
+				activity.Action == common.ActionWithdraw ||
+				activity.Action == common.ActionCancelSetRate) {
 			var (
 				blockNum uint64
 				status   string
