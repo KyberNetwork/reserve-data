@@ -408,6 +408,11 @@ const (
 )
 
 // WithdrawStatus return status of a withdrawal on binance
+// return
+// 		 string withdraw_status
+// 		 string withraw_tx
+// 		 float64 withdraw_fee
+//		 error
 func (bn *Binance) WithdrawStatus(id string, assetID rtypes.AssetID, amount float64, timepoint uint64) (string, string, float64, error) {
 	startTime := timepoint - 86400000
 	endTime := timepoint

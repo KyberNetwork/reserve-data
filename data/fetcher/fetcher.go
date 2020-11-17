@@ -409,6 +409,9 @@ func (f *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord) (m
 					expiredDuration = 15 * time.Minute / time.Millisecond
 					txFailed        = false
 				)
+				if activity.Action == common.ActionWithdraw {
+					continue
+				}
 				// we have a delay to check tx status and consider it as lost,
 				// because tx might not found if node need sometimes to show it up in wait-to-mine queue
 
@@ -710,6 +713,12 @@ func (f *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []common.A
 				status, tx, fee, err = exchange.WithdrawStatus(id.EID, assetID, amount, timepoint)
 				f.l.Debugw("withdraw status", "activity", activity, "status", status, "err", err)
 			default:
+				continue
+			}
+
+			// if action is withdraw then it will be considered as failed if exchange status is failed
+			if activity.Action == common.ActionWithdraw && (status == common.ExchangeStatusFailed || status == common.ExchangeStatusCancelled) {
+				result[id] = common.NewActivityStatus(status, tx, blockNum, common.MiningStatusFailed, fee, remain, err)
 				continue
 			}
 
