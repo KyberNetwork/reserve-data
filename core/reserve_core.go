@@ -306,7 +306,8 @@ func (rc *ReserveCore) Deposit(
 		gasPrice = tx.GasPrice().String()
 	}
 	rc.l.Infow("deposit_initialized", "exchange", exchange.ID().String(), "asset",
-		asset.Address.String(), "name", asset.Name, "amount", amount.String(), "nonce", tx.Nonce(), "gas_price", gasPrice)
+		asset.Address.String(), "name", asset.Name, "amount", amount.String(), "nonce", tx.Nonce(),
+		"gas_price", gasPrice, "tx", tx.Hash().String())
 
 	sErr := recordActivity(
 		common.MiningStatusSubmitted,
@@ -777,6 +778,7 @@ func (rc *ReserveCore) SpeedupDeposit(act common.ActivityRecord) (*big.Int, erro
 	if err != nil {
 		return gasPrice, fmt.Errorf("failed to speedup deposit tx, %w", err)
 	}
+	rc.l.Debugw("sent speedup tx", "new_tx", hash.String(), "src_tx", tx.String())
 
 	// store new act to storage
 	replaceUID := func(actID common.ActivityID, txhex string) common.ActivityID {
