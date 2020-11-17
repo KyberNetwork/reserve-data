@@ -135,11 +135,12 @@ func (b *BaseBlockchain) SpeedupDeposit(tx ethereum.Hash, gasPrice *big.Int) (et
 		return ethereum.Hash{}, fmt.Errorf("abort replace deposit tx due lower price %s / %s", pendingTx.GasPrice().String(), gasPrice.String())
 	}
 	overrideTx := types.NewTransaction(pendingTx.Nonce(), *pendingTx.To(), pendingTx.Value(), pendingTx.Gas(), gasPrice, pendingTx.Data())
-	_, err = b.SignAndBroadcast(overrideTx, DepositOP)
+	signed, err := b.SignAndBroadcast(overrideTx, DepositOP)
 	if err != nil {
 		b.l.Errorw("sending override deposit tx failed", "err", err, "tx", tx)
+		return ethereum.Hash{}, err
 	}
-	return overrideTx.Hash(), err
+	return signed.Hash(), err
 }
 
 func (b *BaseBlockchain) Call(timeOut time.Duration, opts CallOpts, contract *Contract, result interface{}, method string, params ...interface{}) error {
