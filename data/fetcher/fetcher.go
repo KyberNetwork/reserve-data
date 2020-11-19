@@ -398,16 +398,17 @@ func (f *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord) (m
 				if activity.Action == common.ActionSetRate {
 					f.l.Infof("TX_STATUS set rate transaction is mined, id: %s", activity.ID.EID)
 				}
-				result[activity.ID] = common.NewActivityStatus(activity.ExchangeStatus, txStr, blockNum, common.MiningStatusMined, 0, 0, err)
+				result[activity.ID] = common.NewActivityStatus(activity.ExchangeStatus, txStr, blockNum, common.MiningStatusMined, 0, 0, false, err)
 			case common.MiningStatusFailed:
 				f.l.Warnw("transaction failed to mine", "tx", tx.String())
-				result[activity.ID] = common.NewActivityStatus(activity.ExchangeStatus, txStr, blockNum, common.MiningStatusFailed, 0, 0, err)
+				result[activity.ID] = common.NewActivityStatus(activity.ExchangeStatus, txStr, blockNum, common.MiningStatusFailed, 0, 0, false, err)
 			case common.MiningStatusLost:
 				var (
 					// expiredDuration is the amount of time after that if a transaction doesn't appear,
 					// it is considered failed
 					expiredDuration = 15 * time.Minute / time.Millisecond
 					txFailed        = false
+					isOverride      = false
 				)
 				if activity.Action == common.ActionWithdraw {
 					continue
@@ -421,6 +422,7 @@ func (f *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord) (m
 				// of lost tx appear back, it will prevent all follow tx get stuck as pending.
 				if nonceValidator(activity) {
 					txFailed = true
+					isOverride = true
 				} else if activity.Action != common.ActionDeposit {
 					elapsed := common.NowInMillis() - activity.Timestamp.Millis()
 					if elapsed > uint64(expiredDuration) {
@@ -430,7 +432,8 @@ func (f *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord) (m
 				}
 
 				if txFailed {
-					result[activity.ID] = common.NewActivityStatus(activity.ExchangeStatus, txStr, blockNum, common.MiningStatusFailed, 0, 0, fmt.Errorf("tx not found"))
+					result[activity.ID] = common.NewActivityStatus(activity.ExchangeStatus, txStr, blockNum,
+						common.MiningStatusFailed, 0, 0, isOverride, fmt.Errorf("tx not found"))
 				}
 			default:
 				f.l.Infof("TX_STATUS: tx (%s) status is not available. Wait till next try", tx)
@@ -483,6 +486,7 @@ func (f *Fetcher) updateActivityWithBlockchainStatus(record *common.ActivityReco
 		snapshot.Valid = false
 		snapshot.Error = sts.Error.Error()
 		record.Result.StatusError = sts.Error.Error()
+		record.Result.IsReplaced = sts.IsReplaced
 	} else {
 		record.Result.StatusError = ""
 	}
@@ -718,7 +722,7 @@ func (f *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []common.A
 
 			// if action is withdraw then it will be considered as failed if exchange status is failed
 			if activity.Action == common.ActionWithdraw && (status == common.ExchangeStatusFailed || status == common.ExchangeStatusCancelled) {
-				result[id] = common.NewActivityStatus(status, tx, blockNum, common.MiningStatusFailed, fee, remain, err)
+				result[id] = common.NewActivityStatus(status, tx, blockNum, common.MiningStatusFailed, fee, remain, false, err)
 				continue
 			}
 
@@ -729,9 +733,9 @@ func (f *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []common.A
 				f.l.Infof("Activity %+v has invalid timestamp. Just ignore it.", activity)
 			} else {
 				if common.NowInMillis()-timepoint > maxActivityLifeTime*uint64(time.Hour)/uint64(time.Millisecond) {
-					result[id] = common.NewActivityStatus(common.ExchangeStatusFailed, tx, blockNum, activity.MiningStatus, fee, remain, err)
+					result[id] = common.NewActivityStatus(common.ExchangeStatusFailed, tx, blockNum, activity.MiningStatus, fee, remain, false, err)
 				} else {
-					result[id] = common.NewActivityStatus(status, tx, blockNum, activity.MiningStatus, fee, remain, err)
+					result[id] = common.NewActivityStatus(status, tx, blockNum, activity.MiningStatus, fee, remain, false, err)
 				}
 			}
 		} else {
@@ -746,7 +750,7 @@ func (f *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []common.A
 				common.NowInMillis()-timepoint > maxActivityLifeTime*uint64(time.Hour)/uint64(time.Millisecond) {
 				// the activity is still pending but its exchange status is done and it is stuck there for more than
 				// maxActivityLifeTime. This activity is considered failed.
-				result[activity.ID] = common.NewActivityStatus(common.ExchangeStatusFailed, "", 0, activity.MiningStatus, 0, 0, nil)
+				result[activity.ID] = common.NewActivityStatus(common.ExchangeStatusFailed, "", 0, activity.MiningStatus, 0, 0, false, nil)
 			}
 		}
 	}

@@ -293,6 +293,7 @@ type ActivityResult struct {
 	//
 	WithdrawFee float64 `json:"withdraw_fee,omitempty"`
 	TxTime      uint64  `json:"tx_time"` // when the tx was sent, will be update when tx get override to speed up
+	IsReplaced  bool    `json:"is_replaced,omitempty"`
 }
 
 //NewActivityRecord return an activity record
@@ -369,10 +370,12 @@ type ActivityStatus struct {
 	WithdrawFee            float64
 	Error                  error
 	OrderExecutedRemaining float64
+	IsReplaced             bool
 }
 
 // NewActivityStatus creates a new ActivityStatus instance.
-func NewActivityStatus(exchangeStatus, tx string, blockNumber uint64, miningStatus string, withdrawFee, orderRemaining float64, err error) ActivityStatus {
+func NewActivityStatus(exchangeStatus, tx string, blockNumber uint64, miningStatus string, withdrawFee,
+	orderRemaining float64, isReplaced bool, err error) ActivityStatus {
 	return ActivityStatus{
 		ExchangeStatus:         exchangeStatus,
 		Tx:                     tx,
@@ -381,6 +384,7 @@ func NewActivityStatus(exchangeStatus, tx string, blockNumber uint64, miningStat
 		WithdrawFee:            withdrawFee,
 		Error:                  err,
 		OrderExecutedRemaining: orderRemaining,
+		IsReplaced:             isReplaced,
 	}
 }
 
