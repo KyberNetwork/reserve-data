@@ -73,23 +73,6 @@ func main() {
 	}
 }
 
-func getKeyList(c *cli.Context, accessKeyFlag, secretKeyFlag string) ([]authenticator.KeyPair, error) {
-	var keyPairs []authenticator.KeyPair
-	accessKeys := c.StringSlice(accessKeyFlag)
-	secretKeys := c.StringSlice(secretKeyFlag)
-	if len(accessKeys) != len(secretKeys) {
-		return nil, errors.Errorf("length read access keys (%d) and read secret keys (%d)", len(accessKeys), len(secretKeys))
-	}
-
-	for index := range accessKeys {
-		keyPairs = append(keyPairs, authenticator.KeyPair{
-			AccessKeyID:     accessKeys[index],
-			SecretAccessKey: secretKeys[index],
-		})
-	}
-	return keyPairs, nil
-}
-
 type keyConfig struct {
 	ReadRole      []authenticator.KeyPair `json:"read_role"`
 	ManageRole    []authenticator.KeyPair `json:"manage_role"`
