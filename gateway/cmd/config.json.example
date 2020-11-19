@@ -1,0 +1,20 @@
+{
+  "read_role": [
+    {
+      "AccessKeyID": "read_access_key_id",
+      "SecretAccessKey": "read_scret_access_key"
+    }
+  ],
+  "manage_role": [
+    {
+      "AccessKeyID": "manage_access_key_id",
+      "SecretAccessKey": "manage_scret_access_key"
+    }
+  ],
+  "rebalance_role": [
+    {
+      "AccessKeyID": "rebalance_access_key_id",
+      "SecretAccessKey": "rebalance_scret_access_key"
+    }
+  ]
+}
