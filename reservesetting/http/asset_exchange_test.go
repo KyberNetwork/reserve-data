@@ -39,7 +39,7 @@ func TestServer_UpdateAssetExchange(t *testing.T) {
 
 	assetID, err := createSampleAsset(s)
 	require.NoError(t, err)
-	server := NewServer(s, "", supportedExchanges, "", nil, nil, nil)
+	server := NewServer(s, "", supportedExchanges, "", nil, nil, nil, 0)
 	c := apiClient{s: server}
 	assetResp, err := c.getAsset(assetID)
 	require.NoError(t, err)
