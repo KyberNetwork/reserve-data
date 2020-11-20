@@ -333,8 +333,7 @@ func (s *Server) confirmSettingChange(c *gin.Context) {
 			}
 			if err := s.marketDataClient.AddFeed(exchange, sourceSymbol, publicSymbol); err != nil {
 				s.l.Errorw("cannot add feed to market data", "err", err, "exchange", exchange, "source symbol", sourceSymbol)
-				httputil.ResponseFailure(c, httputil.WithError(err))
-				return
+				continue
 			}
 		}
 	}
