@@ -310,53 +310,72 @@ func NewActivityRecord(action string, id ActivityID, destination string, params 
 	}
 }
 
-// IsExchangePending return true if activity is pending on centralized exchange
+// IsExchangePending filter activity record to fetch exchange status.
 func (ar ActivityRecord) IsExchangePending() bool {
 	switch ar.Action {
 	case ActionWithdraw:
-		return (ar.ExchangeStatus == "" || ar.ExchangeStatus == ExchangeStatusSubmitted) &&
-			ar.MiningStatus != MiningStatusFailed
+		return isExchangeWaiting(ar) // && !isBlockchainFailedOrLost(ar)
 	case ActionDeposit:
-		return (ar.ExchangeStatus == "" || ar.ExchangeStatus == ExchangeStatusPending) &&
-			ar.MiningStatus != MiningStatusFailed // if a mining fail, it may never reach to exchange
+		return !isBlockchainFailedOrLost(ar) && isExchangeWaiting(ar) // if a mining fail, it may never reach to exchange
 	case ActionTrade:
-		return ar.ExchangeStatus == "" || ar.ExchangeStatus == ExchangeStatusSubmitted
+		return isExchangeWaiting(ar)
+	default:
+		return false
 	}
-	return true
 }
 
-// IsBlockchainPending return true if activity is pending on blockchain
+// IsBlockchainPending filter activity to fetch on chain status
 func (ar ActivityRecord) IsBlockchainPending() bool {
 	switch ar.Action {
 	case ActionWithdraw:
 		// for withdraw ExchangeStatusFailed/ExchangeStatusCancelled mean will there's no tx => consider it's not a pending anymore.
-		return (ar.MiningStatus == "" || ar.MiningStatus == MiningStatusSubmitted) &&
-			ar.ExchangeStatus != ExchangeStatusFailed && ar.ExchangeStatus != ExchangeStatusCancelled
+		return exchangeNotAborted(ar) && blockchainNotFailedOrMined(ar)
 	case ActionDeposit, ActionSetRate, ActionCancelSetRate:
-		return ar.MiningStatus == "" || ar.MiningStatus == MiningStatusSubmitted
+		return !isBlockchainFinal(ar)
+	case ActionTrade:
+		return false
 	}
 	return true
+}
+
+// the different between blockchainNotFailedOrMined and isBlockchainFinal
+// - blockchainNotFailedOrMined is using in checking tx of withdraw, this tx return from cex,
+// 	and it can be lost, but we should continue to check it later as cex can replace it with an other
+// - isBlockchainFinal use in deposit/set_rate,cancel_set_rate, this case a tx failed,mined or lost will confirm state immediately.
+func blockchainNotFailedOrMined(ar ActivityRecord) bool {
+	return ar.MiningStatus != MiningStatusMined &&
+		ar.MiningStatus != MiningStatusFailed
+}
+func isBlockchainFailedOrLost(ar ActivityRecord) bool {
+	return ar.MiningStatus == MiningStatusFailed || ar.MiningStatus == MiningStatusLost
+}
+func isBlockchainFinal(ar ActivityRecord) bool {
+	return ar.MiningStatus == MiningStatusMined ||
+		ar.MiningStatus == MiningStatusFailed ||
+		ar.MiningStatus == MiningStatusLost
+}
+
+func isExchangeWaiting(ar ActivityRecord) bool {
+	return ar.ExchangeStatus != ExchangeStatusDone &&
+		ar.ExchangeStatus != ExchangeStatusCancelled &&
+		ar.ExchangeStatus != ExchangeStatusFailed
+}
+func exchangeNotAborted(ar ActivityRecord) bool {
+	return ar.ExchangeStatus != ExchangeStatusFailed && ar.ExchangeStatus != ExchangeStatusCancelled
 }
 
 // IsPending return true if activity is pending
 func (ar ActivityRecord) IsPending() bool {
 	switch ar.Action {
 	case ActionWithdraw:
-		// a withdraw is pending if (estatus | m_status == pending), AND mining fail or e_status == failed/cancelled also confirm it's not pending
-		return (ar.ExchangeStatus == "" || ar.ExchangeStatus == ExchangeStatusSubmitted ||
-			ar.MiningStatus == "" || ar.MiningStatus == MiningStatusSubmitted) &&
-			ar.MiningStatus != MiningStatusFailed &&
-			ar.ExchangeStatus != ExchangeStatusFailed && ar.ExchangeStatus != ExchangeStatusCancelled
+		return isExchangeWaiting(ar)
 		// a failed status mining failed also confirm withdraw is done(and failed)
 	case ActionDeposit:
-		return (ar.ExchangeStatus == "" || ar.ExchangeStatus == ExchangeStatusPending ||
-			ar.MiningStatus == "" || ar.MiningStatus == MiningStatusSubmitted) &&
-			ar.MiningStatus != MiningStatusFailed && ar.ExchangeStatus != ExchangeStatusFailed
-		// mining fail confirm it's done, not sure we will ever see exchange failed here but no harmful
+		return (!isBlockchainFailedOrLost(ar)) && isExchangeWaiting(ar)
 	case ActionTrade:
-		return ar.ExchangeStatus == "" || ar.ExchangeStatus == ExchangeStatusSubmitted
+		return isExchangeWaiting(ar)
 	case ActionSetRate, ActionCancelSetRate:
-		return ar.MiningStatus == "" || ar.MiningStatus == MiningStatusSubmitted
+		return !isBlockchainFinal(ar)
 	}
 	return true
 }
@@ -551,20 +570,6 @@ type AuthDataSnapshot struct {
 	ReserveBalances   map[rtypes.AssetID]BalanceEntry     `json:"reserve_balances,omitempty"`
 	PendingActivities []ActivityRecord                    `json:"pending_activities,omitempty"`
 	Block             uint64                              `json:"block,omitempty"`
-}
-
-// deprecated
-type AuthDataRecord struct {
-	Timestamp Timestamp
-	Data      AuthDataSnapshot
-}
-
-// NewAuthDataRecord creates a new AuthDataRecord instance.
-func NewAuthDataRecord(timestamp Timestamp, data AuthDataSnapshot) AuthDataRecord {
-	return AuthDataRecord{
-		Timestamp: timestamp,
-		Data:      data,
-	}
 }
 
 // ExchangeBalance is balance of a token of an exchange
