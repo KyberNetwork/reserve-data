@@ -31,7 +31,7 @@ func (s *Server) getTradingPair(c *gin.Context) {
 }
 
 type getTradingPairParam struct {
-	ID rtypes.ExchangeID `form:"id" binding:"required"`
+	ExchangeID rtypes.ExchangeID `form:"exchange_id" binding:"required"`
 }
 
 func (s *Server) getTradingPairs(c *gin.Context) {
@@ -43,7 +43,7 @@ func (s *Server) getTradingPairs(c *gin.Context) {
 		return
 	}
 
-	result, err := s.storage.GetTradingPairs(query.ID)
+	result, err := s.storage.GetTradingPairs(query.ExchangeID)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
