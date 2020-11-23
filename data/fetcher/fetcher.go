@@ -519,6 +519,9 @@ func (f *Fetcher) updateActivityWithExchangeStatus(record *common.ActivityRecord
 
 	if record.Result.Tx == "" { // for a withdraw, we set tx into result tx(that is when cex process request and return tx id so we can monitor), deposit should already has tx when created.
 		record.Result.Tx = sts.Tx
+	} else if record.Result.Tx != sts.Tx {
+		f.l.Infow("activity tx replaced", "activity", record.ID, "tx", record.Result.Tx, "new_tx", sts.Tx)
+		record.Result.Tx = sts.Tx
 	}
 	record.Result.Remaining = sts.OrderExecutedRemaining
 
