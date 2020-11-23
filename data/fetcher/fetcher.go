@@ -375,7 +375,11 @@ func (f *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord) (m
 	nonceValidator := f.newNonceValidator()
 
 	for _, activity := range pendings {
-		if activity.IsBlockchainPending() && (activity.Action == common.ActionSetRate || activity.Action == common.ActionDeposit || activity.Action == common.ActionWithdraw || activity.Action == common.ActionCancelSetRate) {
+		if activity.IsBlockchainPending() &&
+			(activity.Action == common.ActionSetRate ||
+				activity.Action == common.ActionDeposit ||
+				activity.Action == common.ActionWithdraw ||
+				activity.Action == common.ActionCancelSetRate) {
 			var (
 				blockNum uint64
 				status   string
@@ -423,6 +427,7 @@ func (f *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord) (m
 				if nonceValidator(activity) {
 					txFailed = true
 					isOverride = true
+					f.l.Debugw("nonce expired", "activity", activity.ID.EID, "tx", activity.Result.Tx)
 				} else if activity.Action != common.ActionDeposit {
 					elapsed := common.NowInMillis() - activity.Timestamp.Millis()
 					if elapsed > uint64(expiredDuration) {
@@ -513,6 +518,9 @@ func (f *Fetcher) updateActivityWithExchangeStatus(record *common.ActivityRecord
 	}
 
 	if record.Result.Tx == "" { // for a withdraw, we set tx into result tx(that is when cex process request and return tx id so we can monitor), deposit should already has tx when created.
+		record.Result.Tx = sts.Tx
+	} else if record.Result.Tx != sts.Tx {
+		f.l.Infow("activity tx replaced", "activity", record.ID, "tx", record.Result.Tx, "new_tx", sts.Tx)
 		record.Result.Tx = sts.Tx
 	}
 	record.Result.Remaining = sts.OrderExecutedRemaining
