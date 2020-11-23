@@ -427,6 +427,7 @@ func (f *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord) (m
 				if nonceValidator(activity) {
 					txFailed = true
 					isOverride = true
+					f.l.Debugw("nonce expired", "activity", activity.ID.EID, "tx", activity.Result.Tx)
 				} else if activity.Action != common.ActionDeposit {
 					elapsed := common.NowInMillis() - activity.Timestamp.Millis()
 					if elapsed > uint64(expiredDuration) {
