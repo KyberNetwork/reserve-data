@@ -519,7 +519,7 @@ func (f *Fetcher) updateActivityWithExchangeStatus(record *common.ActivityRecord
 
 	if record.Result.Tx == "" { // for a withdraw, we set tx into result tx(that is when cex process request and return tx id so we can monitor), deposit should already has tx when created.
 		record.Result.Tx = sts.Tx
-	} else if record.Result.Tx != sts.Tx {
+	} else if record.Result.Tx != sts.Tx && sts.Tx != "" {
 		f.l.Infow("activity tx replaced", "activity", record.ID, "tx", record.Result.Tx, "new_tx", sts.Tx)
 		record.Result.Tx = sts.Tx
 	}
@@ -712,12 +712,12 @@ func (f *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []common.A
 				f.l.Debugw("order status", "orderID", orderID, "base", base,
 					"quote", quote, "status", status, "remain", remain, "err", ordErr)
 			case common.ActionDeposit:
-				txHash := activity.Result.Tx
+				tx = activity.Result.Tx
 				amount := activity.Params.Amount
 				assetID := activity.Params.Asset
 
-				status, err = exchange.DepositStatus(id, txHash, assetID, amount, timepoint)
-				f.l.Debugw("deposit status", "tx", txHash, "activity", activity, "status", status, "err", err)
+				status, err = exchange.DepositStatus(id, tx, assetID, amount, timepoint)
+				f.l.Debugw("deposit status", "tx", tx, "activity", activity, "status", status, "err", err)
 			case common.ActionWithdraw:
 				amount := activity.Params.Amount
 				assetID := activity.Params.Asset
