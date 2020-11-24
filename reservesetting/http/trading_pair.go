@@ -30,6 +30,27 @@ func (s *Server) getTradingPair(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithData(result))
 }
 
+type getTradingPairParam struct {
+	ExchangeID rtypes.ExchangeID `form:"exchange_id" binding:"required"`
+}
+
+func (s *Server) getTradingPairs(c *gin.Context) {
+	var (
+		query getTradingPairParam
+	)
+	if err := c.ShouldBindQuery(&query); err != nil {
+		httputil.ResponseFailure(c, httputil.WithError(err))
+		return
+	}
+
+	result, err := s.storage.GetTradingPairs(query.ExchangeID)
+	if err != nil {
+		httputil.ResponseFailure(c, httputil.WithError(err))
+		return
+	}
+	httputil.ResponseSuccess(c, httputil.WithData(result))
+}
+
 func (s *Server) checkDeleteTradingPairParams(entry common.DeleteTradingPairEntry) error {
 	_, err := s.storage.GetTradingPair(entry.TradingPairID, false)
 	return err
