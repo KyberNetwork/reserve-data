@@ -61,6 +61,7 @@ func NewServer(storage storage.Interface, host string, supportedExchanges map[rt
 	g.GET("/exchange/:id", server.getExchange)
 	g.GET("/exchange", server.getExchanges)
 	g.GET("/trading-pair/:id", server.getTradingPair)
+	g.GET("/trading-pair", server.getTradingPairs)
 	g.GET("/stable-token-params", server.getStableTokenParams)
 	g.GET("/feed-configurations", server.getFeedConfigurations)
 

@@ -413,6 +413,59 @@ curl -X GET "https://gateway.local/v3/trading-pair/1?including_deleted=false"
 
 `GET https://gateway.local/v3/trading-pair/:trading_pair_id`
 
+## Get all trading pairs by exchange id
+
+Params | Type | Required | Default | Description
+------ | ---- | -------- | ------- | -----------
+exchange_id| integer | true | none | exchange id 
+
+
+```shell
+curl -X GET "https://gateway.local/v3/trading-pair?exchange_id=1"
+```
+
+> sample response
+
+```json
+{
+    "data": [
+        {
+            "id": 1,
+            "base": 1,
+            "quote": 2,
+            "price_precision": 6,
+            "amount_precision": 3,
+            "amount_limit_min": 0.001,
+            "amount_limit_max": 100000,
+            "price_limit_min": 0.000001,
+            "price_limit_max": 100000,
+            "min_notional": 0.0001,
+            "base_symbol": "ETH",
+            "quote_symbol": "BTC"
+        },
+        {
+            "id": 2,
+            "base": 1,
+            "quote": 3,
+            "price_precision": 6,
+            "amount_precision": 3,
+            "amount_limit_min": 0.001,
+            "amount_limit_max": 100000,
+            "price_limit_min": 0.000001,
+            "price_limit_max": 100000,
+            "min_notional": 0.0001,
+            "base_symbol": "ETH",
+            "quote_symbol": "KNC"
+        }
+    ],
+    "success": true
+}
+```
+
+### HTTP Request
+
+`GET https://gateway.local/v3/trading-pair?exchange_id=1`
+
 ## Get feed configurations
 
 ```shell
