@@ -78,7 +78,7 @@ func (f *Fetcher) Run() error {
 	go f.RunRateFetcher()
 	go f.RunBlockFetcher()
 	go f.RunGlobalDataFetcher()
-	go f.RunFetchExchangeHistory()
+	// go f.RunFetchExchangeHistory()  // TODO: consider to remove code in future
 	f.l.Infof("Fetcher runner is running...")
 	return nil
 }
@@ -807,7 +807,7 @@ func (f *Fetcher) fetchPriceFromExchange(wg *sync.WaitGroup, exchange Exchange, 
 func (f *Fetcher) RunFetchExchangeHistory() {
 	for ; ; <-f.runner.GetExchangeHistoryTicker() {
 		f.l.Debugf("got signal in orderbook channel with exchange-history")
-		f.fetchExchangeTradeHistory()
+		f.fetchExchangeTradeHistory() // disable crawl trade history,
 		f.l.Debug("fetched data from exchanges")
 	}
 }
