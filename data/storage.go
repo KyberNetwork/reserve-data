@@ -22,7 +22,7 @@ type Storage interface {
 	GetRate(common.Version) (common.AllRateEntry, error)
 	GetRates(fromTime, toTime uint64) ([]common.AllRateEntry, error)
 
-	GetAllRecords(fromTime, toTime uint64) ([]common.ActivityRecord, error)
+	GetAllRecords(fromTime, toTime uint64, actions []string) ([]common.ActivityRecord, error)
 	GetPendingActivities() ([]common.ActivityRecord, error)
 	GetAssetRateTriggers(fromTime uint64, toTime uint64) ([]common.AssetRateTrigger, error)
 }

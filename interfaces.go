@@ -33,7 +33,7 @@ type Data interface {
 	// GetRates returns list of valid rates for all tokens that is collected between [fromTime, toTime).
 	GetRates(fromTime, toTime uint64) ([]common.AllRateResponse, error)
 
-	GetRecords(fromTime, toTime uint64) ([]common.ActivityRecord, error)
+	GetRecords(fromTime, toTime uint64, actions []string) ([]common.ActivityRecord, error)
 	GetPendingActivities() ([]common.ActivityRecord, error)
 
 	GetGoldData(timepoint uint64) (common.GoldData, error)
