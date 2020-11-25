@@ -153,6 +153,8 @@ type Asset struct {
 	NormalUpdatePerPeriod float64             `json:"normal_update_per_period"`
 	MaxImbalanceRatio     float64             `json:"max_imbalance_ratio"`
 	OrderDurationMillis   uint64              `json:"order_duration_millis"`
+	PriceETHAmount        float64             `json:"price_eth_amount"`
+	ExchangeETHAmount     float64             `json:"exchange_eth_amount"`
 }
 
 // TODO: write custom marshal json for created/updated fields
@@ -204,6 +206,8 @@ type CreateAssetEntry struct {
 	NormalUpdatePerPeriod float64             `json:"normal_update_per_period"`
 	MaxImbalanceRatio     float64             `json:"max_imbalance_ratio"`
 	OrderDurationMillis   uint64              `json:"order_duration_millis"`
+	PriceETHAmount        float64             `json:"price_eth_amount"`
+	ExchangeETHAmount     float64             `json:"exchange_eth_amount"`
 }
 
 // UpdateAssetEntry entry object for update asset
@@ -227,6 +231,8 @@ type UpdateAssetEntry struct {
 	NormalUpdatePerPeriod *float64            `json:"normal_update_per_period"`
 	MaxImbalanceRatio     *float64            `json:"max_imbalance_ratio"`
 	OrderDurationMillis   *uint64             `json:"order_duration_millis"`
+	PriceETHAmount        *float64            `json:"price_eth_amount"`
+	ExchangeETHAmount     *float64            `json:"exchange_eth_amount"`
 }
 
 type UpdateExchangeEntry struct {
