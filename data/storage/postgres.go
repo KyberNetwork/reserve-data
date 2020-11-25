@@ -320,17 +320,39 @@ func (ps *PostgresStorage) GetRates(fromTime, toTime uint64) ([]common.AllRateEn
 	return rates, nil
 }
 
+var (
+	allowedActions = map[string]struct{}{
+		"set_rates": struct{}{},
+		"withdraw":  struct{}{},
+		"deposit":   struct{}{},
+		"trade":     struct{}{},
+	}
+)
+
 // GetAllRecords return all activities records from database
-func (ps *PostgresStorage) GetAllRecords(fromTime, toTime uint64) ([]common.ActivityRecord, error) {
+func (ps *PostgresStorage) GetAllRecords(fromTime, toTime uint64, actions []string) ([]common.ActivityRecord, error) {
 	var (
-		activities []common.ActivityRecord
+		activities = []common.ActivityRecord{}
 		data       [][]byte
 	)
-	query := fmt.Sprintf(`SELECT data FROM "%s" WHERE created >= $1 AND created <= $2`, activityTable)
+
+	query := fmt.Sprintf(`SELECT data FROM "%s" WHERE data->>'action' IN (?) AND created >= ? AND created <= ?`, activityTable)
+	if len(actions) == 0 {
+		actions = []string{"withdraw", "deposit", "trade"} // adjust default behavior to list all activity exclude set_rate
+	}
+	if len(actions) > len(allowedActions) {
+		actions = actions[:len(allowedActions)]
+	}
 	from := common.MillisToTime(fromTime)
 	to := common.MillisToTime(toTime)
-	if err := ps.db.Select(&data, query, from, to); err != nil {
-		return nil, err
+	query, args, err := sqlx.In(query, actions, from, to)
+	if err != nil {
+		return activities, err
+	}
+	query = ps.db.Rebind(query)
+
+	if err := ps.db.Select(&data, query, args...); err != nil {
+		return activities, err
 	}
 	for _, dataByte := range data {
 		var activity common.ActivityRecord
