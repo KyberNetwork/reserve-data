@@ -322,10 +322,11 @@ func (ps *PostgresStorage) GetRates(fromTime, toTime uint64) ([]common.AllRateEn
 
 var (
 	allowedActions = map[string]struct{}{
-		"set_rates": struct{}{},
-		"withdraw":  struct{}{},
-		"deposit":   struct{}{},
-		"trade":     struct{}{},
+		common.ActionTrade:         {},
+		common.ActionSetRate:       {},
+		common.ActionCancelSetRate: {},
+		common.ActionDeposit:       {},
+		common.ActionWithdraw:      {},
 	}
 )
 
@@ -338,7 +339,7 @@ func (ps *PostgresStorage) GetAllRecords(fromTime, toTime uint64, actions []stri
 
 	query := fmt.Sprintf(`SELECT data FROM "%s" WHERE data->>'action' IN (?) AND created >= ? AND created <= ?`, activityTable)
 	if len(actions) == 0 {
-		actions = []string{"withdraw", "deposit", "trade"} // adjust default behavior to list all activity exclude set_rate
+		actions = []string{common.ActionWithdraw, common.ActionDeposit, common.ActionTrade} // adjust default behavior to list all activity exclude set_rate
 	}
 	if len(actions) > len(allowedActions) {
 		actions = actions[:len(allowedActions)]
