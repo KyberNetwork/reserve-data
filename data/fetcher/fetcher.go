@@ -231,7 +231,7 @@ func (f *Fetcher) FetchAllAuthData(timepoint uint64) {
 				speedDeposit++
 				newGas, err := f.reserveCore.SpeedupDeposit(av)
 				if err != nil {
-					f.l.Errorw("sending speed up tx failed", "err", err, "tx", av.Result.Tx)
+					f.l.Infow("sending speed up tx failed", "err", err, "tx", av.Result.Tx)
 					continue
 				}
 				f.l.Infow("speed up deposit", "tx", av.Result.Tx, "new_gas", newGas.String())
