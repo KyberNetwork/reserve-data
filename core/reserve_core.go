@@ -530,7 +530,7 @@ func (rc *ReserveCore) CancelSetRate() (common.ActivityID, error) {
 		oldNonce, initPrice, count, err = rc.pendingActionInfo(minedNonce, common.ActionSetRate)
 	}
 	if err != nil || oldNonce == nil {
-		rc.l.Errorw("failed to find pending setRate to cancel", "err", err)
+		rc.l.Infow("failed to find pending setRate to cancel", "err", err)
 		return common.ActivityID{}, err
 	}
 	highBoundGasPrice := rc.maxGasPrice()

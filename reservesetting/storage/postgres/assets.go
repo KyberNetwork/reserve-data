@@ -873,7 +873,6 @@ func (s *Storage) GetAsset(id rtypes.AssetID) (common.Asset, error) {
 		feeds[feed.Feed] = feed.Weight
 	}
 
-	s.l.Debugw("getting asset", "id", id)
 	err = tx.Stmtx(s.stmts.getAsset).Get(&assetDBResult, id, nil)
 	switch err {
 	case sql.ErrNoRows:
