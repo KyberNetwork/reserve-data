@@ -430,7 +430,7 @@ func (rc *ReserveCore) Withdraw(exchange common.Exchange, asset commonv3.Asset, 
 			status,
 			common.MiningStatusNA,
 			timepoint,
-			true,
+			status != common.ExchangeStatusFailed && status != common.ExchangeStatusCancelled,
 		)
 	}
 
