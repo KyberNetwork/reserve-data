@@ -1,8 +1,8 @@
-FROM golang:1.13-stretch AS build-env
+FROM golang:1.15-stretch AS build-env
 
 COPY . /reserve-data
 WORKDIR /reserve-data/reservesetting/cmd
-RUN go build -v -mod=vendor -o /setting
+RUN go build -v -o /setting
 
 FROM debian:stretch
 COPY --from=build-env /setting /
