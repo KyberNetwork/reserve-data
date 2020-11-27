@@ -1,4 +1,4 @@
-FROM golang:1.15-stretch AS build-env
+FROM golang:1.15 AS build-env
 
 COPY . /reserve-data
 WORKDIR /reserve-data/reservesetting/cmd
