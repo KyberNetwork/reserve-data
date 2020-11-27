@@ -62,8 +62,8 @@ func WithSettingEndpoint(settingEndpoint string) Option {
 		g.GET("/asset", settingProxyMW)
 		g.GET("/exchange/:id", settingProxyMW)
 		g.GET("/exchange", settingProxyMW)
-		g.GET("trading-pair/:id", settingProxyMW)
-		g.GET("trading-pair", settingProxyMW)
+		g.GET("/trading-pair/:id", settingProxyMW)
+		g.GET("/trading-pair", settingProxyMW)
 		g.GET("/stable-token-params", settingProxyMW)
 		g.GET("/feed-configurations", settingProxyMW)
 
