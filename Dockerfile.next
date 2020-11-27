@@ -1,5 +1,5 @@
 # build stage
-FROM golang:stretch AS build-env
+FROM golang:1.15-stretch AS build-env
 COPY . /go/src/github.com/KyberNetwork/reserve-data
 WORKDIR /go
 RUN go install -v github.com/KyberNetwork/reserve-data/cmd
