@@ -44,6 +44,8 @@ const (
 	defaultIntervalUpdateWithdrawFeeDB   = 10 * time.Minute
 	intervalUpdateWithdrawFeeLiveFlag    = "interval-update-withdraw-fee-live"
 	defaultIntervalUpdateWithdrawFeeLive = 5 * time.Minute
+
+	numberApprovalRequiredFlag = "nummber-approval-required"
 )
 
 func main() {
@@ -96,6 +98,11 @@ func main() {
 			Usage:  "market data url",
 			EnvVar: "MARKET_DATA_URL",
 			Value:  defaultMarketDataURL,
+		},
+		cli.IntFlag{
+			Name:   numberApprovalRequiredFlag,
+			Usage:  "number approval required to apply setting change",
+			EnvVar: "NUMBER_APPROVAL_REQUIRED",
 		},
 	)
 
@@ -173,7 +180,8 @@ func run(c *cli.Context) error {
 
 	sentryDSN := libapp.SentryDSNFromFlag(c)
 	server := settinghttp.NewServer(sr, host, liveExchanges, sentryDSN, coreClient,
-		gaspricedataclient.New(httpClient, c.String(gasPriceURLFlag)), marketdatacli.NewClient(c.String(marketDataURLFlag)))
+		gaspricedataclient.New(httpClient, c.String(gasPriceURLFlag)), marketdatacli.NewClient(c.String(marketDataURLFlag)),
+		c.Int(numberApprovalRequiredFlag))
 	if profiler.IsEnableProfilerFromContext(c) {
 		server.EnableProfiler()
 	}

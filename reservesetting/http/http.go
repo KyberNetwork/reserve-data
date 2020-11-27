@@ -20,19 +20,21 @@ import (
 
 // Server is the HTTP server of token V3.
 type Server struct {
-	storage            storage.Interface
-	r                  *gin.Engine
-	host               string
-	supportedExchanges map[rtypes.ExchangeID]v1common.LiveExchange
-	l                  *zap.SugaredLogger
-	coreClient         *coreclient.Client
-	gasClient          gaspricedataclient.Client
-	marketDataClient   *marketdatacli.Client
+	storage                storage.Interface
+	r                      *gin.Engine
+	host                   string
+	supportedExchanges     map[rtypes.ExchangeID]v1common.LiveExchange
+	l                      *zap.SugaredLogger
+	coreClient             *coreclient.Client
+	gasClient              gaspricedataclient.Client
+	marketDataClient       *marketdatacli.Client
+	numberApprovalRequired int
 }
 
 // NewServer creates new HTTP server for reservesetting APIs.
 func NewServer(storage storage.Interface, host string, supportedExchanges map[rtypes.ExchangeID]v1common.LiveExchange,
-	sentryDSN string, coreClient *coreclient.Client, gasClient gaspricedataclient.Client, marketDataClient *marketdatacli.Client) *Server {
+	sentryDSN string, coreClient *coreclient.Client, gasClient gaspricedataclient.Client,
+	marketDataClient *marketdatacli.Client, numberApprovalRequired int) *Server {
 	l := zap.S()
 	r := gin.Default()
 	if sentryDSN != "" {
@@ -45,14 +47,15 @@ func NewServer(storage storage.Interface, host string, supportedExchanges map[rt
 		r.Use(sentrygin.New(sentrygin.Options{}))
 	}
 	server := &Server{
-		storage:            storage,
-		r:                  r,
-		host:               host,
-		supportedExchanges: supportedExchanges,
-		l:                  l,
-		coreClient:         coreClient,
-		gasClient:          gasClient,
-		marketDataClient:   marketDataClient,
+		storage:                storage,
+		r:                      r,
+		host:                   host,
+		supportedExchanges:     supportedExchanges,
+		l:                      l,
+		coreClient:             coreClient,
+		gasClient:              gasClient,
+		marketDataClient:       marketDataClient,
+		numberApprovalRequired: numberApprovalRequired,
 	}
 	g := r.Group("/v3")
 
@@ -129,6 +132,8 @@ func NewServer(storage storage.Interface, host string, supportedExchanges map[rt
 	g.POST("/gas-threshold", server.setGasThreshold)
 	g.GET("/gas-source", server.getPreferGasSource)
 	g.POST("/gas-source", server.setPreferGasSource)
+
+	g.DELETE("/disapprove-setting-change/:id", server.disapproveSettingChange)
 
 	return server
 }

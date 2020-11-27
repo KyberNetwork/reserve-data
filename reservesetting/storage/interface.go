@@ -31,6 +31,8 @@ type Interface interface {
 	UpdateAssetExchangeWithdrawFee(withdrawFee float64, assetExchangeID rtypes.AssetExchangeID) error
 
 	SetPreferGasSource(v v3.PreferGasSource) error
+
+	GetLisApprovalSettingChange(settingChangeID uint64) ([]v3.ApprovalSettingChangeInfo, error)
 }
 
 // SettingReader is the common interface for reading exchanges, assets configuration.
@@ -58,6 +60,9 @@ type SettingReader interface {
 
 	GetGeneralData(key string) (v3.GeneralData, error)
 	GetPreferGasSource() (v3.PreferGasSource, error)
+
+	ApproveSettingChange(keyID string, settingChangeID uint64) error
+	DispproveSettingChange(keyID string, settingChangeID uint64) error
 }
 
 // ControlInfoInterface ...

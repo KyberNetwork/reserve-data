@@ -347,9 +347,10 @@ type SettingChange struct {
 
 // SettingChangeResponse setting change response
 type SettingChangeResponse struct {
-	ID         rtypes.SettingChangeID `json:"id"`
-	Created    time.Time              `json:"created"`
-	ChangeList []SettingChangeEntry   `json:"change_list"`
+	ID           rtypes.SettingChangeID      `json:"id"`
+	Created      time.Time                   `json:"created"`
+	ChangeList   []SettingChangeEntry        `json:"change_list"`
+	ListApproval []ApprovalSettingChangeInfo `json:"list_approval,omitempty"`
 }
 
 // DeleteTradingPairEntry hold data to delete a trading pair entry
@@ -393,4 +394,10 @@ type PreferGasSource struct {
 // AdditionalDataReturn ...
 type AdditionalDataReturn struct {
 	AddedTradingPairs []rtypes.TradingPairID
+}
+
+// ApprovalSettingChangeInfo ...
+type ApprovalSettingChangeInfo struct {
+	KeyID     string    `json:"key_id" db:"key_id"`
+	Timestamp time.Time `json:"timestamp" db:"timestamp"`
 }

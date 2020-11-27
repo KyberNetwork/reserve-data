@@ -93,6 +93,12 @@ func (s *Storage) getSettingChange(tx *sqlx.Tx, id rtypes.SettingChangeID) (comm
 		s.l.Errorw("failed to convert to common setting change", "err", err)
 		return common.SettingChangeResponse{}, err
 	}
+	listApproval, err := s.GetLisApprovalSettingChange(uint64(id))
+	if err != nil {
+		s.l.Errorw("failed to get approval info of setting change", "err", err)
+		return common.SettingChangeResponse{}, err
+	}
+	res.ListApproval = listApproval
 	return res, nil
 }
 
@@ -113,6 +119,12 @@ func (s *Storage) GetSettingChanges(cat common.ChangeCatalog, status common.Chan
 		if err != nil {
 			return nil, err
 		}
+		listApproval, err := s.GetLisApprovalSettingChange(uint64(rr.ID))
+		if err != nil {
+			s.l.Errorw("failed to get approval info of setting change", "err", err, "setting change id", rr.ID)
+			return nil, err
+		}
+		rr.ListApproval = listApproval
 		result = append(result, rr)
 	}
 	return result, nil

@@ -304,13 +304,82 @@ func (s *Server) rejectSettingChange(c *gin.Context) {
 	httputil.ResponseSuccess(c)
 }
 
-func (s *Server) confirmSettingChange(c *gin.Context) {
-	var input struct {
-		ID uint64 `uri:"id" binding:"required"`
+func (s *Server) getKeyIDFromContext(c *gin.Context) (string, error) {
+	signatures := c.Request.Header.Values("Signature")
+	switch {
+	case len(signatures) >= 2:
+		return "", errors.New("recieve more than one signature in request")
+	case len(signatures) == 1:
+		sig := signatures[0]
+		s.l.Debugw("signature from request", "signature", sig)
+		sig = strings.ReplaceAll(sig, `"`, "")
+		sig = strings.ReplaceAll(sig, `\`, "")
+		ss := strings.Split(sig, ",")
+		if len(ss) == 1 {
+			return "", errors.New("cannot get key ID from signature")
+		}
+		ss2 := strings.Split(ss[0], "=")
+		if len(ss2) != 2 {
+			return "", errors.New("cannot get key ID from signature")
+		}
+		return ss2[1], nil
+	default:
+		return "", nil // not require authentication
 	}
+}
+
+func (s *Server) disapproveSettingChange(c *gin.Context) {
+	var (
+		input struct {
+			ID uint64 `uri:"id" binding:"required"`
+		}
+	)
 	if err := c.ShouldBindUri(&input); err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
+	}
+	keyID, err := s.getKeyIDFromContext(c)
+	if err != nil {
+		httputil.ResponseFailure(c, httputil.WithError(err))
+		return
+	}
+	if err := s.storage.DispproveSettingChange(keyID, input.ID); err != nil {
+		httputil.ResponseFailure(c, httputil.WithError(err))
+		return
+	}
+	httputil.ResponseSuccess(c)
+}
+
+func (s *Server) confirmSettingChange(c *gin.Context) {
+	var (
+		input struct {
+			ID uint64 `uri:"id" binding:"required"`
+		}
+		keyID string
+	)
+	if err := c.ShouldBindUri(&input); err != nil {
+		httputil.ResponseFailure(c, httputil.WithError(err))
+		return
+	}
+	keyID, err := s.getKeyIDFromContext(c)
+	if err != nil {
+		httputil.ResponseFailure(c, httputil.WithError(err))
+		return
+	}
+	if keyID != "" {
+		if err := s.storage.ApproveSettingChange(keyID, input.ID); err != nil {
+			httputil.ResponseFailure(c, httputil.WithError(err))
+			return
+		}
+		listApprovalSettingChange, err := s.storage.GetLisApprovalSettingChange(input.ID)
+		if err != nil {
+			httputil.ResponseFailure(c, httputil.WithError(err))
+			return
+		}
+		if len(listApprovalSettingChange) < s.numberApprovalRequired {
+			httputil.ResponseSuccess(c, httputil.WithField("msg", "approve successfully"))
+			return
+		}
 	}
 	additionalDataReturn, err := s.storage.ConfirmSettingChange(rtypes.SettingChangeID(input.ID), true)
 	if err != nil {
