@@ -2,6 +2,7 @@
 FROM golang:stretch AS build-env
 COPY . /go/src/github.com/KyberNetwork/reserve-data
 WORKDIR /go
+RUN go version
 RUN go install -v github.com/KyberNetwork/reserve-data/cmd
 
 # final stage
