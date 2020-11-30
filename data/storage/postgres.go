@@ -71,8 +71,6 @@ func getDataType(data interface{}) fetchDataType {
 		return goldDataType
 	case common.USDData, *common.USDData:
 		return usdDataType
-	case common.AllPriceEntry, *common.AllPriceEntry:
-		return priceDataType
 	case common.AllRateEntry, *common.AllRateEntry:
 		return rateDataType
 	}
@@ -95,6 +93,49 @@ func (ps *PostgresStorage) storeFetchData(data interface{}, timepoint uint64) er
 		return err
 	}
 	return nil
+}
+
+func (ps *PostgresStorage) storeOrderBookData(data interface{}, timepoint uint64) error {
+	query := `INSERT INTO order_book_data (created, data) VALUES ($1, $2)`
+	timestamp := common.MillisToTime(timepoint)
+	dataJSON, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	if _, err := ps.db.Exec(query, timestamp, dataJSON); err != nil {
+		return err
+	}
+	return nil
+}
+func (ps *PostgresStorage) currentOrderBookVersion(timepoint uint64) (common.Version, error) {
+	var (
+		v  common.Version
+		ts time.Time
+	)
+	timestamp := common.MillisToTime(timepoint)
+	query := `SELECT created
+FROM (
+	SELECT
+		id,
+		created
+	FROM
+		order_book_data
+	WHERE
+		created <= $1
+	ORDER BY
+		created DESC
+	LIMIT 1) a1
+WHERE
+	$1 - created <= interval '150' second` // max duration block is 10 ~ 150 second
+	if err := ps.db.Get(&ts, query, timestamp); err != nil {
+		if err == sql.ErrNoRows {
+			return v, fmt.Errorf("there is no version at timestamp: %d", timepoint)
+		}
+		return v, err
+	}
+	v = common.Version(common.TimeToMillis(ts))
+	return v, nil
 }
 
 func (ps *PostgresStorage) currentVersion(dataType fetchDataType, timepoint uint64) (common.Version, error) {
@@ -149,22 +190,38 @@ func (ps *PostgresStorage) getData(o interface{}, v common.Version) error {
 	return json.Unmarshal(data, o)
 }
 
+func (ps *PostgresStorage) getOrderBookData(v common.Version) (common.AllPriceEntry, error) {
+	var (
+		data   []byte
+		logger = ps.l.With("func", caller.GetCurrentFunctionName())
+	)
+	ts := common.MillisToTime(uint64(v))
+	query := `SELECT data FROM order_book_data WHERE created = $1`
+	if err := ps.db.Get(&data, query, ts); err != nil {
+		logger.Errorw("failed to get data from order_book_data table", "error", err)
+		return common.AllPriceEntry{}, err
+	}
+	var allPrices common.AllPriceEntry
+	err := json.Unmarshal(data, &allPrices)
+	if err != nil {
+		logger.Errorw("unmarshal order book data failed", "err", err, "data", string(data))
+	}
+	return allPrices, err
+}
+
 // StorePrice store price
 func (ps *PostgresStorage) StorePrice(priceEntry common.AllPriceEntry, timepoint uint64) error {
-	return ps.storeFetchData(priceEntry, timepoint)
+	return ps.storeOrderBookData(priceEntry, timepoint)
 }
 
 // CurrentPriceVersion return current price version
 func (ps *PostgresStorage) CurrentPriceVersion(timepoint uint64) (common.Version, error) {
-	return ps.currentVersion(priceDataType, timepoint)
+	return ps.currentOrderBookVersion(timepoint)
 }
 
 // GetAllPrices return all prices currently save in db
 func (ps *PostgresStorage) GetAllPrices(v common.Version) (common.AllPriceEntry, error) {
-	var (
-		allPrices common.AllPriceEntry
-	)
-	err := ps.getData(&allPrices, v)
+	allPrices, err := ps.getOrderBookData(v)
 	return allPrices, err
 }
 
