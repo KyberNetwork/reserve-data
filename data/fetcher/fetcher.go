@@ -78,7 +78,7 @@ func (f *Fetcher) Run() error {
 	go f.RunRateFetcher()
 	go f.RunBlockFetcher()
 	go f.RunGlobalDataFetcher()
-	// go f.RunFetchExchangeHistory()  // TODO: consider to remove code in future
+	go f.RunFetchExchangeHistory()
 	f.l.Infof("Fetcher runner is running...")
 	return nil
 }

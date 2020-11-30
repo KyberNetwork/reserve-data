@@ -22,7 +22,6 @@ import (
 
 const (
 	binanceEpsilon float64 = 0.0000001 // 10e-7
-	batchSize      int     = 4
 )
 
 // Binance instance for binance exchange
@@ -162,11 +161,7 @@ func (bn *Binance) CancelAllOrders(symbol string) error {
 }
 
 // FetchOnePairData fetch price data for one pair of token
-func (bn *Binance) FetchOnePairData(
-	wg *sync.WaitGroup,
-	pair commonv3.TradingPairSymbols,
-	data *sync.Map,
-	timepoint uint64) {
+func (bn *Binance) FetchOnePairData(wg *sync.WaitGroup, pair commonv3.TradingPairSymbols, timepoint uint64) common.ExchangePrice {
 
 	defer wg.Done()
 	result := common.ExchangePrice{}
@@ -180,71 +175,62 @@ func (bn *Binance) FetchOnePairData(
 	if err != nil {
 		result.Valid = false
 		result.Error = err.Error()
-	} else {
-		if respData.Code != 0 || respData.Msg != "" {
-			result.Valid = false
-			result.Error = fmt.Sprintf("Code: %d, Msg: %s", respData.Code, respData.Msg)
-		} else {
-			for _, buy := range respData.Bids {
-				result.Bids = append(
-					result.Bids,
-					common.NewPriceEntry(
-						buy.Quantity,
-						buy.Rate,
-					),
-				)
-			}
-			for _, sell := range respData.Asks {
-				result.Asks = append(
-					result.Asks,
-					common.NewPriceEntry(
-						sell.Quantity,
-						sell.Rate,
-					),
-				)
-			}
-		}
+		return result
 	}
-	data.Store(pair.ID, result)
+	if respData.Code != 0 || respData.Msg != "" {
+		result.Valid = false
+		result.Error = fmt.Sprintf("Code: %d, Msg: %s", respData.Code, respData.Msg)
+		return result
+	}
+	for _, buy := range respData.Bids {
+		result.Bids = append(
+			result.Bids,
+			common.NewPriceEntry(
+				buy.Quantity,
+				buy.Rate,
+			),
+		)
+	}
+	for _, sell := range respData.Asks {
+		result.Asks = append(
+			result.Asks,
+			common.NewPriceEntry(
+				sell.Quantity,
+				sell.Rate,
+			),
+		)
+	}
+	return result
 }
 
 // FetchPriceData fetch price data for all token that we supported
 func (bn *Binance) FetchPriceData(timepoint uint64) (map[rtypes.TradingPairID]common.ExchangePrice, error) {
 	wait := sync.WaitGroup{}
-	data := sync.Map{}
+	result := map[rtypes.TradingPairID]common.ExchangePrice{}
+	var lock sync.Mutex
 	pairs, err := bn.TokenPairs()
 	if err != nil {
 		return nil, err
 	}
-	var (
-		i int
-		x int
-	)
-	for i < len(pairs) {
-		for x = i; x < len(pairs) && x < i+batchSize; x++ {
-			wait.Add(1)
-			pair := pairs[x]
-			go bn.FetchOnePairData(&wait, pair, &data, timepoint)
-		}
-		wait.Wait()
-		i = x
+	jobs := make(chan commonv3.TradingPairSymbols, len(pairs))
+	for _, p := range pairs {
+		jobs <- p
 	}
-	result := map[rtypes.TradingPairID]common.ExchangePrice{}
-	data.Range(func(key, value interface{}) bool {
-		//if there is conversion error, continue to next key,val
-		tokenPairID, ok := key.(rtypes.TradingPairID)
-		if !ok {
-			err = fmt.Errorf("key (%v) cannot be asserted to TokenPairID", key)
-			return false
-		}
-		exPrice, ok := value.(common.ExchangePrice)
-		if !ok {
-			err = fmt.Errorf("value (%v) cannot be asserted to ExchangePrice", value)
-			return false
-		}
-		result[tokenPairID] = exPrice
-		return true
-	})
+	close(jobs)
+	const concurrentFactor = 8
+	wait.Add(concurrentFactor)
+	for i := 0; i < concurrentFactor; i++ {
+		go func() {
+			defer wait.Done()
+			for pair := range jobs {
+				res := bn.FetchOnePairData(&wait, pair, timepoint)
+				lock.Lock()
+				result[pair.ID] = res
+				lock.Unlock()
+			}
+		}()
+	}
+	wait.Wait()
 	return result, err
 }
 
@@ -341,31 +327,34 @@ func (bn *Binance) FetchTradeHistory() {
 		return
 	}
 	var (
-		result        = common.ExchangeTradeHistory{}
-		guard         = &sync.Mutex{}
-		wait          = &sync.WaitGroup{}
-		batchStart, x int
+		result = common.ExchangeTradeHistory{}
+		lock   = &sync.Mutex{}
+		wg     sync.WaitGroup
 	)
-
-	for batchStart < len(pairs) {
-		for x = batchStart; x < len(pairs) && x < batchStart+batchSize; x++ {
-			wait.Add(1)
-			go func(pair commonv3.TradingPairSymbols) {
-				defer wait.Done()
+	jobs := make(chan commonv3.TradingPairSymbols, len(pairs))
+	for _, p := range pairs {
+		jobs <- p
+	}
+	close(jobs)
+	const concurrentFactor = 4
+	wg.Add(concurrentFactor)
+	for i := 0; i < concurrentFactor; i++ {
+		go func() {
+			defer wg.Done()
+			for pair := range jobs { // process until jobs empty
 				histories, err := bn.FetchOnePairTradeHistory(pair)
 				if err != nil {
 					bn.l.Warnw("Cannot fetch data for pair",
 						"pair", fmt.Sprintf("%s%s", pair.BaseSymbol, pair.QuoteSymbol), "err", err)
 					return
 				}
-				guard.Lock()
+				lock.Lock()
 				result[pair.ID] = histories
-				guard.Unlock()
-			}(pairs[x])
-		}
-		batchStart = x
-		wait.Wait()
+				lock.Unlock()
+			}
+		}()
 	}
+	wg.Wait()
 
 	if err := bn.storage.StoreTradeHistory(result); err != nil {
 		bn.l.Warnw("Binance Store trade history error", "err", err)
