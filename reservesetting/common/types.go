@@ -78,10 +78,11 @@ type AssetExchange struct {
 
 // AssetTarget is the target setting of an asset.
 type AssetTarget struct {
-	Total              float64 `json:"total"`
-	Reserve            float64 `json:"reserve"`
-	RebalanceThreshold float64 `json:"rebalance_threshold"`
-	TransferThreshold  float64 `json:"transfer_threshold"`
+	Total                float64 `json:"total"`
+	Reserve              float64 `json:"reserve"`
+	RebalanceThreshold   float64 `json:"rebalance_threshold"`
+	TransferThreshold    float64 `json:"transfer_threshold"`
+	MinWithdrawThreshold float64 `json:"min_withdraw_threshold"`
 }
 
 // PWIEquation is a PWI equation. An asset will have 2 PWI equation: ask and bid.

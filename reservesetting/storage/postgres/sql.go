@@ -394,7 +394,8 @@ func assetStatements(db *sqlx.DB) (*sqlx.NamedStmt, *sqlx.Stmt, *sqlx.NamedStmt,
 		 :max_imbalance_ratio,
 		 :order_duration_millis,
 		 :price_eth_amount,
-		 :exchange_eth_amount
+		 :exchange_eth_amount,
+		 :target_min_withdraw_threshold   
 		         );`
 	newAsset, err := db.PrepareNamed(newAssetQuery)
 	if err != nil {
@@ -440,6 +441,7 @@ func assetStatements(db *sqlx.DB) (*sqlx.NamedStmt, *sqlx.Stmt, *sqlx.NamedStmt,
 							assets.order_duration_millis,
 							assets.price_eth_amount,
 							assets.exchange_eth_amount,
+       						assets.target_min_withdraw_threshold,
 							assets.created,
 							assets.updated
 						FROM assets
@@ -487,6 +489,7 @@ func assetStatements(db *sqlx.DB) (*sqlx.NamedStmt, *sqlx.Stmt, *sqlx.NamedStmt,
 						assets.order_duration_millis,
 						assets.price_eth_amount,
 						assets.exchange_eth_amount,
+					 	assets.target_min_withdraw_threshold,
 						assets.created,
 						assets.updated
 					ORDER BY assets.id`
@@ -546,6 +549,7 @@ func assetStatements(db *sqlx.DB) (*sqlx.NamedStmt, *sqlx.Stmt, *sqlx.NamedStmt,
 			order_duration_millis = COALESCE(:order_duration_millis,order_duration_millis),
 			price_eth_amount = COALESCE(:price_eth_amount,price_eth_amount),
 			exchange_eth_amount = COALESCE(:exchange_eth_amount,exchange_eth_amount),
+		    target_min_withdraw_threshold = COALESCE(:target_min_withdraw_threshold, target_min_withdraw_threshold),
 		    updated      = now()
 		WHERE id = :id RETURNING id;
 		`

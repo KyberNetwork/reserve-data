@@ -125,7 +125,8 @@ curl -X GET "https://gateway.local/v3/asset/1"
             "total": 300,
             "reserve": 300,
             "rebalance_threshold": 300,
-            "transfer_threshold": 300
+            "transfer_threshold": 300,
+            "min_withdraw_threshold": 100
         },
         "stable_param": {
             "price_update_threshold": 0.2,
@@ -222,7 +223,8 @@ curl -X GET "https://gateway.local/v3/asset"
                 "total": 300,
                 "reserve": 300,
                 "rebalance_threshold": 300,
-                "transfer_threshold": 300
+                "transfer_threshold": 300,
+                "min_withdraw_threshold": 100
             },
             "stable_param": {
                 "price_update_threshold": 0.2,
@@ -284,7 +286,8 @@ curl -X GET "https://gateway.local/v3/asset"
                 "total": 10,
                 "reserve": 6,
                 "rebalance_threshold": 0.33,
-                "transfer_threshold": 0.25
+                "transfer_threshold": 0.25,
+                "min_withdraw_threshold": 1.0
             },
             "stable_param": {
                 "price_update_threshold": 0,
