@@ -162,7 +162,7 @@ func (rc *ReserveCore) Trade(
 	id, done, remaining, finished, err := exchange.Trade(tradeType, pair, rate, amount)
 	uid := timebasedID(id)
 	if err != nil {
-		if sErr := recordActivity(id, common.ExchangeStatusFailed, done, remaining, finished, err); sErr != nil {
+		if sErr := recordActivity(id, common.ExchangeStatusFailed, done, remaining, true, err); sErr != nil {
 			rc.l.Warnw("failed to save activity record", "err", sErr)
 			return uid, done, remaining, finished, common.CombineActivityStorageErrs(err, sErr)
 		}

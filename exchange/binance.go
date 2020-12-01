@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
@@ -108,27 +107,10 @@ func (bn *Binance) QueryOrder(symbol string, id uint64) (done float64, remaining
 func (bn *Binance) Trade(tradeType string, pair commonv3.TradingPairSymbols, rate float64, amount float64) (id string, done float64, remaining float64, finished bool, err error) {
 	result, err := bn.interf.Trade(tradeType, pair, rate, amount)
 	if err != nil {
-		return "", 0, 0, false, err
-	}
-	for i := 0; i < 5; i++ { // sometime binance get trouble when query order info right after it created, so we
-		// add a retry to handle it here
-		done, remaining, finished, err = bn.QueryOrder(
-			pair.BaseSymbol+pair.QuoteSymbol,
-			result.OrderID,
-		)
-		if err == nil {
-			break
-		}
-		bn.l.Errorw("failed to query order info", "err", err, "i", i, "orderID",
-			result.OrderID, "base", pair.BaseSymbol, "quote", pair.QuoteSymbol)
-		if strings.Contains(err.Error(), "Order does not exist") { // only retry if got specified error
-			time.Sleep(time.Second)
-			continue
-		}
-		break
+		return "", 0, 0, true, err
 	}
 	id = strconv.FormatUint(result.OrderID, 10)
-	return id, done, remaining, finished, err
+	return id, 0, amount, false, err
 }
 
 // Withdraw create a withdrawal from binance to our reserve
