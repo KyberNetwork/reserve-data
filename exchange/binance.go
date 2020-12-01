@@ -161,9 +161,7 @@ func (bn *Binance) CancelAllOrders(symbol string) error {
 }
 
 // FetchOnePairData fetch price data for one pair of token
-func (bn *Binance) FetchOnePairData(wg *sync.WaitGroup, pair commonv3.TradingPairSymbols, timepoint uint64) common.ExchangePrice {
-
-	defer wg.Done()
+func (bn *Binance) FetchOnePairData(pair commonv3.TradingPairSymbols, timepoint uint64) common.ExchangePrice {
 	result := common.ExchangePrice{}
 
 	timestamp := common.Timestamp(fmt.Sprintf("%d", timepoint))
@@ -223,7 +221,7 @@ func (bn *Binance) FetchPriceData(timepoint uint64) (map[rtypes.TradingPairID]co
 		go func() {
 			defer wait.Done()
 			for pair := range jobs {
-				res := bn.FetchOnePairData(&wait, pair, timepoint)
+				res := bn.FetchOnePairData(pair, timepoint)
 				lock.Lock()
 				result[pair.ID] = res
 				lock.Unlock()
