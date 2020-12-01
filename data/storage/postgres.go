@@ -32,12 +32,12 @@ const (
 type fetchDataType int
 
 const (
-	priceDataType fetchDataType = iota // price
-	rateDataType                       // rate
-	authDataType                       // auth_data
-	goldDataType                       // gold
-	btcDataType                        // btc
-	usdDataType                        // usd
+	_            fetchDataType = iota // price
+	rateDataType                      // rate
+	authDataType                      // auth_data
+	goldDataType                      // gold
+	btcDataType                       // btc
+	usdDataType                       // usd
 )
 
 var (
@@ -85,24 +85,19 @@ func (ps *PostgresStorage) storeFetchData(data interface{}, timepoint uint64) er
 		return err
 	}
 	dataType := getDataType(data)
-	dataCompressed, err := zstd.CompressLevel(nil, dataJSON, 9)
-	if err != nil {
-		return err
-	}
-	if _, err := ps.db.Exec(query, timestamp, dataCompressed, dataType); err != nil {
+	if _, err := ps.db.Exec(query, timestamp, dataJSON, dataType); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (ps *PostgresStorage) storeOrderBookData(data interface{}, timepoint uint64) error {
+func (ps *PostgresStorage) storeOrderBookData(data common.AllPriceEntry, timepoint uint64) error {
 	query := `INSERT INTO order_book_data (created, data) VALUES ($1, $2)`
 	timestamp := common.MillisToTime(timepoint)
 	dataJSON, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
-
 	if _, err := ps.db.Exec(query, timestamp, dataJSON); err != nil {
 		return err
 	}
@@ -172,20 +167,23 @@ WHERE
 
 func (ps *PostgresStorage) getData(o interface{}, v common.Version) error {
 	var (
-		dataCompress []byte
-		logger       = ps.l.With("func", caller.GetCurrentFunctionName())
+		data   []byte
+		logger = ps.l.With("func", caller.GetCurrentFunctionName())
 	)
 	ts := common.MillisToTime(uint64(v))
 	dataType := getDataType(o)
 	query := fmt.Sprintf(`SELECT data FROM "%s" WHERE created = $1 AND type = $2`, fetchDataTable)
-	if err := ps.db.Get(&dataCompress, query, ts, dataType); err != nil {
+	if err := ps.db.Get(&data, query, ts, dataType); err != nil {
 		logger.Errorw("failed to get data from fetchData table", "error", err)
 		return err
 	}
-	data, err := zstd.Decompress(nil, dataCompress)
-	if err != nil {
-		logger.Errorw("failed to decompress data", "error", err)
-		return err
+	var err error
+	if isZSTDPayload(data) {
+		data, err = zstd.Decompress(nil, data)
+		if err != nil {
+			logger.Errorw("decompress error", "err", err)
+			return err
+		}
 	}
 	return json.Unmarshal(data, o)
 }
@@ -342,33 +340,42 @@ func (ps *PostgresStorage) GetRate(v common.Version) (common.AllRateEntry, error
 	err := ps.getData(&rate, v)
 	return rate, err
 }
+func isZSTDPayload(data []byte) bool {
+	// zstd magic prefix 0xFD2FB528
+	if len(data) > 4 && data[0] == 0x28 && data[1] == 0xB5 && data[2] == 0x2F && data[3] == 0xFD {
+		return true
+	}
+	return false
+}
 
 // GetRates return rate from time to time
 func (ps *PostgresStorage) GetRates(fromTime, toTime uint64) ([]common.AllRateEntry, error) {
 	var (
-		rates            []common.AllRateEntry
-		data             [][]byte
-		logger           = ps.l.With("func", caller.GetCallerFunctionName())
-		err              error
-		dataDecompressed []byte
+		rates   []common.AllRateEntry
+		allData [][]byte
+		logger  = ps.l.With("func", caller.GetCallerFunctionName())
 	)
 	query := fmt.Sprintf(`SELECT data FROM "%s" WHERE type = $1 AND created >= $2 AND created <= $3`, fetchDataTable)
 	from := common.MillisToTime(fromTime)
 	to := common.MillisToTime(toTime)
 
-	if err := ps.db.Select(&data, query, rateDataType, from, to); err != nil {
+	if err := ps.db.Select(&allData, query, rateDataType, from, to); err != nil {
 		logger.Errorw("failed to get rates from database", "error", err)
 		return nil, err
 	}
-
-	for _, dataCompress := range data {
-		dataDecompressed, err = zstd.Decompress(dataDecompressed, dataCompress)
-		if err != nil {
-			logger.Errorw("failed to decompress data", "error", err)
-			return nil, err
-		}
+	var err error
+	var buff []byte
+	for _, data := range allData {
 		var rate common.AllRateEntry
-		if err := json.Unmarshal(dataDecompressed, &rate); err != nil {
+		if isZSTDPayload(data) {
+			data, err = zstd.Decompress(buff, data)
+			if err != nil {
+				logger.Errorw("decompress error", "err", err)
+				return nil, err
+			}
+			buff = data // keep buff refer to recent decompressed buffer as it can reuse for next time
+		}
+		if err := json.Unmarshal(data, &rate); err != nil {
 			logger.Errorw("failed to unmarshal rates", "error", err)
 			return nil, err
 		}

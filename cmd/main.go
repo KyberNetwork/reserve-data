@@ -200,6 +200,10 @@ func schedulePartition(store *postgres.Storage) error {
 	if err != nil {
 		return err
 	}
+	if ex := store.PrepareOrderBookTablePartition(); ex != nil {
+		zap.S().Fatalw("failed to prepare order book partition", "err", err)
+		return err
+	}
 	mc := cron.New()
 	err = mc.AddFunc("0 0 * * *", func() { // check everyday is good enough
 		if ex := store.MakeFetchDataTablePartition(); ex != nil {
