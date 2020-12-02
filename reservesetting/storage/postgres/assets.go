@@ -52,10 +52,11 @@ type createAssetParams struct {
 	RebalancePriceQuadraticB *float64 `db:"rebalance_price_quadratic_b"`
 	RebalancePriceQuadraticC *float64 `db:"rebalance_price_quadratic_c"`
 
-	TargetTotal              *float64 `db:"target_total"`
-	TargetReserve            *float64 `db:"target_reserve"`
-	TargetRebalanceThreshold *float64 `db:"target_rebalance_threshold"`
-	TargetTransferThreshold  *float64 `db:"target_transfer_threshold"`
+	TargetTotal                *float64 `db:"target_total"`
+	TargetReserve              *float64 `db:"target_reserve"`
+	TargetRebalanceThreshold   *float64 `db:"target_rebalance_threshold"`
+	TargetTransferThreshold    *float64 `db:"target_transfer_threshold"`
+	TargetMinWithdrawThreshold *float64 `db:"target_min_withdraw_threshold"`
 
 	PriceUpdateThreshold float64 `db:"stable_param_price_update_threshold"`
 	AskSpread            float64 `db:"stable_param_ask_spread"`
@@ -358,6 +359,7 @@ func (s *Storage) createAsset(tx *sqlx.Tx,
 		arg.TargetReserve = &target.Reserve
 		arg.TargetRebalanceThreshold = &target.RebalanceThreshold
 		arg.TargetTransferThreshold = &target.TransferThreshold
+		arg.TargetMinWithdrawThreshold = &target.MinWithdrawThreshold
 	}
 
 	if stableParam != nil {
@@ -606,10 +608,11 @@ type assetDB struct {
 	RebalancePriceQuadraticB *float64 `db:"rebalance_price_quadratic_b"`
 	RebalancePriceQuadraticC *float64 `db:"rebalance_price_quadratic_c"`
 
-	TargetTotal              *float64 `db:"target_total"`
-	TargetReserve            *float64 `db:"target_reserve"`
-	TargetRebalanceThreshold *float64 `db:"target_rebalance_threshold"`
-	TargetTransferThreshold  *float64 `db:"target_transfer_threshold"`
+	TargetTotal                *float64 `db:"target_total"`
+	TargetReserve              *float64 `db:"target_reserve"`
+	TargetRebalanceThreshold   *float64 `db:"target_rebalance_threshold"`
+	TargetTransferThreshold    *float64 `db:"target_transfer_threshold"`
+	TargetMinWithdrawThreshold *float64 `db:"target_min_withdraw_threshold"`
 
 	PriceUpdateThreshold float64 `db:"stable_param_price_update_threshold"`
 	AskSpread            float64 `db:"stable_param_ask_spread"`
@@ -704,12 +707,13 @@ func (adb *assetDB) ToCommon() (common.Asset, error) {
 	if adb.TargetTotal != nil &&
 		adb.TargetReserve != nil &&
 		adb.TargetRebalanceThreshold != nil &&
-		adb.TargetTransferThreshold != nil {
+		adb.TargetTransferThreshold != nil && adb.TargetMinWithdrawThreshold != nil {
 		result.Target = &common.AssetTarget{
-			Total:              *adb.TargetTotal,
-			Reserve:            *adb.TargetReserve,
-			RebalanceThreshold: *adb.TargetRebalanceThreshold,
-			TransferThreshold:  *adb.TargetTransferThreshold,
+			Total:                *adb.TargetTotal,
+			Reserve:              *adb.TargetReserve,
+			RebalanceThreshold:   *adb.TargetRebalanceThreshold,
+			TransferThreshold:    *adb.TargetTransferThreshold,
+			MinWithdrawThreshold: *adb.TargetMinWithdrawThreshold,
 		}
 	}
 	result.StableParam = common.StableParam{
@@ -944,10 +948,11 @@ type updateAssetParam struct {
 	RebalancePriceQuadraticB *float64 `db:"rebalance_price_quadratic_b"`
 	RebalancePriceQuadraticC *float64 `db:"rebalance_price_quadratic_c"`
 
-	TargetTotal              *float64 `db:"target_total"`
-	TargetReserve            *float64 `db:"target_reserve"`
-	TargetRebalanceThreshold *float64 `db:"target_rebalance_threshold"`
-	TargetTransferThreshold  *float64 `db:"target_transfer_threshold"`
+	TargetTotal                *float64 `db:"target_total"`
+	TargetReserve              *float64 `db:"target_reserve"`
+	TargetRebalanceThreshold   *float64 `db:"target_rebalance_threshold"`
+	TargetTransferThreshold    *float64 `db:"target_transfer_threshold"`
+	TargetMinWithdrawThreshold *float64 `db:"target_min_withdraw_threshold"`
 
 	PriceUpdateThreshold  *float64 `db:"stable_param_price_update_threshold"`
 	AskSpread             *float64 `db:"stable_param_ask_spread"`
@@ -1058,6 +1063,7 @@ func (s *Storage) updateAsset(tx *sqlx.Tx, id rtypes.AssetID, uo storage.UpdateA
 		arg.TargetReserve = &target.Reserve
 		arg.TargetRebalanceThreshold = &target.RebalanceThreshold
 		arg.TargetTransferThreshold = &target.TransferThreshold
+		arg.TargetMinWithdrawThreshold = &target.MinWithdrawThreshold
 		updateMsgs = append(updateMsgs, fmt.Sprintf("target=%+v", target))
 	}
 
