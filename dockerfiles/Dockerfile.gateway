@@ -1,8 +1,8 @@
 FROM golang:1.16 AS build-env
-
+ARG COMMIT
 COPY . /reserve-data
 WORKDIR /reserve-data/gateway/cmd
-RUN go build -v -o /gateway
+RUN go build -v -o /gateway -ldflags "-X github.com/KyberNetwork/reserve-data/common.AppVersion=`date -u +%Y%m%d.%H%M%S`_${COMMIT}"
 
 FROM debian:stretch
 COPY --from=build-env /gateway /

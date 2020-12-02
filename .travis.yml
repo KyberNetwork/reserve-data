@@ -36,9 +36,9 @@ script:
 
 after_success:
   - docker --version
-  - docker build -f Dockerfile.next --label "commit=$TRAVIS_COMMIT" -t kybernetwork/reserve-data:$TRAVIS_COMMIT .
-  - docker build -f dockerfiles/Dockerfile.gateway --label "commit=$TRAVIS_COMMIT" -t kybernetwork/reserve-data-gateway:$TRAVIS_COMMIT .
-  - docker build -f dockerfiles/Dockerfile.setting --label "commit=$TRAVIS_COMMIT" -t kybernetwork/reserve-data-setting:$TRAVIS_COMMIT .
+  - docker build -f Dockerfile.next --build-arg COMMIT=$TRAVIS_COMMIT --label "commit=$TRAVIS_COMMIT" -t kybernetwork/reserve-data:$TRAVIS_COMMIT .
+  - docker build -f dockerfiles/Dockerfile.gateway --build-arg COMMIT=$TRAVIS_COMMIT --label "commit=$TRAVIS_COMMIT" -t kybernetwork/reserve-data-gateway:$TRAVIS_COMMIT .
+  - docker build -f dockerfiles/Dockerfile.setting --build-arg COMMIT=$TRAVIS_COMMIT --label "commit=$TRAVIS_COMMIT" -t kybernetwork/reserve-data-setting:$TRAVIS_COMMIT .
 
 deploy:
   - provider: script
