@@ -80,7 +80,7 @@ func NewStorage(db *sqlx.DB) (*Storage, error) {
 
 	assets, err := s.GetAssets()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get existing exchanges")
+		return nil, fmt.Errorf("failed to get existing assets - %w", err)
 	}
 
 	if err = s.initExchanges(); err != nil {

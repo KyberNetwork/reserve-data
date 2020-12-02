@@ -58,7 +58,8 @@ curl -X POST "https://gateway.local/v3/setting-change-main" \
                 "total": 70000,
                 "reserve": 48000,
                 "rebalance_threshold": 0.33,
-                "transfer_threshold": 0.25
+                "transfer_threshold": 0.25,
+                "min_withdraw_threshold": 1.0
             },
             "stable_param": {
                 "price_update_threshold": 0.2,
