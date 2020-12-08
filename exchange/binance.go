@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
@@ -22,7 +21,6 @@ import (
 
 const (
 	binanceEpsilon float64 = 0.0000001 // 10e-7
-	batchSize      int     = 4
 )
 
 // Binance instance for binance exchange
@@ -109,27 +107,10 @@ func (bn *Binance) QueryOrder(symbol string, id uint64) (done float64, remaining
 func (bn *Binance) Trade(tradeType string, pair commonv3.TradingPairSymbols, rate float64, amount float64) (id string, done float64, remaining float64, finished bool, err error) {
 	result, err := bn.interf.Trade(tradeType, pair, rate, amount)
 	if err != nil {
-		return "", 0, 0, false, err
-	}
-	for i := 0; i < 5; i++ { // sometime binance get trouble when query order info right after it created, so we
-		// add a retry to handle it here
-		done, remaining, finished, err = bn.QueryOrder(
-			pair.BaseSymbol+pair.QuoteSymbol,
-			result.OrderID,
-		)
-		if err == nil {
-			break
-		}
-		bn.l.Errorw("failed to query order info", "err", err, "i", i, "orderID",
-			result.OrderID, "base", pair.BaseSymbol, "quote", pair.QuoteSymbol)
-		if strings.Contains(err.Error(), "Order does not exist") { // only retry if got specified error
-			time.Sleep(time.Second)
-			continue
-		}
-		break
+		return "", 0, 0, true, err
 	}
 	id = strconv.FormatUint(result.OrderID, 10)
-	return id, done, remaining, finished, err
+	return id, 0, amount, false, err
 }
 
 // Withdraw create a withdrawal from binance to our reserve
@@ -162,13 +143,7 @@ func (bn *Binance) CancelAllOrders(symbol string) error {
 }
 
 // FetchOnePairData fetch price data for one pair of token
-func (bn *Binance) FetchOnePairData(
-	wg *sync.WaitGroup,
-	pair commonv3.TradingPairSymbols,
-	data *sync.Map,
-	timepoint uint64) {
-
-	defer wg.Done()
+func (bn *Binance) FetchOnePairData(pair commonv3.TradingPairSymbols, timepoint uint64) common.ExchangePrice {
 	result := common.ExchangePrice{}
 
 	timestamp := common.Timestamp(fmt.Sprintf("%d", timepoint))
@@ -180,71 +155,62 @@ func (bn *Binance) FetchOnePairData(
 	if err != nil {
 		result.Valid = false
 		result.Error = err.Error()
-	} else {
-		if respData.Code != 0 || respData.Msg != "" {
-			result.Valid = false
-			result.Error = fmt.Sprintf("Code: %d, Msg: %s", respData.Code, respData.Msg)
-		} else {
-			for _, buy := range respData.Bids {
-				result.Bids = append(
-					result.Bids,
-					common.NewPriceEntry(
-						buy.Quantity,
-						buy.Rate,
-					),
-				)
-			}
-			for _, sell := range respData.Asks {
-				result.Asks = append(
-					result.Asks,
-					common.NewPriceEntry(
-						sell.Quantity,
-						sell.Rate,
-					),
-				)
-			}
-		}
+		return result
 	}
-	data.Store(pair.ID, result)
+	if respData.Code != 0 || respData.Msg != "" {
+		result.Valid = false
+		result.Error = fmt.Sprintf("Code: %d, Msg: %s", respData.Code, respData.Msg)
+		return result
+	}
+	for _, buy := range respData.Bids {
+		result.Bids = append(
+			result.Bids,
+			common.NewPriceEntry(
+				buy.Quantity,
+				buy.Rate,
+			),
+		)
+	}
+	for _, sell := range respData.Asks {
+		result.Asks = append(
+			result.Asks,
+			common.NewPriceEntry(
+				sell.Quantity,
+				sell.Rate,
+			),
+		)
+	}
+	return result
 }
 
 // FetchPriceData fetch price data for all token that we supported
 func (bn *Binance) FetchPriceData(timepoint uint64) (map[rtypes.TradingPairID]common.ExchangePrice, error) {
 	wait := sync.WaitGroup{}
-	data := sync.Map{}
+	result := map[rtypes.TradingPairID]common.ExchangePrice{}
+	var lock sync.Mutex
 	pairs, err := bn.TokenPairs()
 	if err != nil {
 		return nil, err
 	}
-	var (
-		i int
-		x int
-	)
-	for i < len(pairs) {
-		for x = i; x < len(pairs) && x < i+batchSize; x++ {
-			wait.Add(1)
-			pair := pairs[x]
-			go bn.FetchOnePairData(&wait, pair, &data, timepoint)
-		}
-		wait.Wait()
-		i = x
+	jobs := make(chan commonv3.TradingPairSymbols, len(pairs))
+	for _, p := range pairs {
+		jobs <- p
 	}
-	result := map[rtypes.TradingPairID]common.ExchangePrice{}
-	data.Range(func(key, value interface{}) bool {
-		//if there is conversion error, continue to next key,val
-		tokenPairID, ok := key.(rtypes.TradingPairID)
-		if !ok {
-			err = fmt.Errorf("key (%v) cannot be asserted to TokenPairID", key)
-			return false
-		}
-		exPrice, ok := value.(common.ExchangePrice)
-		if !ok {
-			err = fmt.Errorf("value (%v) cannot be asserted to ExchangePrice", value)
-			return false
-		}
-		result[tokenPairID] = exPrice
-		return true
-	})
+	close(jobs)
+	const concurrentFactor = 8
+	wait.Add(concurrentFactor)
+	for i := 0; i < concurrentFactor; i++ {
+		go func() {
+			defer wait.Done()
+			for pair := range jobs {
+				res := bn.FetchOnePairData(pair, timepoint)
+				lock.Lock()
+				result[pair.ID] = res
+				lock.Unlock()
+			}
+		}()
+	}
+	wait.Wait()
 	return result, err
 }
 
@@ -341,31 +307,34 @@ func (bn *Binance) FetchTradeHistory() {
 		return
 	}
 	var (
-		result        = common.ExchangeTradeHistory{}
-		guard         = &sync.Mutex{}
-		wait          = &sync.WaitGroup{}
-		batchStart, x int
+		result = common.ExchangeTradeHistory{}
+		lock   = &sync.Mutex{}
+		wg     sync.WaitGroup
 	)
-
-	for batchStart < len(pairs) {
-		for x = batchStart; x < len(pairs) && x < batchStart+batchSize; x++ {
-			wait.Add(1)
-			go func(pair commonv3.TradingPairSymbols) {
-				defer wait.Done()
+	jobs := make(chan commonv3.TradingPairSymbols, len(pairs))
+	for _, p := range pairs {
+		jobs <- p
+	}
+	close(jobs)
+	const concurrentFactor = 4
+	wg.Add(concurrentFactor)
+	for i := 0; i < concurrentFactor; i++ {
+		go func() {
+			defer wg.Done()
+			for pair := range jobs { // process until jobs empty
 				histories, err := bn.FetchOnePairTradeHistory(pair)
 				if err != nil {
 					bn.l.Warnw("Cannot fetch data for pair",
 						"pair", fmt.Sprintf("%s%s", pair.BaseSymbol, pair.QuoteSymbol), "err", err)
 					return
 				}
-				guard.Lock()
+				lock.Lock()
 				result[pair.ID] = histories
-				guard.Unlock()
-			}(pairs[x])
-		}
-		batchStart = x
-		wait.Wait()
+				lock.Unlock()
+			}
+		}()
 	}
+	wg.Wait()
 
 	if err := bn.storage.StoreTradeHistory(result); err != nil {
 		bn.l.Warnw("Binance Store trade history error", "err", err)
@@ -383,19 +352,21 @@ func (bn *Binance) DepositStatus(id common.ActivityID, txHash string, assetID rt
 	endTime := timepoint
 	deposits, err := bn.interf.DepositHistory(startTime, endTime)
 	if err != nil || !deposits.Success {
-		return "", err
+		return common.ExchangeStatusNA, err
 	}
 	for _, deposit := range deposits.Deposits {
 		if deposit.TxID == txHash {
 			if deposit.Status == 1 {
 				return common.ExchangeStatusDone, nil
 			}
-			return "", nil
+			bn.l.Debugw("got binance deposit status", "status", deposit.Status,
+				"deposit_tx", deposit.TxID, "tx_hash", txHash)
+			return common.ExchangeStatusNA, nil
 		}
 	}
 	bn.l.Warnw("Binance Deposit is not found in deposit list returned from Binance. " +
 		"This might cause by wrong start/end time, please check again.")
-	return "", nil
+	return common.ExchangeStatusNA, nil
 }
 
 const (
@@ -418,7 +389,7 @@ func (bn *Binance) WithdrawStatus(id string, assetID rtypes.AssetID, amount floa
 	endTime := timepoint
 	withdraws, err := bn.interf.WithdrawHistory(startTime, endTime)
 	if err != nil || !withdraws.Success {
-		return "", "", 0, err
+		return common.ExchangeStatusNA, "", 0, err
 	}
 	for _, withdraw := range withdraws.Withdrawals {
 		if withdraw.ID == id {
@@ -430,25 +401,29 @@ func (bn *Binance) WithdrawStatus(id string, assetID rtypes.AssetID, amount floa
 			case binanceCancelled: // 1 = cancelled
 				return common.ExchangeStatusCancelled, withdraw.TxID, withdraw.Fee, nil
 			case binanceAwaitingApproval, binanceProcessing: // no action, just leave it as pending
+				return common.ExchangeStatusPending, withdraw.TxID, withdraw.Fee, nil
+			default:
+				bn.l.Errorw("got unexpected withdraw status", "status", withdraw.Status,
+					"withdrawID", id, "assetID", assetID, "amount", amount)
+				return common.ExchangeStatusNA, withdraw.TxID, withdraw.Fee, nil
 			}
-			return "", withdraw.TxID, withdraw.Fee, nil
 		}
 	}
 	bn.l.Warnw("Binance Withdrawal doesn't exist. This shouldn't happen unless tx returned from withdrawal from binance and activity ID are not consistently designed",
 		"id", id, "asset_id", assetID, "amount", amount, "timepoint", timepoint)
-	return "", "", 0, nil
+	return common.ExchangeStatusNA, "", 0, nil
 }
 
 // OrderStatus return status of an order on binance
 func (bn *Binance) OrderStatus(id, base, quote string) (string, float64, error) {
 	orderID, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
-		return "", 0, fmt.Errorf("can not parse orderID (val %s) to uint", id)
+		return common.ExchangeStatusNA, 0, fmt.Errorf("can not parse orderID (val %s) to uint", id)
 	}
 	symbol := base + quote
 	order, err := bn.interf.OrderStatus(symbol, orderID)
 	if err != nil {
-		return "", 0, err
+		return common.ExchangeStatusNA, 0, err
 	}
 	qtyLeft, err := remainingQty(order.OrigQty, order.ExecutedQty)
 	if err != nil {
@@ -458,7 +433,7 @@ func (bn *Binance) OrderStatus(id, base, quote string) (string, float64, error) 
 	case "CANCELED":
 		return common.ExchangeStatusCancelled, qtyLeft, nil
 	case "NEW", "PARTIALLY_FILLED", "PENDING_CANCEL":
-		return "", qtyLeft, nil
+		return common.ExchangeStatusPending, qtyLeft, nil
 	default:
 		return common.ExchangeStatusDone, qtyLeft, nil
 	}

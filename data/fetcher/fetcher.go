@@ -231,7 +231,7 @@ func (f *Fetcher) FetchAllAuthData(timepoint uint64) {
 				speedDeposit++
 				newGas, err := f.reserveCore.SpeedupDeposit(av)
 				if err != nil {
-					f.l.Errorw("sending speed up tx failed", "err", err, "tx", av.Result.Tx)
+					f.l.Infow("sending speed up tx failed", "err", err, "tx", av.Result.Tx)
 					continue
 				}
 				f.l.Infow("speed up deposit", "tx", av.Result.Tx, "new_gas", newGas.String())
@@ -375,7 +375,11 @@ func (f *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord) (m
 	nonceValidator := f.newNonceValidator()
 
 	for _, activity := range pendings {
-		if activity.IsBlockchainPending() && (activity.Action == common.ActionSetRate || activity.Action == common.ActionDeposit || activity.Action == common.ActionWithdraw || activity.Action == common.ActionCancelSetRate) {
+		if activity.IsBlockchainPending() &&
+			(activity.Action == common.ActionSetRate ||
+				activity.Action == common.ActionDeposit ||
+				activity.Action == common.ActionWithdraw ||
+				activity.Action == common.ActionCancelSetRate) {
 			var (
 				blockNum uint64
 				status   string
@@ -423,6 +427,7 @@ func (f *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord) (m
 				if nonceValidator(activity) {
 					txFailed = true
 					isOverride = true
+					f.l.Debugw("nonce expired", "activity", activity.ID.EID, "tx", activity.Result.Tx)
 				} else if activity.Action != common.ActionDeposit {
 					elapsed := common.NowInMillis() - activity.Timestamp.Millis()
 					if elapsed > uint64(expiredDuration) {
@@ -513,6 +518,9 @@ func (f *Fetcher) updateActivityWithExchangeStatus(record *common.ActivityRecord
 	}
 
 	if record.Result.Tx == "" { // for a withdraw, we set tx into result tx(that is when cex process request and return tx id so we can monitor), deposit should already has tx when created.
+		record.Result.Tx = sts.Tx
+	} else if record.Result.Tx != sts.Tx && sts.Tx != "" {
+		f.l.Infow("activity tx replaced", "activity", record.ID, "tx", record.Result.Tx, "new_tx", sts.Tx)
 		record.Result.Tx = sts.Tx
 	}
 	record.Result.Remaining = sts.OrderExecutedRemaining
@@ -704,12 +712,12 @@ func (f *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []common.A
 				f.l.Debugw("order status", "orderID", orderID, "base", base,
 					"quote", quote, "status", status, "remain", remain, "err", ordErr)
 			case common.ActionDeposit:
-				txHash := activity.Result.Tx
+				tx = activity.Result.Tx
 				amount := activity.Params.Amount
 				assetID := activity.Params.Asset
 
-				status, err = exchange.DepositStatus(id, txHash, assetID, amount, timepoint)
-				f.l.Debugw("deposit status", "tx", txHash, "activity", activity, "status", status, "err", err)
+				status, err = exchange.DepositStatus(id, tx, assetID, amount, timepoint)
+				f.l.Debugw("deposit status", "tx", tx, "activity", activity, "status", status, "err", err)
 			case common.ActionWithdraw:
 				amount := activity.Params.Amount
 				assetID := activity.Params.Asset
@@ -799,7 +807,7 @@ func (f *Fetcher) fetchPriceFromExchange(wg *sync.WaitGroup, exchange Exchange, 
 func (f *Fetcher) RunFetchExchangeHistory() {
 	for ; ; <-f.runner.GetExchangeHistoryTicker() {
 		f.l.Debugf("got signal in orderbook channel with exchange-history")
-		f.fetchExchangeTradeHistory()
+		f.fetchExchangeTradeHistory() // disable crawl trade history,
 		f.l.Debug("fetched data from exchanges")
 	}
 }

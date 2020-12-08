@@ -78,10 +78,11 @@ type AssetExchange struct {
 
 // AssetTarget is the target setting of an asset.
 type AssetTarget struct {
-	Total              float64 `json:"total"`
-	Reserve            float64 `json:"reserve"`
-	RebalanceThreshold float64 `json:"rebalance_threshold"`
-	TransferThreshold  float64 `json:"transfer_threshold"`
+	Total                float64 `json:"total"`
+	Reserve              float64 `json:"reserve"`
+	RebalanceThreshold   float64 `json:"rebalance_threshold"`
+	TransferThreshold    float64 `json:"transfer_threshold"`
+	MinWithdrawThreshold float64 `json:"min_withdraw_threshold"`
 }
 
 // PWIEquation is a PWI equation. An asset will have 2 PWI equation: ask and bid.
@@ -153,6 +154,8 @@ type Asset struct {
 	NormalUpdatePerPeriod float64             `json:"normal_update_per_period"`
 	MaxImbalanceRatio     float64             `json:"max_imbalance_ratio"`
 	OrderDurationMillis   uint64              `json:"order_duration_millis"`
+	PriceETHAmount        float64             `json:"price_eth_amount"`
+	ExchangeETHAmount     float64             `json:"exchange_eth_amount"`
 }
 
 // TODO: write custom marshal json for created/updated fields
@@ -204,6 +207,8 @@ type CreateAssetEntry struct {
 	NormalUpdatePerPeriod float64             `json:"normal_update_per_period"`
 	MaxImbalanceRatio     float64             `json:"max_imbalance_ratio"`
 	OrderDurationMillis   uint64              `json:"order_duration_millis"`
+	PriceETHAmount        float64             `json:"price_eth_amount"`
+	ExchangeETHAmount     float64             `json:"exchange_eth_amount"`
 }
 
 // UpdateAssetEntry entry object for update asset
@@ -227,6 +232,8 @@ type UpdateAssetEntry struct {
 	NormalUpdatePerPeriod *float64            `json:"normal_update_per_period"`
 	MaxImbalanceRatio     *float64            `json:"max_imbalance_ratio"`
 	OrderDurationMillis   *uint64             `json:"order_duration_millis"`
+	PriceETHAmount        *float64            `json:"price_eth_amount"`
+	ExchangeETHAmount     *float64            `json:"exchange_eth_amount"`
 }
 
 type UpdateExchangeEntry struct {

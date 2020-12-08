@@ -1,7 +1,7 @@
 language: go
 
 go:
-  - "1.13.x"
+  - "1.15.x"
 
 services:
   - docker
@@ -12,9 +12,9 @@ addons:
 
 env:
   global:
-    - GOLANGCI_LINT_VERSION=1.21.0
+    - GOLANGCI_LINT_VERSION=1.23.6
     - GO111MODULE=on
-    - GOFLAGS=-mod=vendor
+    - GOFLAGS=
 
 install:
   - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b ${TRAVIS_HOME}/bin v${GOLANGCI_LINT_VERSION}

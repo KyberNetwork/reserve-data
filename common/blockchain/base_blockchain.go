@@ -366,6 +366,7 @@ func (b *BaseBlockchain) TxStatus(hash ethereum.Hash) (string, uint64, error) {
 	tx, pending, err := b.TransactionByHash(option, hash)
 	if err != nil {
 		if err == ether.NotFound {
+			logger.Warnw("tx is lost", "error", err)
 			// tx doesn't exist. it failed
 			return common.MiningStatusLost, 0, nil
 		}

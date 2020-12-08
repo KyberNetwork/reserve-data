@@ -478,14 +478,14 @@ func (h *Huobi) exchangeDepositStatus(id common.ActivityID, tx2Entry common.TXEn
 	assets, err := h.sr.GetAssets()
 	if err != nil {
 		h.l.Warnw("Huobi ERROR: Can not get list of assets from setting", "err", err)
-		return "", err
+		return common.ExchangeStatusNA, err
 	}
 
 	// make sure the size is enough for storing all deposit history
 	deposits, err := h.interf.DepositHistory(len(assets) * 2)
 	if err != nil || deposits.Status != "ok" {
 		h.l.Warnw("Huobi Getting deposit history from huobi failed", "err", err, "status", deposits)
-		return "", nil
+		return common.ExchangeStatusNA, nil
 	}
 	//check tx2 deposit status from Huobi
 	for _, deposit := range deposits.Data {
@@ -498,31 +498,31 @@ func (h *Huobi) exchangeDepositStatus(id common.ActivityID, tx2Entry common.TXEn
 				data := common.NewTXEntry(tx2Entry.Hash,
 					h.ID().String(),
 					assetID,
-					"mined",
-					exchangeStatusDone,
+					common.MiningStatusMined,
+					common.ExchangeStatusDone,
 					sentAmount,
 					common.GetTimestamp(),
 				)
 				if err = h.storage.StoreIntermediateTx(id, data); err != nil {
 					h.l.Warnw("Huobi Trying to store intermediate tx to huobi storage. Ignore it and try later", "err", err)
-					return "", nil
+					return common.ExchangeStatusNA, nil
 				}
-				return exchangeStatusDone, nil
+				return common.ExchangeStatusDone, nil
 			}
 			//TODO : handle other states following https://github.com/huobiapi/API_Docs_en/wiki/REST_Reference#deposit-states
 			h.l.Infof("Huobi Tx %s is found but the status was not safe but %s", deposit.TxHash, deposit.State)
-			return "", nil
+			return common.ExchangeStatusNA, nil
 		}
 	}
 	h.l.Infof("Huobi Deposit doesn't exist. Huobi hasn't recognized the deposit yet or in theory, you have more than %d deposits at the same time.", len(assets)*2)
-	return "", nil
+	return common.ExchangeStatusNA, nil
 }
 
 func (h *Huobi) process1stTx(id common.ActivityID, tx1Hash string, assetID rtypes.AssetID, sentAmount float64) (string, error) {
 	status, blockno, err := h.blockchain.TxStatus(ethereum.HexToHash(tx1Hash))
 	if err != nil {
 		h.l.Warnw("Huobi Can not get TX status", "err", err, "tx", tx1Hash)
-		return "", nil
+		return common.ExchangeStatusNA, nil
 	}
 	h.l.Infof("Huobi Status for Tx1 was %s at block %d ", status, blockno)
 	if status == common.MiningStatusMined {
@@ -532,7 +532,7 @@ func (h *Huobi) process1stTx(id common.ActivityID, tx1Hash string, assetID rtype
 		//check if the asset is supported, the asset can be active or inactivee
 		asset, err := h.sr.GetAsset(assetID)
 		if err != nil {
-			return "", err
+			return common.ExchangeStatusNA, err
 		}
 
 		var exhSymbol string
@@ -544,12 +544,12 @@ func (h *Huobi) process1stTx(id common.ActivityID, tx1Hash string, assetID rtype
 
 		exchangeAddress, err := h.RealDepositAddress(exhSymbol, asset)
 		if err != nil {
-			return "", err
+			return common.ExchangeStatusNA, err
 		}
 		tx2, err := h.Send2ndTransaction(sentAmount, asset, exchangeAddress)
 		if err != nil {
 			h.l.Infow("Huobi Trying to send 2nd tx failed, error, will retry next time", "err", err)
-			return "", nil
+			return common.ExchangeStatusNA, nil
 		}
 		//store tx2 to pendingIntermediateTx
 		data := common.NewTXEntry(
@@ -557,7 +557,7 @@ func (h *Huobi) process1stTx(id common.ActivityID, tx1Hash string, assetID rtype
 			h.ID().String(),
 			assetID,
 			common.MiningStatusSubmitted,
-			"",
+			common.ExchangeStatusNA,
 			sentAmount,
 			common.GetTimestamp(),
 		)
@@ -565,10 +565,10 @@ func (h *Huobi) process1stTx(id common.ActivityID, tx1Hash string, assetID rtype
 			h.l.Warnw("Trying to store 2nd tx to pending tx storage failed, error: %s. It will be ignored and "+
 				"can make us to send to huobi again and the deposit will be marked as failed because the fund is not efficient", "err", err)
 		}
-		return "", nil
+		return common.ExchangeStatusNA, nil
 	}
 	//No need to handle other blockchain status of TX1 here, since Fetcher will handle it from blockchain Status.
-	return "", nil
+	return common.ExchangeStatusNA, nil
 }
 
 // DepositStatus return status of a deposit
@@ -589,7 +589,7 @@ func (h *Huobi) DepositStatus(id common.ActivityID, tx1Hash string, assetID rtyp
 	// if there is tx2Entry, check it blockchain status and handle the status accordingly:
 	miningStatus, _, err := h.blockchain.TxStatus(ethereum.HexToHash(tx2Entry.Hash))
 	if err != nil {
-		return "", err
+		return common.ExchangeStatusNA, err
 	}
 	switch miningStatus {
 	case common.MiningStatusMined:
@@ -599,14 +599,14 @@ func (h *Huobi) DepositStatus(id common.ActivityID, tx1Hash string, assetID rtyp
 			h.ID().String(),
 			assetID,
 			common.MiningStatusMined,
-			"",
+			common.ExchangeStatusNA,
 			sentAmount,
 			common.GetTimestamp())
 		// as auth data will call DepositStatus more than 1 time, store pending tx can be call multiple times,
 		// so we handle it as on conflict update ...
 		if uErr := h.storage.StorePendingIntermediateTx(id, data); uErr != nil {
 			h.l.Warnw("Huobi Trying to store intermediate tx to huobi storage, error. Ignore it and try later", "err", uErr)
-			return "", nil
+			return common.ExchangeStatusNA, nil
 		}
 		return h.exchangeDepositStatus(id, tx2Entry, assetID, sentAmount)
 	case common.MiningStatusFailed:
@@ -621,7 +621,7 @@ func (h *Huobi) DepositStatus(id common.ActivityID, tx1Hash string, assetID rtyp
 		)
 		if err = h.storage.StoreIntermediateTx(id, data); err != nil {
 			h.l.Warnw("Huobi Trying to store intermediate tx failed. Ignore it and treat it like it is still pending", "err", err)
-			return "", nil
+			return common.ExchangeStatusNA, nil
 		}
 		return common.ExchangeStatusFailed, nil
 	case common.MiningStatusLost:
@@ -638,14 +638,14 @@ func (h *Huobi) DepositStatus(id common.ActivityID, tx1Hash string, assetID rtyp
 			)
 			if err = h.storage.StoreIntermediateTx(id, data); err != nil {
 				h.l.Warnw("Huobi Trying to store intermediate tx failed. Ignore it and treat it like it is still pending", "err", err)
-				return "", nil
+				return common.ExchangeStatusNA, nil
 			}
 			h.l.Infof("Huobi The tx is not found for over 15mins, it is considered as lost and the deposit failed")
 			return common.ExchangeStatusFailed, nil
 		}
-		return "", nil
+		return common.ExchangeStatusNA, nil
 	}
-	return "", nil
+	return common.ExchangeStatusNA, nil
 }
 
 //WithdrawStatus return withdraw status from huobi
@@ -654,12 +654,12 @@ func (h *Huobi) WithdrawStatus(
 	withdrawID, _ := strconv.ParseUint(id, 10, 64)
 	assets, err := h.sr.GetAssets()
 	if err != nil {
-		return "", "", 0, fmt.Errorf("huobi Can't get list of assets from setting (%s)", err)
+		return common.ExchangeStatusNA, "", 0, fmt.Errorf("huobi Can't get list of assets from setting (%s)", err)
 	}
 	// make sure the size is enough for storing all huobi withdrawal history
 	withdraws, err := h.interf.WithdrawHistory(len(assets) * 2)
 	if err != nil {
-		return "", "", 0, fmt.Errorf("can't get withdraw history from huobi: %s", err.Error())
+		return common.ExchangeStatusNA, "", 0, fmt.Errorf("can't get withdraw history from huobi: %s", err.Error())
 	}
 	h.l.Infof("Huobi Withdrawal id: %d", withdrawID)
 	for _, withdraw := range withdraws.Data {
@@ -674,22 +674,23 @@ func (h *Huobi) WithdrawStatus(
 			return common.ExchangeStatusDone, withdraw.TxHash, withdraw.Fee, nil
 		case "reject", "wallet-reject", "confirm-error":
 			return common.ExchangeStatusFailed, "", withdraw.Fee, nil
+		default:
+			return common.ExchangeStatusPending, withdraw.TxHash, withdraw.Fee, nil
 		}
-		return "", withdraw.TxHash, withdraw.Fee, nil
 	}
-	return "", "", 0, errors.New("huobi Withdrawal doesn't exist. This shouldn't happen unless tx returned from withdrawal from huobi and activity ID are not consistently designed")
+	return common.ExchangeStatusNA, "", 0, errors.New("huobi Withdrawal doesn't exist. This shouldn't happen unless tx returned from withdrawal from huobi and activity ID are not consistently designed")
 }
 
 // OrderStatus return order status from Huobi
 func (h *Huobi) OrderStatus(id, base, quote string) (string, float64, error) {
 	orderID, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
-		return "", 0, err
+		return common.ExchangeStatusNA, 0, err
 	}
 	symbol := base + quote
 	order, err := h.interf.OrderStatus(symbol, orderID)
 	if err != nil {
-		return "", 0, err
+		return common.ExchangeStatusNA, 0, err
 	}
 	qtyLeft, err := remainingQty(order.Data.OrigQty, order.Data.ExecutedQty)
 	if err != nil {
@@ -699,7 +700,7 @@ func (h *Huobi) OrderStatus(id, base, quote string) (string, float64, error) {
 	case "canceled":
 		return common.ExchangeStatusCancelled, qtyLeft, nil
 	case "pre-submitted", "submitting", "submitted", "partial-filled", "partial-canceled":
-		return "", qtyLeft, nil
+		return common.ExchangeStatusPending, qtyLeft, nil
 	default:
 		return common.ExchangeStatusDone, qtyLeft, nil
 	}

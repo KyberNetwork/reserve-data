@@ -162,7 +162,7 @@ func (rc *ReserveCore) Trade(
 	id, done, remaining, finished, err := exchange.Trade(tradeType, pair, rate, amount)
 	uid := timebasedID(id)
 	if err != nil {
-		if sErr := recordActivity(id, common.ExchangeStatusFailed, done, remaining, finished, err); sErr != nil {
+		if sErr := recordActivity(id, common.ExchangeStatusFailed, done, remaining, true, err); sErr != nil {
 			rc.l.Warnw("failed to save activity record", "err", sErr)
 			return uid, done, remaining, finished, common.CombineActivityStorageErrs(err, sErr)
 		}
@@ -286,7 +286,7 @@ func (rc *ReserveCore) Deposit(
 				Timepoint: timepoint,
 			},
 			activityResult,
-			"",
+			common.ExchangeStatusNA,
 			status,
 			timepoint,
 			true,
@@ -376,32 +376,6 @@ func (rc *ReserveCore) doDeposit(exchange common.Exchange, asset commonv3.Asset,
 	selectedNonce = maxInt64(int64(minedNonce), selectedNonce) // select the bigger value, just in case our local nonce get delay
 	rc.l.Debugw("selected nonce for deposit", "nonce", selectedNonce)
 
-	/* // we don't support override nonce for deposit due huobi deposit require 2 step
-	// a deposit can stay in pending state when step 1 done, step 2 is processing,
-	// we can't handle this situation at this time.
-	oldNonce   *big.Int
-	count      uint64
-	oldNonce, initPrice, count, err = rc.pendingActionInfo(minedNonce, common.ActionDeposit)
-	rc.l.Infof("old nonce: %v, init price: %v, count: %d, err: %+v", oldNonce, initPrice, count, err)
-	if err != nil {
-		return tx, fmt.Errorf("couldn't check pending deposit tx pool (%+v). Please try later", err)
-	}
-	if oldNonce != nil {
-		newPrice := calculateNewGasPrice(initPrice, count)
-		tx, err = rc.blockchain.Send(token, amount, address, oldNonce, newPrice)
-		if err != nil {
-			rc.l.Errorw("deposit: trying to replace old tx failed", "err", err)
-			return tx, err
-		}
-		rc.l.Infof("deposit: trying to replace old tx with new price: %s, tx: %s, init price: %s, count: %d",
-			newPrice.String(),
-			tx.Hash().Hex(),
-			initPrice.String(),
-			count,
-		)
-		return tx, err
-	}*/
-
 	recommendedPrice, err := rc.gasPriceInfo.GetCurrentGas()
 	if err != nil {
 		rc.l.Errorw("deposit failed to get gas price, use default", "err", err)
@@ -454,9 +428,9 @@ func (rc *ReserveCore) Withdraw(exchange common.Exchange, asset commonv3.Asset, 
 			},
 			acitivityResult,
 			status,
-			"",
+			common.MiningStatusNA,
 			timepoint,
-			true,
+			status != common.ExchangeStatusFailed && status != common.ExchangeStatusCancelled,
 		)
 	}
 
@@ -556,7 +530,7 @@ func (rc *ReserveCore) CancelSetRate() (common.ActivityID, error) {
 		oldNonce, initPrice, count, err = rc.pendingActionInfo(minedNonce, common.ActionSetRate)
 	}
 	if err != nil || oldNonce == nil {
-		rc.l.Errorw("failed to find pending setRate to cancel", "err", err)
+		rc.l.Infow("failed to find pending setRate to cancel", "err", err)
 		return common.ActivityID{}, err
 	}
 	highBoundGasPrice := rc.maxGasPrice()

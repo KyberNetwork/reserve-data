@@ -25,10 +25,11 @@ func TestUpdateAsset(t *testing.T) {
 	initData(t, s)
 	assetID := rtypes.AssetID(1)
 	target := &common.AssetTarget{
-		Total:              100.0,
-		Reserve:            101.0,
-		RebalanceThreshold: 102.0,
-		TransferThreshold:  103.0,
+		Total:                100.0,
+		Reserve:              101.0,
+		RebalanceThreshold:   102.0,
+		TransferThreshold:    103.0,
+		MinWithdrawThreshold: 104.0,
 	}
 	pwi := &common.AssetPWI{
 		Ask: common.PWIEquation{

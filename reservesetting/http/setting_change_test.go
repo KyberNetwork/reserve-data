@@ -84,11 +84,12 @@ func createSampleAsset(store *postgres.Storage) (rtypes.AssetID, error) {
 				},
 			},
 		}, &common.AssetTarget{
-			TransferThreshold:  1.0,
-			RebalanceThreshold: 1.0,
-			Reserve:            1.0,
-			Total:              100.0,
-		}, nil, nil, 0.1, 0.2, 10000)
+			TransferThreshold:    1.0,
+			RebalanceThreshold:   1.0,
+			Reserve:              1.0,
+			Total:                100.0,
+			MinWithdrawThreshold: 1.0,
+		}, nil, nil, 0.1, 0.2, 10000, 1, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -221,10 +222,11 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 								},
 							},
 							Target: &common.AssetTarget{
-								Total:              12,
-								Reserve:            24,
-								TransferThreshold:  34,
-								RebalanceThreshold: 1,
+								Total:                12,
+								Reserve:              24,
+								TransferThreshold:    34,
+								RebalanceThreshold:   1,
+								MinWithdrawThreshold: 1.0,
 							},
 							Exchanges: []common.AssetExchange{
 								{
@@ -256,6 +258,8 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 							NormalUpdatePerPeriod: 0.123,
 							MaxImbalanceRatio:     0.456,
 							OrderDurationMillis:   15000,
+							PriceETHAmount:        1,
+							ExchangeETHAmount:     2,
 						},
 					},
 				},
@@ -278,6 +282,8 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 				require.Equal(t, 0.123, asset.NormalUpdatePerPeriod)
 				require.Equal(t, 0.456, asset.MaxImbalanceRatio)
 				require.Equal(t, uint64(15000), asset.OrderDurationMillis)
+				require.Equal(t, float64(1), asset.PriceETHAmount)
+				require.Equal(t, float64(2), asset.ExchangeETHAmount)
 			},
 		},
 		{
@@ -293,6 +299,8 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 							NormalUpdatePerPeriod: common.FloatPointer(0.111),
 							MaxImbalanceRatio:     common.FloatPointer(0.222),
 							OrderDurationMillis:   common.Uint64Pointer(15666),
+							PriceETHAmount:        common.FloatPointer(1.1),
+							ExchangeETHAmount:     common.FloatPointer(2.2),
 						},
 					},
 				},
@@ -311,6 +319,8 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 				require.Equal(t, 0.111, asset.NormalUpdatePerPeriod)
 				require.Equal(t, 0.222, asset.MaxImbalanceRatio)
 				require.Equal(t, uint64(15666), asset.OrderDurationMillis)
+				require.Equal(t, float64(1.1), asset.PriceETHAmount)
+				require.Equal(t, float64(2.2), asset.ExchangeETHAmount)
 			},
 		},
 		{
@@ -346,10 +356,11 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 								},
 							},
 							Target: &common.AssetTarget{
-								Total:              12,
-								Reserve:            24,
-								TransferThreshold:  34,
-								RebalanceThreshold: 1,
+								Total:                12,
+								Reserve:              24,
+								TransferThreshold:    34,
+								RebalanceThreshold:   1,
+								MinWithdrawThreshold: 1.0,
 							},
 							Exchanges: []common.AssetExchange{
 								{
@@ -385,6 +396,8 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 							NormalUpdatePerPeriod: 0.123,
 							MaxImbalanceRatio:     0.456,
 							OrderDurationMillis:   10000,
+							PriceETHAmount:        1.2,
+							ExchangeETHAmount:     2.1,
 						},
 					},
 				},
@@ -405,6 +418,7 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 				require.Equal(t, 0.0, asset.StableParam.PriceUpdateThreshold)
 				assert.Equal(t, expectedAskSpread, asset.StableParam.AskSpread)
 				assert.Equal(t, 2, len(*asset.FeedWeight))
+				require.Equal(t, 1.0, asset.Target.MinWithdrawThreshold)
 			},
 		},
 		{
@@ -543,10 +557,11 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 								},
 							},
 							Target: &common.AssetTarget{
-								Total:              12,
-								Reserve:            24,
-								TransferThreshold:  34,
-								RebalanceThreshold: 1,
+								Total:                12,
+								Reserve:              24,
+								TransferThreshold:    34,
+								RebalanceThreshold:   1,
+								MinWithdrawThreshold: 1.0,
 							},
 							Exchanges: []common.AssetExchange{
 								{

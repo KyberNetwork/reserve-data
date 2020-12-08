@@ -1,13 +1,13 @@
 # build stage
-FROM golang:stretch AS build-env
+FROM golang:1.15 AS build-env
 COPY . /go/src/github.com/KyberNetwork/reserve-data
-WORKDIR /go
-RUN go install -v github.com/KyberNetwork/reserve-data/cmd
+WORKDIR /go/src/github.com/KyberNetwork/reserve-data/cmd
+RUN go build -ldflags '-linkmode external -w -extldflags "-static"'
 
 # final stage
 FROM debian:stretch
 ENV KYBER_EXCHANGES huobi,binance
-COPY --from=build-env /go/bin/cmd /cmd
+COPY --from=build-env /go/src/github.com/KyberNetwork/reserve-data/cmd/cmd /cmd
 COPY ./entrypoint.sh /entrypoint.sh
 COPY ./cmd/deposit_keystore ./cmd/keystore ./cmd/intermediate_account_keystore /setting/
 ADD  ./cmd/migrations /migrations

@@ -32,12 +32,12 @@ const (
 type fetchDataType int
 
 const (
-	priceDataType fetchDataType = iota // price
-	rateDataType                       // rate
-	authDataType                       // auth_data
-	goldDataType                       // gold
-	btcDataType                        // btc
-	usdDataType                        // usd
+	_            fetchDataType = iota // price
+	rateDataType                      // rate
+	authDataType                      // auth_data
+	goldDataType                      // gold
+	btcDataType                       // btc
+	usdDataType                       // usd
 )
 
 var (
@@ -71,8 +71,6 @@ func getDataType(data interface{}) fetchDataType {
 		return goldDataType
 	case common.USDData, *common.USDData:
 		return usdDataType
-	case common.AllPriceEntry, *common.AllPriceEntry:
-		return priceDataType
 	case common.AllRateEntry, *common.AllRateEntry:
 		return rateDataType
 	}
@@ -87,14 +85,52 @@ func (ps *PostgresStorage) storeFetchData(data interface{}, timepoint uint64) er
 		return err
 	}
 	dataType := getDataType(data)
-	dataCompressed, err := zstd.CompressLevel(nil, dataJSON, 9)
-	if err != nil {
-		return err
-	}
-	if _, err := ps.db.Exec(query, timestamp, dataCompressed, dataType); err != nil {
+	if _, err := ps.db.Exec(query, timestamp, dataJSON, dataType); err != nil {
 		return err
 	}
 	return nil
+}
+
+func (ps *PostgresStorage) storeOrderBookData(data common.AllPriceEntry, timepoint uint64) error {
+	query := `INSERT INTO order_book_data (created, data) VALUES ($1, $2)`
+	timestamp := common.MillisToTime(timepoint)
+	dataJSON, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+	if _, err := ps.db.Exec(query, timestamp, dataJSON); err != nil {
+		return err
+	}
+	return nil
+}
+func (ps *PostgresStorage) currentOrderBookVersion(timepoint uint64) (common.Version, error) {
+	var (
+		v  common.Version
+		ts time.Time
+	)
+	timestamp := common.MillisToTime(timepoint)
+	query := `SELECT created
+FROM (
+	SELECT
+		id,
+		created
+	FROM
+		order_book_data
+	WHERE
+		created <= $1
+	ORDER BY
+		created DESC
+	LIMIT 1) a1
+WHERE
+	$1 - created <= interval '150' second` // max duration block is 10 ~ 150 second
+	if err := ps.db.Get(&ts, query, timestamp); err != nil {
+		if err == sql.ErrNoRows {
+			return v, fmt.Errorf("there is no version at timestamp: %d", timepoint)
+		}
+		return v, err
+	}
+	v = common.Version(common.TimeToMillis(ts))
+	return v, nil
 }
 
 func (ps *PostgresStorage) currentVersion(dataType fetchDataType, timepoint uint64) (common.Version, error) {
@@ -131,40 +167,59 @@ WHERE
 
 func (ps *PostgresStorage) getData(o interface{}, v common.Version) error {
 	var (
-		dataCompress []byte
-		logger       = ps.l.With("func", caller.GetCurrentFunctionName())
+		data   []byte
+		logger = ps.l.With("func", caller.GetCurrentFunctionName())
 	)
 	ts := common.MillisToTime(uint64(v))
 	dataType := getDataType(o)
 	query := fmt.Sprintf(`SELECT data FROM "%s" WHERE created = $1 AND type = $2`, fetchDataTable)
-	if err := ps.db.Get(&dataCompress, query, ts, dataType); err != nil {
+	if err := ps.db.Get(&data, query, ts, dataType); err != nil {
 		logger.Errorw("failed to get data from fetchData table", "error", err)
 		return err
 	}
-	data, err := zstd.Decompress(nil, dataCompress)
-	if err != nil {
-		logger.Errorw("failed to decompress data", "error", err)
-		return err
+	var err error
+	if isZSTDPayload(data) {
+		data, err = zstd.Decompress(nil, data)
+		if err != nil {
+			logger.Errorw("decompress error", "err", err)
+			return err
+		}
 	}
 	return json.Unmarshal(data, o)
 }
 
+func (ps *PostgresStorage) getOrderBookData(v common.Version) (common.AllPriceEntry, error) {
+	var (
+		data   []byte
+		logger = ps.l.With("func", caller.GetCurrentFunctionName())
+	)
+	ts := common.MillisToTime(uint64(v))
+	query := `SELECT data FROM order_book_data WHERE created = $1`
+	if err := ps.db.Get(&data, query, ts); err != nil {
+		logger.Errorw("failed to get data from order_book_data table", "error", err)
+		return common.AllPriceEntry{}, err
+	}
+	var allPrices common.AllPriceEntry
+	err := json.Unmarshal(data, &allPrices)
+	if err != nil {
+		logger.Errorw("unmarshal order book data failed", "err", err, "data", string(data))
+	}
+	return allPrices, err
+}
+
 // StorePrice store price
 func (ps *PostgresStorage) StorePrice(priceEntry common.AllPriceEntry, timepoint uint64) error {
-	return ps.storeFetchData(priceEntry, timepoint)
+	return ps.storeOrderBookData(priceEntry, timepoint)
 }
 
 // CurrentPriceVersion return current price version
 func (ps *PostgresStorage) CurrentPriceVersion(timepoint uint64) (common.Version, error) {
-	return ps.currentVersion(priceDataType, timepoint)
+	return ps.currentOrderBookVersion(timepoint)
 }
 
 // GetAllPrices return all prices currently save in db
 func (ps *PostgresStorage) GetAllPrices(v common.Version) (common.AllPriceEntry, error) {
-	var (
-		allPrices common.AllPriceEntry
-	)
-	err := ps.getData(&allPrices, v)
+	allPrices, err := ps.getOrderBookData(v)
 	return allPrices, err
 }
 
@@ -285,33 +340,42 @@ func (ps *PostgresStorage) GetRate(v common.Version) (common.AllRateEntry, error
 	err := ps.getData(&rate, v)
 	return rate, err
 }
+func isZSTDPayload(data []byte) bool {
+	// zstd magic prefix 0xFD2FB528
+	if len(data) > 4 && data[0] == 0x28 && data[1] == 0xB5 && data[2] == 0x2F && data[3] == 0xFD {
+		return true
+	}
+	return false
+}
 
 // GetRates return rate from time to time
 func (ps *PostgresStorage) GetRates(fromTime, toTime uint64) ([]common.AllRateEntry, error) {
 	var (
-		rates            []common.AllRateEntry
-		data             [][]byte
-		logger           = ps.l.With("func", caller.GetCallerFunctionName())
-		err              error
-		dataDecompressed []byte
+		rates   []common.AllRateEntry
+		allData [][]byte
+		logger  = ps.l.With("func", caller.GetCallerFunctionName())
 	)
 	query := fmt.Sprintf(`SELECT data FROM "%s" WHERE type = $1 AND created >= $2 AND created <= $3`, fetchDataTable)
 	from := common.MillisToTime(fromTime)
 	to := common.MillisToTime(toTime)
 
-	if err := ps.db.Select(&data, query, rateDataType, from, to); err != nil {
+	if err := ps.db.Select(&allData, query, rateDataType, from, to); err != nil {
 		logger.Errorw("failed to get rates from database", "error", err)
 		return nil, err
 	}
-
-	for _, dataCompress := range data {
-		dataDecompressed, err = zstd.Decompress(dataDecompressed, dataCompress)
-		if err != nil {
-			logger.Errorw("failed to decompress data", "error", err)
-			return nil, err
-		}
+	var err error
+	var buff []byte
+	for _, data := range allData {
 		var rate common.AllRateEntry
-		if err := json.Unmarshal(dataDecompressed, &rate); err != nil {
+		if isZSTDPayload(data) {
+			data, err = zstd.Decompress(buff, data)
+			if err != nil {
+				logger.Errorw("decompress error", "err", err)
+				return nil, err
+			}
+			buff = data // keep buff refer to recent decompressed buffer as it can reuse for next time
+		}
+		if err := json.Unmarshal(data, &rate); err != nil {
 			logger.Errorw("failed to unmarshal rates", "error", err)
 			return nil, err
 		}
@@ -320,17 +384,40 @@ func (ps *PostgresStorage) GetRates(fromTime, toTime uint64) ([]common.AllRateEn
 	return rates, nil
 }
 
+var (
+	allowedActions = map[string]struct{}{
+		common.ActionTrade:         {},
+		common.ActionSetRate:       {},
+		common.ActionCancelSetRate: {},
+		common.ActionDeposit:       {},
+		common.ActionWithdraw:      {},
+	}
+)
+
 // GetAllRecords return all activities records from database
-func (ps *PostgresStorage) GetAllRecords(fromTime, toTime uint64) ([]common.ActivityRecord, error) {
+func (ps *PostgresStorage) GetAllRecords(fromTime, toTime uint64, actions []string) ([]common.ActivityRecord, error) {
 	var (
-		activities []common.ActivityRecord
+		activities = []common.ActivityRecord{}
 		data       [][]byte
 	)
-	query := fmt.Sprintf(`SELECT data FROM "%s" WHERE created >= $1 AND created <= $2`, activityTable)
+
+	query := fmt.Sprintf(`SELECT data FROM "%s" WHERE data->>'action' IN (?) AND created >= ? AND created <= ?`, activityTable)
+	if len(actions) == 0 {
+		actions = []string{common.ActionWithdraw, common.ActionDeposit, common.ActionTrade} // adjust default behavior to list all activity exclude set_rate
+	}
+	if len(actions) > len(allowedActions) {
+		actions = actions[:len(allowedActions)]
+	}
 	from := common.MillisToTime(fromTime)
 	to := common.MillisToTime(toTime)
-	if err := ps.db.Select(&data, query, from, to); err != nil {
-		return nil, err
+	query, args, err := sqlx.In(query, actions, from, to)
+	if err != nil {
+		return activities, err
+	}
+	query = ps.db.Rebind(query)
+
+	if err := ps.db.Select(&data, query, args...); err != nil {
+		return activities, err
 	}
 	for _, dataByte := range data {
 		var activity common.ActivityRecord

@@ -477,8 +477,9 @@ func (s *Server) Deposit(c *gin.Context) {
 }
 
 type getActivitiesRequest struct {
-	FromTime uint64 `form:"fromTime" binding:"required"`
-	ToTime   uint64 `form:"toTime" binding:"required"`
+	FromTime uint64   `form:"fromTime" binding:"required"`
+	ToTime   uint64   `form:"toTime" binding:"required"`
+	Actions  []string `form:"actions"`
 }
 
 // GetActivities return all activities record
@@ -495,7 +496,7 @@ func (s *Server) GetActivities(c *gin.Context) {
 		return
 	}
 
-	data, err := s.app.GetRecords(query.FromTime, query.ToTime)
+	data, err := s.app.GetRecords(query.FromTime, query.ToTime, query.Actions)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 	} else {
