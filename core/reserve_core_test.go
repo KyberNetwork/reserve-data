@@ -131,6 +131,10 @@ type testActivityStorage struct {
 	PendingDeposit bool
 }
 
+func (tas testActivityStorage) GetPendingSetRate(action string, minedNonce uint64) (*common.ActivityRecord, error) {
+	panic("implement me")
+}
+
 func (tas testActivityStorage) MaxPendingNonce(action string) (int64, error) {
 	return 0, nil
 }
