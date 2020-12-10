@@ -401,7 +401,7 @@ func (ps *PostgresStorage) GetAllRecords(fromTime, toTime uint64, actions []stri
 		data       [][]byte
 	)
 
-	query := fmt.Sprintf(`SELECT data FROM "%s" WHERE data->>'action' IN (?) AND created >= ? AND created <= ?`, activityTable)
+	query := fmt.Sprintf(`SELECT data FROM "%s" WHERE data->>'action' IN (?) AND created >= ? AND created <= ? ORDER BY created DESC`, activityTable)
 	if len(actions) == 0 {
 		actions = []string{common.ActionWithdraw, common.ActionDeposit, common.ActionTrade} // adjust default behavior to list all activity exclude set_rate
 	}
@@ -607,6 +607,20 @@ SELECT data FROM pending WHERE (data->'result'->>'nonce')::int = (SELECT MIN((da
 		return nil, fmt.Errorf("unmarshal failed, err=%+v, data=%s", err, string(data))
 	}
 	return &activity, nil
+}
+
+func (ps *PostgresStorage) FindReplacedTx(action string, nonce uint64) (string, error) {
+	var tx string
+	err := ps.db.Get(&tx,
+		`SELECT data->'result'->>'tx' from activity where (data->'result'->>'nonce')=$1 AND data->>'action'=$2 AND data->>'mining_status'=$3`,
+		nonce, action, common.MiningStatusMined)
+	if err == sql.ErrNoRows {
+		return "", nil
+	}
+	if err != nil {
+		return "", err
+	}
+	return tx, nil
 }
 
 // HasPendingDeposit return true if there is any pending deposit for a token
