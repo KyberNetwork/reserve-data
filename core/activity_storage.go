@@ -27,4 +27,6 @@ type ActivityStorage interface {
 	// PendingActivityForAction return the last pending set rate and number of pending
 	// transactions.
 	PendingActivityForAction(minedNonce uint64, activityType string) (*common.ActivityRecord, uint64, error)
+	// find
+	GetPendingSetRate(action string, minedNonce uint64) (*common.ActivityRecord, error)
 }
