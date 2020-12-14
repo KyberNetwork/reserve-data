@@ -612,7 +612,7 @@ SELECT data FROM pending WHERE (data->'result'->>'nonce')::int = (SELECT MIN((da
 func (ps *PostgresStorage) FindReplacedTx(action string, nonce uint64) (string, error) {
 	var tx string
 	err := ps.db.Get(&tx,
-		`SELECT data->'result'->>'tx' from activity where (data->'result'->>'nonce')=$1 AND data->>'action'=$2 AND data->>'mining_status'=$3`,
+		`SELECT data->'result'->>'tx' from activity where (data->'result'->>'nonce')::int=$1 AND data->>'action'=$2 AND data->>'mining_status'=$3`,
 		nonce, action, common.MiningStatusMined)
 	if err == sql.ErrNoRows {
 		return "", nil
@@ -650,7 +650,7 @@ func (ps *PostgresStorage) HasPendingDeposit(token commonv3.Asset, exchange comm
 // MaxPendingNonce return biggest nonce in pending activity for an action
 func (ps *PostgresStorage) MaxPendingNonce(action string) (int64, error) {
 	var v int64
-	if err := ps.db.Get(&v, "SELECT MAX(data->'result'->>'nonce') FROM activity WHERE is_pending IS TRUE AND data->>'action' = $1", action); err != nil {
+	if err := ps.db.Get(&v, "SELECT MAX((data->'result'->>'nonce')::int) FROM activity WHERE is_pending IS TRUE AND data->>'action' = $1", action); err != nil {
 		if err == sql.ErrNoRows {
 			return 0, nil
 		}
