@@ -124,3 +124,13 @@ func getFrame(skipFrames int) runtime.Frame {
 
 	return frame
 }
+
+func CalculateNewPrice(pendingPrice float64, recommendPrice float64) float64 {
+	switch {
+	// if recommendPrice less than pending price, choose pending price as we can't override tx if use smaller price.
+	case recommendPrice <= pendingPrice:
+		return pendingPrice + (pendingPrice * 0.1) // increase 10% to prevent node to decline (I'm not sure on this)
+	default:
+		return math.Max(recommendPrice, pendingPrice*1.1) // recommendPrice should > pendingPrice at least 10% gwei
+	}
+}

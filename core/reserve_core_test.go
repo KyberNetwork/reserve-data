@@ -70,7 +70,7 @@ func (tbc testBlockchain) TransferToSelf(op string, gasPrice *big.Int, nonce *bi
 	panic("implement me")
 }
 
-func (tbc testBlockchain) SpeedupDeposit(tx ethereum.Hash, gasPrice *big.Int) (ethereum.Hash, error) {
+func (tbc testBlockchain) SpeedupDeposit(tx ethereum.Hash, recommendGasPrice float64, maxGasPrice float64) (*types.Transaction, error) {
 	panic("implement me")
 }
 

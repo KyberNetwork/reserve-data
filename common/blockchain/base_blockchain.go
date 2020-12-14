@@ -119,28 +119,34 @@ func (b *BaseBlockchain) SignAndBroadcast(tx *types.Transaction, from string) (*
 }
 
 // SpeedupDeposit speed up tx deposit which is pending for too long
-func (b *BaseBlockchain) SpeedupDeposit(tx ethereum.Hash, gasPrice *big.Int) (ethereum.Hash, error) {
+func (b *BaseBlockchain) SpeedupDeposit(tx ethereum.Hash, recommendGasPrice float64, maxGasPrice float64) (*types.Transaction, error) {
 	pendingTx, pending, err := b.client.TransactionByHash(context.Background(), tx)
 	if err != nil {
-		return ethereum.Hash{}, err
+		return nil, err
 	}
 	if !pending {
-		return ethereum.Hash{}, fmt.Errorf("override tx no longer pending")
+		return nil, fmt.Errorf("override tx no longer pending")
 	}
 	if pendingTx.To() == nil {
-		return ethereum.Hash{}, fmt.Errorf("pending tx has no To()")
+		return nil, fmt.Errorf("pending tx has no To()")
 	}
-	b.l.Debugw("try to replace deposit tx", "current_price", pendingTx.GasPrice().String(), "new_price", gasPrice.String())
-	if pendingTx.GasPrice().Cmp(gasPrice) > 0 {
-		return ethereum.Hash{}, fmt.Errorf("abort replace deposit tx due lower price %s / %s", pendingTx.GasPrice().String(), gasPrice.String())
+
+	currentPrice := common.BigToFloat(pendingTx.GasPrice(), 9)
+	newGasPrice := common.CalculateNewPrice(currentPrice, recommendGasPrice)
+
+	if newGasPrice > maxGasPrice {
+		b.l.Debugw("abort speedup deposit tx due exceed maxGas", "current_price", pendingTx.GasPrice().String(), "new_price", newGasPrice)
+		return nil, fmt.Errorf("abort replace deposit tx due exceed maxGas %v / %v", newGasPrice, maxGasPrice)
 	}
-	overrideTx := types.NewTransaction(pendingTx.Nonce(), *pendingTx.To(), pendingTx.Value(), pendingTx.Gas(), gasPrice, pendingTx.Data())
+	b.l.Debugw("try to replace deposit tx", "current_price", currentPrice, "new_price", newGasPrice)
+	overrideTx := types.NewTransaction(pendingTx.Nonce(), *pendingTx.To(), pendingTx.Value(), pendingTx.Gas(),
+		common.FloatToBigInt(newGasPrice, 9), pendingTx.Data())
 	signed, err := b.SignAndBroadcast(overrideTx, DepositOP)
 	if err != nil {
 		b.l.Errorw("sending override deposit tx failed", "err", err, "tx", tx)
-		return ethereum.Hash{}, err
+		return nil, err
 	}
-	return signed.Hash(), err
+	return signed, err
 }
 
 func (b *BaseBlockchain) Call(timeOut time.Duration, opts CallOpts, contract *Contract, result interface{}, method string, params ...interface{}) error {

@@ -1,0 +1,1 @@
+CREATE INDEX activity_nonce_idx ON activity(((data->'result'->'nonce')::int));

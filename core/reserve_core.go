@@ -289,7 +289,7 @@ func (rc *ReserveCore) Deposit(
 			common.ExchangeStatusNA,
 			status,
 			timepoint,
-			true,
+			status != common.MiningStatusFailed,
 		)
 	}
 
@@ -547,7 +547,7 @@ func (rc *ReserveCore) CancelSetRate() (common.ActivityID, error) {
 			targetActivity.Result.GasPrice)
 	}
 	pendingTxGasFloat := common.BigToFloat(pendingTxGasPriceBig, 9)
-	newGasPrice := calculateNewPrice(pendingTxGasFloat, recommendedPrice)
+	newGasPrice := common.CalculateNewPrice(pendingTxGasFloat, recommendedPrice)
 	if newGasPrice > highBoundGasPrice {
 		rc.l.Errorw("abort override cancel setRate as gasPrice too high", "pendingTxPrice", pendingTxGasFloat,
 			"newGasPrice", newGasPrice, "highBound", highBoundGasPrice)
@@ -603,7 +603,7 @@ func (rc *ReserveCore) CancelSetRate() (common.ActivityID, error) {
 		common.ExchangeStatusNA,
 		miningStatus,
 		common.NowInMillis(),
-		true,
+		miningStatus != common.MiningStatusFailed,
 	)
 
 	rc.l.Infow("sent cancel setRate tx", "tx", btx.Hash().String(), "gasPrice",
@@ -663,7 +663,7 @@ func (rc *ReserveCore) GetSetRateResult(tokens []commonv3.Asset,
 			return nil, fmt.Errorf("get invalid gasPrice from activity")
 		}
 		pendingTxGasFloat := common.BigToFloat(pendingTxGasPriceBig, 9)
-		newGasPrice := calculateNewPrice(pendingTxGasFloat, recommendedPrice)
+		newGasPrice := common.CalculateNewPrice(pendingTxGasFloat, recommendedPrice)
 		if newGasPrice > highBoundGasPrice {
 			rc.l.Errorw("abort override setRate as gasPrice too high", "pendingTxPrice", pendingTxGasFloat,
 				"newGasPrice", newGasPrice, "highBound", highBoundGasPrice)
@@ -689,16 +689,6 @@ func (rc *ReserveCore) GetSetRateResult(tokens []commonv3.Asset,
 		initPrice,
 	)
 	return tx, err
-}
-
-func calculateNewPrice(pendingPrice float64, recommendPrice float64) float64 {
-	switch {
-	// if recommendPrice less than pending price, choose pending price as we can't override tx if use smaller price.
-	case recommendPrice <= pendingPrice:
-		return pendingPrice + (pendingPrice * 0.1) // increase 10% to prevent node to decline (I'm not sure on this)
-	default:
-		return math.Max(recommendPrice, pendingPrice*1.1) // recommendPrice should > pendingPrice at least 10% gwei
-	}
 }
 
 // SetRates to reserve
@@ -752,10 +742,10 @@ func (rc *ReserveCore) SetRates(assets []commonv3.Asset, buys, sells []*big.Int,
 			Triggers: triggers,
 		},
 		activityResult,
-		"",
+		common.ExchangeStatusNA,
 		miningStatus,
 		common.NowInMillis(),
-		true,
+		miningStatus != common.MiningStatusFailed,
 	)
 	rc.l.Infof(
 		"Core ----------> Set rates: ==> Result: tx: %s, nonce: %d, price: %s, error: %v, storage error: %v",
@@ -775,16 +765,13 @@ func (rc *ReserveCore) SpeedupDeposit(act common.ActivityRecord) (*big.Int, erro
 	if err != nil {
 		maxGas = common.HighBoundGasPrice
 	}
-	if newGas > maxGas {
-		newGas = maxGas
-	}
-	gasPrice := common.GweiToWei(newGas)
+
 	tx := ethereum.HexToHash(act.Result.Tx)
-	hash, err := rc.blockchain.SpeedupDeposit(tx, gasPrice)
+	signedTx, err := rc.blockchain.SpeedupDeposit(tx, newGas, maxGas)
 	if err != nil {
-		return gasPrice, fmt.Errorf("failed to speedup deposit tx, %w", err)
+		return nil, fmt.Errorf("failed to speedup deposit tx, %w", err)
 	}
-	rc.l.Debugw("sent speedup tx", "new_tx", hash.String(), "src_tx", tx.String())
+	rc.l.Debugw("sent speedup tx", "new_tx", signedTx.Hash().String(), "src_tx", tx.String())
 
 	// store new act to storage
 	replaceUID := func(actID common.ActivityID, txhex string) common.ActivityID {
@@ -800,19 +787,19 @@ func (rc *ReserveCore) SpeedupDeposit(act common.ActivityRecord) (*big.Int, erro
 		return timebasedID(id)
 	}
 	activityResult := common.ActivityResult{
-		Tx:       hash.Hex(),
+		Tx:       signedTx.Hash().Hex(),
 		Nonce:    act.Result.Nonce,
-		GasPrice: gasPrice.String(),
+		GasPrice: signedTx.GasPrice().String(),
 		Error:    "",
 		TxTime:   common.TimeToMillis(time.Now()),
 	}
-	return gasPrice, rc.activityStorage.Record(
+	return signedTx.GasPrice(), rc.activityStorage.Record(
 		common.ActionDeposit,
-		replaceUID(act.ID, hash.Hex()),
+		replaceUID(act.ID, signedTx.Hash().Hex()),
 		act.Params.Exchange.String(),
 		*act.Params,
 		activityResult,
-		"",
+		common.ExchangeStatusNA,
 		common.MiningStatusSubmitted,
 		common.TimeToMillis(time.Now()),
 		true,
