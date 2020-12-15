@@ -33,16 +33,14 @@ type Fetcher struct {
 	contractAddressConf    *common.ContractAddressConfiguration
 	l                      *zap.SugaredLogger
 	reserveCore            *core.ReserveCore
+
+	lostTxActivities map[string]time.Time
+	lostLock         *sync.Mutex
 }
 
-func NewFetcher(
-	storage Storage,
-	globalStorage GlobalStorage,
-	theworld TheWorld,
-	runner Runner,
-	simulationMode bool,
+func NewFetcher(storage Storage, globalStorage GlobalStorage, theworld TheWorld, runner Runner, simulationMode bool,
 	contractAddressConf *common.ContractAddressConfiguration) *Fetcher {
-	return &Fetcher{
+	f := &Fetcher{
 		storage:             storage,
 		globalStorage:       globalStorage,
 		exchanges:           []Exchange{},
@@ -52,6 +50,26 @@ func NewFetcher(
 		simulationMode:      simulationMode,
 		contractAddressConf: contractAddressConf,
 		l:                   zap.S(),
+		lostTxActivities:    make(map[string]time.Time),
+		lostLock:            &sync.Mutex{},
+	}
+	return f
+}
+
+func (f *Fetcher) setFirstTxLostTime(eid string, firstTime time.Time) time.Time {
+	f.lostLock.Lock()
+	defer f.lostLock.Unlock()
+	if t, ok := f.lostTxActivities[eid]; ok {
+		return t
+	}
+	f.lostTxActivities[eid] = firstTime
+	return firstTime
+}
+func (f *Fetcher) untrackingLostTx() {
+	f.lostLock.Lock()
+	defer f.lostLock.Unlock()
+	if len(f.lostTxActivities) > 0 {
+		f.lostTxActivities = make(map[string]time.Time)
 	}
 }
 
@@ -225,7 +243,8 @@ func (f *Fetcher) FetchAllAuthData(timepoint uint64) {
 	speedDeposit := 0
 	pendingTimeMillis := uint64(45000) // TODO: to make this configurable
 	for _, av := range pendings {
-		if av.Action == common.ActionDeposit {
+		if av.Action == common.ActionDeposit && (av.MiningStatus != common.MiningStatusFailed &&
+			av.MiningStatus != common.MiningStatusMined && av.MiningStatus != common.MiningStatusLost) {
 			// among txs with same nonce, only override the latest one
 			if ok, latestTime := getLatestTxTimeByNonce(pendings, av); ok && (common.TimeToMillis(time.Now())-latestTime) > pendingTimeMillis {
 				speedDeposit++
@@ -436,7 +455,25 @@ func (f *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord) (m
 					}
 				}
 
+				const maxMonitorDuration = time.Minute * 5 // if an activity is fail(and its nonce passed), mark it as fail
+				// after maxMonitorDuration, this is because we saw a case even tx is seem lost, nonce passed,
+				// but it turn mined after that, so we still need to monitor more time for sure.
 				if txFailed {
+					rtx, dbErr := f.storage.FindReplacedTx(activity.Action, activity.Result.Nonce)
+					if dbErr != nil {
+						f.l.Errorw("query replaced tx error", "err", err)
+					}
+					if rtx != "" { // we found a mined tx with same nonce, indicate this activity as replaced
+						errMessage := fmt.Errorf("tx replaced by %s", rtx)
+						result[activity.ID] = common.NewActivityStatus(activity.ExchangeStatus, txStr, blockNum,
+							common.MiningStatusFailed, 0, 0, isOverride, errMessage)
+						continue
+					}
+					// otherwise, wait for maxIterationThreshold and mark fail
+					firstTime := f.setFirstTxLostTime(activity.ID.EID, time.Now())
+					if time.Since(firstTime) < maxMonitorDuration { //
+						continue
+					}
 					result[activity.ID] = common.NewActivityStatus(activity.ExchangeStatus, txStr, blockNum,
 						common.MiningStatusFailed, 0, 0, isOverride, fmt.Errorf("tx not found"))
 				}
@@ -444,6 +481,9 @@ func (f *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord) (m
 				f.l.Infof("TX_STATUS: tx (%s) status is not available. Wait till next try", tx)
 			}
 		}
+	}
+	if len(pendings) == 0 {
+		f.untrackingLostTx() // clear monitor state when no more pending activity exists
 	}
 	return result, nil
 }

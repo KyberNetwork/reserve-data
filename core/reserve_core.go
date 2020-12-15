@@ -289,7 +289,7 @@ func (rc *ReserveCore) Deposit(
 			common.ExchangeStatusNA,
 			status,
 			timepoint,
-			true,
+			status != common.MiningStatusFailed,
 		)
 	}
 
@@ -487,24 +487,6 @@ func calculateNewGasPrice(initPrice *big.Int, count uint64, highBoundGasPrice fl
 	return common.FloatToBigInt(newPrice, 9)
 }
 
-// return: old nonce, init price, step, error
-func (rc *ReserveCore) pendingActionInfo(minedNonce uint64, activityType string) (*big.Int, *big.Int, uint64, error) {
-	act, count, err := rc.activityStorage.PendingActivityForAction(minedNonce, activityType)
-	if err != nil {
-		return nil, nil, 0, err
-	}
-	if act == nil {
-		return nil, nil, 0, nil
-	}
-	gasPriceStr := act.Result.GasPrice
-
-	gasPrice, err := strconv.ParseUint(gasPriceStr, 10, 64)
-	if err != nil {
-		return nil, nil, count, err
-	}
-	return big.NewInt(int64(act.Result.Nonce)), big.NewInt(int64(gasPrice)), count, nil
-}
-
 func requireSameLength(tokens []commonv3.Asset, buys, sells, afpMids []*big.Int) error {
 	if len(tokens) != len(buys) {
 		return fmt.Errorf("number of buys (%d) is not equal to number of tokens (%d)", len(buys), len(tokens))
@@ -521,26 +503,63 @@ func requireSameLength(tokens []commonv3.Asset, buys, sells, afpMids []*big.Int)
 
 // CancelSetRate create and send a tx with higher gas price to cancel all pending set rate tx
 func (rc *ReserveCore) CancelSetRate() (common.ActivityID, error) {
+	highBoundGasPrice := rc.maxGasPrice()
+
+	recommendedPrice, err := rc.gasPriceInfo.GetCurrentGas()
+	if err != nil {
+		rc.l.Errorw("failed to get gas price", "err", err)
+		return common.ActivityID{}, fmt.Errorf("setRate failed to get gas price %w", err)
+	}
+	if recommendedPrice == 0 || recommendedPrice > highBoundGasPrice {
+		rc.l.Errorw("failed to get gas price", "err", err, "gas",
+			recommendedPrice, "highBound", highBoundGasPrice)
+		return common.ActivityID{}, fmt.Errorf("cancel setRate failed to query gas price got value %v highBound %v",
+			recommendedPrice, highBoundGasPrice)
+	}
 	minedNonce, err := rc.blockchain.GetMinedNonceWithOP(blockchain.PricingOP)
 	if err != nil {
 		return common.ActivityID{}, fmt.Errorf("couldn't get mined nonce of set rate operator (%+v)", err)
 	}
-	oldNonce, initPrice, count, err := rc.pendingActionInfo(minedNonce, common.ActionCancelSetRate)
-	if err != nil || oldNonce == nil { // if there's no pending cancel setrate exist, we use nonce from actionSetRate
-		oldNonce, initPrice, count, err = rc.pendingActionInfo(minedNonce, common.ActionSetRate)
-	}
-	if err != nil || oldNonce == nil {
-		rc.l.Infow("failed to find pending setRate to cancel", "err", err)
-		return common.ActivityID{}, err
-	}
-	highBoundGasPrice := rc.maxGasPrice()
-	newPrice := calculateNewGasPrice(initPrice, count, highBoundGasPrice)
 
-	rc.l.Infow("cancel setRate tx with info", "newPrice", newPrice.String(), "highBoundGasPrice", highBoundGasPrice,
-		"count", count, "nonce", oldNonce.String())
+	targetActivity, err := rc.activityStorage.GetPendingSetRate(common.ActionCancelSetRate, minedNonce)
+	if err != nil {
+		rc.l.Errorw("failed to get pending activity", "err", err)
+		return common.ActivityID{}, fmt.Errorf("failed to get pending cancel setrate activity, %w", err)
+	}
+	if targetActivity == nil { // if no pending cancel setRate found, fallback to cancel recent setRate
+		targetActivity, err = rc.activityStorage.GetPendingSetRate(common.ActionSetRate, minedNonce)
+	}
+	if err != nil {
+		rc.l.Errorw("failed to get pending activity", "err", err)
+		return common.ActivityID{}, fmt.Errorf("failed to get pending activity, %w", err)
+	}
+	if targetActivity == nil {
+		msg := "no pending setRate to cancel"
+		rc.l.Infow(msg)
+		return common.ActivityID{}, fmt.Errorf(msg)
+	}
+
+	pendingTxGasPriceBig, ok := new(big.Int).SetString(targetActivity.Result.GasPrice, 10)
+	if !ok {
+		rc.l.Errorw("get invalid gasPrice from activity", "tx_result", targetActivity.Result,
+			"activity", targetActivity.ID.String())
+		return common.ActivityID{}, fmt.Errorf("get invalid gasPrice from activity, stored price %s",
+			targetActivity.Result.GasPrice)
+	}
+	pendingTxGasFloat := common.BigToFloat(pendingTxGasPriceBig, 9)
+	newGasPrice := common.CalculateNewPrice(pendingTxGasFloat, recommendedPrice)
+	if newGasPrice > highBoundGasPrice {
+		rc.l.Errorw("abort override cancel setRate as gasPrice too high", "pendingTxPrice", pendingTxGasFloat,
+			"newGasPrice", newGasPrice, "highBound", highBoundGasPrice)
+		return common.ActivityID{}, fmt.Errorf("abort override setRate as gasPrice too high")
+	}
+	newPrice := common.FloatToBigInt(newGasPrice, 9)
+
+	rc.l.Infow("cancel setRate tx with info", "newPrice", newPrice.String(),
+		"highBoundGasPrice", highBoundGasPrice, "nonce", targetActivity.Result.Nonce)
 
 	tx, err := rc.blockchain.BuildSendETHTx(blockchain.TxOpts{
-		Nonce:    oldNonce,
+		Nonce:    big.NewInt(int64(targetActivity.Result.Nonce)),
 		Value:    big.NewInt(0),
 		GasPrice: newPrice,
 	}, rc.blockchain.GetDepositOPAddress())
@@ -581,14 +600,14 @@ func (rc *ReserveCore) CancelSetRate() (common.ActivityID, error) {
 		"blockchain",
 		common.ActivityParams{},
 		activityResult,
-		"",
+		common.ExchangeStatusNA,
 		miningStatus,
 		common.NowInMillis(),
-		true,
+		miningStatus != common.MiningStatusFailed,
 	)
 
 	rc.l.Infow("sent cancel setRate tx", "tx", btx.Hash().String(), "gasPrice",
-		newPrice.String(), "nonce", oldNonce.String())
+		newPrice.String(), "nonce", targetActivity.Result.Nonce)
 
 	return uid, common.CombineActivityStorageErrs(err, sErr)
 }
@@ -614,45 +633,22 @@ func (rc *ReserveCore) GetSetRateResult(tokens []commonv3.Asset,
 	}
 	// if there is a pending set rate tx, we replace it
 	var (
-		oldNonce   *big.Int
-		initPrice  *big.Int
 		minedNonce uint64
-		count      uint64
 	)
 	highBoundGasPrice := rc.maxGasPrice()
 	minedNonce, err = rc.blockchain.GetMinedNonceWithOP(blockchain.PricingOP)
 	if err != nil {
 		return tx, fmt.Errorf("couldn't get mined nonce of set rate operator (%s)", err.Error())
 	}
-	oldNonce, initPrice, count, err = rc.pendingActionInfo(minedNonce, common.ActionSetRate)
-	rc.l.Infof("old nonce: %v, init price: %v, count: %d, err: %v", oldNonce, initPrice, count, err)
+	pendingSetRate, err := rc.activityStorage.GetPendingSetRate(common.ActionSetRate, minedNonce)
 	if err != nil {
-		return tx, fmt.Errorf("couldn't check pending set rate tx pool (%s). Please try later", err.Error())
+		rc.l.Errorw("failed to get pending activity", "err", err)
+		return nil, fmt.Errorf("failed to get pending activity, %w", err)
 	}
-	if oldNonce != nil {
-		newPrice := calculateNewGasPrice(initPrice, count, highBoundGasPrice)
-		tx, err = rc.blockchain.SetRates(
-			tokenAddrs, buys, sells, block,
-			oldNonce,
-			newPrice,
-		)
-		if err != nil {
-			rc.l.Errorw("Trying to replace old tx failed", "err", err)
-			return tx, err
-		}
-		rc.l.Infof("Trying to replace old tx with new price: %s, tx: %s, init price: %s, count: %d",
-			newPrice.String(),
-			tx.Hash().Hex(),
-			initPrice.String(),
-			count,
-		)
-		return tx, err
-	}
-
 	recommendedPrice, err := rc.gasPriceInfo.GetCurrentGas()
 	if err != nil {
-		rc.l.Errorw("failed to get gas price, use default", "err", err)
-		return nil, fmt.Errorf("setrate failed to get gas price %w", err)
+		rc.l.Errorw("failed to get gas price", "err", err)
+		return nil, fmt.Errorf("setRate failed to get gas price %w", err)
 	}
 	if recommendedPrice == 0 || recommendedPrice > highBoundGasPrice {
 		rc.l.Errorw("failed to get gas price", "err", err, "gas",
@@ -660,7 +656,32 @@ func (rc *ReserveCore) GetSetRateResult(tokens []commonv3.Asset,
 		return nil, fmt.Errorf("setrate failed to query gas price got value %v highBound %v",
 			recommendedPrice, highBoundGasPrice)
 	}
-	initPrice = common.GweiToWei(recommendedPrice)
+	if pendingSetRate != nil {
+		pendingTxGasPriceBig, ok := new(big.Int).SetString(pendingSetRate.Result.GasPrice, 10)
+		if !ok {
+			rc.l.Errorw("get invalid gasPrice from activity", "tx_result", pendingSetRate.Result, "activity", pendingSetRate.ID.String())
+			return nil, fmt.Errorf("get invalid gasPrice from activity")
+		}
+		pendingTxGasFloat := common.BigToFloat(pendingTxGasPriceBig, 9)
+		newGasPrice := common.CalculateNewPrice(pendingTxGasFloat, recommendedPrice)
+		if newGasPrice > highBoundGasPrice {
+			rc.l.Errorw("abort override setRate as gasPrice too high", "pendingTxPrice", pendingTxGasFloat,
+				"newGasPrice", newGasPrice, "highBound", highBoundGasPrice)
+			return nil, fmt.Errorf("abort override setRate as gasPrice too high")
+		}
+		newPrice := common.FloatToBigInt(newGasPrice, 9)
+		tx, err = rc.blockchain.SetRates(tokenAddrs, buys, sells, block, big.NewInt(int64(pendingSetRate.Result.Nonce)), newPrice)
+		if err != nil {
+			rc.l.Errorw("Trying to replace old tx failed", "err", err)
+			return tx, err
+		}
+		rc.l.Infof("Trying to replace old tx with new price: %v, tx: %s, previous price: %v, activity %s",
+			newGasPrice, tx.Hash().Hex(), pendingTxGasFloat, pendingSetRate.ID.String(),
+		)
+		return tx, err
+	}
+
+	initPrice := common.GweiToWei(recommendedPrice)
 	rc.l.Infof("initial set rate tx, init price: %s", initPrice.String())
 	tx, err = rc.blockchain.SetRates(
 		tokenAddrs, buys, sells, block,
@@ -671,7 +692,8 @@ func (rc *ReserveCore) GetSetRateResult(tokens []commonv3.Asset,
 }
 
 // SetRates to reserve
-func (rc *ReserveCore) SetRates(assets []commonv3.Asset, buys, sells []*big.Int, block *big.Int, afpMids []*big.Int, msgs []string, triggers []bool) (common.ActivityID, error) {
+func (rc *ReserveCore) SetRates(assets []commonv3.Asset, buys, sells []*big.Int, block *big.Int, afpMids []*big.Int,
+	msgs []string, triggers []bool) (common.ActivityID, error) {
 
 	var (
 		tx           *types.Transaction
@@ -720,10 +742,10 @@ func (rc *ReserveCore) SetRates(assets []commonv3.Asset, buys, sells []*big.Int,
 			Triggers: triggers,
 		},
 		activityResult,
-		"",
+		common.ExchangeStatusNA,
 		miningStatus,
 		common.NowInMillis(),
-		true,
+		miningStatus != common.MiningStatusFailed,
 	)
 	rc.l.Infof(
 		"Core ----------> Set rates: ==> Result: tx: %s, nonce: %d, price: %s, error: %v, storage error: %v",
@@ -743,16 +765,13 @@ func (rc *ReserveCore) SpeedupDeposit(act common.ActivityRecord) (*big.Int, erro
 	if err != nil {
 		maxGas = common.HighBoundGasPrice
 	}
-	if newGas > maxGas {
-		newGas = maxGas
-	}
-	gasPrice := common.GweiToWei(newGas)
+
 	tx := ethereum.HexToHash(act.Result.Tx)
-	hash, err := rc.blockchain.SpeedupDeposit(tx, gasPrice)
+	signedTx, err := rc.blockchain.SpeedupDeposit(tx, newGas, maxGas)
 	if err != nil {
-		return gasPrice, fmt.Errorf("failed to speedup deposit tx, %w", err)
+		return nil, fmt.Errorf("failed to speedup deposit tx, %w", err)
 	}
-	rc.l.Debugw("sent speedup tx", "new_tx", hash.String(), "src_tx", tx.String())
+	rc.l.Debugw("sent speedup tx", "new_tx", signedTx.Hash().String(), "src_tx", tx.String())
 
 	// store new act to storage
 	replaceUID := func(actID common.ActivityID, txhex string) common.ActivityID {
@@ -768,19 +787,19 @@ func (rc *ReserveCore) SpeedupDeposit(act common.ActivityRecord) (*big.Int, erro
 		return timebasedID(id)
 	}
 	activityResult := common.ActivityResult{
-		Tx:       hash.Hex(),
+		Tx:       signedTx.Hash().Hex(),
 		Nonce:    act.Result.Nonce,
-		GasPrice: gasPrice.String(),
+		GasPrice: signedTx.GasPrice().String(),
 		Error:    "",
 		TxTime:   common.TimeToMillis(time.Now()),
 	}
-	return gasPrice, rc.activityStorage.Record(
+	return signedTx.GasPrice(), rc.activityStorage.Record(
 		common.ActionDeposit,
-		replaceUID(act.ID, hash.Hex()),
+		replaceUID(act.ID, signedTx.Hash().Hex()),
 		act.Params.Exchange.String(),
 		*act.Params,
 		activityResult,
-		"",
+		common.ExchangeStatusNA,
 		common.MiningStatusSubmitted,
 		common.TimeToMillis(time.Now()),
 		true,
