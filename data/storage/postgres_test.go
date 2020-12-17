@@ -423,6 +423,11 @@ func TestUSDData(t *testing.T) {
 			Ask:   0.234,
 			Valid: true,
 		},
+		CurveDAIUSDC10000: common.FeedProviderResponse{
+			Bid:   1.0123,
+			Ask:   1.0234,
+			Valid: true,
+		},
 	}
 	err = ps.StoreUSDInfo(usdTest)
 	assert.NoError(t, err)

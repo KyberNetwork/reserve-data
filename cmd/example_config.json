@@ -64,6 +64,9 @@
     },
     "coinbase_eth_usd_dai_5000": {
       "url": "http://localhost:8003/feed/CoinbaseETHUSDDAI5000"
+    },
+    "curve_dai_usdc_10000": {
+      "url": "http://localhost:8080/convert/curve/DAIUSDC/10000"
     }
   }
 }
