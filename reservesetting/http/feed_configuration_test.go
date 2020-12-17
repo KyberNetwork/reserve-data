@@ -53,6 +53,7 @@ func TestCheckFeedConfiguration(t *testing.T) {
 	// USD feed
 	supportedUSDFeed := []feed.Feed{
 		feed.CoinbaseETHUSDDAI5000,
+		feed.CurveDAIUSDC10000,
 	}
 
 	for _, feedName := range supportedUSDFeed {

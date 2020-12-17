@@ -36,6 +36,7 @@ func TestFeedWeight(t *testing.T) {
 
 	testFeedWeightUSDIsSupported := common.FeedWeight{
 		feed.CoinbaseETHUSDDAI5000.String(): 0.1,
+		feed.CurveDAIUSDC10000.String():     0.2,
 	}
 	err = checkFeedWeight(&testSetRateUSDFeed, &testFeedWeightUSDIsSupported)
 	assert.NoError(t, err)
