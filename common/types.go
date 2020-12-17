@@ -740,6 +740,7 @@ type WorldEndpoints struct {
 	BinanceETHBTC3  SiteConfig `json:"binance_eth_btc_3"`
 
 	CoinbaseETHUSDDAI5000 SiteConfig `json:"coinbase_eth_usd_dai_5000"`
+	CurveDAIUSDC10000     SiteConfig `json:"curve_dai_usdc_10000"`
 }
 
 // ContractAddresses ...
