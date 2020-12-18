@@ -58,6 +58,10 @@ type preparedStmts struct {
 
 	getGeneralData *sqlx.Stmt
 	setGeneralData *sqlx.NamedStmt
+
+	approveSettingChange        *sqlx.Stmt
+	getApprovalSettingChange    *sqlx.Stmt
+	deleteApprovalSettingChange *sqlx.Stmt
 }
 
 func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
@@ -167,6 +171,11 @@ func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
 		return nil, err
 	}
 
+	approveSettingChange, getApprovalSettingChange, deleteApprovalSettingChange, err := confirmPedingSettingStatements(db)
+	if err != nil {
+		return nil, err
+	}
+
 	return &preparedStmts{
 		getExchanges:                   getExchanges,
 		getExchange:                    getExchange,
@@ -220,6 +229,10 @@ func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
 
 		getGeneralData: getGeneralDataStmt,
 		setGeneralData: setGeneralDataStmt,
+
+		approveSettingChange:        approveSettingChange,
+		getApprovalSettingChange:    getApprovalSettingChange,
+		deleteApprovalSettingChange: deleteApprovalSettingChange,
 	}, nil
 }
 
@@ -808,4 +821,23 @@ func generalDataStatements(db *sqlx.DB) (*sqlx.NamedStmt, *sqlx.Stmt, error) {
 		return nil, nil, err
 	}
 	return setGeneralDataStmt, getGeneralDataStmt, err
+}
+
+func confirmPedingSettingStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, error) {
+	const setQuery = `INSERT INTO confirm_pending_setting(key_id, setting_change_id, timestamp) VALUES ($1, $2, now()) RETURNING id;`
+	approveSettingChangeStmt, err := db.Preparex(setQuery)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	const getQuery = `SELECT key_id, timestamp FROM confirm_pending_setting WHERE setting_change_id=$1;`
+	getApprovalSettingChangeStmt, err := db.Preparex(getQuery)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	const removeQuery = `DELETE FROM confirm_pending_setting WHERE key_id=$1 AND setting_change_id=$2;`
+	deleteApprovalSettingChangeStmt, err := db.Preparex(removeQuery)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	return approveSettingChangeStmt, getApprovalSettingChangeStmt, deleteApprovalSettingChangeStmt, err
 }

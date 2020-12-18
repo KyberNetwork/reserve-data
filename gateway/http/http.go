@@ -1,6 +1,7 @@
 package http
 
 import (
+	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"time"
@@ -19,7 +20,7 @@ type Server struct {
 	addr string
 }
 
-func newReverseProxyMW(target string) (gin.HandlerFunc, error) {
+func newReverseProxyMW(target string, noAuth bool) (gin.HandlerFunc, error) {
 	parsedURL, err := url.Parse(target)
 	if err != nil {
 		return nil, err
@@ -27,6 +28,15 @@ func newReverseProxyMW(target string) (gin.HandlerFunc, error) {
 	proxy := httputil.NewSingleHostReverseProxy(parsedURL)
 
 	return func(c *gin.Context) {
+		if !noAuth {
+			c.Request.Header.Del("UserKeyID")
+			signedHeader, err := NewSignatureHeader(c.Request)
+			if err != nil {
+				libhttputil.ResponseFailure(c, http.StatusBadRequest, err)
+				return
+			}
+			c.Request.Header.Add("UserKeyID", signedHeader.KeyID)
+		}
 		proxy.ServeHTTP(c.Writer, c.Request)
 	}, nil
 }
