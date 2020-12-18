@@ -4,9 +4,9 @@ package http
 type Option func(*Server) error
 
 // WithCoreEndpoint set endpoint gateway for V3
-func WithCoreEndpoint(coreEndpoint string) Option {
+func WithCoreEndpoint(coreEndpoint string, noAuth bool) Option {
 	return func(s *Server) error {
-		coreProxyMW, err := newReverseProxyMW(coreEndpoint)
+		coreProxyMW, err := newReverseProxyMW(coreEndpoint, noAuth)
 		if err != nil {
 			return err
 		}
@@ -50,9 +50,9 @@ func WithCoreEndpoint(coreEndpoint string) Option {
 }
 
 //WithSettingEndpoint set endpoint gateway for V3
-func WithSettingEndpoint(settingEndpoint string) Option {
+func WithSettingEndpoint(settingEndpoint string, noAuth bool) Option {
 	return func(s *Server) error {
-		settingProxyMW, err := newReverseProxyMW(settingEndpoint)
+		settingProxyMW, err := newReverseProxyMW(settingEndpoint, noAuth)
 		if err != nil {
 			return err
 		}
@@ -130,6 +130,9 @@ func WithSettingEndpoint(settingEndpoint string) Option {
 
 		g.GET("/gas-source", settingProxyMW)
 		g.POST("/gas-source", settingProxyMW)
+
+		g.DELETE("/disapprove-setting-change/:id", settingProxyMW)
+		g.GET("/number-approval-required", settingProxyMW)
 
 		return nil
 	}

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"log"
 	"os"
 
@@ -10,28 +12,24 @@ import (
 	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli"
+	"go.uber.org/zap"
 
 	"github.com/KyberNetwork/httpsign-utils/authenticator"
 	"github.com/KyberNetwork/reserve-data/cmd/mode"
+	"github.com/KyberNetwork/reserve-data/gateway/common"
 	"github.com/KyberNetwork/reserve-data/gateway/http"
 	libapp "github.com/KyberNetwork/reserve-data/lib/app"
 	"github.com/KyberNetwork/reserve-data/lib/httputil"
 )
 
 const (
-	readAccessKeyFlag      = "read-access-key"
-	readSecretKeyFlag      = "read-secret-key"
-	writeAccessKeyFlag     = "write-access-key"
-	writeSecretKeyFlag     = "write-secret-key"
-	confirmAccessKeyFlag   = "confirm-access-key"
-	confirmSecretKeyFlag   = "confirm-secret-key"
-	rebalanceAccessKeyFlag = "rebalance-access-key"
-	rebalanceSecretKeyFlag = "rebalance-secret-key"
-
 	coreEndpointFlag    = "core-endpoint"
 	settingEndpointFlag = "setting-endpoint"
 
 	noAuthFlag = "no-auth"
+
+	configFileFlag    = "config"
+	defaultConfigFile = "config.json"
 )
 
 var (
@@ -43,53 +41,12 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "HTTP gateway for reserve core"
 	app.Action = run
-	app.Flags = append(app.Flags,
-		cli.StringSliceFlag{
-			Name:   readAccessKeyFlag,
-			Usage:  "key for access read paths",
-			EnvVar: "READ_ACCESS_KEY",
-		},
-		cli.StringSliceFlag{
-			Name:   readSecretKeyFlag,
-			Usage:  "secret key for read paths",
-			EnvVar: "READ_SECRET_KEY",
-		},
-		cli.StringSliceFlag{
-			Name:   writeAccessKeyFlag,
-			Usage:  "key for access write paths",
-			EnvVar: "WRITE_ACCESS_KEY",
-		},
-		cli.StringSliceFlag{
-			Name:   writeSecretKeyFlag,
-			Usage:  "secret key for access write paths",
-			EnvVar: "WRITE_SECRET_KEY",
-		},
-		cli.StringSliceFlag{
-			Name:   confirmAccessKeyFlag,
-			Usage:  "access key for access confirm paths",
-			EnvVar: "CONFIRM_ACCESS_KEY",
-		},
-		cli.StringSliceFlag{
-			Name:   confirmSecretKeyFlag,
-			Usage:  "secret key for access confirm paths",
-			EnvVar: "CONFIRM_SECRET_KEY",
-		},
-		cli.StringSliceFlag{
-			Name:   rebalanceAccessKeyFlag,
-			Usage:  "access key for access rebalance paths",
-			EnvVar: "REBALANCE_ACCESS_KEY",
-		},
-		cli.StringSliceFlag{
-			Name:   rebalanceSecretKeyFlag,
-			Usage:  "secret key to access rebalance paths",
-			EnvVar: "REBALANCE_SECRET_KEY",
-		},
-		cli.StringFlag{
-			Name:   coreEndpointFlag,
-			Usage:  "core endpoint url",
-			EnvVar: "CORE_ENDPOINT",
-			Value:  coreEndpointDefaultValue,
-		},
+	app.Flags = append(app.Flags, cli.StringFlag{
+		Name:   coreEndpointFlag,
+		Usage:  "core endpoint url",
+		EnvVar: "CORE_ENDPOINT",
+		Value:  coreEndpointDefaultValue,
+	},
 		cli.StringFlag{
 			Name:   settingEndpointFlag,
 			Usage:  "setting endpoint url",
@@ -101,6 +58,12 @@ func main() {
 			Usage:  "no authenticate",
 			EnvVar: "NO_AUTH",
 		},
+		cli.StringFlag{
+			Name:   configFileFlag,
+			Usage:  "path to config file",
+			EnvVar: "CONFIG",
+			Value:  defaultConfigFile,
+		},
 	)
 
 	app.Flags = append(app.Flags, httputil.NewHTTPCliFlags(httputil.GatewayPort)...)
@@ -111,35 +74,66 @@ func main() {
 	}
 }
 
-func getKeyList(c *cli.Context, accessKeyFlag, secretKeyFlag string) ([]authenticator.KeyPair, error) {
-	var keyPairs []authenticator.KeyPair
-	accessKeys := c.StringSlice(accessKeyFlag)
-	secretKeys := c.StringSlice(secretKeyFlag)
-	if len(accessKeys) != len(secretKeys) {
-		return nil, errors.Errorf("length read access keys (%d) and read secret keys (%d)", len(accessKeys), len(secretKeys))
-	}
+type keyConfig struct {
+	ReadRole      []authenticator.KeyPair `json:"read_role"`
+	ManageRole    []authenticator.KeyPair `json:"manage_role"` // keys for api that requires confirmations
+	AdminRole     []authenticator.KeyPair `json:"admin_role"`
+	RebalanceRole []authenticator.KeyPair `json:"rebalance_role"`
+}
 
-	for index := range accessKeys {
-		keyPairs = append(keyPairs, authenticator.KeyPair{
-			AccessKeyID:     accessKeys[index],
-			SecretAccessKey: secretKeys[index],
-		})
+func configFromFile(path string) (keyConfig, error) {
+	var rkc struct {
+		ReadRole      []common.KeyPair `json:"read_role"`
+		ManageRole    []common.KeyPair `json:"manage_role"`
+		AdminRole     []common.KeyPair `json:"admin_role"`
+		RebalanceRole []common.KeyPair `json:"rebalance_role"`
 	}
-	return keyPairs, nil
+	f, err := ioutil.ReadFile(path)
+	if err != nil {
+		return keyConfig{}, err
+	}
+	if err := json.Unmarshal(f, &rkc); err != nil {
+		return keyConfig{}, err
+	}
+	var (
+		readRole      []authenticator.KeyPair
+		manageRole    []authenticator.KeyPair
+		adminRole     []authenticator.KeyPair
+		rebalanceRole []authenticator.KeyPair
+	)
+	for _, rr := range rkc.ReadRole {
+		readRole = append(readRole, rr.ToAuthenticatorKeyPair())
+	}
+	for _, mr := range rkc.ManageRole {
+		manageRole = append(manageRole, mr.ToAuthenticatorKeyPair())
+	}
+	for _, ar := range rkc.AdminRole {
+		adminRole = append(adminRole, ar.ToAuthenticatorKeyPair())
+	}
+	for _, rr := range rkc.RebalanceRole {
+		rebalanceRole = append(rebalanceRole, rr.ToAuthenticatorKeyPair())
+	}
+	return keyConfig{
+		ReadRole:      readRole,
+		ManageRole:    manageRole,
+		AdminRole:     adminRole,
+		RebalanceRole: rebalanceRole,
+	}, nil
 }
 
 func run(c *cli.Context) error {
 	var (
-		keyPairs, readKeys, writeKeys, confirmKeys, rebalanceKeys []authenticator.KeyPair
-		err                                                       error
-		auth                                                      *httpsign.Authenticator
-		perm                                                      gin.HandlerFunc
+		keyPairs []authenticator.KeyPair
+		err      error
+		auth     *httpsign.Authenticator
+		perm     gin.HandlerFunc
 	)
 	logger, err := libapp.NewLogger(c)
 	if err != nil {
 		return err
 	}
 	defer libapp.NewFlusher(logger)()
+	zap.ReplaceGlobals(logger)
 	if err := validation.Validate(c.String(coreEndpointFlag),
 		validation.Required,
 		is.URL); err != nil {
@@ -154,39 +148,55 @@ func run(c *cli.Context) error {
 
 	noAuth := c.Bool(noAuthFlag)
 	if !noAuth {
-		readKeys, err = getKeyList(c, readAccessKeyFlag, readSecretKeyFlag)
+		config, err := configFromFile(c.String(configFileFlag))
 		if err != nil {
-			return errors.Wrap(err, "failed to get read keys")
+			return errors.Wrap(err, "cannot read config file")
 		}
-		keyPairs = append(keyPairs, readKeys...)
-		writeKeys, err = getKeyList(c, writeAccessKeyFlag, writeSecretKeyFlag)
-		if err != nil {
-			return errors.Wrap(err, "failed to get write keys")
-		}
-		keyPairs = append(keyPairs, writeKeys...)
-		confirmKeys, err = getKeyList(c, confirmAccessKeyFlag, confirmSecretKeyFlag)
-		if err != nil {
-			return errors.Wrap(err, "failed to get confirm keys")
-		}
-		keyPairs = append(keyPairs, confirmKeys...)
-		rebalanceKeys, err = getKeyList(c, rebalanceAccessKeyFlag, rebalanceSecretKeyFlag)
-		if err != nil {
-			return errors.Wrap(err, "failed to get rebalance keys")
-		}
-		keyPairs = append(keyPairs, rebalanceKeys...)
+		for _, kp := range config.ReadRole {
+			if err := validation.Validate(kp.AccessKeyID, validation.Required); err != nil {
+				return errors.Wrap(err, "read access key error")
+			}
 
-		if err := validation.Validate(c.String(writeAccessKeyFlag), validation.Required); err != nil {
-			return errors.Wrap(err, "write access key error")
+			if err := validation.Validate(kp.SecretAccessKey, validation.Required); err != nil {
+				return errors.Wrap(err, "read secret key error")
+			}
+			keyPairs = append(keyPairs, kp)
 		}
+		for _, kp := range config.ManageRole {
+			if err := validation.Validate(kp.AccessKeyID, validation.Required); err != nil {
+				return errors.Wrap(err, "manage access key error")
+			}
 
-		if err := validation.Validate(c.String(writeSecretKeyFlag), validation.Required); err != nil {
-			return errors.Wrap(err, "secret key error")
+			if err := validation.Validate(kp.SecretAccessKey, validation.Required); err != nil {
+				return errors.Wrap(err, "manage secret key error")
+			}
+			keyPairs = append(keyPairs, kp)
+		}
+		for _, kp := range config.AdminRole {
+			if err := validation.Validate(kp.AccessKeyID, validation.Required); err != nil {
+				return errors.Wrap(err, "admin access key error")
+			}
+
+			if err := validation.Validate(kp.SecretAccessKey, validation.Required); err != nil {
+				return errors.Wrap(err, "admin secret key error")
+			}
+			keyPairs = append(keyPairs, kp)
+		}
+		for _, kp := range config.RebalanceRole {
+			if err := validation.Validate(kp.AccessKeyID, validation.Required); err != nil {
+				return errors.Wrap(err, "rebalance access key error")
+			}
+
+			if err := validation.Validate(kp.SecretAccessKey, validation.Required); err != nil {
+				return errors.Wrap(err, "rebalance secret key error")
+			}
+			keyPairs = append(keyPairs, kp)
 		}
 		auth, err = authenticator.NewAuthenticator(keyPairs...)
 		if err != nil {
 			return errors.Wrap(err, "authentication object creation error")
 		}
-		perm, err = http.NewPermissioner(readKeys, writeKeys, confirmKeys, rebalanceKeys)
+		perm, err = http.NewPermissioner(config.ReadRole, config.ManageRole, config.RebalanceRole, config.AdminRole)
 		if err != nil {
 			return errors.Wrap(err, "permission object creation error")
 		}
@@ -197,8 +207,8 @@ func run(c *cli.Context) error {
 		perm,
 		noAuth,
 		logger,
-		http.WithCoreEndpoint(c.String(coreEndpointFlag)),
-		http.WithSettingEndpoint(c.String(settingEndpointFlag)),
+		http.WithCoreEndpoint(c.String(coreEndpointFlag), noAuth),
+		http.WithSettingEndpoint(c.String(settingEndpointFlag), noAuth),
 	)
 	if err != nil {
 		return errors.Wrap(err, "create new server error")

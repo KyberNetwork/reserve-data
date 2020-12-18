@@ -304,13 +304,61 @@ func (s *Server) rejectSettingChange(c *gin.Context) {
 	httputil.ResponseSuccess(c)
 }
 
-func (s *Server) confirmSettingChange(c *gin.Context) {
-	var input struct {
-		ID uint64 `uri:"id" binding:"required"`
-	}
+func (s *Server) getKeyIDFromContext(c *gin.Context) string {
+	return c.Request.Header.Get("UserKeyID")
+}
+
+func (s *Server) disapproveSettingChange(c *gin.Context) {
+	var (
+		input struct {
+			ID uint64 `uri:"id" binding:"required"`
+		}
+	)
 	if err := c.ShouldBindUri(&input); err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
+	}
+	if _, err := s.storage.GetSettingChange(rtypes.SettingChangeID(input.ID)); err != nil {
+		httputil.ResponseFailure(c, httputil.WithError(err))
+		return
+	}
+	keyID := s.getKeyIDFromContext(c)
+	if err := s.storage.DisapproveSettingChange(keyID, input.ID); err != nil {
+		httputil.ResponseFailure(c, httputil.WithError(err))
+		return
+	}
+	httputil.ResponseSuccess(c)
+}
+
+func (s *Server) confirmSettingChange(c *gin.Context) {
+	var (
+		input struct {
+			ID uint64 `uri:"id" binding:"required"`
+		}
+	)
+	if err := c.ShouldBindUri(&input); err != nil {
+		httputil.ResponseFailure(c, httputil.WithError(err))
+		return
+	}
+	keyID := s.getKeyIDFromContext(c)
+	if keyID != "" {
+		if _, err := s.storage.GetSettingChange(rtypes.SettingChangeID(input.ID)); err != nil {
+			httputil.ResponseFailure(c, httputil.WithError(err))
+			return
+		}
+		if err := s.storage.ApproveSettingChange(keyID, input.ID); err != nil {
+			httputil.ResponseFailure(c, httputil.WithError(err))
+			return
+		}
+		listApprovalSettingChange, err := s.storage.GetLisApprovalSettingChange(input.ID)
+		if err != nil {
+			httputil.ResponseFailure(c, httputil.WithError(err))
+			return
+		}
+		if len(listApprovalSettingChange) < s.numberApprovalRequired {
+			httputil.ResponseSuccess(c)
+			return
+		}
 	}
 	additionalDataReturn, err := s.storage.ConfirmSettingChange(rtypes.SettingChangeID(input.ID), true)
 	if err != nil {
@@ -781,4 +829,8 @@ func (s *Server) checkSetFeedConfigurationParams(setFeedConfigurationEntry commo
 	}
 
 	return fmt.Errorf("feed does not exist, feed=%s", setFeedConfigurationEntry.Name)
+}
+
+func (s *Server) getNumberApprovalRequired(c *gin.Context) {
+	httputil.ResponseSuccess(c, httputil.WithData(s.numberApprovalRequired))
 }
