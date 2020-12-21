@@ -143,7 +143,7 @@ func TestUpdateAsset(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Logf("running test case for: %s", tc.msg)
-		id, err := s.CreateSettingChange(common.ChangeCatalogMain, tc.data)
+		id, err := s.CreateSettingChange(common.ChangeCatalogMain, tc.data, "")
 		assert.NoError(t, err)
 		_, err = s.ConfirmSettingChange(id, true)
 		require.NoError(t, err)
