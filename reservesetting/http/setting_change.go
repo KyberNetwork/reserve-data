@@ -213,8 +213,8 @@ func (s *Server) createSettingChange(c *gin.Context, t common.ChangeCatalog) {
 		httputil.ResponseFailure(c, httputil.WithReason(msg))
 		return
 	}
-
-	id, err := s.storage.CreateSettingChange(t, settingChange, s.getKeyIDFromContext(c))
+	keyID := s.getKeyIDFromContext(c)
+	id, err := s.storage.CreateSettingChange(t, settingChange, keyID)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(makeFriendlyMessage(err)))
 		return
@@ -225,7 +225,7 @@ func (s *Server) createSettingChange(c *gin.Context, t common.ChangeCatalog) {
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(makeFriendlyMessage(err)))
 		// clean up
-		if err = s.storage.RejectSettingChange(id, "" /*keyID*/); err != nil {
+		if err = s.storage.RejectSettingChange(id, keyID); err != nil {
 			s.l.Errorw("failed to clean up with reject setting change", "err", err)
 		}
 		return
@@ -348,7 +348,7 @@ func (s *Server) confirmSettingChange(c *gin.Context) {
 			return
 		}
 		if change.Proposer == keyID {
-			httputil.ResponseFailure(c, httputil.WithError(errors.New("cannot approve for the change that made by you")))
+			httputil.ResponseFailure(c, httputil.WithError(errors.New("cannot approve for the change that made by yourself")))
 			return
 		}
 		if err := s.storage.ApproveSettingChange(keyID, input.ID); err != nil {
