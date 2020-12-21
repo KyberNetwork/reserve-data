@@ -14,10 +14,10 @@ type Interface interface {
 	UpdateDepositAddress(assetID rtypes.AssetID, exchangeID rtypes.ExchangeID, address ethereum.Address) error
 	UpdateTradingPair(id rtypes.TradingPairID, opts UpdateTradingPairOpts) error
 
-	CreateSettingChange(v3.ChangeCatalog, v3.SettingChange) (rtypes.SettingChangeID, error)
+	CreateSettingChange(v3.ChangeCatalog, v3.SettingChange, string) (rtypes.SettingChangeID, error)
 	GetSettingChange(id rtypes.SettingChangeID) (v3.SettingChangeResponse, error)
 	GetSettingChanges(catalog v3.ChangeCatalog, status v3.ChangeStatus) ([]v3.SettingChangeResponse, error)
-	RejectSettingChange(id rtypes.SettingChangeID) error
+	RejectSettingChange(id rtypes.SettingChangeID, keyID string) error
 	ConfirmSettingChange(rtypes.SettingChangeID, bool) (*v3.AdditionalDataReturn, error)
 
 	CreatePriceFactor(v3.PriceFactorAtTime) (uint64, error)

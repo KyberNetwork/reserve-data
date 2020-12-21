@@ -198,7 +198,7 @@ func initData(t *testing.T, s *Storage) {
 				OrderDurationMillis:   12000,
 			},
 		},
-	}})
+	}}, "")
 	require.NoError(t, err)
 	_, err = s.ConfirmSettingChange(id, true)
 	require.NoError(t, err)
@@ -243,7 +243,7 @@ func TestStorage_SettingChangeCreate(t *testing.T) {
 			},
 			assertFn: func(t *testing.T, u rtypes.SettingChangeID, e error) {
 				assert.Equal(t, common.ErrPWIMissing, e)
-				assert.NoError(t, s.RejectSettingChange(u))
+				assert.NoError(t, s.RejectSettingChange(u, ""))
 			},
 		},
 		{
@@ -291,7 +291,7 @@ func TestStorage_SettingChangeCreate(t *testing.T) {
 			},
 			assertFn: func(t *testing.T, u rtypes.SettingChangeID, e error) {
 				assert.Equal(t, common.ErrRebalanceQuadraticMissing, e)
-				assert.NoError(t, s.RejectSettingChange(u))
+				assert.NoError(t, s.RejectSettingChange(u, ""))
 			},
 		},
 		{
@@ -334,7 +334,7 @@ func TestStorage_SettingChangeCreate(t *testing.T) {
 			},
 			assertFn: func(t *testing.T, u rtypes.SettingChangeID, e error) {
 				assert.Equal(t, common.ErrAssetExchangeMissing, e)
-				assert.NoError(t, s.RejectSettingChange(u))
+				assert.NoError(t, s.RejectSettingChange(u, ""))
 			},
 		},
 		{
@@ -383,7 +383,7 @@ func TestStorage_SettingChangeCreate(t *testing.T) {
 			},
 			assertFn: func(t *testing.T, u rtypes.SettingChangeID, e error) {
 				assert.Equal(t, common.ErrAssetTargetMissing, e)
-				assert.NoError(t, s.RejectSettingChange(u))
+				assert.NoError(t, s.RejectSettingChange(u, ""))
 			},
 		},
 		{
@@ -428,7 +428,7 @@ func TestStorage_SettingChangeCreate(t *testing.T) {
 			},
 			assertFn: func(t *testing.T, u rtypes.SettingChangeID, e error) {
 				assert.Equal(t, common.ErrAddressMissing, e)
-				assert.NoError(t, s.RejectSettingChange(u))
+				assert.NoError(t, s.RejectSettingChange(u, ""))
 			},
 		},
 		{
@@ -475,7 +475,7 @@ func TestStorage_SettingChangeCreate(t *testing.T) {
 			},
 			assertFn: func(t *testing.T, u rtypes.SettingChangeID, e error) {
 				assert.Equal(t, common.ErrDepositAddressMissing, e)
-				assert.NoError(t, s.RejectSettingChange(u))
+				assert.NoError(t, s.RejectSettingChange(u, ""))
 			},
 		},
 		{
@@ -534,7 +534,7 @@ func TestStorage_SettingChangeCreate(t *testing.T) {
 			},
 			assertFn: func(t *testing.T, u rtypes.SettingChangeID, e error) {
 				assert.Equal(t, common.ErrQuoteAssetInvalid, e)
-				assert.NoError(t, s.RejectSettingChange(u))
+				assert.NoError(t, s.RejectSettingChange(u, ""))
 			},
 		},
 		{
@@ -563,7 +563,7 @@ func TestStorage_SettingChangeCreate(t *testing.T) {
 
 			assertFn: func(t *testing.T, u rtypes.SettingChangeID, e error) {
 				assert.Equal(t, common.ErrDepositAddressMissing, e)
-				assert.NoError(t, s.RejectSettingChange(u))
+				assert.NoError(t, s.RejectSettingChange(u, ""))
 			},
 		},
 		{
@@ -603,7 +603,7 @@ func TestStorage_SettingChangeCreate(t *testing.T) {
 
 			assertFn: func(t *testing.T, u rtypes.SettingChangeID, e error) {
 				assert.Error(t, e)
-				assert.NoError(t, s.RejectSettingChange(u))
+				assert.NoError(t, s.RejectSettingChange(u, ""))
 			},
 		},
 		{
@@ -643,7 +643,7 @@ func TestStorage_SettingChangeCreate(t *testing.T) {
 
 			assertFn: func(t *testing.T, u rtypes.SettingChangeID, e error) {
 				assert.Error(t, e)
-				assert.NoError(t, s.RejectSettingChange(u))
+				assert.NoError(t, s.RejectSettingChange(u, ""))
 			},
 		},
 		{
@@ -683,13 +683,13 @@ func TestStorage_SettingChangeCreate(t *testing.T) {
 
 			assertFn: func(t *testing.T, u rtypes.SettingChangeID, e error) {
 				assert.Error(t, e)
-				assert.NoError(t, s.RejectSettingChange(u))
+				assert.NoError(t, s.RejectSettingChange(u, ""))
 			},
 		},
 	}
 	for _, tc := range tests {
 		t.Logf("running test case for: %s", tc.msg)
-		id, err := s.CreateSettingChange(common.ChangeCatalogMain, tc.data)
+		id, err := s.CreateSettingChange(common.ChangeCatalogMain, tc.data, "")
 		assert.NoError(t, err)
 		_, err = s.ConfirmSettingChange(id, true)
 		tc.assertFn(t, id, err)
@@ -731,7 +731,7 @@ func TestStorage_DeleteTradingPair(t *testing.T) {
 			},
 		},
 		Message: "delete trading pair",
-	})
+	}, "")
 	require.NoError(t, err)
 	_, err = s.ConfirmSettingChange(c, true)
 	require.NoError(t, err)
@@ -739,4 +739,39 @@ func TestStorage_DeleteTradingPair(t *testing.T) {
 	require.Error(t, err, common.ErrNotFound)
 	_, err = s.GetTradingPair(1, true)
 	require.NoError(t, err)
+}
+
+func TestStorage_ProposerAndRejector(t *testing.T) {
+	db, tearDown := testutil.MustNewDevelopmentDB(migrationPath)
+	defer func() {
+		assert.NoError(t, tearDown())
+	}()
+	s, err := NewStorage(db)
+	require.NoError(t, err)
+	initData(t, s)
+	var (
+		proposer = "proposer"
+		rejector = "rejector"
+	)
+	_, err = s.GetTradingPair(1, false)
+	require.NoError(t, err)
+	c, err := s.CreateSettingChange(common.ChangeCatalogMain, common.SettingChange{
+		ChangeList: []common.SettingChangeEntry{
+			{
+				Type: common.ChangeTypeDeleteTradingPair,
+				Data: common.DeleteTradingPairEntry{TradingPairID: 1},
+			},
+		},
+		Message: "delete trading pair",
+	}, proposer)
+	require.NoError(t, err)
+	sc, err := s.GetSettingChange(c)
+	require.NoError(t, err)
+	require.Equal(t, sc.Proposer, proposer)
+	err = s.RejectSettingChange(c, rejector)
+	require.NoError(t, err)
+	lsc, err := s.GetSettingChanges(common.ChangeCatalogMain, common.ChangeStatusRejected)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(lsc))
+	require.Equal(t, rejector, lsc[0].Rejector)
 }

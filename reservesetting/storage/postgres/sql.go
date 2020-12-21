@@ -710,17 +710,17 @@ func tradingByStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, error
 }
 
 func settingChangeStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, error) {
-	const newSettingChangeQuery = `SELECT new_setting_change FROM new_setting_change($1, $2)`
+	const newSettingChangeQuery = `SELECT new_setting_change FROM new_setting_change($1, $2, $3)`
 	newSettingChangeStmt, err := db.Preparex(newSettingChangeQuery)
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	const updateSettingChangeStatus = `UPDATE setting_change SET status = $2 WHERE id=$1 returning id`
+	const updateSettingChangeStatus = `UPDATE setting_change SET status = $2, rejector = COALESCE($3, rejector) WHERE id=$1 returning id`
 	updateSettingChangeStatusStmt, err := db.Preparex(updateSettingChangeStatus)
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	const listSettingChangeQuery = `SELECT id,created,data FROM setting_change WHERE id=COALESCE($1, setting_change.id) AND cat=COALESCE($2, setting_change.cat)
+	const listSettingChangeQuery = `SELECT id,created,data,proposer,rejector FROM setting_change WHERE id=COALESCE($1, setting_change.id) AND cat=COALESCE($2, setting_change.cat)
 	AND status=COALESCE($3, 'pending'::setting_change_status)`
 	listSettingChangeStmt, err := db.Preparex(listSettingChangeQuery)
 	if err != nil {
