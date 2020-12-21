@@ -71,6 +71,7 @@ curl -X GET "https://gateway.local/v3/setting-change-main?status=pending"
           "id": 2
         }
       },
+      "proposer": "proposer",
       "list_approval":[
         {
           "key_id": "manage_access_key_id",

@@ -351,6 +351,8 @@ type SettingChangeResponse struct {
 	ID           rtypes.SettingChangeID      `json:"id"`
 	Created      time.Time                   `json:"created"`
 	ChangeList   []SettingChangeEntry        `json:"change_list"`
+	Proposer     string                      `json:"proposer,omitempty"`
+	Rejector     string                      `json:"rejector,omitempty"`
 	ListApproval []ApprovalSettingChangeInfo `json:"list_approval,omitempty"`
 }
 

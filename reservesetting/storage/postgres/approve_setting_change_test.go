@@ -36,7 +36,7 @@ func TestApproveSettingChange(t *testing.T) {
 				},
 			},
 		},
-	})
+	}, "")
 	require.NoError(t, err)
 	err = s.ApproveSettingChange("123", uint64(stID))
 	require.NoError(t, err)

@@ -20,7 +20,7 @@ const (
 )
 
 // CreateSettingChange creates an setting change in database and return id
-func (s *Storage) CreateSettingChange(cat common.ChangeCatalog, obj common.SettingChange) (rtypes.SettingChangeID, error) {
+func (s *Storage) CreateSettingChange(cat common.ChangeCatalog, obj common.SettingChange, keyID string) (rtypes.SettingChangeID, error) {
 	var id rtypes.SettingChangeID
 	jsonData, err := json.Marshal(obj)
 	if err != nil {
@@ -32,7 +32,7 @@ func (s *Storage) CreateSettingChange(cat common.ChangeCatalog, obj common.Setti
 	}
 	defer pgutil.RollbackUnlessCommitted(tx)
 
-	if err = tx.Stmtx(s.stmts.newSettingChange).Get(&id, cat.String(), jsonData); err != nil {
+	if err = tx.Stmtx(s.stmts.newSettingChange).Get(&id, cat.String(), jsonData, common.StringPointer(keyID)); err != nil {
 		pErr, ok := err.(*pq.Error)
 		if !ok {
 			return 0, fmt.Errorf("unknown returned err=%s", err.Error())
@@ -52,9 +52,11 @@ func (s *Storage) CreateSettingChange(cat common.ChangeCatalog, obj common.Setti
 }
 
 type settingChangeDB struct {
-	ID      rtypes.SettingChangeID `db:"id"`
-	Created time.Time              `db:"created"`
-	Data    []byte                 `db:"data"`
+	ID       rtypes.SettingChangeID `db:"id"`
+	Created  time.Time              `db:"created"`
+	Data     []byte                 `db:"data"`
+	Proposer sql.NullString         `db:"proposer"`
+	Rejector sql.NullString         `db:"rejector"`
 }
 
 func (objDB settingChangeDB) ToCommon() (common.SettingChangeResponse, error) {
@@ -67,6 +69,8 @@ func (objDB settingChangeDB) ToCommon() (common.SettingChangeResponse, error) {
 		ChangeList: settingChange.ChangeList,
 		ID:         objDB.ID,
 		Created:    objDB.Created,
+		Proposer:   objDB.Proposer.String,
+		Rejector:   objDB.Rejector.String,
 	}, nil
 }
 
@@ -131,14 +135,14 @@ func (s *Storage) GetSettingChanges(cat common.ChangeCatalog, status common.Chan
 }
 
 // RejectSettingChange delete setting change with a given id
-func (s *Storage) RejectSettingChange(id rtypes.SettingChangeID) error {
+func (s *Storage) RejectSettingChange(id rtypes.SettingChangeID, keyID string) error {
 	var returnedID uint64
 	tx, err := s.db.Beginx()
 	if err != nil {
 		return err
 	}
 	defer pgutil.RollbackUnlessCommitted(tx)
-	err = tx.Stmtx(s.stmts.updateSettingChangeStatus).Get(&returnedID, id, common.ChangeStatusRejected.String())
+	err = tx.Stmtx(s.stmts.updateSettingChangeStatus).Get(&returnedID, id, common.ChangeStatusRejected.String(), common.StringPointer(keyID))
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return common.ErrNotFound
@@ -255,7 +259,7 @@ func (s *Storage) ConfirmSettingChange(id rtypes.SettingChangeID, commit bool) (
 			return nil, err
 		}
 	}
-	_, err = tx.Stmtx(s.stmts.updateSettingChangeStatus).Exec(id, common.ChangeStatusAccepted.String())
+	_, err = tx.Stmtx(s.stmts.updateSettingChangeStatus).Exec(id, common.ChangeStatusAccepted.String(), nil)
 	if err != nil {
 		return nil, err
 	}
