@@ -67,6 +67,9 @@
     },
     "curve_dai_usdc_10000": {
       "url": "http://localhost:8080/convert/curve/DAIUSDC/10000"
+    },
+    "binance_eth_usdc_10000": {
+      "url": "http://localhost:8080/convert/binance/eth-usdc/10000"
     }
   }
 }

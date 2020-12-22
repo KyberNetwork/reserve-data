@@ -16,6 +16,7 @@ const (
 
 	CoinbaseETHUSDDAI5000 // CoinbaseETHUSDDAI5000
 	CurveDAIUSDC10000     // CurveDAIUSDC10000
+	BinanceETHUSDC10000   // BinanceETHUSDC10000
 )
 
 var (
@@ -24,6 +25,7 @@ var (
 	usdFeeds = map[string]struct{}{
 		CoinbaseETHUSDDAI5000.String(): dummyStruct,
 		CurveDAIUSDC10000.String():     dummyStruct,
+		BinanceETHUSDC10000.String():   dummyStruct,
 	}
 
 	// btcFeeds list of supported btc feeds
