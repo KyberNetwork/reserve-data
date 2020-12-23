@@ -249,19 +249,18 @@ func tradingPairStatements(db *sqlx.DB) (*tradingPairStmts, error) {
 		return nil, errors.Wrap(err, "failed to prepare newTradingPair")
 	}
 	const getTradingPairQuery = `SELECT DISTINCT tp.id,
-									                tp.exchange_id,
-									                tp.base_id,
-									                tp.quote_id,
-									                tp.price_precision,
-									                tp.amount_precision,
-									                tp.amount_limit_min,
-									                tp.amount_limit_max,
-									                tp.price_limit_min,
-									                tp.price_limit_max,
-									                tp.min_notional
+									tp.exchange_id,
+									tp.base_id,
+									tp.quote_id,
+									tp.price_precision,
+									tp.amount_precision,
+									tp.amount_limit_min,
+									tp.amount_limit_max,
+									tp.price_limit_min,
+									tp.price_limit_max,
+									tp.min_notional
 									FROM trading_pairs tp
-									         INNER JOIN asset_exchanges ae ON tp.exchange_id = ae.exchange_id
-									WHERE ae.asset_id = coalesce($1, ae.asset_id);
+									WHERE tp.base_id = coalesce($1, tp.base_id) OR tp.quote_id=COALESCE($1,tp.quote_id);
 									`
 	getTradingPair, err := db.Preparex(getTradingPairQuery)
 	if err != nil {
