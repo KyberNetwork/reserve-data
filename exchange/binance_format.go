@@ -13,6 +13,7 @@ type Binaresp struct {
 	Msg           string      `json:"msg"`
 	Bids          []Binaprice `json:"bids"`
 	Asks          []Binaprice `json:"asks"`
+	Timestamp     uint64      `json:"timestamp"`
 }
 
 // Binainfo binance account info

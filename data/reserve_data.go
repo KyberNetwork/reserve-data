@@ -92,10 +92,8 @@ func (rd ReserveData) GetAllPrices(timepoint uint64) (common.AllPriceResponse, e
 		return common.AllPriceResponse{}, err
 	}
 
-	returnTime := common.GetTimestamp()
 	result.Version = version
 	result.Timestamp = timestamp
-	result.ReturnTime = returnTime
 	result.Data = data.Data
 	result.Block = data.Block
 	return result, err
@@ -110,10 +108,8 @@ func (rd ReserveData) GetOnePrice(pairID rtypes.TradingPairID, timepoint uint64)
 	}
 	result := common.OnePriceResponse{}
 	data, err := rd.storage.GetOnePrice(pairID, version)
-	returnTime := common.GetTimestamp()
 	result.Version = version
 	result.Timestamp = timestamp
-	result.ReturnTime = returnTime
 	result.Data = data
 	return result, err
 }

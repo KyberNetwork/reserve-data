@@ -198,8 +198,6 @@ func (h *Huobi) FetchOnePairData(
 	result.Timestamp = timestamp
 	result.Valid = true
 	respData, err := h.interf.GetDepthOnePair(pair.BaseSymbol, pair.QuoteSymbol)
-	returnTime := common.GetTimestamp()
-	result.ReturnTime = returnTime
 	if err != nil {
 		result.Valid = false
 		result.Error = err.Error()

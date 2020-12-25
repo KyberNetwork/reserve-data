@@ -425,31 +425,35 @@ type AllPriceEntry struct {
 	Data  map[rtypes.TradingPairID]OnePrice
 }
 
+// AllPriceResponse return price for all supported tradning pair
 type AllPriceResponse struct {
-	Version    Version
-	Timestamp  Timestamp
-	ReturnTime Timestamp
-	Data       map[rtypes.TradingPairID]OnePrice
-	Block      uint64
+	Version   Version
+	Timestamp Timestamp //  server time when it is fetched
+	// ReturnTime Timestamp
+	Data  map[rtypes.TradingPairID]OnePrice
+	Block uint64
 }
 
+// OnePriceResponse response for 1 pair only
 type OnePriceResponse struct {
-	Version    Version
-	Timestamp  Timestamp
-	ReturnTime Timestamp
-	Data       OnePrice
-	Block      uint64
+	Version   Version
+	Timestamp Timestamp // server time when data is fetched
+	// ReturnTime Timestamp
+	Data  OnePrice
+	Block uint64
 }
 
+// OnePrice map exchange id with its correspond price
 type OnePrice map[rtypes.ExchangeID]ExchangePrice
 
+// ExchangePrice is price of a trading pair
 type ExchangePrice struct {
-	Valid      bool
-	Error      string
-	Timestamp  Timestamp
-	Bids       []PriceEntry
-	Asks       []PriceEntry
-	ReturnTime Timestamp
+	Valid     bool
+	Error     string
+	Timestamp Timestamp // exchange timestamp
+	Bids      []PriceEntry
+	Asks      []PriceEntry
+	// ReturnTime Timestamp // server time when api is called
 }
 
 type RawBalance big.Int
@@ -842,8 +846,9 @@ type RawConfig struct {
 
 // FeedProviderResponse ...
 type FeedProviderResponse struct {
-	Valid bool
-	Error string
-	Bid   float64 `json:"bid,string"`
-	Ask   float64 `json:"ask,string"`
+	Valid     bool
+	Error     string
+	Bid       float64 `json:"bid,string"`
+	Ask       float64 `json:"ask,string"`
+	Timestamp uint64  `json:"timestamp"`
 }

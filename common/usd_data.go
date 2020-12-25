@@ -17,7 +17,7 @@ type BinanceData struct {
 
 // USDData ...
 type USDData struct {
-	Timestamp             uint64
+	Timestamp             uint64               `json:"timestamp"`
 	CoinbaseETHUSDDAI5000 FeedProviderResponse `json:"CoinbaseETHUSDDAI5000"`
 	CurveDAIUSDC10000     FeedProviderResponse `json:"CurveDAIUSDC10000"`
 	BinanceETHUSDC10000   FeedProviderResponse `json:"BinanceETHUSDC10000"`

@@ -146,12 +146,9 @@ func (bn *Binance) CancelAllOrders(symbol string) error {
 func (bn *Binance) FetchOnePairData(pair commonv3.TradingPairSymbols, timepoint uint64) common.ExchangePrice {
 	result := common.ExchangePrice{}
 
-	timestamp := common.Timestamp(fmt.Sprintf("%d", timepoint))
-	result.Timestamp = timestamp
 	result.Valid = true
 	respData, err := bn.interf.GetDepthOnePair(pair.BaseSymbol, pair.QuoteSymbol)
-	returnTime := common.GetTimestamp()
-	result.ReturnTime = returnTime
+	result.Timestamp = common.Timestamp(fmt.Sprintf("%d", respData.Timestamp))
 	if err != nil {
 		result.Valid = false
 		result.Error = err.Error()
