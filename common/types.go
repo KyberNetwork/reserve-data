@@ -30,6 +30,11 @@ func (ts Timestamp) Millis() uint64 {
 	return res
 }
 
+// TimestampFromMillis ...
+func TimestampFromMillis(ms uint64) Timestamp {
+	return Timestamp(strconv.FormatUint(ms, 10))
+}
+
 // GetTimestamp return timestamp
 func GetTimestamp() Timestamp {
 	return Timestamp(strconv.FormatUint(NowInMillis(), 10))
