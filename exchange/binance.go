@@ -3,6 +3,7 @@ package exchange
 import (
 	"database/sql"
 	"fmt"
+	"math"
 	"math/big"
 	"strconv"
 	"strings"
@@ -412,6 +413,32 @@ func (bn *Binance) WithdrawStatus(id string, assetID rtypes.AssetID, amount floa
 	bn.l.Warnw("Binance Withdrawal doesn't exist. This shouldn't happen unless tx returned from withdrawal from binance and activity ID are not consistently designed",
 		"id", id, "asset_id", assetID, "amount", amount, "timepoint", timepoint)
 	return common.ExchangeStatusNA, "", 0, nil
+}
+
+// FindReplacedWithdraw try to find withdraw that binance replace original withdraw. Binance does replace withdraw when
+// it stuck, a new id and tx id generated, so we can't track it. We resolve by try to find similar withdraw (asset/amount/time)
+func (bn *Binance) FindReplacedWithdraw(asset commonv3.Asset, amount float64, timePoint uint64) (id string, txID string, err error) {
+	var symbol string
+	for _, exchg := range asset.Exchanges {
+		if exchg.ExchangeID == bn.id {
+			symbol = exchg.Symbol
+		}
+	}
+	if symbol == "" {
+		return "", "", fmt.Errorf("no exchange symbol for asset")
+	}
+	fromTime := timePoint - 120000 // find around timepoint for similar withdraw token/amount
+	endTime := timePoint + 120000
+	results, err := bn.interf.WithdrawHistory(fromTime, endTime)
+	if err != nil {
+		return "", "", err
+	}
+	for _, w := range results.Withdrawals {
+		if w.Asset == symbol && math.Abs(amount-(w.Amount+w.Fee)) < 0.1 { // epsilon
+			return w.ID, w.TxID, nil
+		}
+	}
+	return "", "", nil
 }
 
 // OrderStatus return status of an order on binance

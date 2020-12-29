@@ -680,6 +680,9 @@ func (h *Huobi) WithdrawStatus(
 	}
 	return common.ExchangeStatusNA, "", 0, errors.New("huobi Withdrawal doesn't exist. This shouldn't happen unless tx returned from withdrawal from huobi and activity ID are not consistently designed")
 }
+func (h *Huobi) FindReplacedWithdraw(asset commonv3.Asset, amount float64, timePoint uint64) (id string, txID string, err error) {
+	return "", "", fmt.Errorf("not support")
+}
 
 // OrderStatus return order status from Huobi
 func (h *Huobi) OrderStatus(id, base, quote string) (string, float64, error) {
