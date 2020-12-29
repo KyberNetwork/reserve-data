@@ -146,12 +146,8 @@ func (bn *Binance) CancelAllOrders(symbol string) error {
 func (bn *Binance) FetchOnePairData(pair commonv3.TradingPairSymbols, timepoint uint64) common.ExchangePrice {
 	result := common.ExchangePrice{}
 
-	timestamp := common.Timestamp(fmt.Sprintf("%d", timepoint))
-	result.Timestamp = timestamp
 	result.Valid = true
 	respData, err := bn.interf.GetDepthOnePair(pair.BaseSymbol, pair.QuoteSymbol)
-	returnTime := common.GetTimestamp()
-	result.ReturnTime = returnTime
 	if err != nil {
 		result.Valid = false
 		result.Error = err.Error()
@@ -162,23 +158,12 @@ func (bn *Binance) FetchOnePairData(pair commonv3.TradingPairSymbols, timepoint 
 		result.Error = fmt.Sprintf("Code: %d, Msg: %s", respData.Code, respData.Msg)
 		return result
 	}
+	result.Timestamp = common.TimestampFromMillis(respData.Timestamp)
 	for _, buy := range respData.Bids {
-		result.Bids = append(
-			result.Bids,
-			common.NewPriceEntry(
-				buy.Quantity,
-				buy.Rate,
-			),
-		)
+		result.Bids = append(result.Bids, common.NewPriceEntry(buy.Quantity, buy.Rate))
 	}
 	for _, sell := range respData.Asks {
-		result.Asks = append(
-			result.Asks,
-			common.NewPriceEntry(
-				sell.Quantity,
-				sell.Rate,
-			),
-		)
+		result.Asks = append(result.Asks, common.NewPriceEntry(sell.Quantity, sell.Rate))
 	}
 	return result
 }
@@ -220,7 +205,7 @@ func (bn *Binance) FetchEBalanceData(timepoint uint64) (common.EBalanceEntry, er
 		logger = bn.l.With("func", caller.GetCurrentFunctionName())
 	)
 	result := common.EBalanceEntry{}
-	result.Timestamp = common.Timestamp(fmt.Sprintf("%d", timepoint))
+	result.Timestamp = common.TimestampFromMillis(timepoint)
 	result.Valid = true
 	result.Error = ""
 	respData, err := bn.interf.GetInfo()
