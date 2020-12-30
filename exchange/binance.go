@@ -3,6 +3,7 @@ package exchange
 import (
 	"database/sql"
 	"fmt"
+	"math"
 	"math/big"
 	"strconv"
 	"strings"
@@ -146,12 +147,8 @@ func (bn *Binance) CancelAllOrders(symbol string) error {
 func (bn *Binance) FetchOnePairData(pair commonv3.TradingPairSymbols, timepoint uint64) common.ExchangePrice {
 	result := common.ExchangePrice{}
 
-	timestamp := common.Timestamp(fmt.Sprintf("%d", timepoint))
-	result.Timestamp = timestamp
 	result.Valid = true
 	respData, err := bn.interf.GetDepthOnePair(pair.BaseSymbol, pair.QuoteSymbol)
-	returnTime := common.GetTimestamp()
-	result.ReturnTime = returnTime
 	if err != nil {
 		result.Valid = false
 		result.Error = err.Error()
@@ -162,23 +159,12 @@ func (bn *Binance) FetchOnePairData(pair commonv3.TradingPairSymbols, timepoint 
 		result.Error = fmt.Sprintf("Code: %d, Msg: %s", respData.Code, respData.Msg)
 		return result
 	}
+	result.Timestamp = common.TimestampFromMillis(respData.Timestamp)
 	for _, buy := range respData.Bids {
-		result.Bids = append(
-			result.Bids,
-			common.NewPriceEntry(
-				buy.Quantity,
-				buy.Rate,
-			),
-		)
+		result.Bids = append(result.Bids, common.NewPriceEntry(buy.Quantity, buy.Rate))
 	}
 	for _, sell := range respData.Asks {
-		result.Asks = append(
-			result.Asks,
-			common.NewPriceEntry(
-				sell.Quantity,
-				sell.Rate,
-			),
-		)
+		result.Asks = append(result.Asks, common.NewPriceEntry(sell.Quantity, sell.Rate))
 	}
 	return result
 }
@@ -220,7 +206,7 @@ func (bn *Binance) FetchEBalanceData(timepoint uint64) (common.EBalanceEntry, er
 		logger = bn.l.With("func", caller.GetCurrentFunctionName())
 	)
 	result := common.EBalanceEntry{}
-	result.Timestamp = common.Timestamp(fmt.Sprintf("%d", timepoint))
+	result.Timestamp = common.TimestampFromMillis(timepoint)
 	result.Valid = true
 	result.Error = ""
 	respData, err := bn.interf.GetInfo()
@@ -412,6 +398,32 @@ func (bn *Binance) WithdrawStatus(id string, assetID rtypes.AssetID, amount floa
 	bn.l.Warnw("Binance Withdrawal doesn't exist. This shouldn't happen unless tx returned from withdrawal from binance and activity ID are not consistently designed",
 		"id", id, "asset_id", assetID, "amount", amount, "timepoint", timepoint)
 	return common.ExchangeStatusNA, "", 0, nil
+}
+
+// FindReplacedWithdraw try to find withdraw that binance replace original withdraw. Binance does replace withdraw when
+// it stuck, a new id and tx id generated, so we can't track it. We resolve by try to find similar withdraw (asset/amount/time)
+func (bn *Binance) FindReplacedWithdraw(asset commonv3.Asset, amount float64, timePoint uint64) (id string, txID string, err error) {
+	var symbol string
+	for _, exchg := range asset.Exchanges {
+		if exchg.ExchangeID == bn.id {
+			symbol = exchg.Symbol
+		}
+	}
+	if symbol == "" {
+		return "", "", fmt.Errorf("no exchange symbol for asset")
+	}
+	fromTime := timePoint - 120000 // find around timepoint for similar withdraw token/amount
+	endTime := timePoint + 120000
+	results, err := bn.interf.WithdrawHistory(fromTime, endTime)
+	if err != nil {
+		return "", "", err
+	}
+	for _, w := range results.Withdrawals {
+		if w.Asset == symbol && math.Abs(amount-(w.Amount+w.Fee)) < 0.1 { // epsilon
+			return w.ID, w.TxID, nil
+		}
+	}
+	return "", "", nil
 }
 
 // OrderStatus return status of an order on binance

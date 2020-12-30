@@ -5,6 +5,7 @@ import (
 
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/lib/rtypes"
+	commonv3 "github.com/KyberNetwork/reserve-data/reservesetting/common"
 )
 
 // Exchange is the common interface of centralized exchanges.
@@ -18,5 +19,6 @@ type Exchange interface {
 	OrderStatus(id, base, quote string) (string, float64, error)
 	DepositStatus(id common.ActivityID, txHash string, assetID rtypes.AssetID, amount float64, timepoint uint64) (string, error)
 	WithdrawStatus(id string, assetID rtypes.AssetID, amount float64, timepoint uint64) (string, string, float64, error)
+	FindReplacedWithdraw(asset commonv3.Asset, amount float64, timePoint uint64) (id string, txID string, err error)
 	TokenAddresses() (map[rtypes.AssetID]ethereum.Address, error)
 }
