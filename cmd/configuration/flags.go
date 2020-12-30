@@ -136,7 +136,8 @@ func CreateDataCore(config *Config,
 	rcf common.RawConfig,
 	httpClient *http.Client) (*data.ReserveData, *core.ReserveCore, *gasinfo.GasPriceInfo) {
 	// get fetcher based on config and ENV == simulation.
-	dataFetcher := fetcher.NewFetcher(config.FetcherStorage, config.FetcherGlobalStorage, config.World, config.FetcherRunner, dpl == deployment.Simulation, config.ContractAddresses)
+	dataFetcher := fetcher.NewFetcher(config.FetcherStorage, config.FetcherGlobalStorage, config.World,
+		config.FetcherRunner, dpl == deployment.Simulation, config.ContractAddresses, config.SettingStorage)
 
 	for _, ex := range config.FetcherExchanges {
 		dataFetcher.AddExchange(ex)
