@@ -265,7 +265,7 @@ func (s *BoltSettingStorage) UpdateTokenWithExchangeSetting(tokens []common.Toke
 			so we need a logic that remove all info about token on exchange before we apply new update.
 			this behave is true replace setting instead of overwrite only common part.
 		*/
-		if uErr := removeTokensFromExchanges(tx, toRemoveFromExchanges, availExs); uErr != nil {
+		if uErr := RemoveTokensFromExchanges(tx, toRemoveFromExchanges, availExs); uErr != nil {
 			return uErr
 		}
 		//Apply exchanges setting

@@ -176,7 +176,7 @@ func (s *BoltSettingStorage) GetDepositAddresses(ex settings.ExchangeName) (comm
 	return result, err
 }
 
-func removeTokensFromExchanges(tx *bolt.Tx, tokens []string, availExs []settings.ExchangeName) error {
+func RemoveTokensFromExchanges(tx *bolt.Tx, tokens []string, availExs []settings.ExchangeName) error {
 	for _, ex := range availExs {
 		if dErr := delDepositAddress(tx, ex, tokens); dErr != nil {
 			return fmt.Errorf("cannot remove deposit address of tokens %v from exchange %s, error: %s", tokens, ex.String(), dErr)
