@@ -609,11 +609,15 @@ SELECT data FROM pending WHERE (data->'result'->>'nonce')::int = (SELECT MIN((da
 	return &activity, nil
 }
 
-func (ps *PostgresStorage) FindReplacedTx(action string, nonce uint64) (string, error) {
+func (ps *PostgresStorage) FindReplacedTx(actions []string, nonce uint64) (string, error) {
 	var tx string
-	err := ps.db.Get(&tx,
-		`SELECT data->'result'->>'tx' from activity where (data->'result'->>'nonce')::int=$1 AND data->>'action'=$2 AND data->>'mining_status'=$3`,
-		nonce, action, common.MiningStatusMined)
+	query := `SELECT data->'result'->>'tx' from activity where (data->'result'->>'nonce')::int=? AND data->>'action' IN (?) AND data->>'mining_status'=?`
+	query, args, err := sqlx.In(query, nonce, actions, common.MiningStatusMined)
+	if err != nil {
+		return "", err
+	}
+	query = ps.db.Rebind(query)
+	err = ps.db.Get(&tx, query, args...)
 	if err == sql.ErrNoRows {
 		return "", nil
 	}
