@@ -568,7 +568,11 @@ func (f *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord) (m
 				// after maxMonitorDuration, this is because we saw a case even tx is seem lost, nonce passed,
 				// but it turn mined after that, so we still need to monitor more time for sure.
 				if txFailed {
-					rtx, dbErr := f.storage.FindReplacedTx(activity.Action, activity.Result.Nonce)
+					actions := []string{activity.Action}
+					if activity.Action == common.ActionSetRate {
+						actions = append(actions, common.ActionCancelSetRate)
+					}
+					rtx, dbErr := f.storage.FindReplacedTx(actions, activity.Result.Nonce)
 					if dbErr != nil {
 						f.l.Errorw("query replaced tx error", "err", err)
 					}

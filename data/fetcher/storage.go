@@ -19,5 +19,5 @@ type Storage interface {
 
 	CurrentAuthDataVersion(timepoint uint64) (common.Version, error)
 	GetAuthData(common.Version) (common.AuthDataSnapshot, error)
-	FindReplacedTx(action string, nonce uint64) (string, error)
+	FindReplacedTx(actions []string, nonce uint64) (string, error)
 }
