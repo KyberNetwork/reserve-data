@@ -664,20 +664,18 @@ func (rc *ReserveCore) GetSetRateResult(tokens []commonv3.Asset,
 		}
 		pendingTxGasFloat := common.BigToFloat(pendingTxGasPriceBig, 9)
 		newGasPrice := common.CalculateNewPrice(pendingTxGasFloat, recommendedPrice)
+		l := rc.l.With("current_price", pendingTxGasFloat, "new_price", newGasPrice, "current_tx", pendingSetRate.Result.Tx)
 		if newGasPrice > highBoundGasPrice {
-			rc.l.Errorw("abort override setRate as gasPrice too high", "pendingTxPrice", pendingTxGasFloat,
-				"newGasPrice", newGasPrice, "highBound", highBoundGasPrice)
+			l.Errorw("abort override setRate as gasPrice too high", "highBound", highBoundGasPrice)
 			return nil, fmt.Errorf("abort override setRate as gasPrice too high")
 		}
 		newPrice := common.FloatToBigInt(newGasPrice, 9)
 		tx, err = rc.blockchain.SetRates(tokenAddrs, buys, sells, block, big.NewInt(int64(pendingSetRate.Result.Nonce)), newPrice)
 		if err != nil {
-			rc.l.Errorw("Trying to replace old tx failed", "err", err)
+			l.Errorw("Trying to replace old tx failed", "err", err)
 			return tx, err
 		}
-		rc.l.Infof("Trying to replace old tx with new price: %v, tx: %s, previous price: %v, activity %s",
-			newGasPrice, tx.Hash().Hex(), pendingTxGasFloat, pendingSetRate.ID.String(),
-		)
+		l.Infow("sent tx with new price", "new_tx", tx.Hash().String())
 		return tx, err
 	}
 
@@ -710,12 +708,14 @@ func (rc *ReserveCore) SetRates(assets []commonv3.Asset, buys, sells []*big.Int,
 		miningStatus = common.MiningStatusFailed
 	} else {
 		miningStatus = common.MiningStatusSubmitted
+	}
+	if tx != nil {
 		txhex = tx.Hash().Hex()
 		txnonce = tx.Nonce()
 		txprice = tx.GasPrice().Text(10)
 	}
 	uid := timebasedID(txhex)
-	assetsID := []rtypes.AssetID{}
+	assetsID := make([]rtypes.AssetID, 0, len(assets))
 	for _, asset := range assets {
 		assetsID = append(assetsID, asset.ID)
 	}
