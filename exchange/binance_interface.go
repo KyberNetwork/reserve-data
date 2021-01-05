@@ -16,6 +16,8 @@ type BinanceInterface interface {
 
 	GetInfo() (Binainfo, error)
 
+	GetMarginAccountInfo() (CrossMarginAccountDetails, error)
+
 	GetExchangeInfo() (BinanceExchangeInfo, error)
 
 	GetDepositAddress(exchangeSymbol string) (Binadepositaddress, error)

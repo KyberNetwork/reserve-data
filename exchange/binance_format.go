@@ -1,5 +1,9 @@
 package exchange
 
+import (
+	"github.com/KyberNetwork/reserve-data/common"
+)
+
 // Binaprice is binance order book
 type Binaprice struct {
 	Quantity float64 `json:"size"`
@@ -38,6 +42,18 @@ type Balance struct {
 	Asset  string `json:"asset"`
 	Free   string `json:"free"`
 	Locked string `json:"locked"`
+}
+
+// CrossMarginAccountDetails ...
+type CrossMarginAccountDetails struct {
+	BorrowEnabled       bool                     `json:"borrowEnabled"`
+	MarginLevel         string                   `json:"marginLevel"`
+	TotalAssetOfBtc     string                   `json:"totalAssetOfBtc"`
+	TotalLiabilityOfBtc string                   `json:"totalLiabilityOfBtc"`
+	TotalNetAssetOfBtc  string                   `json:"totalNetAssetOfBtc"`
+	TradeEnabled        bool                     `json:"tradeEnabled"`
+	TransferEnabled     bool                     `json:"transferEnabled"`
+	UserAssets          []common.UserMarginAsset `json:"userAssets"`
 }
 
 type FilterLimit struct {
