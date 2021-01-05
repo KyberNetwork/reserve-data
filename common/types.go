@@ -8,10 +8,8 @@ import (
 	"strings"
 	"time"
 
-	ethereum "github.com/ethereum/go-ethereum/common"
-
-	"github.com/KyberNetwork/reserve-data/common/archive"
 	rtypes "github.com/KyberNetwork/reserve-data/lib/rtypes"
+	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
 // Version indicate fetched data version
@@ -809,7 +807,6 @@ type GasConfig struct {
 
 // RawConfig include all configs read from files
 type RawConfig struct {
-	AWSConfig         archive.AWSConfig `json:"aws_config"`
 	WorldEndpoints    WorldEndpoints    `json:"world_endpoints"`
 	ContractAddresses ContractAddresses `json:"contract_addresses"`
 	ExchangeEndpoints ExchangeEndpoints `json:"exchange_endpoints"`

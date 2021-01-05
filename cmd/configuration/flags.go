@@ -151,8 +151,6 @@ func CreateDataCore(config *Config,
 	rData := data.NewReserveData(
 		config.DataStorage,
 		dataFetcher,
-		config.DataControllerRunner,
-		config.Archive,
 		config.DataGlobalStorage,
 		config.Exchanges,
 		config.SettingStorage,
