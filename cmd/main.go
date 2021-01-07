@@ -124,12 +124,6 @@ func run(c *cli.Context) error {
 
 	rData, rCore, gasInfo := configuration.CreateDataCore(conf, dpl, bc, kyberNetworkProxy, rcf, httpClient)
 	if !dryRun {
-		if dpl != deployment.Simulation {
-			if err = rData.RunStorageController(); err != nil {
-				l.Errorw("failed to run storage controller", "err", err)
-				return err
-			}
-		}
 		if err = rData.Run(); err != nil {
 			l.Errorw("failed to run data service", "err", err)
 			return err

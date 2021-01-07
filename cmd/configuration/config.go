@@ -9,11 +9,9 @@ import (
 
 	"github.com/KyberNetwork/reserve-data/cmd/deployment"
 	"github.com/KyberNetwork/reserve-data/common"
-	"github.com/KyberNetwork/reserve-data/common/archive"
 	"github.com/KyberNetwork/reserve-data/common/blockchain"
 	"github.com/KyberNetwork/reserve-data/core"
 	"github.com/KyberNetwork/reserve-data/data"
-	"github.com/KyberNetwork/reserve-data/data/datapruner"
 	"github.com/KyberNetwork/reserve-data/data/fetcher"
 	"github.com/KyberNetwork/reserve-data/data/fetcher/httprunner"
 	"github.com/KyberNetwork/reserve-data/data/storage"
@@ -30,15 +28,13 @@ type Config struct {
 	DataGlobalStorage    data.GlobalStorage
 	FetcherStorage       fetcher.Storage
 	FetcherGlobalStorage fetcher.GlobalStorage
-	Archive              archive.Archive
 
-	World                *world.TheWorld
-	FetcherRunner        fetcher.Runner
-	DataControllerRunner datapruner.StorageControllerRunner
-	FetcherExchanges     []fetcher.Exchange
-	Exchanges            []common.Exchange
-	BlockchainSigner     blockchain.Signer
-	DepositSigner        blockchain.Signer
+	World            *world.TheWorld
+	FetcherRunner    fetcher.Runner
+	FetcherExchanges []fetcher.Exchange
+	Exchanges        []common.Exchange
+	BlockchainSigner blockchain.Signer
+	DepositSigner    blockchain.Signer
 
 	EthereumEndpoint        string
 	BackupEthereumEndpoints []string
@@ -69,7 +65,6 @@ func (c *Config) AddCoreConfig(cliCtx *cli.Context, rcf common.RawConfig, bi bin
 	}
 
 	var fetcherRunner fetcher.Runner
-	var dataControllerRunner datapruner.StorageControllerRunner
 	if dpl == deployment.Simulation {
 		if fetcherRunner, err = httprunner.NewHTTPRunner(httprunner.WithPort(8001)); err != nil {
 			l.Errorw("failed to create HTTP runner", "err", err.Error())
@@ -84,7 +79,6 @@ func (c *Config) AddCoreConfig(cliCtx *cli.Context, rcf common.RawConfig, bi bin
 			time.Duration(rcf.FetcherDelay.GlobalData),
 			time.Duration(rcf.FetcherDelay.TradeHistory),
 		)
-		dataControllerRunner = datapruner.NewStorageControllerTickerRunner(24 * time.Hour)
 	}
 
 	c.ActivityStorage = dataStorage
@@ -93,7 +87,6 @@ func (c *Config) AddCoreConfig(cliCtx *cli.Context, rcf common.RawConfig, bi bin
 	c.FetcherStorage = dataStorage
 	c.FetcherGlobalStorage = dataStorage
 	c.FetcherRunner = fetcherRunner
-	c.DataControllerRunner = dataControllerRunner
 	c.BlockchainSigner = blockchain.NewEthereumSigner(rcf.PricingKeystore, rcf.PricingPassphrase, chainID)
 	c.DepositSigner = blockchain.NewEthereumSigner(rcf.DepositKeystore, rcf.DepositPassphrase, chainID)
 

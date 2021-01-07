@@ -57,8 +57,6 @@ func TestGetActivities(t *testing.T) {
 	rData := data.NewReserveData(
 		s,   // storage
 		nil, // fetcher
-		nil, // storageControllerRunner
-		nil, // archive
 		nil, // globalStorage
 		nil, // exchanges
 		nil, // settingStorage
