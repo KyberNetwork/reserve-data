@@ -109,7 +109,8 @@ func (b *BaseBlockchain) SignAndBroadcast(tx *types.Transaction, from string) (*
 	b.l.Infof("Rebroadcasting failures: %s", failures)
 	if !ok {
 		b.l.Warnw("Broadcasting transaction failed!",
-			"tx", tx.Hash().String(), "nonce", tx.Nonce(), "gasPrice", tx.GasPrice().Text(10), "failures", failures)
+			"from", from, "tx", tx.Hash().String(), "nonce", tx.Nonce(),
+			"gasPrice", tx.GasPrice().Text(10), "failures", failures)
 		if signedTx != nil {
 			return signedTx, fmt.Errorf("broadcasting transaction %s failed, retry failures: %s", tx.Hash().Hex(), failures)
 		}
@@ -134,17 +135,18 @@ func (b *BaseBlockchain) SpeedupDeposit(tx ethereum.Hash, recommendGasPrice floa
 	currentPrice := common.BigToFloat(pendingTx.GasPrice(), 9)
 	newGasPrice := common.CalculateNewPrice(currentPrice, recommendGasPrice)
 
+	l := b.l.With("current_tx", tx.String(), "current_price", currentPrice, "new_price", newGasPrice)
 	if newGasPrice > maxGasPrice {
-		b.l.Debugw("abort speedup deposit tx due exceed maxGas", "current_price", pendingTx.GasPrice().String(), "new_price", newGasPrice)
+		l.Debugw("abort speedup deposit tx due exceed maxGas", "max_gas", maxGasPrice)
 		return nil, fmt.Errorf("abort replace deposit tx due exceed maxGas %v / %v", newGasPrice, maxGasPrice)
 	}
-	b.l.Debugw("try to replace deposit tx", "current_price", currentPrice, "new_price", newGasPrice)
+	l.Debugw("try to replace deposit tx")
 	overrideTx := types.NewTransaction(pendingTx.Nonce(), *pendingTx.To(), pendingTx.Value(), pendingTx.Gas(),
 		common.FloatToBigInt(newGasPrice, 9), pendingTx.Data())
 	signed, err := b.SignAndBroadcast(overrideTx, DepositOP)
 	if err != nil {
-		b.l.Errorw("sending override deposit tx failed", "err", err, "tx", tx)
-		return nil, err
+		l.Errorw("sending override deposit tx failed", "err", err)
+		return signed, err
 	}
 	return signed, err
 }

@@ -9,7 +9,6 @@ require (
 	github.com/allegro/bigcache v1.2.1 // indirect
 	github.com/aristanetworks/goarista v0.0.0-20190625195245-f3b0eb5a88b2 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a // indirect
-	github.com/aws/aws-sdk-go v1.25.48
 	github.com/btcsuite/btcd v0.0.0-20190614013741-962a206e94e9 // indirect
 	github.com/casbin/casbin v1.7.0
 	github.com/certifi/gocertifi v0.0.0-20190506164543-d2eda7129713 // indirect

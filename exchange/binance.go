@@ -350,8 +350,6 @@ func (bn *Binance) DepositStatus(id common.ActivityID, txHash string, assetID rt
 			return common.ExchangeStatusNA, nil
 		}
 	}
-	bn.l.Warnw("Binance Deposit is not found in deposit list returned from Binance. " +
-		"This might cause by wrong start/end time, please check again.")
 	return common.ExchangeStatusNA, nil
 }
 
