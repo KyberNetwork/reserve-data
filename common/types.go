@@ -8,10 +8,8 @@ import (
 	"strings"
 	"time"
 
-	ethereum "github.com/ethereum/go-ethereum/common"
-
-	"github.com/KyberNetwork/reserve-data/common/archive"
 	rtypes "github.com/KyberNetwork/reserve-data/lib/rtypes"
+	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
 // Version indicate fetched data version
@@ -28,6 +26,11 @@ func (ts Timestamp) Millis() uint64 {
 		panic(err)
 	}
 	return res
+}
+
+// TimestampFromMillis ...
+func TimestampFromMillis(ms uint64) Timestamp {
+	return Timestamp(strconv.FormatUint(ms, 10))
 }
 
 // GetTimestamp return timestamp
@@ -425,31 +428,35 @@ type AllPriceEntry struct {
 	Data  map[rtypes.TradingPairID]OnePrice
 }
 
+// AllPriceResponse return price for all supported tradning pair
 type AllPriceResponse struct {
-	Version    Version
-	Timestamp  Timestamp
-	ReturnTime Timestamp
-	Data       map[rtypes.TradingPairID]OnePrice
-	Block      uint64
+	Version   Version
+	Timestamp Timestamp //  server time when it is fetched
+	// ReturnTime Timestamp
+	Data  map[rtypes.TradingPairID]OnePrice
+	Block uint64
 }
 
+// OnePriceResponse response for 1 pair only
 type OnePriceResponse struct {
-	Version    Version
-	Timestamp  Timestamp
-	ReturnTime Timestamp
-	Data       OnePrice
-	Block      uint64
+	Version   Version
+	Timestamp Timestamp // server time when data is fetched
+	// ReturnTime Timestamp
+	Data  OnePrice
+	Block uint64
 }
 
+// OnePrice map exchange id with its correspond price
 type OnePrice map[rtypes.ExchangeID]ExchangePrice
 
+// ExchangePrice is price of a trading pair
 type ExchangePrice struct {
-	Valid      bool
-	Error      string
-	Timestamp  Timestamp
-	Bids       []PriceEntry
-	Asks       []PriceEntry
-	ReturnTime Timestamp
+	Valid     bool
+	Error     string
+	Timestamp Timestamp // exchange timestamp
+	Bids      []PriceEntry
+	Asks      []PriceEntry
+	// ReturnTime Timestamp // server time when api is called
 }
 
 type RawBalance big.Int
@@ -740,6 +747,8 @@ type WorldEndpoints struct {
 	BinanceETHBTC3  SiteConfig `json:"binance_eth_btc_3"`
 
 	CoinbaseETHUSDDAI5000 SiteConfig `json:"coinbase_eth_usd_dai_5000"`
+	CurveDAIUSDC10000     SiteConfig `json:"curve_dai_usdc_10000"`
+	BinanceETHUSDC10000   SiteConfig `json:"binance_eth_usdc_10000"`
 }
 
 // ContractAddresses ...
@@ -798,7 +807,6 @@ type GasConfig struct {
 
 // RawConfig include all configs read from files
 type RawConfig struct {
-	AWSConfig         archive.AWSConfig `json:"aws_config"`
 	WorldEndpoints    WorldEndpoints    `json:"world_endpoints"`
 	ContractAddresses ContractAddresses `json:"contract_addresses"`
 	ExchangeEndpoints ExchangeEndpoints `json:"exchange_endpoints"`
@@ -840,8 +848,9 @@ type RawConfig struct {
 
 // FeedProviderResponse ...
 type FeedProviderResponse struct {
-	Valid bool
-	Error string
-	Bid   float64 `json:"bid,string"`
-	Ask   float64 `json:"ask,string"`
+	Valid     bool
+	Error     string
+	Bid       float64 `json:"bid,string"`
+	Ask       float64 `json:"ask,string"`
+	Timestamp uint64  `json:"timestamp"`
 }

@@ -100,10 +100,9 @@ func TestPrice(t *testing.T) {
 							Quantity: 46,
 						},
 					},
-					Error:      "",
-					Valid:      true,
-					Timestamp:  "1568358536753",
-					ReturnTime: "1568358536834",
+					Error:     "",
+					Valid:     true,
+					Timestamp: "1568358536753",
 				},
 			},
 		},
@@ -421,6 +420,11 @@ func TestUSDData(t *testing.T) {
 		CoinbaseETHUSDDAI5000: common.FeedProviderResponse{
 			Bid:   0.123,
 			Ask:   0.234,
+			Valid: true,
+		},
+		CurveDAIUSDC10000: common.FeedProviderResponse{
+			Bid:   1.0123,
+			Ask:   1.0234,
 			Valid: true,
 		},
 	}

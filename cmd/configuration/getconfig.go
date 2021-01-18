@@ -8,7 +8,6 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/KyberNetwork/reserve-data/common"
-	"github.com/KyberNetwork/reserve-data/common/archive"
 	"github.com/KyberNetwork/reserve-data/common/blockchain"
 	"github.com/KyberNetwork/reserve-data/exchange/binance"
 	"github.com/KyberNetwork/reserve-data/exchange/huobi"
@@ -46,14 +45,12 @@ func GetConfig(
 		blockchain.NewContractCaller(callClients),
 	)
 
-	s3archive := archive.NewS3Archive(rcf.AWSConfig)
 	theWorld := world.NewTheWorld(rcf.WorldEndpoints)
 
 	config := &Config{
 		Blockchain:              bc,
 		EthereumEndpoint:        nodeConf.Main,
 		BackupEthereumEndpoints: nodeConf.Backup,
-		Archive:                 s3archive,
 		World:                   theWorld,
 		ContractAddresses:       contractAddressConf,
 		SettingStorage:          settingStorage,

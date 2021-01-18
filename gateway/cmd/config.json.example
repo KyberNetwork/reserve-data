@@ -1,0 +1,30 @@
+{
+  "read_role": [
+    {
+      "user": "user name",
+      "access_key_id": "read_access_key_id",
+      "secret_access_key": "read_scret_access_key"
+    }
+  ],
+  "manage_role": [
+    {
+      "user": "user name",
+      "access_key_id": "manage_access_key_id",
+      "secret_access_key": "manage_scret_access_key"
+    }
+  ],
+  "admin_role": [
+    {
+      "user": "user name",
+      "access_key_id": "admin_access_key_id",
+      "secret_access_key": "admin_scret_access_key"
+    }
+  ],
+  "rebalance_role": [
+    {
+      "user": "user name",
+      "access_key_id": "rebalance_access_key_id",
+      "secret_access_key": "rebalance_scret_access_key"
+    }
+  ]
+}

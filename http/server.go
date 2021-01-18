@@ -73,11 +73,12 @@ func (s *Server) AllPricesVersion(c *gin.Context) {
 }
 
 type price struct {
-	Base     rtypes.AssetID      `json:"base"`
-	Quote    rtypes.AssetID      `json:"quote"`
-	Exchange rtypes.ExchangeID   `json:"exchange"`
-	Bids     []common.PriceEntry `json:"bids"`
-	Asks     []common.PriceEntry `json:"asks"`
+	Base      rtypes.AssetID      `json:"base"`
+	Quote     rtypes.AssetID      `json:"quote"`
+	Exchange  rtypes.ExchangeID   `json:"exchange"`
+	Bids      []common.PriceEntry `json:"bids"`
+	Asks      []common.PriceEntry `json:"asks"`
+	Timestamp uint64              `json:"timestamp"`
 }
 
 // AllPrices return prices of all tokens
@@ -97,12 +98,17 @@ func (s *Server) AllPrices(c *gin.Context) {
 			return
 		}
 		for exchangeID, exchangePrice := range onePrice {
+			ts := uint64(0)
+			if exchangePrice.Timestamp != "" {
+				ts = exchangePrice.Timestamp.Millis()
+			}
 			responseData = append(responseData, price{
-				Base:     pair.Base,
-				Quote:    pair.Quote,
-				Exchange: exchangeID,
-				Bids:     exchangePrice.Bids,
-				Asks:     exchangePrice.Asks,
+				Base:      pair.Base,
+				Quote:     pair.Quote,
+				Exchange:  exchangeID,
+				Bids:      exchangePrice.Bids,
+				Asks:      exchangePrice.Asks,
+				Timestamp: ts,
 			})
 		}
 	}

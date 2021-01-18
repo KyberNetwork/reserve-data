@@ -1,18 +1,10 @@
 package data
 
 import (
-	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"time"
-
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
 	"github.com/KyberNetwork/reserve-data/common"
-	"github.com/KyberNetwork/reserve-data/common/archive"
-	"github.com/KyberNetwork/reserve-data/data/datapruner"
 	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	v3 "github.com/KyberNetwork/reserve-data/reservesetting/common"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage"
@@ -20,13 +12,12 @@ import (
 
 // ReserveData struct for reserve data
 type ReserveData struct {
-	storage           Storage
-	fetcher           Fetcher
-	storageController datapruner.StorageController
-	globalStorage     GlobalStorage
-	exchanges         []common.Exchange
-	settingStorage    storage.Interface
-	l                 *zap.SugaredLogger
+	storage        Storage
+	fetcher        Fetcher
+	globalStorage  GlobalStorage
+	exchanges      []common.Exchange
+	settingStorage storage.Interface
+	l              *zap.SugaredLogger
 }
 
 // CurrentGoldInfoVersion get current godl info version
@@ -92,10 +83,8 @@ func (rd ReserveData) GetAllPrices(timepoint uint64) (common.AllPriceResponse, e
 		return common.AllPriceResponse{}, err
 	}
 
-	returnTime := common.GetTimestamp()
 	result.Version = version
 	result.Timestamp = timestamp
-	result.ReturnTime = returnTime
 	result.Data = data.Data
 	result.Block = data.Block
 	return result, err
@@ -110,10 +99,8 @@ func (rd ReserveData) GetOnePrice(pairID rtypes.TradingPairID, timepoint uint64)
 	}
 	result := common.OnePriceResponse{}
 	data, err := rd.storage.GetOnePrice(pairID, version)
-	returnTime := common.GetTimestamp()
 	result.Version = version
 	result.Timestamp = timestamp
-	result.ReturnTime = returnTime
 	result.Data = data
 	return result, err
 }
@@ -391,71 +378,6 @@ func (rd ReserveData) Stop() error {
 	return rd.fetcher.Stop()
 }
 
-// ControlAuthDataSize pack old data to file, push to S3 and prune outdated data
-func (rd ReserveData) ControlAuthDataSize() error {
-	tmpDir, err := ioutil.TempDir("", "ExpiredAuthData")
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		if rErr := os.RemoveAll(tmpDir); rErr != nil {
-			rd.l.Errorw("failed to cleanup temp dir", "tmpdir", tmpDir, "err", rErr)
-		}
-	}()
-
-	for {
-		rd.l.Debug("DataPruner: waiting for signal from runner AuthData controller channel")
-		t := <-rd.storageController.Runner.GetAuthBucketTicker()
-		timepoint := common.TimeToMillis(t)
-		rd.l.Infow("DataPruner: got signal in AuthData controller channel", "timestamp", common.TimeToMillis(t))
-		fileName := filepath.Join(tmpDir, fmt.Sprintf("ExpiredAuthData_at_%s", time.Unix(int64(timepoint/1000), 0).UTC()))
-		nRecord, err := rd.storage.ExportExpiredAuthData(common.TimeToMillis(t), fileName)
-		if err != nil {
-			rd.l.Errorw("ERROR: DataPruner export AuthData operation failed", "err", err, "file", fileName)
-		} else {
-			var integrity bool
-			if nRecord > 0 {
-				err = rd.storageController.Arch.UploadFile(rd.storageController.Arch.GetReserveDataBucketName(), rd.storageController.ExpiredAuthDataPath, fileName)
-				if err != nil {
-					rd.l.Errorw("DataPruner: Upload file failed", "err", err, "file", fileName)
-				} else {
-					integrity, err = rd.storageController.Arch.CheckFileIntergrity(rd.storageController.Arch.GetReserveDataBucketName(), rd.storageController.ExpiredAuthDataPath, fileName)
-					if err != nil {
-						rd.l.Errorw("ERROR: DataPruner: error in file integrity check", "err", err)
-					} else if !integrity {
-						rd.l.Errorw("ERROR: DataPruner: file upload corrupted")
-
-					}
-					if err != nil || !integrity {
-						// if the intergrity check failed, remove the remote file.
-						removalErr := rd.storageController.Arch.RemoveFile(rd.storageController.Arch.GetReserveDataBucketName(), rd.storageController.ExpiredAuthDataPath, fileName)
-						if removalErr != nil {
-							rd.l.Warnw("ERROR: DataPruner: cannot remove remote file", "err", removalErr, "file", fileName)
-							return err
-						}
-					}
-				}
-			}
-			if integrity && err == nil {
-				nPrunedRecords, err := rd.storage.PruneExpiredAuthData(common.TimeToMillis(t))
-				switch {
-				case err != nil:
-					rd.l.Errorw("DataPruner: Can not prune Auth Data", "err", err)
-					return err
-				case nPrunedRecords != nRecord:
-					rd.l.Infof("DataPruner: Number of Exported Data is %d, which is different from number of pruned data %d", nRecord, nPrunedRecords)
-				default:
-					rd.l.Infof("DataPruner: exported and pruned %d expired records from AuthData", nRecord)
-				}
-			}
-		}
-		if err := os.Remove(fileName); err != nil {
-			return err
-		}
-	}
-}
-
 // GetTradeHistory return trade history
 func (rd ReserveData) GetTradeHistory(fromTime, toTime uint64) (common.AllTradeHistory, error) {
 	data := common.AllTradeHistory{}
@@ -471,36 +393,17 @@ func (rd ReserveData) GetTradeHistory(fromTime, toTime uint64) (common.AllTradeH
 	return data, nil
 }
 
-// RunStorageController run storage controller
-func (rd ReserveData) RunStorageController() error {
-	if err := rd.storageController.Runner.Start(); err != nil {
-		rd.l.Fatalw("Storage controller runner error", "err", err)
-	}
-	go func() {
-		if err := rd.ControlAuthDataSize(); err != nil {
-			rd.l.Errorw("Control auth data size failed", "err", err)
-		}
-	}()
-	return nil
-}
-
 // NewReserveData initiate a new reserve instance
 func NewReserveData(storage Storage,
-	fetcher Fetcher, storageControllerRunner datapruner.StorageControllerRunner,
-	arch archive.Archive, globalStorage GlobalStorage,
+	fetcher Fetcher, globalStorage GlobalStorage,
 	exchanges []common.Exchange,
 	settingStorage storage.Interface) *ReserveData {
-	storageController, err := datapruner.NewStorageController(storageControllerRunner, arch)
-	if err != nil {
-		panic(err)
-	}
 	return &ReserveData{
-		storage:           storage,
-		fetcher:           fetcher,
-		storageController: storageController,
-		globalStorage:     globalStorage,
-		exchanges:         exchanges,
-		settingStorage:    settingStorage,
-		l:                 zap.S(),
+		storage:        storage,
+		fetcher:        fetcher,
+		globalStorage:  globalStorage,
+		exchanges:      exchanges,
+		settingStorage: settingStorage,
+		l:              zap.S(),
 	}
 }

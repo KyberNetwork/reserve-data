@@ -22,7 +22,7 @@ func TestCheckFeedConfiguration(t *testing.T) {
 	s, err := postgres.NewStorage(db)
 	require.NoError(t, err)
 	supportedExchanges := make(map[rtypes.ExchangeID]v1common.LiveExchange)
-	server := NewServer(s, "", supportedExchanges, "", nil, nil, nil)
+	server := NewServer(s, "", supportedExchanges, "", nil, nil, nil, 0)
 
 	feedConfigurationEntryNotSupportedTest := common.SetFeedConfigurationEntry{
 		Name: "Not supported feed",
@@ -53,6 +53,7 @@ func TestCheckFeedConfiguration(t *testing.T) {
 	// USD feed
 	supportedUSDFeed := []feed.Feed{
 		feed.CoinbaseETHUSDDAI5000,
+		feed.CurveDAIUSDC10000,
 	}
 
 	for _, feedName := range supportedUSDFeed {

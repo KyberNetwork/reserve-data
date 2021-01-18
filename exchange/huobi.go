@@ -194,12 +194,8 @@ func (h *Huobi) FetchOnePairData(
 	defer wg.Done()
 	result := common.ExchangePrice{}
 
-	timestamp := common.Timestamp(fmt.Sprintf("%d", timepoint))
-	result.Timestamp = timestamp
 	result.Valid = true
 	respData, err := h.interf.GetDepthOnePair(pair.BaseSymbol, pair.QuoteSymbol)
-	returnTime := common.GetTimestamp()
-	result.ReturnTime = returnTime
 	if err != nil {
 		result.Valid = false
 		result.Error = err.Error()
@@ -208,23 +204,12 @@ func (h *Huobi) FetchOnePairData(
 			result.Valid = false
 			result.Error = respData.Error
 		} else {
+			result.Timestamp = common.TimestampFromMillis(respData.TimeStamp)
 			for _, buy := range respData.Bids {
-				result.Bids = append(
-					result.Bids,
-					common.NewPriceEntry(
-						buy.Size,
-						buy.Price,
-					),
-				)
+				result.Bids = append(result.Bids, common.NewPriceEntry(buy.Size, buy.Price))
 			}
 			for _, sell := range respData.Asks {
-				result.Asks = append(
-					result.Asks,
-					common.NewPriceEntry(
-						sell.Size,
-						sell.Price,
-					),
-				)
+				result.Asks = append(result.Asks, common.NewPriceEntry(sell.Size, sell.Price))
 			}
 		}
 	}
@@ -266,7 +251,7 @@ func (h *Huobi) FetchPriceData(timepoint uint64) (map[rtypes.TradingPairID]commo
 // FetchEBalanceData return account balance
 func (h *Huobi) FetchEBalanceData(timepoint uint64) (common.EBalanceEntry, error) {
 	result := common.EBalanceEntry{}
-	result.Timestamp = common.Timestamp(fmt.Sprintf("%d", timepoint))
+	result.Timestamp = common.TimestampFromMillis(timepoint)
 	result.Valid = true
 	result.Error = ""
 	respData, err := h.interf.GetInfo()
@@ -679,6 +664,9 @@ func (h *Huobi) WithdrawStatus(
 		}
 	}
 	return common.ExchangeStatusNA, "", 0, errors.New("huobi Withdrawal doesn't exist. This shouldn't happen unless tx returned from withdrawal from huobi and activity ID are not consistently designed")
+}
+func (h *Huobi) FindReplacedWithdraw(asset commonv3.Asset, amount float64, timePoint uint64) (id string, txID string, err error) {
+	return "", "", fmt.Errorf("not support")
 }
 
 // OrderStatus return order status from Huobi

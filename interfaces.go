@@ -43,7 +43,6 @@ type Data interface {
 	GetTradeHistory(fromTime, toTime uint64) (common.AllTradeHistory, error)
 
 	Run() error
-	RunStorageController() error
 	Stop() error
 	GetAssetRateTriggers(fromTime uint64, toTime uint64) (map[rtypes.AssetID]int, error)
 }

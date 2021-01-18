@@ -70,7 +70,14 @@ curl -X GET "https://gateway.local/v3/setting-change-main?status=pending"
         "data": {
           "id": 2
         }
-      }
+      },
+      "proposer": "proposer",
+      "list_approval":[
+        {
+          "key_id": "manage_access_key_id",
+          "timestamp": "2020-12-14T09:55:14.222009Z"
+        }
+      ]
     }
   ],
   "success": true
@@ -87,10 +94,28 @@ Params | Type | Required | Default | Description
 ------ | ---- | -------- | ------- | -----------
 status | string | false | pending | status of setting change (include: pending, accepted, rejected)
 
-## Confirm pending setting change
+## Approve pending setting change
+
+Approve for a setting change, when the number of approvals reaches the requirement the setting change will be applied automatically.
 
 ```shell
 curl -X PUT "https://gateway.local/v3/setting-change-main/1"
+```
+
+> sample response
+
+```json
+{
+    "success": true
+}
+```
+
+## Disapprove pending setting change
+
+Disapprove a setting change that is approved by you before it's applied.
+
+```shell
+curl -X DELETE "https://gateway.local/v3/disapprove-setting-change/1"
 ```
 
 > sample response
