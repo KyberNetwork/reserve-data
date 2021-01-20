@@ -13,6 +13,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethereum "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
@@ -23,6 +24,10 @@ import (
 
 const (
 	zeroAddress string = "0x0000000000000000000000000000000000000000"
+)
+
+var (
+	ErrEstimateGasFailed = errors.New("failed to estimate gas needed")
 )
 
 // BaseBlockchain interact with the blockchain in a way that eases
@@ -225,7 +230,11 @@ func (b *BaseBlockchain) transactTx(context context.Context, opts TxOpts, contra
 		msg := ether.CallMsg{From: opts.Operator.Address, To: &contract, Value: value, Data: input}
 		gasLimit, err = b.client.EstimateGas(ensureContext(context), msg)
 		if err != nil {
-			return types.NewTransaction(nonce, contract, value, gasLimit, opts.GasPrice, input), fmt.Errorf("failed to estimate gas needed: %v", err)
+			currentBlock, _ := b.CurrentBlock() // we ignore error as currentBlock just an reference value for tracing
+			b.l.Errorw("estimateGas failed", "err", err, "from", opts.Operator.Address.String(),
+				"contract", contract.String(), "gasPrice", opts.GasPrice, "gasLimit", gasLimit,
+				"input", hexutil.Encode(input), "current_block", currentBlock)
+			return types.NewTransaction(nonce, contract, value, gasLimit, opts.GasPrice, input), ErrEstimateGasFailed
 		}
 		// add gas limit by 50K gas
 		gasLimit += 50000
@@ -290,6 +299,18 @@ func (b *BaseBlockchain) CurrentBlock() (uint64, error) {
 
 func (b *BaseBlockchain) PackERC20Data(method string, params ...interface{}) ([]byte, error) {
 	return b.erc20abi.Pack(method, params...)
+}
+
+func (b *BaseBlockchain) BalanceOf(token ethereum.Address, wallet ethereum.Address) (*big.Int, error) {
+	if common.IsEthereumAddress(token) {
+		return b.client.BalanceAt(context.Background(), wallet, nil)
+	}
+	var balance *big.Int
+	err := b.Call(time.Second*3, CallOpts{Block: nil}, &Contract{Address: token, ABI: b.erc20abi}, &balance, "balanceOf", wallet)
+	if err != nil {
+		return nil, err
+	}
+	return balance, nil
 }
 
 func (b *BaseBlockchain) BuildSendERC20Tx(opts TxOpts, amount *big.Int, to ethereum.Address, tokenAddress ethereum.Address) (*types.Transaction, error) {
