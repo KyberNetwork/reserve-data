@@ -148,6 +148,7 @@ func (rc *ReserveCore) Trade(
 			"",
 			timepoint,
 			isPending,
+			common.NowInMillis(),
 		)
 	}
 
@@ -290,6 +291,7 @@ func (rc *ReserveCore) Deposit(
 			status,
 			timepoint,
 			status != common.MiningStatusFailed,
+			common.NowInMillis(),
 		)
 	}
 
@@ -431,6 +433,7 @@ func (rc *ReserveCore) Withdraw(exchange common.Exchange, asset commonv3.Asset, 
 			common.MiningStatusNA,
 			timepoint,
 			status != common.ExchangeStatusFailed && status != common.ExchangeStatusCancelled,
+			common.NowInMillis(),
 		)
 	}
 
@@ -604,6 +607,7 @@ func (rc *ReserveCore) CancelSetRate() (common.ActivityID, error) {
 		miningStatus,
 		common.NowInMillis(),
 		miningStatus != common.MiningStatusFailed,
+		common.NowInMillis(),
 	)
 
 	rc.l.Infow("sent cancel setRate tx", "tx", btx.Hash().String(), "gasPrice",
@@ -746,6 +750,7 @@ func (rc *ReserveCore) SetRates(assets []commonv3.Asset, buys, sells []*big.Int,
 		miningStatus,
 		common.NowInMillis(),
 		miningStatus != common.MiningStatusFailed,
+		common.NowInMillis(),
 	)
 	rc.l.Infof(
 		"Core ----------> Set rates: ==> Result: tx: %s, nonce: %d, price: %s, error: %v, storage error: %v",
@@ -803,6 +808,7 @@ func (rc *ReserveCore) SpeedupDeposit(act common.ActivityRecord) (*big.Int, erro
 		common.MiningStatusSubmitted,
 		common.TimeToMillis(time.Now()),
 		true,
+		act.OrgTime,
 	)
 }
 

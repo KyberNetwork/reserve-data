@@ -387,7 +387,9 @@ func (f *Fetcher) handleStuckWithdraw(pendings []common.ActivityRecord) {
 				common.ExchangeStatusNA,
 				common.MiningStatusNA,
 				timePoint,
-				true)
+				true,
+				av.OrgTime,
+			)
 			if err != nil {
 				l.Errorw("failed to record activity", "id", id, "err", err)
 			}
@@ -419,6 +421,7 @@ func (f *Fetcher) handleStuckDeposit(pendings []common.ActivityRecord) {
 		"speed_up_count", speedDeposit)
 }
 
+// FetchAuthDataFromBlockchain fetch account balance and update pendings activities
 func (f *Fetcher) FetchAuthDataFromBlockchain(
 	allBalances map[rtypes.AssetID]common.BalanceEntry,
 	allStatuses *sync.Map,

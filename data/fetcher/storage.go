@@ -14,7 +14,7 @@ type Storage interface {
 	GetPendingActivities() ([]common.ActivityRecord, error)
 	UpdateActivity(id common.ActivityID, act common.ActivityRecord) error
 	Record(action string, id common.ActivityID, destination string, params common.ActivityParams,
-		result common.ActivityResult, estatus string, mstatus string, timepoint uint64, isPending bool) error
+		result common.ActivityResult, estatus string, mstatus string, timepoint uint64, isPending bool, orgTime uint64) error
 	GetActivity(exchangeID rtypes.ExchangeID, id string) (common.ActivityRecord, error)
 
 	CurrentAuthDataVersion(timepoint uint64) (common.Version, error)
