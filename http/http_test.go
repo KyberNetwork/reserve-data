@@ -31,7 +31,8 @@ func initData(t *testing.T, s *storage.PostgresStorage) {
 		"",
 		"",
 		common.NowInMillis(),
-		true) // default pending status
+		true,
+		common.NowInMillis()) // default pending status
 	assert.NoError(t, err)
 }
 

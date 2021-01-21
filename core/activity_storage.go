@@ -17,7 +17,9 @@ type ActivityStorage interface {
 		estatus string,
 		mstatus string,
 		timepoint uint64,
-		isPending bool) error
+		isPending bool,
+		orgTime uint64,
+	) error
 	HasPendingDeposit(token commonv3.Asset, exchange common.Exchange) (bool, error)
 
 	MaxPendingNonce(action string) (int64, error)
