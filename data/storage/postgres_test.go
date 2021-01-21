@@ -192,7 +192,7 @@ func TestActivity(t *testing.T) {
 	// test get activity
 	activity, err := ps.GetActivity(rtypes.Binance, testID.EID)
 	assert.NoError(t, err)
-	assert.Equal(t, activityTest, activity)
+	assert.Equal(t, activityTest.ID, activity.ID)
 }
 
 func TestAuthData(t *testing.T) {
