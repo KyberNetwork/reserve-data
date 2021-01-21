@@ -488,7 +488,7 @@ func (ps *PostgresStorage) UpdateActivity(id common.ActivityID, act common.Activ
 	var (
 		data []byte
 	)
-	// get activity from db
+	// get activity from db - check if activity exists, if it does not exist then return
 	getQuery := fmt.Sprintf(`SELECT data FROM "%s" WHERE timepoint = $1 AND eid = $2`, activityTable)
 	if err := ps.db.Get(&data, getQuery, id.Timepoint, id.EID); err != nil {
 		if err == sql.ErrNoRows {
@@ -498,6 +498,8 @@ func (ps *PostgresStorage) UpdateActivity(id common.ActivityID, act common.Activ
 	}
 	// check if activity is not pending anymore update it
 	updateQuery := fmt.Sprintf(`UPDATE "%s" SET is_pending = $1, data = $2 WHERE timepoint = $3 AND eid = $4`, activityTable)
+
+	act.LastTime = common.NowInMillis() // update last time the activit is updated
 	dataBytes, err := json.Marshal(act)
 	if err != nil {
 		return err
@@ -666,7 +668,7 @@ func (ps *PostgresStorage) MaxPendingNonce(action string) (int64, error) {
 // Record save activity
 func (ps *PostgresStorage) Record(action string, id common.ActivityID, destination string,
 	params common.ActivityParams, result common.ActivityResult,
-	estatus string, mstatus string, timepoint uint64, isPending bool) error {
+	estatus string, mstatus string, timepoint uint64, isPending bool, orgTime uint64) error {
 	record := common.NewActivityRecord(
 		action,
 		id,
@@ -676,6 +678,7 @@ func (ps *PostgresStorage) Record(action string, id common.ActivityID, destinati
 		estatus,
 		mstatus,
 		common.Timestamp(strconv.FormatUint(timepoint, 10)),
+		orgTime,
 	)
 	query := fmt.Sprintf(`INSERT INTO "%s" (created, data, is_pending, timepoint, eid) VALUES($1, $2, $3, $4, $5)`, activityTable)
 	timestamp := common.MillisToTime(timepoint)
