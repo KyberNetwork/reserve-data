@@ -224,21 +224,31 @@ func (bn *Binance) FetchEBalanceData(timepoint uint64) (common.EBalanceEntry, er
 		result.Status = false
 		return result, nil
 	}
-	result.MarginBalance = marginRespData.UserAssets
+	result.MarginBalance = map[rtypes.AssetID]common.AssetMarginBalance{}
 	result.AvailableBalance = map[rtypes.AssetID]float64{}
 	result.LockedBalance = map[rtypes.AssetID]float64{}
 	result.DepositBalance = map[rtypes.AssetID]float64{}
 	result.Status = true
+	assets, err := bn.sr.GetAssets()
+	if err != nil {
+		logger.Errorw("failed to get asset from storage", "error", err)
+		return common.EBalanceEntry{}, err
+	}
+	for _, ua := range marginRespData.UserAssets {
+		tokenSymbol := ua.Asset
+		for _, asset := range assets {
+			for _, exchg := range asset.Exchanges {
+				if exchg.ExchangeID == bn.id && exchg.Symbol == tokenSymbol {
+					result.MarginBalance[asset.ID] = ua
+				}
+			}
+		}
+	}
 	if respData.Code != 0 {
 		result.Valid = false
 		result.Error = fmt.Sprintf("Code: %d, Msg: %s", respData.Code, respData.Msg)
 		result.Status = false
 	} else {
-		assets, err := bn.sr.GetAssets()
-		if err != nil {
-			logger.Errorw("failed to get asset from storage", "error", err)
-			return common.EBalanceEntry{}, err
-		}
 		for _, b := range respData.Balances {
 			tokenSymbol := b.Asset
 			for _, asset := range assets {
