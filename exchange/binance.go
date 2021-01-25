@@ -210,37 +210,55 @@ func (bn *Binance) FetchEBalanceData(timepoint uint64) (common.EBalanceEntry, er
 	result.Valid = true
 	result.Error = ""
 	respData, err := bn.interf.GetInfo()
+	marginRespData, errM := bn.interf.GetMarginAccountInfo()
 	result.ReturnTime = common.GetTimestamp()
 	if err != nil {
 		result.Valid = false
 		result.Error = err.Error()
 		result.Status = false
-	} else {
-		result.AvailableBalance = map[rtypes.AssetID]float64{}
-		result.LockedBalance = map[rtypes.AssetID]float64{}
-		result.DepositBalance = map[rtypes.AssetID]float64{}
-		result.Status = true
-		if respData.Code != 0 {
-			result.Valid = false
-			result.Error = fmt.Sprintf("Code: %d, Msg: %s", respData.Code, respData.Msg)
-			result.Status = false
-		} else {
-			assets, err := bn.sr.GetAssets()
-			if err != nil {
-				logger.Errorw("failed to get asset from storage", "error", err)
-				return common.EBalanceEntry{}, err
+		return result, nil
+	}
+	if errM != nil {
+		result.Valid = false
+		result.Error = errM.Error()
+		result.Status = false
+		return result, nil
+	}
+	result.MarginBalance = map[rtypes.AssetID]common.AssetMarginBalance{}
+	result.AvailableBalance = map[rtypes.AssetID]float64{}
+	result.LockedBalance = map[rtypes.AssetID]float64{}
+	result.DepositBalance = map[rtypes.AssetID]float64{}
+	result.Status = true
+	assets, err := bn.sr.GetAssets()
+	if err != nil {
+		logger.Errorw("failed to get asset from storage", "error", err)
+		return common.EBalanceEntry{}, err
+	}
+	for _, ua := range marginRespData.UserAssets {
+		tokenSymbol := ua.Asset
+		for _, asset := range assets {
+			for _, exchg := range asset.Exchanges {
+				if exchg.ExchangeID == bn.id && exchg.Symbol == tokenSymbol {
+					result.MarginBalance[asset.ID] = ua
+				}
 			}
-			for _, b := range respData.Balances {
-				tokenSymbol := b.Asset
-				for _, asset := range assets {
-					for _, exchg := range asset.Exchanges {
-						if exchg.ExchangeID == bn.id && exchg.Symbol == tokenSymbol {
-							avai, _ := strconv.ParseFloat(b.Free, 64)
-							locked, _ := strconv.ParseFloat(b.Locked, 64)
-							result.AvailableBalance[asset.ID] = avai
-							result.LockedBalance[asset.ID] = locked
-							result.DepositBalance[asset.ID] = 0
-						}
+		}
+	}
+	if respData.Code != 0 {
+		result.Valid = false
+		result.Error = fmt.Sprintf("Code: %d, Msg: %s", respData.Code, respData.Msg)
+		result.Status = false
+	} else {
+		for _, b := range respData.Balances {
+			tokenSymbol := b.Asset
+			for _, asset := range assets {
+				for _, exchg := range asset.Exchanges {
+					if exchg.ExchangeID == bn.id && exchg.Symbol == tokenSymbol {
+						avai, _ := strconv.ParseFloat(b.Free, 64)
+						locked, _ := strconv.ParseFloat(b.Locked, 64)
+						result.AvailableBalance[asset.ID] = avai
+						result.LockedBalance[asset.ID] = locked
+						result.DepositBalance[asset.ID] = 0
 					}
 				}
 			}
