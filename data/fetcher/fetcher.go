@@ -824,6 +824,12 @@ func (f *Fetcher) FetchAuthDataFromExchange(
 			}
 		}
 
+		for tokenID := range balances.MarginBalance {
+			if _, ok := tokenAddress[tokenID]; !ok {
+				delete(balances.MarginBalance, tokenID)
+			}
+		}
+
 		statuses = f.FetchStatusFromExchange(exchange, pendings, timepoint)
 		if unchanged(preStatuses, statuses) {
 			break
