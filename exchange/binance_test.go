@@ -39,6 +39,10 @@ func (bi *binanceTestInterface) GetInfo() (Binainfo, error) {
 	panic("implement me")
 }
 
+func (bi *binanceTestInterface) GetMarginAccountInfo() (CrossMarginAccountDetails, error) {
+	panic("implement me")
+}
+
 func (bi *binanceTestInterface) GetExchangeInfo() (BinanceExchangeInfo, error) {
 	panic("implement me")
 }

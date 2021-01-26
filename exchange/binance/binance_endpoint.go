@@ -418,6 +418,21 @@ func (ep *Endpoint) GetInfo() (exchange.Binainfo, error) {
 	return result, err
 }
 
+// GetMarginAccountInfo return binance exchange info
+func (ep *Endpoint) GetMarginAccountInfo() (exchange.CrossMarginAccountDetails, error) {
+	result := exchange.CrossMarginAccountDetails{}
+	respBody, err := ep.authHTTP.DoReq(
+		fmt.Sprintf("%s/binance/margin-account/%s", ep.accountDataBaseURL, ep.accountID),
+		http.MethodGet,
+		map[string]string{})
+	if err == nil {
+		if err = json.Unmarshal(respBody, &result); err != nil {
+			return result, err
+		}
+	}
+	return result, err
+}
+
 // OpenOrdersForOnePair return list open orders for one pair of token
 func (ep *Endpoint) OpenOrdersForOnePair(pair *commonv3.TradingPairSymbols) (exchange.Binaorders, error) {
 	var (

@@ -563,6 +563,17 @@ type EBalanceEntry struct {
 	LockedBalance    map[rtypes.AssetID]float64
 	DepositBalance   map[rtypes.AssetID]float64
 	Status           bool
+	MarginBalance    map[rtypes.AssetID]AssetMarginBalance
+}
+
+// AssetMarginBalance ...
+type AssetMarginBalance struct {
+	Asset    string `json:"asset"`
+	Borrowed string `json:"borrowed"`
+	Free     string `json:"free"`
+	Interest string `json:"interest"`
+	Locked   string `json:"locked"`
+	NetAsset string `json:"netAsset"`
 }
 
 type AllEBalanceResponse struct {
