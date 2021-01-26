@@ -238,6 +238,7 @@ type CancelOrderResult struct {
 
 // ActivityRecord object
 type ActivityRecord struct {
+	OrgTime        uint64          `json:"org_time"` // origin timestamp - timestamp of the first activity (in case it has many activities like override or replace)
 	Action         string          `json:"action,omitempty"`
 	ID             ActivityID      `json:"id,omitempty"`
 	EID            string          `json:"eid"`
@@ -246,7 +247,8 @@ type ActivityRecord struct {
 	Result         *ActivityResult `json:"result,omitempty"`
 	ExchangeStatus string          `json:"exchange_status,omitempty"`
 	MiningStatus   string          `json:"mining_status,omitempty"`
-	Timestamp      Timestamp       `json:"timestamp,omitempty"`
+	Timestamp      Timestamp       `json:"timestamp,omitempty"` // created
+	LastTime       uint64          `json:"last_time"`           // activity finished time
 }
 
 // AssetRateTrigger keep result of calculate token rate trigger
@@ -300,8 +302,10 @@ type ActivityResult struct {
 }
 
 //NewActivityRecord return an activity record
-func NewActivityRecord(action string, id ActivityID, destination string, params ActivityParams, result ActivityResult, exStatus, miStatus string, timestamp Timestamp) ActivityRecord {
+func NewActivityRecord(action string, id ActivityID, destination string, params ActivityParams,
+	result ActivityResult, exStatus, miStatus string, timestamp Timestamp, orgTime uint64) ActivityRecord {
 	return ActivityRecord{
+		OrgTime:        orgTime,
 		Action:         action,
 		ID:             id,
 		Destination:    destination,
@@ -410,6 +414,7 @@ func NewActivityStatus(exchangeStatus, tx string, blockNumber uint64, miningStat
 	}
 }
 
+// PriceEntry order price
 type PriceEntry struct {
 	Quantity float64 `json:"quantity"`
 	Rate     float64 `json:"rate"`

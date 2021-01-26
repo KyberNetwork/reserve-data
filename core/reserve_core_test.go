@@ -148,7 +148,9 @@ func (tas testActivityStorage) Record(
 	estatus string,
 	mstatus string,
 	timepoint uint64,
-	isPending bool) error {
+	isPending bool,
+	orgTime uint64,
+) error {
 	return nil
 }
 
