@@ -62,7 +62,7 @@ size_c | float64 | false | nil |
 price_a | float64 | false | nil | 
 price_b | float64 | false | nil | 
 price_c | float64 | false | nil | 
-<aside class="notice">Write key is required</aside>
+<aside class="notice">Manage key is required</aside>
 
 ## Get pending setting rbquadratic
 

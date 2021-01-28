@@ -29,6 +29,7 @@ includes:
   - stable-token-and-btc/apis
   - errors
   - settings/gas_threshold
+  - settings/setting_change_tpair
 
 search: true
 ---

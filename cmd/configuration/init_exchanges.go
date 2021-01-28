@@ -105,7 +105,7 @@ func updateDepositAddress(assetStorage storage.Interface, exchanges map[rtypes.E
 				if !ok {
 					l.Warnw("failed to get deposit address for asset",
 						"asset_id", asset.ID,
-						"exchange", ae.ExchangeID.String(), "symbol", ae.Symbol, "err", err.Error())
+						"exchange", ae.ExchangeID.String(), "symbol", ae.Symbol, "err", err)
 					continue
 				}
 				if err = assetStorage.UpdateDepositAddress(

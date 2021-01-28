@@ -27,7 +27,7 @@ curl -X POST "https://gateway.local/v3/gas-source" \
 Params | Type | Required | Default | Description
 ------ | ---- | -------- | ------- | -----------
 name | string | yes |  | name of prefer source
-<aside class="notice">Confirm key is required</aside>
+<aside class="notice">Admin key is required</aside>
 
 ## Get Gas Source
 

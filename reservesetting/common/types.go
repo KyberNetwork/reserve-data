@@ -47,6 +47,9 @@ type TradingPair struct {
 	PriceLimitMax   float64              `json:"price_limit_max"`
 	MinNotional     float64              `json:"min_notional"`
 	ExchangeID      rtypes.ExchangeID    `json:"-"`
+	BaseSymbol      string               `json:"base_symbol"`
+	QuoteSymbol     string               `json:"quote_symbol"`
+	StallThreshold  float64              `json:"stall_threshold"`
 }
 
 // TradingBy is a struct hold trading pair and its asset
@@ -253,6 +256,13 @@ type CreateTradingPairEntry struct {
 	ExchangeID rtypes.ExchangeID `json:"exchange_id"`
 }
 
+type UpdateTradingPairEntry struct {
+	settingChangeMarker
+	TradingPairID  rtypes.TradingPairID `json:"trading_pair_id"`
+	StallThreshold *float64             `json:"stall_threshold"` // currently, this is the only field we allow to update using API
+	// other fields of trading pair is update from exchange automatically
+}
+
 // ChangeAssetAddressEntry present data to create a change asset address
 type ChangeAssetAddressEntry struct {
 	settingChangeMarker
@@ -282,6 +292,7 @@ const (
 	ChangeCatalogUpdateExchange                          // update_exchange
 	ChangeCatalogMain                                    // main
 	ChangeCatalogFeedConfiguration                       // set_feed_configuration
+	ChangeCatalogTradingPair                             // update_tpair
 )
 
 // ChangeType represent type of change type entry in list change
@@ -309,8 +320,10 @@ const (
 	ChangeTypeDeleteAssetExchange // delete_asset_exchange
 	// ChangeTypeUpdateStableTokenParams is used in present update stable token params
 	ChangeTypeUpdateStableTokenParams // update_stable_token_params
-	// ChangeTypeSetFeedConfiguration is used when set feed confuguration
+	// ChangeTypeSetFeedConfiguration is used when set feed configuration
 	ChangeTypeSetFeedConfiguration // set_feed_configuration
+	// ChangeTypeUpdateTradingPair is use when update trading pair
+	ChangeTypeUpdateTradingPair // update_trading_pair
 )
 
 // ChangeStatus represent status of change

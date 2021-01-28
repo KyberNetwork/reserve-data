@@ -214,6 +214,7 @@ func (rd ReserveData) GetAuthData(timepoint uint64) (common.AuthDataResponseV3, 
 			exchangeBalance.ExchangeID = exchanges[exchangeID.String()].ID
 			exchangeBalance.Available = balances.AvailableBalance[token.ID]
 			exchangeBalance.Locked = balances.LockedBalance[token.ID]
+			exchangeBalance.MarginBalance = balances.MarginBalance[token.ID]
 			exchangeBalances = append(exchangeBalances, exchangeBalance)
 
 		}

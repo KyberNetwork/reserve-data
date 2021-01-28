@@ -597,11 +597,12 @@ type AuthDataSnapshot struct {
 
 // ExchangeBalance is balance of a token of an exchange
 type ExchangeBalance struct {
-	ExchangeID rtypes.ExchangeID `json:"exchange_id"`
-	Available  float64           `json:"available"`
-	Locked     float64           `json:"locked"`
-	Name       string            `json:"name"`
-	Error      string            `json:"error"`
+	ExchangeID    rtypes.ExchangeID  `json:"exchange_id"`
+	Available     float64            `json:"available"`
+	Locked        float64            `json:"locked"`
+	Name          string             `json:"name"`
+	MarginBalance AssetMarginBalance `json:"margin_balance"`
+	Error         string             `json:"error"`
 }
 
 // AuthdataBalance is balance for a token in reservesetting authata

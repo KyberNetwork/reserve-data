@@ -14,7 +14,7 @@ import (
 )
 
 func (s *Storage) createTradingPair(tx *sqlx.Tx, exchangeID rtypes.ExchangeID, baseID, quoteID rtypes.AssetID, pricePrecision, amountPrecision uint64,
-	amountLimitMin, amountLimitMax, priceLimitMin, priceLimitMax, minNotional float64, assetID rtypes.AssetID) (rtypes.TradingPairID, error) {
+	amountLimitMin, amountLimitMax, priceLimitMin, priceLimitMax, minNotional float64, stallThreshold float64, assetID rtypes.AssetID) (rtypes.TradingPairID, error) {
 
 	var tradingPairID rtypes.TradingPairID
 	err := tx.NamedStmt(s.stmts.newTradingPair).Get(
@@ -30,6 +30,7 @@ func (s *Storage) createTradingPair(tx *sqlx.Tx, exchangeID rtypes.ExchangeID, b
 			PriceLimitMin   float64           `db:"price_limit_min"`
 			PriceLimitMax   float64           `db:"price_limit_max"`
 			MinNotional     float64           `db:"min_notional"`
+			StallThreshold  float64           `db:"stall_threshold"`
 		}{
 			ExchangeID:      exchangeID,
 			Base:            baseID,
@@ -41,6 +42,7 @@ func (s *Storage) createTradingPair(tx *sqlx.Tx, exchangeID rtypes.ExchangeID, b
 			PriceLimitMin:   priceLimitMin,
 			PriceLimitMax:   priceLimitMax,
 			MinNotional:     minNotional,
+			StallThreshold:  stallThreshold,
 		},
 	)
 	if err != nil {
@@ -102,6 +104,7 @@ func (s *Storage) updateTradingPair(tx *sqlx.Tx, id rtypes.TradingPairID, opts s
 		PriceLimitMin   *float64             `db:"price_limit_min"`
 		PriceLimitMax   *float64             `db:"price_limit_max"`
 		MinNotional     *float64             `db:"min_notional"`
+		StallThreshold  *float64             `db:"stall_threshold"`
 	}{
 		ID:              id,
 		PricePrecision:  opts.PricePrecision,
@@ -111,6 +114,7 @@ func (s *Storage) updateTradingPair(tx *sqlx.Tx, id rtypes.TradingPairID, opts s
 		PriceLimitMin:   opts.PriceLimitMin,
 		PriceLimitMax:   opts.PriceLimitMax,
 		MinNotional:     opts.MinNotional,
+		StallThreshold:  opts.StallThreshold,
 	})
 	if err == sql.ErrNoRows {
 		return common.ErrNotFound
