@@ -271,9 +271,16 @@ func tradingPairStatements(db *sqlx.DB) (*tradingPairStmts, error) {
 									tp.amount_limit_max,
 									tp.price_limit_min,
 									tp.price_limit_max,
-									tp.min_notional
+									tp.min_notional,
+									bae.symbol AS base_symbol,
+									qae.symbol AS quote_symbol
 									FROM trading_pairs tp
-									WHERE tp.base_id = coalesce($1, tp.base_id) OR tp.quote_id=COALESCE($1,tp.quote_id);
+									INNER JOIN assets AS ba ON tp.base_id = ba.id
+									INNER JOIN asset_exchanges AS bae ON ba.id = bae.asset_id
+									INNER JOIN assets AS qa ON tp.quote_id = qa.id
+									INNER JOIN asset_exchanges AS qae ON qa.id = qae.asset_id
+									WHERE tp.exchange_id = bae.exchange_id AND tp.exchange_id = qae.exchange_id
+									AND tp.base_id = coalesce($1, tp.base_id) OR tp.quote_id=COALESCE($1,tp.quote_id);
 									`
 	getTradingPair, err := db.Preparex(getTradingPairQuery)
 	if err != nil {
