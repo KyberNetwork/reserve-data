@@ -44,6 +44,8 @@ func (s *Server) validateChangeEntry(e common.SettingChangeType, changeType comm
 		return nil
 	case common.ChangeTypeSetFeedConfiguration:
 		err = s.checkSetFeedConfigurationParams(*e.(*common.SetFeedConfigurationEntry))
+	case common.ChangeTypeUpdateTradingPair:
+		return nil
 	default:
 		return errors.Errorf("unknown type of setting change: %v", reflect.TypeOf(e))
 	}

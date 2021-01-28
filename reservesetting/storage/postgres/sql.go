@@ -256,7 +256,8 @@ func tradingPairStatements(db *sqlx.DB) (*tradingPairStmts, error) {
 									                      :amount_limit_max,
 									                      :price_limit_min,
 									                      :price_limit_max,
-									                      :min_notional);`
+									                      :min_notional,
+									    				  :stall_threshold);`
 	newTradingPair, err := db.PrepareNamed(newTradingPairQuery)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to prepare newTradingPair")
@@ -272,6 +273,7 @@ func tradingPairStatements(db *sqlx.DB) (*tradingPairStmts, error) {
 									tp.price_limit_min,
 									tp.price_limit_max,
 									tp.min_notional,
+                					tp.stall_threshold,
 									bae.symbol AS base_symbol,
 									qae.symbol AS quote_symbol
 									FROM trading_pairs tp
@@ -293,7 +295,8 @@ func tradingPairStatements(db *sqlx.DB) (*tradingPairStmts, error) {
 									    amount_limit_max = coalesce(:amount_limit_max, amount_limit_max),
 									    price_limit_min  = coalesce(:price_limit_min, price_limit_min),
 									    price_limit_max  = coalesce(:price_limit_max, price_limit_max),
-									    min_notional= coalesce(:min_notional, min_notional)
+									    min_notional= coalesce(:min_notional, min_notional),
+									    stall_threshold = coalesce(:stall_threshold, stall_threshold)
 									WHERE id = :id RETURNING id; `
 	updateTradingPair, err := db.PrepareNamed(updateTradingPairQuery)
 	if err != nil {
@@ -302,9 +305,9 @@ func tradingPairStatements(db *sqlx.DB) (*tradingPairStmts, error) {
 
 	const getTradingPairByIDQuery = `WITH selected AS (
 	SELECT tp.id,tp.exchange_id, tp.base_id,tp.quote_id, tp.price_precision, tp.amount_precision, tp.amount_limit_min,tp.amount_limit_max,
-	tp.price_limit_min, tp.price_limit_max, tp.min_notional	FROM trading_pairs tp WHERE tp.id=$1
+	tp.price_limit_min, tp.price_limit_max, tp.min_notional,tp.stall_threshold	FROM trading_pairs tp WHERE tp.id=$1
 	UNION ALL SELECT tpd.id,tpd.exchange_id, tpd.base_id,tpd.quote_id, tpd.price_precision, tpd.amount_precision, tpd.amount_limit_min,tpd.amount_limit_max,
-	tpd.price_limit_min, tpd.price_limit_max, tpd.min_notional FROM trading_pairs_deleted tpd WHERE tpd.id=$1 and $2 IS TRUE
+	tpd.price_limit_min, tpd.price_limit_max, tpd.min_notional,tpd.stall_threshold FROM trading_pairs_deleted tpd WHERE tpd.id=$1 and $2 IS TRUE
 ) SELECT DISTINCT tp.id,
 									                tp.exchange_id,
 									                tp.base_id,
@@ -316,6 +319,7 @@ func tradingPairStatements(db *sqlx.DB) (*tradingPairStmts, error) {
 									                tp.price_limit_min,
 									                tp.price_limit_max,
 									                tp.min_notional,
+                  									tp.stall_threshold,
 									                bae.symbol AS base_symbol,
 									                qae.symbol AS quote_symbol
 									FROM selected AS tp
@@ -340,6 +344,7 @@ func tradingPairStatements(db *sqlx.DB) (*tradingPairStmts, error) {
 									                tp.price_limit_min,
 									                tp.price_limit_max,
 									                tp.min_notional,
+                									tp.stall_threshold,
 									                bae.symbol AS base_symbol,
 									                qae.symbol AS quote_symbol
 									FROM trading_pairs AS tp

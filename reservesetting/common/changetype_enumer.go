@@ -8,9 +8,9 @@ import (
 	"fmt"
 )
 
-const _ChangeTypeName = "create_assetupdate_assetcreate_asset_exchangeupdate_asset_exchangecreate_trading_pairupdate_exchangechange_asset_addrdelete_trading_pairdelete_asset_exchangeupdate_stable_token_paramsset_feed_configuration"
+const _ChangeTypeName = "create_assetupdate_assetcreate_asset_exchangeupdate_asset_exchangecreate_trading_pairupdate_exchangechange_asset_addrdelete_trading_pairdelete_asset_exchangeupdate_stable_token_paramsset_feed_configurationupdate_trading_pair"
 
-var _ChangeTypeIndex = [...]uint8{0, 12, 24, 45, 66, 85, 100, 117, 136, 157, 183, 205}
+var _ChangeTypeIndex = [...]uint8{0, 12, 24, 45, 66, 85, 100, 117, 136, 157, 183, 205, 224}
 
 func (i ChangeType) String() string {
 	if i < 0 || i >= ChangeType(len(_ChangeTypeIndex)-1) {
@@ -19,7 +19,7 @@ func (i ChangeType) String() string {
 	return _ChangeTypeName[_ChangeTypeIndex[i]:_ChangeTypeIndex[i+1]]
 }
 
-var _ChangeTypeValues = []ChangeType{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+var _ChangeTypeValues = []ChangeType{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}
 
 var _ChangeTypeNameToValueMap = map[string]ChangeType{
 	_ChangeTypeName[0:12]:    0,
@@ -33,6 +33,7 @@ var _ChangeTypeNameToValueMap = map[string]ChangeType{
 	_ChangeTypeName[136:157]: 8,
 	_ChangeTypeName[157:183]: 9,
 	_ChangeTypeName[183:205]: 10,
+	_ChangeTypeName[205:224]: 11,
 }
 
 // ChangeTypeString retrieves an enum value from the enum constants string name.

@@ -40,7 +40,7 @@ name | string | true | nil | name of feed will be updated
 enabled | bool | false | nil | 
 base_volatility_spread | float64 | false | nil | 
 normal_spread | float64 | false | nil |  
-<aside class="notice">Write key is required</aside>
+<aside class="notice">Manage key is required</aside>
 
 ## Get pending set feed configuration
 
@@ -137,4 +137,4 @@ curl -X PUT "https://gateway.local/v3/update-feed-status" \
 ### HTTP Request
 
 `PUT https://gateway.local/v3/update-feed-status/:name`
-<aside class="notice">Write key is required</aside>
+<aside class="notice">Manage key is required</aside>

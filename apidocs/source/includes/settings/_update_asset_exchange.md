@@ -31,7 +31,7 @@ curl -X POST "https://gateway.local/v3/setting-change-main" \
 ### HTTP Request
 
 `POST https://gateway.local/v3/setting-change-main`
-<aside class="notice">Write key is required</aside>
+<aside class="notice">Manage key is required</aside>
 <aside class="warning">
 Constraints:<br>
 - if asset has "transferable" = true => "deposit_address" != nil<br>

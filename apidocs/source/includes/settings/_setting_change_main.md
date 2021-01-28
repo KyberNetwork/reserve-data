@@ -129,7 +129,7 @@ curl -X DELETE "https://gateway.local/v3/disapprove-setting-change/1"
 ### HTTP Request
 
 `PUT https://gateway.local/v3/setting-change-main/:change_id`
-<aside class="notice">Confirm key is required</aside>
+<aside class="notice">Admin key is required</aside>
 
 ## Reject pending setting change 
 
@@ -148,4 +148,4 @@ curl -X DELETE "https://gateway.local/v3/setting-change-main/1"
 ### HTTP Request
 
 `DELETE https://gateway.local/v3/setting-change-main/:change_id`
-<aside class="notice">Confirm key is required</aside>
+<aside class="notice">Admin key is required</aside>
