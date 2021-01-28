@@ -3,6 +3,7 @@ package http
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 
 	ethereum "github.com/ethereum/go-ethereum/common"
@@ -386,7 +387,7 @@ func (s *Server) confirmSettingChange(c *gin.Context) {
 				httputil.ResponseFailure(c, httputil.WithError(err))
 				return
 			}
-			if err := s.marketDataClient.AddFeed(exchange, sourceSymbol, publicSymbol); err != nil {
+			if err := s.marketDataClient.AddFeed(exchange, sourceSymbol, publicSymbol, strconv.FormatInt(int64(tpID), 10)); err != nil {
 				s.l.Errorw("cannot add feed to market data", "err", err, "exchange", exchange, "source symbol", sourceSymbol)
 				continue
 			}
