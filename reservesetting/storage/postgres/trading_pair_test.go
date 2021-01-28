@@ -30,6 +30,7 @@ func TestStorage_UpdateTradingPair(t *testing.T) {
 	expectedTradingPair.PriceLimitMin = 0.1
 	expectedTradingPair.PriceLimitMax = 0.1
 	expectedTradingPair.MinNotional = 0.1
+	expectedTradingPair.StallThreshold = 10.0
 	err = s.UpdateTradingPair(tp.ID, storage.UpdateTradingPairOpts{
 		ID:              tp.ID,
 		PricePrecision:  common.Uint64Pointer(1),
@@ -39,6 +40,7 @@ func TestStorage_UpdateTradingPair(t *testing.T) {
 		PriceLimitMin:   common.FloatPointer(0.1),
 		PriceLimitMax:   common.FloatPointer(0.1),
 		MinNotional:     common.FloatPointer(0.1),
+		StallThreshold:  common.FloatPointer(10.0),
 	})
 	require.NoError(t, err)
 	updatedTradingPair, err := s.GetTradingPair(1, false)

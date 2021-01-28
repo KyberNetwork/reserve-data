@@ -39,7 +39,7 @@ exchange_id | int | true | nil | ID of exchange will be updated
 trading_fee_maker | float64 | false | nil | 
 trading_fee_taker | float64 | false | nil | 
 disable | bool | false | nil |  
-<aside class="notice">Write key is required</aside>
+<aside class="notice">Manage key is required</aside>
 
 ## Get pending update exchange 
 
@@ -134,4 +134,4 @@ curl -X PUT "https://gateway.local/v3/set-exchange-enabled/:exchange_id" \
 ### HTTP Request
 
 `PUT https://gateway.local/v3/update-exchange-status/:exchange_id`
-<aside class="notice">Write key is required</aside>
+<aside class="notice">Manage key is required</aside>

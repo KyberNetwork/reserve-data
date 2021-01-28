@@ -113,6 +113,13 @@ func NewServer(storage storage.Interface, host string, supportedExchanges map[rt
 	g.GET("/setting-change-feed-configuration/:id", server.getSettingChange)
 	g.PUT("/setting-change-feed-configuration/:id", server.confirmSettingChange)
 	g.DELETE("/setting-change-feed-configuration/:id", server.rejectSettingChange)
+
+	g.POST("/setting-change-tpair", server.createSettingChangeWithType(common.ChangeCatalogTradingPair))
+	g.GET("/setting-change-tpair", server.getSettingChangeWithType(common.ChangeCatalogTradingPair))
+	g.GET("/setting-change-tpair/:id", server.getSettingChange)
+	g.PUT("/setting-change-tpair/:id", server.confirmSettingChange)
+	g.DELETE("/setting-change-tpair/:id", server.rejectSettingChange)
+
 	g.PUT("/update-feed-status/:name", server.updateFeedStatus)
 
 	g.GET("/price-factor", server.getPriceFactor)

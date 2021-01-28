@@ -64,9 +64,18 @@ func (s *Storage) initAssets() error {
 	return err
 }
 
+// this migration is a workaround as ALTER can not be run in transaction => it can't run with go-migrate
+const migrationScript = `
+	ALTER TYPE setting_change_cat ADD VALUE IF NOT EXISTS 'update_tpair';
+`
+
 // NewStorage creates a new Storage instance from given configuration.
 func NewStorage(db *sqlx.DB) (*Storage, error) {
 	l := zap.S()
+	_, err := db.Exec(migrationScript)
+	if err != nil {
+		return nil, err
+	}
 	stmts, err := newPreparedStmts(db)
 	if err != nil {
 		return nil, fmt.Errorf("failed to preprare statements err=%s", err.Error())

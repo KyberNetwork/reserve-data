@@ -13,6 +13,7 @@ import (
 	pgutil "github.com/KyberNetwork/reserve-data/common/postgres"
 	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	"github.com/KyberNetwork/reserve-data/reservesetting/common"
+	"github.com/KyberNetwork/reserve-data/reservesetting/storage"
 )
 
 const (
@@ -185,7 +186,7 @@ func (s *Storage) applyChange(tx *sqlx.Tx, i int, entry common.SettingChangeEntr
 		adr.AddedTradingPairs = append(adr.AddedTradingPairs, tradingPairIDs...)
 	case *common.CreateTradingPairEntry:
 		tpID, err := s.createTradingPair(tx, e.ExchangeID, e.Base, e.Quote, e.PricePrecision, e.AmountPrecision, e.AmountLimitMin,
-			e.AmountLimitMax, e.PriceLimitMin, e.PriceLimitMax, e.MinNotional, e.AssetID)
+			e.AmountLimitMax, e.PriceLimitMin, e.PriceLimitMax, e.MinNotional, e.StallThreshold, e.AssetID)
 		if err != nil {
 			s.l.Errorw("create trading pair", "index", i, "err", err)
 			return err
@@ -231,6 +232,14 @@ func (s *Storage) applyChange(tx *sqlx.Tx, i int, entry common.SettingChangeEntr
 		err = s.setFeedConfiguration(tx, *e)
 		if err != nil {
 			s.l.Errorw("set feed configuration", "index", i, "err", err)
+			return err
+		}
+	case *common.UpdateTradingPairEntry:
+		err = s.updateTradingPair(tx, e.TradingPairID, storage.UpdateTradingPairOpts{
+			StallThreshold: e.StallThreshold,
+		})
+		if err != nil {
+			s.l.Errorw("update trading pair", "index", i, "err", err)
 			return err
 		}
 	default:
