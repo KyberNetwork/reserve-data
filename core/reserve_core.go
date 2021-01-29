@@ -624,6 +624,13 @@ func (rc *ReserveCore) GetSetRateResult(tokens []commonv3.Asset,
 		tx  *types.Transaction
 		err error
 	)
+	if block.Int64() == 0 {
+		cb, err := rc.blockchain.CurrentBlock()
+		if err != nil {
+			return nil, fmt.Errorf("cannot get current block: %v", err)
+		}
+		block = big.NewInt(int64(cb))
+	}
 	err = requireSameLength(tokens, buys, sells, afpMids)
 	if err != nil {
 		return tx, err
