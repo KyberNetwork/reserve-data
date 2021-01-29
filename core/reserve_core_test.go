@@ -82,6 +82,10 @@ func (tbc testBlockchain) GetDepositOPAddress() ethereum.Address {
 	return ethereum.Address{}
 }
 
+func (tbc testBlockchain) CurrentBlock() (uint64, error) {
+	return 0, nil
+}
+
 func (tbc testBlockchain) SignAndBroadcast(tx *types.Transaction, from string) (*types.Transaction, error) {
 	return nil, errors.New("not supported")
 }
