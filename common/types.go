@@ -10,6 +10,7 @@ import (
 
 	rtypes "github.com/KyberNetwork/reserve-data/lib/rtypes"
 	ethereum "github.com/ethereum/go-ethereum/common"
+	"github.com/shopspring/decimal"
 )
 
 // Version indicate fetched data version
@@ -566,14 +567,70 @@ type EBalanceEntry struct {
 	MarginBalance    map[rtypes.AssetID]AssetMarginBalance
 }
 
-// AssetMarginBalance ...
-type AssetMarginBalance struct {
+// RawAssetMarginBalance raw margin balance data response from binance
+type RawAssetMarginBalance struct {
 	Asset    string `json:"asset"`
 	Borrowed string `json:"borrowed"`
 	Free     string `json:"free"`
 	Interest string `json:"interest"`
 	Locked   string `json:"locked"`
 	NetAsset string `json:"netAsset"`
+}
+
+// ToAssetMarginBalance convert raw data from binance to data with core's format
+func (ramb *RawAssetMarginBalance) ToAssetMarginBalance() (AssetMarginBalance, error) {
+	var (
+		borrowedF, freeF, interestF, lockedF, netAssetF float64
+		err                                             error
+	)
+	borrowedF, err = stringToFloat(ramb.Borrowed)
+	if err != nil {
+		return AssetMarginBalance{}, err
+	}
+	freeF, err = stringToFloat(ramb.Free)
+	if err != nil {
+		return AssetMarginBalance{}, err
+	}
+	interestF, err = stringToFloat(ramb.Interest)
+	if err != nil {
+		return AssetMarginBalance{}, err
+	}
+	lockedF, err = stringToFloat(ramb.Locked)
+	if err != nil {
+		return AssetMarginBalance{}, err
+	}
+	netAssetF, err = stringToFloat(ramb.NetAsset)
+	if err != nil {
+		return AssetMarginBalance{}, err
+	}
+	return AssetMarginBalance{
+		Borrowed: borrowedF,
+		Free:     freeF,
+		Interest: interestF,
+		Locked:   lockedF,
+		NetAsset: netAssetF,
+	}, nil
+}
+
+func stringToFloat(ns string) (float64, error) {
+	if ns == "" {
+		return 0, nil
+	}
+	nD, err := decimal.NewFromString(ns)
+	if err != nil {
+		return 0, err
+	}
+	nf, _ := nD.Float64()
+	return nf, nil
+}
+
+// AssetMarginBalance ...
+type AssetMarginBalance struct {
+	Borrowed float64 `json:"borrowed"`
+	Free     float64 `json:"free"`
+	Interest float64 `json:"interest"`
+	Locked   float64 `json:"locked"`
+	NetAsset float64 `json:"net_asset"`
 }
 
 type AllEBalanceResponse struct {

@@ -46,14 +46,14 @@ type Balance struct {
 
 // CrossMarginAccountDetails ...
 type CrossMarginAccountDetails struct {
-	BorrowEnabled       bool                        `json:"borrowEnabled"`
-	MarginLevel         string                      `json:"marginLevel"`
-	TotalAssetOfBtc     string                      `json:"totalAssetOfBtc"`
-	TotalLiabilityOfBtc string                      `json:"totalLiabilityOfBtc"`
-	TotalNetAssetOfBtc  string                      `json:"totalNetAssetOfBtc"`
-	TradeEnabled        bool                        `json:"tradeEnabled"`
-	TransferEnabled     bool                        `json:"transferEnabled"`
-	UserAssets          []common.AssetMarginBalance `json:"userAssets"`
+	BorrowEnabled       bool                           `json:"borrowEnabled"`
+	MarginLevel         string                         `json:"marginLevel"`
+	TotalAssetOfBtc     string                         `json:"totalAssetOfBtc"`
+	TotalLiabilityOfBtc string                         `json:"totalLiabilityOfBtc"`
+	TotalNetAssetOfBtc  string                         `json:"totalNetAssetOfBtc"`
+	TradeEnabled        bool                           `json:"tradeEnabled"`
+	TransferEnabled     bool                           `json:"transferEnabled"`
+	UserAssets          []common.RawAssetMarginBalance `json:"userAssets"`
 }
 
 type FilterLimit struct {
