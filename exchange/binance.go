@@ -239,7 +239,12 @@ func (bn *Binance) FetchEBalanceData(timepoint uint64) (common.EBalanceEntry, er
 		for _, asset := range assets {
 			for _, exchg := range asset.Exchanges {
 				if exchg.ExchangeID == bn.id && exchg.Symbol == tokenSymbol {
-					result.MarginBalance[asset.ID] = ua
+					amb, err := ua.ToAssetMarginBalance()
+					if err != nil {
+						logger.Errorw("failed to convert raw data to asset margin balance", "error", err)
+						return common.EBalanceEntry{}, err
+					}
+					result.MarginBalance[asset.ID] = amb
 				}
 			}
 		}
