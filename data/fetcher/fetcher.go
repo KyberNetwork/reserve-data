@@ -892,7 +892,7 @@ func (f *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []common.A
 
 			// if action is withdraw then it will be considered as failed if exchange status is failed
 			if activity.Action == common.ActionWithdraw && (status == common.ExchangeStatusFailed || status == common.ExchangeStatusCancelled) {
-				result[id] = common.NewActivityStatus(status, tx, blockNum, common.MiningStatusFailed, fee, remain, false, err)
+				result[id] = common.NewActivityStatus(status, tx, blockNum, common.MiningStatusFailed, fee, remain, false, fmt.Errorf("withdraw rejected by Binance: %s", ee))
 				continue
 			}
 

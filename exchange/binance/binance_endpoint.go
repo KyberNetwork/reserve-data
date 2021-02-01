@@ -397,7 +397,7 @@ func (ep *Endpoint) Withdraw(asset commonv3.Asset, amount *big.Int, address ethe
 		}
 		return result.ID, nil
 	}
-	return "", fmt.Errorf("withdraw rejected by Binnace: %v", err)
+	return "", fmt.Errorf("withdraw rejected by Binance: %v", err)
 }
 
 // GetInfo return binance exchange info
