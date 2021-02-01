@@ -625,6 +625,9 @@ func unchanged(pre, post map[common.ActivityID]common.ActivityStatus) bool {
 func (f *Fetcher) updateActivityWithBlockchainStatus(record *common.ActivityRecord, bstatuses *sync.Map, snapshot *common.AuthDataSnapshot) {
 	status, ok := bstatuses.Load(record.ID)
 	if !ok || status == nil {
+		if record.Action == common.ActionTrade { // skip log for trade action as it has no relate to blockchain
+			return
+		}
 		f.l.Infof("block chain status for %s is nil or not existed ", record.ID.String())
 		return
 	}
@@ -657,6 +660,9 @@ func (f *Fetcher) updateActivityWithBlockchainStatus(record *common.ActivityReco
 func (f *Fetcher) updateActivityWithExchangeStatus(record *common.ActivityRecord, estatuses *sync.Map, snapshot *common.AuthDataSnapshot) {
 	status, ok := estatuses.Load(record.ID)
 	if !ok || status == nil {
+		if record.Action == common.ActionSetRate || record.Action == common.ActionCancelSetRate {
+			return
+		}
 		f.l.Infof("exchange status for %s is nil or not existed ", record.ID.String())
 		return
 	}
@@ -872,7 +878,7 @@ func (f *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []common.A
 				// authdata. Analytic will ignore order status anyway.
 				status, remain, ordErr = exchange.OrderStatus(orderID, base, quote)
 				f.l.Debugw("order status", "orderID", orderID, "base", base,
-					"quote", quote, "status", status, "remain", remain, "err", ordErr)
+					"quote", quote, "status", status, "remain", remain, "total", activity.Params.Amount, "err", ordErr)
 			case common.ActionDeposit:
 				tx = activity.Result.Tx
 				amount := activity.Params.Amount
@@ -892,7 +898,7 @@ func (f *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []common.A
 
 			// if action is withdraw then it will be considered as failed if exchange status is failed
 			if activity.Action == common.ActionWithdraw && (status == common.ExchangeStatusFailed || status == common.ExchangeStatusCancelled) {
-				result[id] = common.NewActivityStatus(status, tx, blockNum, common.MiningStatusFailed, fee, remain, false, err)
+				result[id] = common.NewActivityStatus(status, tx, blockNum, common.MiningStatusFailed, fee, remain, false, fmt.Errorf("withdraw rejected by Binance: %s", err))
 				continue
 			}
 
@@ -929,11 +935,11 @@ func (f *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []common.A
 
 func (f *Fetcher) RunOrderbookFetcher() {
 	for {
-		f.l.Debugf("waiting for signal from runner orderbook channel")
 		t := <-f.runner.GetOrderbookTicker()
-		f.l.Debugf("got signal in orderbook channel with timestamp %d", common.TimeToMillis(t))
+		start := time.Now()
+		f.l.Debugf("starting fetch orderbook timestamp %d", common.TimeToMillis(t))
 		f.FetchOrderbook(common.TimeToMillis(t))
-		f.l.Debug("fetched data from exchanges")
+		f.l.Debugw("fetched orderbook from exchanges", "fetch_time", time.Since(start).Seconds())
 	}
 }
 
