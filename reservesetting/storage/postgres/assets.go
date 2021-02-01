@@ -194,7 +194,7 @@ func (s *Storage) createAssetExchange(tx *sqlx.Tx, exchangeID rtypes.ExchangeID,
 			tradingPair.PriceLimitMin,
 			tradingPair.PriceLimitMax,
 			tradingPair.MinNotional,
-			tradingPair.StallThreshold,
+			tradingPair.StaleThreshold,
 			assetID,
 		)
 		if err != nil {
@@ -462,7 +462,7 @@ func (s *Storage) createAsset(tx *sqlx.Tx,
 					PriceLimitMin   float64           `db:"price_limit_min"`
 					PriceLimitMax   float64           `db:"price_limit_max"`
 					MinNotional     float64           `db:"min_notional"`
-					StallThreshold  float64           `db:"stall_threshold"`
+					StaleThreshold  float64           `db:"stale_threshold"`
 				}{
 					ExchangeID:      exchange.ExchangeID,
 					Base:            baseID,
@@ -474,7 +474,7 @@ func (s *Storage) createAsset(tx *sqlx.Tx,
 					PriceLimitMin:   pair.PriceLimitMin,
 					PriceLimitMax:   pair.PriceLimitMax,
 					MinNotional:     pair.MinNotional,
-					StallThreshold:  pair.StallThreshold,
+					StaleThreshold:  pair.StaleThreshold,
 				},
 			)
 			if err != nil {
@@ -563,7 +563,7 @@ type tradingPairDB struct {
 	MinNotional     float64              `db:"min_notional"`
 	BaseSymbol      string               `db:"base_symbol"`
 	QuoteSymbol     string               `db:"quote_symbol"`
-	StallThreshold  float64              `db:"stall_threshold"`
+	StaleThreshold  float64              `db:"stale_threshold"`
 }
 
 func (tpd *tradingPairDB) ToCommon() common.TradingPair {
@@ -581,7 +581,7 @@ func (tpd *tradingPairDB) ToCommon() common.TradingPair {
 		ExchangeID:      tpd.ExchangeID,
 		BaseSymbol:      tpd.BaseSymbol,
 		QuoteSymbol:     tpd.QuoteSymbol,
-		StallThreshold:  tpd.StallThreshold,
+		StaleThreshold:  tpd.StaleThreshold,
 	}
 }
 

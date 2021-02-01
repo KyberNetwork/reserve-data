@@ -1,5 +1,5 @@
-ALTER TABLE trading_pairs ADD COLUMN stall_threshold float8 DEFAULT 45000;
-ALTER TABLE trading_pairs_deleted ADD COLUMN stall_threshold float8 DEFAULT 45000;
+ALTER TABLE trading_pairs ADD COLUMN stale_threshold float8 DEFAULT 45000;
+ALTER TABLE trading_pairs_deleted ADD COLUMN stale_threshold float8 DEFAULT 45000;
 
 CREATE OR REPLACE FUNCTION new_trading_pair(_exchange_id trading_pairs.exchange_id%TYPE,
                                             _base_id trading_pairs.base_id%TYPE,
@@ -11,7 +11,7 @@ CREATE OR REPLACE FUNCTION new_trading_pair(_exchange_id trading_pairs.exchange_
                                             _price_limit_min trading_pairs.price_limit_min%TYPE,
                                             _price_limit_max trading_pairs.price_limit_max%TYPE,
                                             _min_notional trading_pairs.min_notional%TYPE,
-                                            _stall_threshold trading_pairs.stall_threshold%TYPE)
+                                            _stale_threshold trading_pairs.stale_threshold%TYPE)
     RETURNS INT AS
 $$
 DECLARE
@@ -54,7 +54,7 @@ BEGIN
                                price_limit_min,
                                price_limit_max,
                                min_notional,
-                               stall_threshold)
+                               stale_threshold)
     VALUES (_exchange_id,
             _base_id,
             _quote_id,
@@ -65,7 +65,7 @@ BEGIN
             _price_limit_min,
             _price_limit_max,
             _min_notional,
-            _stall_threshold) RETURNING id INTO _id;
+            _stale_threshold) RETURNING id INTO _id;
     RETURN _id;
 END
 $$ LANGUAGE PLPGSQL;

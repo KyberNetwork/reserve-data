@@ -8,7 +8,7 @@ curl -X POST "https://gateway.local/v3/setting-change-tpair" \
         "type": "update_trading_pair",
         "data": {
             "trading_pair_id": 1,
-            "stall_threshold": 45000
+            "stale_threshold": 45000
         }
     }]
 }'
@@ -33,7 +33,7 @@ curl -X POST "https://gateway.local/v3/setting-change-tpair" \
 Params | Type | Required | Default | Description
 ------ | ---- | -------- | ------- | -----------
 trading_pair_id | int | true | nil | id of trading pair
-stall_threshold | float | false | nil | the new stall threshold value
+stale_threshold | float | false | nil | the new stale threshold value
 
 
 ## Get pending setting trading pair
@@ -56,7 +56,7 @@ curl -X GET "https://gateway.local/v3/setting-change-tpair"
           "type": "update_trading_pair",
           "data": {
             "trading_pair_id": 1,
-            "stall_threshold": 45000
+            "stale_threshold": 45000
           }
         },
         ...

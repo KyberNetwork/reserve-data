@@ -49,7 +49,7 @@ type TradingPair struct {
 	ExchangeID      rtypes.ExchangeID    `json:"-"`
 	BaseSymbol      string               `json:"base_symbol"`
 	QuoteSymbol     string               `json:"quote_symbol"`
-	StallThreshold  float64              `json:"stall_threshold"`
+	StaleThreshold  float64              `json:"stale_threshold"`
 }
 
 // TradingBy is a struct hold trading pair and its asset
@@ -259,7 +259,7 @@ type CreateTradingPairEntry struct {
 type UpdateTradingPairEntry struct {
 	settingChangeMarker
 	TradingPairID  rtypes.TradingPairID `json:"trading_pair_id"`
-	StallThreshold *float64             `json:"stall_threshold"` // currently, this is the only field we allow to update using API
+	StaleThreshold *float64             `json:"stale_threshold"` // currently, this is the only field we allow to update using API
 	// other fields of trading pair is update from exchange automatically
 }
 
