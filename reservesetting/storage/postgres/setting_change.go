@@ -186,7 +186,7 @@ func (s *Storage) applyChange(tx *sqlx.Tx, i int, entry common.SettingChangeEntr
 		adr.AddedTradingPairs = append(adr.AddedTradingPairs, tradingPairIDs...)
 	case *common.CreateTradingPairEntry:
 		tpID, err := s.createTradingPair(tx, e.ExchangeID, e.Base, e.Quote, e.PricePrecision, e.AmountPrecision, e.AmountLimitMin,
-			e.AmountLimitMax, e.PriceLimitMin, e.PriceLimitMax, e.MinNotional, e.StallThreshold, e.AssetID)
+			e.AmountLimitMax, e.PriceLimitMin, e.PriceLimitMax, e.MinNotional, e.StaleThreshold, e.AssetID)
 		if err != nil {
 			s.l.Errorw("create trading pair", "index", i, "err", err)
 			return err
@@ -236,7 +236,7 @@ func (s *Storage) applyChange(tx *sqlx.Tx, i int, entry common.SettingChangeEntr
 		}
 	case *common.UpdateTradingPairEntry:
 		err = s.updateTradingPair(tx, e.TradingPairID, storage.UpdateTradingPairOpts{
-			StallThreshold: e.StallThreshold,
+			StaleThreshold: e.StaleThreshold,
 		})
 		if err != nil {
 			s.l.Errorw("update trading pair", "index", i, "err", err)
