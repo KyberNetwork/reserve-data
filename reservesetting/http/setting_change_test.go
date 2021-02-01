@@ -1511,7 +1511,7 @@ func TestUpdateTradingPair(t *testing.T) {
 						Type: common.ChangeTypeUpdateTradingPair,
 						Data: common.UpdateTradingPairEntry{
 							TradingPairID:  1,
-							StallThreshold: common.FloatPointer(10),
+							StaleThreshold: common.FloatPointer(10),
 						},
 					},
 				},
@@ -1555,7 +1555,7 @@ func TestUpdateTradingPair(t *testing.T) {
 				require.Equal(t, true, response.Success)
 				newFC, err := s.GetTradingPair(1, false)
 				require.NoError(t, err)
-				require.Equal(t, newFC.StallThreshold, float64(10))
+				require.Equal(t, newFC.StaleThreshold, float64(10))
 			},
 		},
 	}

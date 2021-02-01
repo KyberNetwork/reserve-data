@@ -1,5 +1,5 @@
-ALTER TABLE trading_pairs DROP COLUMN stall_threshold;
-ALTER TABLE trading_pairs_deleted DROP COLUMN stall_threshold;
+ALTER TABLE trading_pairs DROP COLUMN stale_threshold;
+ALTER TABLE trading_pairs_deleted DROP COLUMN stale_threshold;
 
 CREATE OR REPLACE FUNCTION new_trading_pair(_exchange_id trading_pairs.exchange_id%TYPE,
                                             _base_id trading_pairs.base_id%TYPE,
