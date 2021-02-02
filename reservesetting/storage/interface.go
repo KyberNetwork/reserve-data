@@ -94,4 +94,5 @@ type UpdateTradingPairOpts struct {
 	PriceLimitMin   *float64             `json:"price_limit_min"`
 	PriceLimitMax   *float64             `json:"price_limit_max"`
 	MinNotional     *float64             `json:"min_notional"`
+	StaleThreshold  *float64             `json:"stale_threshold"`
 }

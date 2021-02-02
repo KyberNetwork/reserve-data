@@ -67,6 +67,8 @@ func SettingChangeFromType(t ChangeType) (SettingChangeType, error) {
 		i = &UpdateStableTokenParamsEntry{}
 	case ChangeTypeSetFeedConfiguration:
 		i = &SetFeedConfigurationEntry{}
+	case ChangeTypeUpdateTradingPair:
+		i = &UpdateTradingPairEntry{}
 	}
 	return i, nil
 }

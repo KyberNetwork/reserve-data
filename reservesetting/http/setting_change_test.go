@@ -1481,3 +1481,86 @@ func TestSetFeedConfiguration(t *testing.T) {
 		t.Run(tc.msg, func(t *testing.T) { testHTTPRequest(t, tc, server.r) })
 	}
 }
+
+func TestUpdateTradingPair(t *testing.T) {
+	db, tearDown := testutil.MustNewDevelopmentDB(migrationPath)
+	defer func() {
+		assert.NoError(t, tearDown())
+	}()
+	s, err := postgres.NewStorage(db)
+	require.NoError(t, err)
+
+	_, err = createSampleAsset(s)
+	require.NoError(t, err)
+
+	supportedExchanges := make(map[rtypes.ExchangeID]v1common.LiveExchange)
+	server := NewServer(s, "", supportedExchanges, "", nil, nil, nil, 0)
+	var (
+		updateTradingPairEndpoint = "/v3/setting-change-tpair"
+		changeID                  uint64
+	)
+
+	var tests = []testCase{
+		{
+			msg:      "test create set feed configuration",
+			endpoint: updateTradingPairEndpoint,
+			method:   http.MethodPost,
+			data: common.SettingChange{
+				ChangeList: []common.SettingChangeEntry{
+					{
+						Type: common.ChangeTypeUpdateTradingPair,
+						Data: common.UpdateTradingPairEntry{
+							TradingPairID:  1,
+							StaleThreshold: common.FloatPointer(10),
+						},
+					},
+				},
+				Message: "update trading pair",
+			},
+			assert: func(t *testing.T, resp *httptest.ResponseRecorder) {
+				var idResponse struct {
+					ID      uint64 `json:"id"`
+					Success bool   `json:"success"`
+					Reason  string `json:"reason"`
+				}
+				require.Equal(t, http.StatusOK, resp.Code)
+				err = json.Unmarshal(resp.Body.Bytes(), &idResponse)
+				require.NoError(t, err)
+				require.True(t, idResponse.Success)
+				changeID = idResponse.ID
+			},
+		},
+		{
+			msg: "test get pending update trading pair",
+			endpointExp: func() string {
+				return updateTradingPairEndpoint + fmt.Sprintf("/%d", changeID)
+			},
+			method: http.MethodGet,
+			assert: httputil.ExpectSuccess,
+		},
+		{
+			msg: "confirm update trading pair",
+			endpointExp: func() string {
+				return updateTradingPairEndpoint + fmt.Sprintf("/%d", changeID)
+			},
+			method: http.MethodPut,
+			assert: func(t *testing.T, resp *httptest.ResponseRecorder) {
+				var response struct {
+					Success bool   `json:"success"`
+					Reason  string `json:"reason"`
+				}
+				require.Equal(t, http.StatusOK, resp.Code)
+				err = json.Unmarshal(resp.Body.Bytes(), &response)
+				require.NoError(t, err)
+				require.Equal(t, true, response.Success)
+				newFC, err := s.GetTradingPair(1, false)
+				require.NoError(t, err)
+				require.Equal(t, newFC.StaleThreshold, float64(10))
+			},
+		},
+	}
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.msg, func(t *testing.T) { testHTTPRequest(t, tc, server.r) })
+	}
+}

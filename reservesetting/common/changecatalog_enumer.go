@@ -8,9 +8,9 @@ import (
 	"fmt"
 )
 
-const _ChangeCatalogName = "set_targetset_pwisset_stable_tokenset_rebalance_quadraticupdate_exchangemainset_feed_configuration"
+const _ChangeCatalogName = "set_targetset_pwisset_stable_tokenset_rebalance_quadraticupdate_exchangemainset_feed_configurationupdate_tpair"
 
-var _ChangeCatalogIndex = [...]uint8{0, 10, 18, 34, 57, 72, 76, 98}
+var _ChangeCatalogIndex = [...]uint8{0, 10, 18, 34, 57, 72, 76, 98, 110}
 
 func (i ChangeCatalog) String() string {
 	if i < 0 || i >= ChangeCatalog(len(_ChangeCatalogIndex)-1) {
@@ -19,16 +19,17 @@ func (i ChangeCatalog) String() string {
 	return _ChangeCatalogName[_ChangeCatalogIndex[i]:_ChangeCatalogIndex[i+1]]
 }
 
-var _ChangeCatalogValues = []ChangeCatalog{0, 1, 2, 3, 4, 5, 6}
+var _ChangeCatalogValues = []ChangeCatalog{0, 1, 2, 3, 4, 5, 6, 7}
 
 var _ChangeCatalogNameToValueMap = map[string]ChangeCatalog{
-	_ChangeCatalogName[0:10]:  0,
-	_ChangeCatalogName[10:18]: 1,
-	_ChangeCatalogName[18:34]: 2,
-	_ChangeCatalogName[34:57]: 3,
-	_ChangeCatalogName[57:72]: 4,
-	_ChangeCatalogName[72:76]: 5,
-	_ChangeCatalogName[76:98]: 6,
+	_ChangeCatalogName[0:10]:   0,
+	_ChangeCatalogName[10:18]:  1,
+	_ChangeCatalogName[18:34]:  2,
+	_ChangeCatalogName[34:57]:  3,
+	_ChangeCatalogName[57:72]:  4,
+	_ChangeCatalogName[72:76]:  5,
+	_ChangeCatalogName[76:98]:  6,
+	_ChangeCatalogName[98:110]: 7,
 }
 
 // ChangeCatalogString retrieves an enum value from the enum constants string name.

@@ -55,7 +55,7 @@ b | float64 | false | nil |
 c | float64 | false | nil | 
 min_min_spread | float64 | false | nil | 
 price_multiply_factor | float64 | false | nil | 
-<aside class="notice">Write key is required</aside>
+<aside class="notice">Manage key is required</aside>
 
 ## Get pending setting pwis
 

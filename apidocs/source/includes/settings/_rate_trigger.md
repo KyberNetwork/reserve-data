@@ -26,7 +26,7 @@ curl -X POST "https://gateway.local/v3/rate-trigger-period" \
 Params | Type | Required | Default | Description
 ------ | ---- | -------- | ------- | -----------
 value | float64 | yes |  | value of rate trigger period
-<aside class="notice">Confirm key is required</aside>
+<aside class="notice">Admin key is required</aside>
 
 ## Get rate trigger period
 

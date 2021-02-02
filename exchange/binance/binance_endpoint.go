@@ -81,8 +81,6 @@ func (ep *Endpoint) GetResponse(
 	}
 	req.URL.RawQuery = q.Encode()
 	ep.fillRequest(req, signNeeded, timepoint)
-
-	ep.l.Debugf("request to binance: %s", req.URL)
 	resp, err := ep.client.Do(req)
 	if err != nil {
 		return respBody, err
@@ -397,7 +395,7 @@ func (ep *Endpoint) Withdraw(asset commonv3.Asset, amount *big.Int, address ethe
 		}
 		return result.ID, nil
 	}
-	return "", fmt.Errorf("withdraw rejected by Binnace: %v", err)
+	return "", fmt.Errorf("withdraw rejected by Binance: %v", err)
 }
 
 // GetInfo return binance exchange info
@@ -414,6 +412,21 @@ func (ep *Endpoint) GetInfo() (exchange.Binainfo, error) {
 	}
 	if result.Code != 0 {
 		return result, fmt.Errorf("getting account info from Binance failed: %s", result.Msg)
+	}
+	return result, err
+}
+
+// GetMarginAccountInfo return binance exchange info
+func (ep *Endpoint) GetMarginAccountInfo() (exchange.CrossMarginAccountDetails, error) {
+	result := exchange.CrossMarginAccountDetails{}
+	respBody, err := ep.authHTTP.DoReq(
+		fmt.Sprintf("%s/binance/margin-account/%s", ep.accountDataBaseURL, ep.accountID),
+		http.MethodGet,
+		map[string]string{})
+	if err == nil {
+		if err = json.Unmarshal(respBody, &result); err != nil {
+			return result, err
+		}
 	}
 	return result, err
 }

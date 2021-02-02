@@ -74,14 +74,16 @@ func (c *Client) doReq(url, method string, data interface{}) ([]byte, error) {
 }
 
 // AddFeed ...
-func (c *Client) AddFeed(exchange, sourceSymbol, publicSymbol string) error {
+func (c *Client) AddFeed(exchange, sourceSymbol, publicSymbol, extID string) error {
 	url := fmt.Sprintf("%s/feed/%s", c.url, exchange)
 	resp, err := c.doReq(url, http.MethodPost, struct {
 		SourceSymbolName string `json:"source_symbol_name"`
 		PublicSymbolName string `json:"public_symbol_name"`
+		ExtID            string `json:"ext_id"`
 	}{
 		SourceSymbolName: sourceSymbol,
 		PublicSymbolName: publicSymbol,
+		ExtID:            extID,
 	})
 	if err != nil {
 		return err

@@ -56,7 +56,10 @@ func initEthClient(rc common.RawConfig) (*common.EthClient, []*common.EthClient,
 	}
 	return mainNode, bks, nil
 }
-
+func toJSONString(i interface{}) string {
+	data, _ := json.Marshal(i)
+	return string(data)
+}
 func run(c *cli.Context) error {
 	configuration.SetupLogging()
 
@@ -84,6 +87,13 @@ func run(c *cli.Context) error {
 		l.Errorw("error load config file", "error", err)
 		return err
 	}
+	l.Debugw("start with config",
+		"world_endpoints", toJSONString(rcf.WorldEndpoints),
+		"contract_address", toJSONString(rcf.ContractAddresses),
+		"exchange_endpoints", toJSONString(rcf.ExchangeEndpoints),
+		"nodes", toJSONString(rcf.Nodes),
+		"fetch_delay", toJSONString(rcf.FetcherDelay),
+		"gas_config", toJSONString(rcf.GasConfig))
 
 	rcf.MigrationPath = migration.NewMigrationPathFromContext(c)
 	httpClient := &http.Client{}

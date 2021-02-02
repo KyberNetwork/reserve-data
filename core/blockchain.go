@@ -33,4 +33,5 @@ type Blockchain interface {
 	GetDepositOPAddress() ethereum.Address
 	SignAndBroadcast(tx *types.Transaction, from string) (*types.Transaction, error)
 	SpeedupDeposit(tx ethereum.Hash, recommendGasPrice float64, maxGasPrice float64) (*types.Transaction, error)
+	CurrentBlock() (uint64, error)
 }

@@ -30,7 +30,7 @@ Params | Type | Required | Default | Description
 ------ | ---- | -------- | ------- | -----------
 high | float64 | yes |  | the high value
 low | float64 | yes |  | the low value
-<aside class="notice">Confirm key is required</aside>
+<aside class="notice">Admin key is required</aside>
 
 ## Get GasThreshold
 
