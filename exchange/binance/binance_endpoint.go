@@ -522,6 +522,63 @@ func (ep *Endpoint) GetExchangeInfo() (exchange.BinanceExchangeInfo, error) {
 	return result, err
 }
 
+// CoinInfo ...
+type CoinInfo struct {
+	Coin             string `json:"coin"`
+	DepositAllEnable bool   `json:"depositAllEnable"`
+	Free             string `json:"free"`
+	Freeze           string `json:"freeze"`
+	IPOable          string `json:"ipoable"`
+	IsLegalMoney     bool   `json:"isLegalMoney"`
+	Locked           string `json:"locked"`
+	Name             string `json:"name"`
+	NetworkList      []struct {
+		AddressRegex       string `json:"addressRegex"`
+		Coin               string `json:"coin"`
+		DepositDesc        string `json:"depositDesc"`
+		DepositEnable      bool   `json:"depositEnable"`
+		IsDefault          bool   `json:"isDefault"`
+		MinConfirm         int64  `json:"minConfirm"`
+		Name               string `json:"name"`
+		Network            string `json:"network"`
+		ResetAddressStatus bool   `json:"resetAddressStatus"`
+		SpecialTips        string `json:"specialTips"`
+		UnLockConfirm      int64  `json:"unLockConfirm"`
+		WithdrawDesc       string `json:"withdrawDesc"`
+		WithdrawEnable     bool   `json:"withdrawEnable"`
+		WithdrawFee        string `json:"withdrawFee"`
+		WithdrawMin        string `json:"withdrawMin"`
+	} `json:"networkList"`
+}
+
+// GetAllAssetWithdrawStatus return all asset withdraw status
+func (ep *Endpoint) GetAllAssetWithdrawStatus() (map[string]bool, error) {
+	var (
+		response []CoinInfo
+		result   = make(map[string]bool)
+	)
+	ep.l.Infow("url", "detail", (fmt.Sprintf("%s/binance/all-coin-info", ep.accountDataBaseURL)))
+	respBody, err := ep.authHTTP.DoReq(
+		fmt.Sprintf("%s/binance/all-coin-info", ep.accountDataBaseURL),
+		http.MethodGet,
+		make(map[string]string))
+	if err != nil {
+		return result, err
+	}
+	if err := json.Unmarshal(respBody, &response); err != nil {
+		return result, err
+	}
+	for _, ci := range response {
+		for _, n := range ci.NetworkList {
+			if n.Network == "ETH" {
+				result[ci.Coin] = n.WithdrawEnable
+				break
+			}
+		}
+	}
+	return result, nil
+}
+
 func (ep *Endpoint) getServerTime() (uint64, error) {
 	result := exchange.BinaServerTime{}
 	respBody, err := ep.GetResponse(

@@ -614,6 +614,42 @@ func (s *Server) checkTokenIndice(c *gin.Context) {
 	)
 }
 
+func (s *Server) getAllAssetWithdrawStatus(c *gin.Context) {
+	exchange := c.Param("exchange")
+	switch exchange {
+	case rtypes.Binance.String(), rtypes.Binance2.String():
+		data, err := s.binanceMainAccount.GetAllAssetWithdrawStatus()
+		if err != nil {
+			httputil.ResponseFailure(c, httputil.WithError(err))
+			return
+		}
+		httputil.ResponseSuccess(c, httputil.WithData(data))
+	case rtypes.Huobi.String():
+		ws := make(map[string]bool)
+		assets, err := s.settingStorage.GetAssets()
+		if err != nil {
+			httputil.ResponseFailure(c, httputil.WithError(err))
+			return
+		}
+		for _, a := range assets {
+			for _, aex := range a.Exchanges {
+				if aex.ExchangeID == rtypes.Huobi {
+					ws[aex.Symbol] = true
+					break
+				}
+			}
+		}
+		httputil.ResponseSuccess(c, httputil.WithData(ws))
+	default:
+		c.JSON(
+			http.StatusBadRequest,
+			gin.H{
+				"error": fmt.Sprintf("exchange %s is not supported", exchange),
+			},
+		)
+	}
+}
+
 func (s *Server) register() {
 	if s.core != nil && s.app != nil {
 		g := s.r.Group("/v3")
@@ -652,6 +688,8 @@ func (s *Server) register() {
 		g.GET("/token-rate-trigger", s.getTriggers)
 		g.POST("/cex-transfer", s.cexTransfer)
 		g.GET("/binance/main", s.getBinanceMainAccountInfo)
+
+		g.GET("/all-asset-withdraw-status/:exchange", s.getAllAssetWithdrawStatus)
 	}
 }
 

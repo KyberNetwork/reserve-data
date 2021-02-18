@@ -376,3 +376,27 @@ toTime | uint64 | true | nil | toTime to get trade history
 
 **Limit: toTime - fromTime <= 3 days**
 
+
+## Get Asset Withdraw Status
+
+```shell
+curl -X GET "https://gateway.local/v3/all-asset-withdraw-status/:exchange"
+```
+
+> sample response
+
+```json
+{
+    "success": true,
+    "data": {
+        "KNC": true,
+        "ETH": true,
+        ...
+    }
+}
+```
+
+### HTTP Request
+
+`GET https://gateway.local/v3/all-asset-withdraw-status/:exchange`
+<aside class="notice">All keys are accepted</aside>
