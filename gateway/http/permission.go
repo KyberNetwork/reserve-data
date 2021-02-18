@@ -36,6 +36,7 @@ p, %[1]s, /v3/setting-change-target, POST
 p, %[1]s, /v3/setting-change-pwis, POST
 p, %[1]s, /v3/setting-change-rbquadratic, POST
 p, %[1]s, /v3/setting-change-main, POST
+p, %[1]s, /v3/setting-change-tpair, POST
 p, %[1]s, /v3/setting-change-stable, POST
 p, %[1]s, /v3/setting-change-feed-configuration, POST
 p, %[1]s, /v3/setting-change-update-exchange/:id, (PUT)|(DELETE)
@@ -43,6 +44,7 @@ p, %[1]s, /v3/setting-change-target/:id, (PUT)|(DELETE)
 p, %[1]s, /v3/setting-change-pwis/:id, (PUT)|(DELETE)
 p, %[1]s, /v3/setting-change-rbquadratic/:id, (PUT)|(DELETE)
 p, %[1]s, /v3/setting-change-main/:id, (PUT)|(DELETE)
+p, %[1]s, /v3/setting-change-tpair/:id, (PUT)|(DELETE)
 p, %[1]s, /v3/setting-change-stable/:id, (PUT)|(DELETE)
 p, %[1]s, /v3/setting-change-feed-configuration/:id, (PUT)|(DELETE)
 p, %[1]s, /v3/disapprove-setting-change/:id, DELETE`, manageRole)
