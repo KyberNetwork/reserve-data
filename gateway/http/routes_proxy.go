@@ -73,6 +73,12 @@ func WithSettingEndpoint(settingEndpoint string, noAuth bool) Option {
 		g.PUT("/setting-change-main/:id", settingProxyMW)
 		g.DELETE("/setting-change-main/:id", settingProxyMW)
 
+		g.GET("/setting-change-tpair", settingProxyMW)
+		g.GET("setting-change-tpair/:id", settingProxyMW)
+		g.POST("/setting-change-tpair", settingProxyMW)
+		g.PUT("/setting-change-tpair/:id", settingProxyMW)
+		g.DELETE("/setting-change-tpair/:id", settingProxyMW)
+
 		g.GET("/setting-change-target", settingProxyMW)
 		g.GET("setting-change-target/:id", settingProxyMW)
 		g.POST("/setting-change-target", settingProxyMW)
