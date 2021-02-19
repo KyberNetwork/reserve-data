@@ -389,8 +389,8 @@ curl -X GET "https://gateway.local/v3/all-asset-withdraw-status/:exchange"
 {
     "success": true,
     "data": {
-        "KNC": true,
-        "ETH": true,
+        "1": true,
+        "2": true,
         ...
     }
 }

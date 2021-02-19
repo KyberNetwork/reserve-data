@@ -616,6 +616,11 @@ func (s *Server) checkTokenIndice(c *gin.Context) {
 
 func (s *Server) getAllAssetWithdrawStatus(c *gin.Context) {
 	exchange := c.Param("exchange")
+	assets, err := s.settingStorage.GetAssets()
+	if err != nil {
+		httputil.ResponseFailure(c, httputil.WithError(err))
+		return
+	}
 	switch exchange {
 	case rtypes.Binance.String(), rtypes.Binance2.String():
 		data, err := s.binanceMainAccount.GetAllAssetWithdrawStatus()
@@ -623,18 +628,22 @@ func (s *Server) getAllAssetWithdrawStatus(c *gin.Context) {
 			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
 		}
-		httputil.ResponseSuccess(c, httputil.WithData(data))
-	case rtypes.Huobi.String():
-		ws := make(map[string]bool)
-		assets, err := s.settingStorage.GetAssets()
-		if err != nil {
-			httputil.ResponseFailure(c, httputil.WithError(err))
-			return
+		ws := make(map[rtypes.AssetID]bool)
+		for _, a := range assets {
+			for _, aex := range a.Exchanges {
+				if aex.ExchangeID == rtypes.Binance || aex.ExchangeID == rtypes.Binance2 {
+					ws[aex.AssetID] = data[aex.Symbol]
+					break
+				}
+			}
 		}
+		httputil.ResponseSuccess(c, httputil.WithData(ws))
+	case rtypes.Huobi.String():
+		ws := make(map[rtypes.AssetID]bool)
 		for _, a := range assets {
 			for _, aex := range a.Exchanges {
 				if aex.ExchangeID == rtypes.Huobi {
-					ws[aex.Symbol] = true
+					ws[aex.AssetID] = true
 					break
 				}
 			}
