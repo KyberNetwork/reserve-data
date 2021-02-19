@@ -557,7 +557,6 @@ func (ep *Endpoint) GetAllAssetWithdrawStatus() (map[string]bool, error) {
 		response []CoinInfo
 		result   = make(map[string]bool)
 	)
-	ep.l.Infow("url", "detail", (fmt.Sprintf("%s/binance/all-coin-info", ep.accountDataBaseURL)))
 	respBody, err := ep.authHTTP.DoReq(
 		fmt.Sprintf("%s/binance/all-coin-info", ep.accountDataBaseURL),
 		http.MethodGet,

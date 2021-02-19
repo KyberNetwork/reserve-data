@@ -614,7 +614,7 @@ func (s *Server) checkTokenIndice(c *gin.Context) {
 	)
 }
 
-func (s *Server) getAllAssetWithdrawStatus(c *gin.Context) {
+func (s *Server) getNonWithdrawableAssets(c *gin.Context) {
 	exchange := c.Param("exchange")
 	assets, err := s.settingStorage.GetAssets()
 	if err != nil {
@@ -628,27 +628,20 @@ func (s *Server) getAllAssetWithdrawStatus(c *gin.Context) {
 			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
 		}
-		ws := make(map[rtypes.AssetID]bool)
+		nwa := []rtypes.AssetID{}
 		for _, a := range assets {
 			for _, aex := range a.Exchanges {
 				if aex.ExchangeID == rtypes.Binance || aex.ExchangeID == rtypes.Binance2 {
-					ws[aex.AssetID] = data[aex.Symbol]
+					if !data[aex.Symbol] {
+						nwa = append(nwa, aex.AssetID)
+					}
 					break
 				}
 			}
 		}
-		httputil.ResponseSuccess(c, httputil.WithData(ws))
+		httputil.ResponseSuccess(c, httputil.WithData(nwa))
 	case rtypes.Huobi.String():
-		ws := make(map[rtypes.AssetID]bool)
-		for _, a := range assets {
-			for _, aex := range a.Exchanges {
-				if aex.ExchangeID == rtypes.Huobi {
-					ws[aex.AssetID] = true
-					break
-				}
-			}
-		}
-		httputil.ResponseSuccess(c, httputil.WithData(ws))
+		httputil.ResponseSuccess(c, httputil.WithData([]rtypes.AssetID{}))
 	default:
 		c.JSON(
 			http.StatusBadRequest,
@@ -698,7 +691,7 @@ func (s *Server) register() {
 		g.POST("/cex-transfer", s.cexTransfer)
 		g.GET("/binance/main", s.getBinanceMainAccountInfo)
 
-		g.GET("/all-asset-withdraw-status/:exchange", s.getAllAssetWithdrawStatus)
+		g.GET("/non-withdrawable-assets/:exchange", s.getNonWithdrawableAssets)
 	}
 }
 

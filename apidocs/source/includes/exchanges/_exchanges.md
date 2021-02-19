@@ -380,7 +380,7 @@ toTime | uint64 | true | nil | toTime to get trade history
 ## Get Asset Withdraw Status
 
 ```shell
-curl -X GET "https://gateway.local/v3/all-asset-withdraw-status/:exchange"
+curl -X GET "https://gateway.local/v3/non-withdrawable-assets/:exchange"
 ```
 
 > sample response
@@ -388,15 +388,11 @@ curl -X GET "https://gateway.local/v3/all-asset-withdraw-status/:exchange"
 ```json
 {
     "success": true,
-    "data": {
-        "1": true,
-        "2": true,
-        ...
-    }
+    "data": [1, 2, 3 ...]
 }
 ```
 
 ### HTTP Request
 
-`GET https://gateway.local/v3/all-asset-withdraw-status/:exchange`
+`GET https://gateway.local/v3/non-withdrawable-assets/:exchange`
 <aside class="notice">All keys are accepted</aside>
