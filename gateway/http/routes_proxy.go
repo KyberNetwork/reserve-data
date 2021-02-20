@@ -44,6 +44,7 @@ func WithCoreEndpoint(coreEndpoint string, noAuth bool) Option {
 		g.POST("/transfer-self,", coreProxyMW)
 		g.POST("/cex-transfer", coreProxyMW)
 		g.GET("/binance/main", coreProxyMW)
+		g.GET("/non-withdrawable-assets/:exchange", coreProxyMW)
 
 		return nil
 	}
