@@ -51,6 +51,7 @@ type createAssetParams struct {
 	RebalancePriceQuadraticA *float64 `db:"rebalance_price_quadratic_a"`
 	RebalancePriceQuadraticB *float64 `db:"rebalance_price_quadratic_b"`
 	RebalancePriceQuadraticC *float64 `db:"rebalance_price_quadratic_c"`
+	RebalancePriceOffset     *float64 `db:"rebalance_price_offset"`
 
 	TargetTotal                *float64 `db:"target_total"`
 	TargetReserve              *float64 `db:"target_reserve"`
@@ -353,6 +354,7 @@ func (s *Storage) createAsset(tx *sqlx.Tx,
 		arg.RebalancePriceQuadraticA = &rb.PriceA
 		arg.RebalancePriceQuadraticB = &rb.PriceB
 		arg.RebalancePriceQuadraticC = &rb.PriceC
+		arg.RebalancePriceOffset = &rb.PriceOffset
 	}
 
 	if target != nil {
@@ -614,6 +616,7 @@ type assetDB struct {
 	RebalancePriceQuadraticA *float64 `db:"rebalance_price_quadratic_a"`
 	RebalancePriceQuadraticB *float64 `db:"rebalance_price_quadratic_b"`
 	RebalancePriceQuadraticC *float64 `db:"rebalance_price_quadratic_c"`
+	RebalancePriceOffset     *float64 `db:"rebalance_price_offset"`
 
 	TargetTotal                *float64 `db:"target_total"`
 	TargetReserve              *float64 `db:"target_reserve"`
@@ -702,12 +705,13 @@ func (adb *assetDB) ToCommon() (common.Asset, error) {
 	if adb.RebalanceSizeQuadraticA != nil && adb.RebalanceSizeQuadraticB != nil && adb.RebalanceSizeQuadraticC != nil &&
 		adb.RebalancePriceQuadraticA != nil && adb.RebalancePriceQuadraticB != nil && adb.RebalancePriceQuadraticC != nil {
 		result.RebalanceQuadratic = &common.RebalanceQuadratic{
-			SizeA:  *adb.RebalanceSizeQuadraticA,
-			SizeB:  *adb.RebalanceSizeQuadraticB,
-			SizeC:  *adb.RebalanceSizeQuadraticC,
-			PriceA: *adb.RebalancePriceQuadraticA,
-			PriceB: *adb.RebalancePriceQuadraticB,
-			PriceC: *adb.RebalancePriceQuadraticC,
+			SizeA:       *adb.RebalanceSizeQuadraticA,
+			SizeB:       *adb.RebalanceSizeQuadraticB,
+			SizeC:       *adb.RebalanceSizeQuadraticC,
+			PriceA:      *adb.RebalancePriceQuadraticA,
+			PriceB:      *adb.RebalancePriceQuadraticB,
+			PriceC:      *adb.RebalancePriceQuadraticC,
+			PriceOffset: *adb.RebalancePriceOffset,
 		}
 	}
 
@@ -954,6 +958,7 @@ type updateAssetParam struct {
 	RebalancePriceQuadraticA *float64 `db:"rebalance_price_quadratic_a"`
 	RebalancePriceQuadraticB *float64 `db:"rebalance_price_quadratic_b"`
 	RebalancePriceQuadraticC *float64 `db:"rebalance_price_quadratic_c"`
+	RebalancePriceOffset     *float64 `db:"rebalance_price_offset"`
 
 	TargetTotal                *float64 `db:"target_total"`
 	TargetReserve              *float64 `db:"target_reserve"`
@@ -1060,6 +1065,7 @@ func (s *Storage) updateAsset(tx *sqlx.Tx, id rtypes.AssetID, uo storage.UpdateA
 		arg.RebalancePriceQuadraticA = &rb.PriceA
 		arg.RebalancePriceQuadraticB = &rb.PriceB
 		arg.RebalancePriceQuadraticC = &rb.PriceC
+		arg.RebalancePriceOffset = &rb.PriceOffset
 		updateMsgs = append(updateMsgs, fmt.Sprintf("rebalance_quadratic=%+v", rb))
 	}
 
