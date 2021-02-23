@@ -105,12 +105,13 @@ type AssetPWI struct {
 
 // RebalanceQuadratic is params of quadratic equation
 type RebalanceQuadratic struct {
-	SizeA  float64 `json:"size_a"`
-	SizeB  float64 `json:"size_b"`
-	SizeC  float64 `json:"size_c"`
-	PriceA float64 `json:"price_a"`
-	PriceB float64 `json:"price_b"`
-	PriceC float64 `json:"price_c"`
+	SizeA       float64 `json:"size_a"`
+	SizeB       float64 `json:"size_b"`
+	SizeC       float64 `json:"size_c"`
+	PriceA      float64 `json:"price_a"`
+	PriceB      float64 `json:"price_b"`
+	PriceC      float64 `json:"price_c"`
+	PriceOffset float64 `json:"price_offset"`
 }
 
 // StableParam is params of stablize action
