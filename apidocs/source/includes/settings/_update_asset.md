@@ -39,7 +39,8 @@ curl -X POST "https://gateway.local/v3/setting-change-main" \
                     "size_c": 0.3414,
                     "price_a": 0.3242,
                     "price_b": 0.342473,
-                    "price_c": 0.3415
+                    "price_c": 0.3415,
+                    "price_offset": 1
             },
             "target": {
                 "total": 4134242.432,
