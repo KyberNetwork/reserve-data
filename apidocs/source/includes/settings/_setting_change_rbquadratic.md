@@ -17,7 +17,8 @@ curl -X POST "https://gateway.local/v3/setting-change-rbquadratic" \
                 "size_c":0.000001754386,
                 "price_a":0.1234,
                 "price_b":0.1235,
-                "price_c":0.1236
+                "price_c":0.1236,
+                "price_offset": 0
               }
           }
         },
@@ -31,7 +32,8 @@ curl -X POST "https://gateway.local/v3/setting-change-rbquadratic" \
                 "size_c":0.99976786,
                 "price_a":0.1234,
                 "price_b":0.1235,
-                "price_c":0.1236
+                "price_c":0.1236,
+                "price_offset": 0
               }
           }
         },
@@ -61,7 +63,8 @@ size_b | float64 | false | nil |
 size_c | float64 | false | nil | 
 price_a | float64 | false | nil | 
 price_b | float64 | false | nil | 
-price_c | float64 | false | nil | 
+price_c | float64 | false | nil |
+price_offset | float64 | false | nil |
 <aside class="notice">Manage key is required</aside>
 
 ## Get pending setting rbquadratic
@@ -81,31 +84,33 @@ curl -X GET "https://gateway.local/v3/setting-change-rbquadratic"
       "created": "2019-08-13T07:25:49.869418Z",
       "change_list": [
         {
-          "type":"update_asset",
-          "data":{
-              "asset_id":3,
-              "rebalance_quadratic":{
-                "size_a":0.000001754386,
-                "size_b":0.000001754386,
-                "size_c":0.000001754386,
-                "price_a":0.1234,
-                "price_b":0.1235,
-                "price_c":0.1236
-              }
+          "type": "update_asset",
+          "data": {
+            "asset_id": 3,
+            "rebalance_quadratic": {
+              "size_a": 0.000001754386,
+              "size_b": 0.000001754386,
+              "size_c": 0.000001754386,
+              "price_a": 0.1234,
+              "price_b": 0.1235,
+              "price_c": 0.1236,
+              "price_offset": 0
+            }
           }
         },
         {
-          "type":"update_asset",
-          "data":{
-              "asset_id":5,
-              "rebalance_quadratic":{
-                "size_a":0.00000357143,
-                "size_b":0.0002285714,
-                "size_c":0.99976786,
-                "price_a":0.1234,
-                "price_b":0.1235,
-                "price_c":0.1236
-              }
+          "type": "update_asset",
+          "data": {
+            "asset_id": 5,
+            "rebalance_quadratic": {
+              "size_a": 0.00000357143,
+              "size_b": 0.0002285714,
+              "size_c": 0.99976786,
+              "price_a": 0.1234,
+              "price_b": 0.1235,
+              "price_c": 0.1236,
+              "price_offset": 0
+            }
           }
         },
         ...
