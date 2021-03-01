@@ -71,5 +71,6 @@
     "binance_eth_usdc_10000": {
       "url": "http://localhost:8080/convert/binance/eth-usdc/10000"
     }
-  }
+  },
+  "blockchain_network": "ETH"
 }

@@ -162,6 +162,11 @@ type Asset struct {
 	ExchangeETHAmount     float64             `json:"exchange_eth_amount"`
 }
 
+// IsNetworkAsset check if token is main coin
+func (a Asset) IsNetworkAsset() bool {
+	return a.ID == 1
+}
+
 // TODO: write custom marshal json for created/updated fields
 
 // CreateAssetExchangeEntry is the configuration of an asset for a specific exchange.

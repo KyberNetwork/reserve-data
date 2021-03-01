@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/KyberNetwork/reserve-data/common/bcnetwork"
 	ethereum "github.com/ethereum/go-ethereum/common"
 	"go.uber.org/zap"
 
@@ -38,6 +39,7 @@ type Endpoint struct {
 	accountDataBaseURL string
 	accountID          string
 	authHTTP           *authhttp.AuthHTTP
+	network            string
 }
 
 func (ep *Endpoint) fillRequest(req *http.Request, signNeeded bool, timepoint uint64) {
@@ -385,6 +387,7 @@ func (ep *Endpoint) Withdraw(asset commonv3.Asset, amount *big.Int, address ethe
 			"address": address.Hex(),
 			"name":    "reserve",
 			"amount":  strconv.FormatFloat(common.BigToFloat(amount, int64(asset.Decimals)), 'f', -1, 64),
+			"network": ep.network,
 		})
 	if err == nil {
 		if err = json.Unmarshal(respBody, &result); err != nil {
@@ -569,7 +572,7 @@ func (ep *Endpoint) GetAllAssetWithdrawStatus() (map[string]bool, error) {
 	}
 	for _, ci := range response {
 		for _, n := range ci.NetworkList {
-			if n.Network == "ETH" {
+			if n.Network == ep.network {
 				result[ci.Coin] = n.WithdrawEnable
 				break
 			}
@@ -613,6 +616,7 @@ func (ep *Endpoint) UpdateTimeDelta() error {
 func NewBinanceEndpoint(signer Signer, interf Interface, dpl deployment.Deployment, client *http.Client, exparam rtypes.ExchangeID,
 	marketDataBaseURL, accountDataBaseURL, accountID string, authHTTP *authhttp.AuthHTTP) *Endpoint {
 	l := zap.S()
+	nw := bcnetwork.GetPreConfig().Network
 	endpoint := &Endpoint{
 		signer:             signer,
 		interf:             interf,
@@ -623,6 +627,7 @@ func NewBinanceEndpoint(signer Signer, interf Interface, dpl deployment.Deployme
 		accountDataBaseURL: accountDataBaseURL,
 		accountID:          accountID,
 		authHTTP:           authHTTP,
+		network:            nw,
 	}
 	switch dpl {
 	case deployment.Simulation:
