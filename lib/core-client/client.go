@@ -14,7 +14,7 @@ const (
 	defaultTimeout = 5 * time.Second
 )
 
-//Client is client for core
+// Client is client for core
 type Client struct {
 	endpoint string
 }

@@ -15,7 +15,7 @@ const (
 	migrationPathFlag = "migration-path"
 )
 
-//NewMigrationFolderPathFlag return new flag for migration folder
+// NewMigrationFolderPathFlag return new flag for migration folder
 func NewMigrationFolderPathFlag() cli.Flag {
 	return cli.StringFlag{
 		Name:   migrationPathFlag,

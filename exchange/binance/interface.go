@@ -11,20 +11,24 @@ type Interface interface {
 	AuthenticatedEndpoint() string
 }
 
+// RealInterface ...
 type RealInterface struct {
 	publicEndpoint string
 }
 
+// NewRealInterface ...
 func NewRealInterface(publicEndpoint string) *RealInterface {
 	return &RealInterface{publicEndpoint: publicEndpoint}
 }
 
 func (r *RealInterface) isBinance() {}
 
+// PublicEndpoint ...
 func (r *RealInterface) PublicEndpoint() string {
 	return r.publicEndpoint
 }
 
+// AuthenticatedEndpoint ...
 func (r *RealInterface) AuthenticatedEndpoint() string {
 	return r.publicEndpoint
 }

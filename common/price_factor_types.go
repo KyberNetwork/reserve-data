@@ -4,6 +4,7 @@ import (
 	"fmt"
 )
 
+// TokenTargetQty ...
 type TokenTargetQty struct {
 	ID        uint64
 	Timestamp uint64
@@ -12,17 +13,18 @@ type TokenTargetQty struct {
 	Type      int64
 }
 
+// PWIEquation ...
 type PWIEquation struct {
 	ID   uint64 `json:"id"`
 	Data string `json:"data"`
 }
 
-//RebalanceControl represent status of rebalance, true is enable and false is disable
+// RebalanceControl represent status of rebalance, true is enable and false is disable
 type RebalanceControl struct {
 	Status bool `json:"status"`
 }
 
-//SetrateControl represent status of set rate ability, true is enable and false is disable
+// SetrateControl represent status of set rate ability, true is enable and false is disable
 type SetrateControl struct {
 	Status bool `json:"status"`
 }

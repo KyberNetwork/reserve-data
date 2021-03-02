@@ -478,6 +478,31 @@ func (ep *Endpoint) GetDepositAddress(asset string) (exchange.Binadepositaddress
 	return result, err
 }
 
+// GetDepositAddressWithNetwork ...
+func (ep *Endpoint) GetDepositAddressWithNetwork(asset, network string) (exchange.Binadepositaddress, error) {
+	result := exchange.Binadepositaddress{}
+	endpoint := fmt.Sprintf("%s/sapi/v1/capital/deposit/address", ep.interf.AuthenticatedEndpoint())
+	respBody, err := ep.GetResponse(
+		"GET",
+		endpoint,
+		map[string]string{
+			"coin":    asset,
+			"network": network,
+		},
+		true,
+		common.NowInMillis(),
+	)
+	if err == nil {
+		if err = json.Unmarshal(respBody, &result); err != nil {
+			return result, err
+		}
+		if !result.Success {
+			err = errors.New(result.Msg)
+		}
+	}
+	return result, err
+}
+
 // GetAllAssetDetail all asset detail on binance
 func (ep *Endpoint) GetAllAssetDetail() (map[string]exchange.BinanceAssetDetail, error) {
 	resp := struct {
