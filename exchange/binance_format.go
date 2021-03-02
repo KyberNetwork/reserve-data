@@ -109,8 +109,10 @@ type Binaorder struct {
 	Time          uint64 `json:"time"`
 }
 
+// Binaorders ...
 type Binaorders []Binaorder
 
+// Binadepositaddress ...
 type Binadepositaddress struct {
 	Success    bool   `json:"success"`
 	Msg        string `json:"msg"`
@@ -119,6 +121,15 @@ type Binadepositaddress struct {
 	Asset      string `json:"asset"`
 }
 
+// BinanceDepositAddressWithNetwork ...
+type BinanceDepositAddressWithNetwork struct {
+	Address string `json:"address"`
+	Coin    string `json:"coin"`
+	Tag     string `json:"tag"`
+	URL     string `json:"url"`
+}
+
+// Binacancel ...
 type Binacancel struct {
 	Code              int    `json:"code"`
 	Msg               string `json:"msg"`
@@ -156,6 +167,7 @@ type Binadeposits struct {
 	Deposits []Binadeposit `json:"depositList"`
 }
 
+// Binadeposit ...
 type Binadeposit struct {
 	InsertTime uint64  `json:"insertTime"`
 	Amount     float64 `json:"amount"`

@@ -479,8 +479,8 @@ func (ep *Endpoint) GetDepositAddress(asset string) (exchange.Binadepositaddress
 }
 
 // GetDepositAddressWithNetwork ...
-func (ep *Endpoint) GetDepositAddressWithNetwork(asset, network string) (exchange.Binadepositaddress, error) {
-	result := exchange.Binadepositaddress{}
+func (ep *Endpoint) GetDepositAddressWithNetwork(asset, network string) (exchange.BinanceDepositAddressWithNetwork, error) {
+	result := exchange.BinanceDepositAddressWithNetwork{}
 	endpoint := fmt.Sprintf("%s/sapi/v1/capital/deposit/address", ep.interf.AuthenticatedEndpoint())
 	respBody, err := ep.GetResponse(
 		"GET",
@@ -495,9 +495,6 @@ func (ep *Endpoint) GetDepositAddressWithNetwork(asset, network string) (exchang
 	if err == nil {
 		if err = json.Unmarshal(respBody, &result); err != nil {
 			return result, err
-		}
-		if !result.Success {
-			err = errors.New(result.Msg)
 		}
 	}
 	return result, err
