@@ -459,13 +459,14 @@ func (ep *Endpoint) OpenOrdersForOnePair(pair *commonv3.TradingPairSymbols) (exc
 }
 
 // GetDepositAddress of an asset
-func (ep *Endpoint) GetDepositAddress(asset string) (exchange.Binadepositaddress, error) {
-	result := exchange.Binadepositaddress{}
+func (ep *Endpoint) GetDepositAddress(coin, network string) (exchange.CoinDepositAddress, error) {
+	result := exchange.CoinDepositAddress{}
 	respBody, err := ep.GetResponse(
 		"GET",
-		ep.interf.AuthenticatedEndpoint()+"/wapi/v3/depositAddress.html",
+		ep.interf.AuthenticatedEndpoint()+"/sapi/v1/capital/deposit/address",
 		map[string]string{
-			"asset": asset,
+			"coin":    coin,
+			"network": network,
 		},
 		true,
 		common.NowInMillis(),
@@ -473,9 +474,6 @@ func (ep *Endpoint) GetDepositAddress(asset string) (exchange.Binadepositaddress
 	if err == nil {
 		if err = json.Unmarshal(respBody, &result); err != nil {
 			return result, err
-		}
-		if !result.Success {
-			err = errors.New(result.Msg)
 		}
 	}
 	return result, err
