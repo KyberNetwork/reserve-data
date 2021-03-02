@@ -401,7 +401,7 @@ func (h *Huobi) Send2ndTransaction(amount float64, asset commonv3.Asset, exchang
 	}
 	gasPrice = common.GweiToWei(recommendedPrice)
 	h.l.Infof("Send2ndTransaction, gas price: %s", gasPrice.String())
-	if asset.Symbol == "ETH" {
+	if asset.IsNetworkAsset() {
 		tx, err = h.blockchain.SendETHFromAccountToExchange(IAmount, exchangeAddress, gasPrice)
 	} else {
 		tx, err = h.blockchain.SendTokenFromAccountToExchange(IAmount, exchangeAddress, asset.Address, gasPrice)

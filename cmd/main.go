@@ -16,6 +16,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/cmd/configuration"
 	"github.com/KyberNetwork/reserve-data/cmd/deployment"
 	"github.com/KyberNetwork/reserve-data/common"
+	"github.com/KyberNetwork/reserve-data/common/bcnetwork"
 	"github.com/KyberNetwork/reserve-data/common/profiler"
 	"github.com/KyberNetwork/reserve-data/exchange/binance"
 	apphttp "github.com/KyberNetwork/reserve-data/http"
@@ -77,7 +78,6 @@ func run(c *cli.Context) error {
 	zap.ReplaceGlobals(l.Desugar())
 
 	configFile, secretConfigFile := configuration.NewConfigFilesFromContext(c)
-
 	rcf := common.RawConfig{}
 	if err := loadConfigFromFile(configFile, &rcf); err != nil {
 		l.Errorw("error load config file", "error", err)
@@ -94,6 +94,11 @@ func run(c *cli.Context) error {
 		"nodes", toJSONString(rcf.Nodes),
 		"fetch_delay", toJSONString(rcf.FetcherDelay),
 		"gas_config", toJSONString(rcf.GasConfig))
+
+	network := rcf.BlockChainNetwork
+	if err := bcnetwork.SetActiveNetwork(network); err != nil {
+		l.Errorw("blockchain_network not supported", "value", network)
+	}
 
 	rcf.MigrationPath = migration.NewMigrationPathFromContext(c)
 	httpClient := &http.Client{}

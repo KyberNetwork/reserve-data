@@ -111,12 +111,11 @@ type Binaorder struct {
 
 type Binaorders []Binaorder
 
-type Binadepositaddress struct {
-	Success    bool   `json:"success"`
-	Msg        string `json:"msg"`
-	Address    string `json:"address"`
-	AddressTag string `json:"addressTag"`
-	Asset      string `json:"asset"`
+type CoinDepositAddress struct {
+	Address string `json:"address"`
+	Coin    string `json:"coin"`
+	Tag     string `json:"tag"`
+	URL     string `json:"url"`
 }
 
 type Binacancel struct {
