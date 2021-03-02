@@ -95,10 +95,7 @@ func run(c *cli.Context) error {
 		"fetch_delay", toJSONString(rcf.FetcherDelay),
 		"gas_config", toJSONString(rcf.GasConfig))
 
-	network := rcf.BlockChainNetwork
-	if err := bcnetwork.SetActiveNetwork(network); err != nil {
-		l.Errorw("blockchain_network not supported", "value", network)
-	}
+	bcnetwork.SetActiveNetwork(rcf.BlockChainNetwork)
 
 	rcf.MigrationPath = migration.NewMigrationPathFromContext(c)
 	httpClient := &http.Client{}
