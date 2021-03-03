@@ -74,6 +74,7 @@
   },
   "blockchain_network": {
     "network": "ETH",
+    "max_gas_price": 1000,
     "bootstrap_asset": {
       "symbol": "ETH",
       "name": "Ethereum",

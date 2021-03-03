@@ -134,3 +134,8 @@ func CalculateNewPrice(pendingPrice float64, recommendPrice float64) float64 {
 		return math.Max(recommendPrice, pendingPrice*1.1) // recommendPrice should > pendingPrice at least 10% gwei
 	}
 }
+
+// IsZeroAddress check if address is zero
+func IsZeroAddress(a common.Address) bool {
+	return a.Hash().Big().BitLen() == 0
+}

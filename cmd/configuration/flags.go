@@ -132,7 +132,7 @@ func CreateBlockchain(config *Config) (*blockchain.Blockchain, error) {
 func CreateDataCore(config *Config,
 	dpl deployment.Deployment,
 	bc *blockchain.Blockchain,
-	kyberNetworkProxy *blockchain.NetworkProxy,
+	gasPriceLimiter gasinfo.GasPriceLimiter,
 	rcf common.RawConfig,
 	httpClient *http.Client) (*data.ReserveData, *core.ReserveCore, *gasinfo.GasPriceInfo) {
 	// get fetcher based on config and ENV == simulation.
@@ -156,7 +156,6 @@ func CreateDataCore(config *Config,
 		config.SettingStorage,
 	)
 
-	gasPriceLimiter := gasinfo.NewNetworkGasPriceLimiter(kyberNetworkProxy, rcf.GasConfig.FetchMaxGasCacheSeconds)
 	gasInfo := gasinfo.NewGasPriceInfo(gasPriceLimiter, rData, gaspricedataclient.New(httpClient, rcf.GasConfig.GasPriceURL))
 	gasinfo.SetGlobal(gasInfo)
 	rCore := core.NewReserveCore(bc, config.ActivityStorage, config.ContractAddresses, gasInfo)
