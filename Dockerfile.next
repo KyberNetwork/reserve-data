@@ -1,5 +1,5 @@
 # build stage
-FROM golang:1.15 AS build-env
+FROM golang:1.16 AS build-env
 COPY . /go/src/github.com/KyberNetwork/reserve-data
 WORKDIR /go/src/github.com/KyberNetwork/reserve-data/cmd
 RUN go build -ldflags '-linkmode external -w -extldflags "-static"'

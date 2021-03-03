@@ -177,7 +177,7 @@ func getTestCore(hasPendingDeposit bool) *ReserveCore {
 	addressSetting := &common.ContractAddressConfiguration{}
 
 	return NewReserveCore(testBlockchain{}, testActivityStorage{hasPendingDeposit}, addressSetting,
-		gasinfo.NewGasPriceInfo(&gasinfo.ConstGasPriceLimiter{}, &ExampleGasConfig{}, &ExampleGasClient{}))
+		gasinfo.NewGasPriceInfo(gasinfo.NewConstGasPriceLimiter(100), &ExampleGasConfig{}, &ExampleGasClient{}))
 }
 
 type ExampleGasConfig struct {
