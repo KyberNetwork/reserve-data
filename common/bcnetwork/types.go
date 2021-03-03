@@ -18,7 +18,8 @@ func SetActiveNetwork(nc NetworkConfig) {
 func GetPreConfig() NetworkConfig {
 	if selectedNetwork.Network == "" { // this make sure if no network config set, use ETH as default
 		return NetworkConfig{
-			Network: "ETH",
+			Network:     "ETH",
+			MaxGasPrice: 1000,
 			BootstrapAsset: BootstrapAsset{
 				Symbol:   "ETH",
 				Name:     "Ethereum",
@@ -41,5 +42,6 @@ type BootstrapAsset struct {
 // NetworkConfig store config to switch to BSC, this will use to seed say ETH/BNB on the network
 type NetworkConfig struct {
 	Network        string         `json:"network"`
+	MaxGasPrice    float64        `json:"max_gas_price"` // fallback value, in case there no network contract
 	BootstrapAsset BootstrapAsset `json:"bootstrap_asset"`
 }
