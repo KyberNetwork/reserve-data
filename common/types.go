@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/KyberNetwork/reserve-data/common/bcnetwork"
 	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/shopspring/decimal"
 
@@ -920,7 +921,7 @@ type RawConfig struct {
 		AccessSecret string `json:"access_secret"`
 	} `json:"account_data"`
 
-	BlockChainNetwork string `json:"blockchain_network"`
+	BlockChainNetwork bcnetwork.NetworkConfig `json:"blockchain_network"`
 }
 
 // FeedProviderResponse ...
