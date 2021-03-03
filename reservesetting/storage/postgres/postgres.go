@@ -9,6 +9,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/KyberNetwork/reserve-data/common"
+	"github.com/KyberNetwork/reserve-data/common/bcnetwork"
 	v3 "github.com/KyberNetwork/reserve-data/reservesetting/common"
 )
 
@@ -45,14 +46,15 @@ func (s *Storage) initAssets() error {
 	var (
 		defaultNormalUpdatePerPeriod float64 = 1
 		defaultMaxImbalanceRatio     float64 = 2
-		ethAddr                              = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
 		defaultOrderDurationMillis   uint64  = 20000
 	)
+	networkConf := bcnetwork.GetPreConfig().BootstrapAsset
+	addr := networkConf.Address.String()
 	_, err := s.stmts.newAsset.Exec(&createAssetParams{
-		Symbol:                "ETH",
-		Name:                  "Ethereum",
-		Address:               &ethAddr,
-		Decimals:              18,
+		Symbol:                networkConf.Symbol,
+		Name:                  networkConf.Name,
+		Address:               &addr,
+		Decimals:              networkConf.Decimals,
 		Transferable:          true,
 		SetRate:               v3.SetRateNotSet.String(),
 		Rebalance:             false,

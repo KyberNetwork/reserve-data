@@ -47,7 +47,7 @@ func (bi *binanceTestInterface) GetExchangeInfo() (BinanceExchangeInfo, error) {
 	panic("implement me")
 }
 
-func (bi *binanceTestInterface) GetDepositAddress(tokenID string) (Binadepositaddress, error) {
+func (bi *binanceTestInterface) GetDepositAddress(tokenID, nw string) (CoinDepositAddress, error) {
 	panic("implement me")
 }
 

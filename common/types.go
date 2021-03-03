@@ -8,9 +8,11 @@ import (
 	"strings"
 	"time"
 
-	rtypes "github.com/KyberNetwork/reserve-data/lib/rtypes"
+	"github.com/KyberNetwork/reserve-data/common/bcnetwork"
 	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/shopspring/decimal"
+
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 )
 
 // Version indicate fetched data version
@@ -918,6 +920,8 @@ type RawConfig struct {
 		AccessKey    string `json:"access_key"`
 		AccessSecret string `json:"access_secret"`
 	} `json:"account_data"`
+
+	BlockChainNetwork bcnetwork.NetworkConfig `json:"blockchain_network"`
 }
 
 // FeedProviderResponse ...
