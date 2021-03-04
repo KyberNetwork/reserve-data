@@ -1,8 +1,9 @@
 package blockchain
 
 import (
+	"bytes"
+	"io/ioutil"
 	"math/big"
-	"os"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethereum "github.com/ethereum/go-ethereum/common"
@@ -25,15 +26,15 @@ func (es EthereumSigner) GetAddress() ethereum.Address {
 }
 
 func (es EthereumSigner) Sign(tx *types.Transaction) (*types.Transaction, error) {
-	return es.opts.Signer(types.NewEIP155Signer(es.chainID), es.GetAddress(), tx)
+	return es.opts.Signer(es.GetAddress(), tx)
 }
 
 func NewEthereumSigner(keyPath string, passphrase string, chainID *big.Int) *EthereumSigner {
-	key, err := os.Open(keyPath)
+	data, err := ioutil.ReadFile(keyPath)
 	if err != nil {
 		panic(err)
 	}
-	auth, err := bind.NewTransactor(key, passphrase)
+	auth, err := bind.NewTransactorWithChainID(bytes.NewReader(data), passphrase, chainID)
 	if err != nil {
 		panic(err)
 	}

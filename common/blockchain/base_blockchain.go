@@ -185,7 +185,7 @@ func (b *BaseBlockchain) Call(timeOut time.Duration, opts CallOpts, contract *Co
 	if err != nil {
 		return err
 	}
-	return contract.ABI.Unpack(result, method, output)
+	return contract.ABI.UnpackIntoInterface(result, method, output)
 }
 
 func (b *BaseBlockchain) BuildTx(context context.Context, opts TxOpts, contract *Contract, method string, params ...interface{}) (*types.Transaction, error) {
