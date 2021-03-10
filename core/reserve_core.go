@@ -705,12 +705,13 @@ func (rc *ReserveCore) SetRates(assets []commonv3.Asset, buys, sells []*big.Int,
 	msgs []string, triggers []bool) (common.ActivityID, error) {
 
 	var (
-		tx               *types.Transaction
-		txhex            = ethereum.Hash{}.Hex()
-		txnonce, orgTime = uint64(0), uint64(0)
-		txprice          = "0"
-		err              error
-		miningStatus     string
+		tx           *types.Transaction
+		txhex        = ethereum.Hash{}.Hex()
+		txnonce      = uint64(0)
+		orgTime      uint64
+		txprice      = "0"
+		err          error
+		miningStatus string
 	)
 
 	tx, orgTime, err = rc.GetSetRateResult(assets, buys, sells, afpMids, block)
