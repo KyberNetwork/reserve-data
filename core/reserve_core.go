@@ -524,13 +524,13 @@ func (rc *ReserveCore) CancelSetRate() (common.ActivityID, error) {
 		return common.ActivityID{}, fmt.Errorf("couldn't get mined nonce of set rate operator (%+v)", err)
 	}
 
-	targetActivity, err := rc.activityStorage.GetPendingSetRate(common.ActionCancelSetRate, minedNonce)
+	targetActivity, err := rc.activityStorage.GetActivityForOverride(common.ActionCancelSetRate, minedNonce)
 	if err != nil {
 		rc.l.Errorw("failed to get pending activity", "err", err)
 		return common.ActivityID{}, fmt.Errorf("failed to get pending cancel setrate activity, %w", err)
 	}
 	if targetActivity == nil { // if no pending cancel setRate found, fallback to cancel recent setRate
-		targetActivity, err = rc.activityStorage.GetPendingSetRate(common.ActionSetRate, minedNonce)
+		targetActivity, err = rc.activityStorage.GetActivityForOverride(common.ActionSetRate, minedNonce)
 	}
 	if err != nil {
 		rc.l.Errorw("failed to get pending activity", "err", err)
@@ -651,7 +651,7 @@ func (rc *ReserveCore) GetSetRateResult(tokens []commonv3.Asset,
 	if err != nil {
 		return tx, common.NowInMillis(), fmt.Errorf("couldn't get mined nonce of set rate operator (%s)", err.Error())
 	}
-	pendingSetRate, err := rc.activityStorage.GetPendingSetRate(common.ActionSetRate, minedNonce)
+	pendingSetRate, err := rc.activityStorage.GetActivityForOverride(common.ActionSetRate, minedNonce)
 	if err != nil {
 		rc.l.Errorw("failed to get pending activity", "err", err)
 		return nil, common.NowInMillis(), fmt.Errorf("failed to get pending activity, %w", err)

@@ -29,6 +29,8 @@ type ActivityStorage interface {
 	// PendingActivityForAction return the last pending set rate and number of pending
 	// transactions.
 	PendingActivityForAction(minedNonce uint64, activityType string) (*common.ActivityRecord, uint64, error)
-	// find
+
 	GetPendingSetRate(action string, minedNonce uint64) (*common.ActivityRecord, error)
+	// GetActivityForOverride find activity for override, this can be a failed tx (eg underprice) so we can override more precision
+	GetActivityForOverride(action string, minedNonce uint64) (*common.ActivityRecord, error)
 }
