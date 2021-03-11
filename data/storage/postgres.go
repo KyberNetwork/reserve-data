@@ -8,6 +8,7 @@ import (
 	"math"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/DataDog/zstd"
@@ -49,6 +50,9 @@ var (
 type PostgresStorage struct {
 	db *sqlx.DB
 	l  *zap.SugaredLogger
+
+	mu            sync.Mutex
+	orderBookData *common.AllPriceEntry
 }
 
 // NewPostgresStorage return new db instance
@@ -56,6 +60,7 @@ func NewPostgresStorage(db *sqlx.DB) (*PostgresStorage, error) {
 	s := &PostgresStorage{
 		db: db,
 		l:  zap.S(),
+		mu: sync.Mutex{},
 	}
 
 	return s, nil
@@ -89,48 +94,6 @@ func (ps *PostgresStorage) storeFetchData(data interface{}, timepoint uint64) er
 		return err
 	}
 	return nil
-}
-
-func (ps *PostgresStorage) storeOrderBookData(data common.AllPriceEntry, timepoint uint64) error {
-	query := `INSERT INTO order_book_data (created, data) VALUES ($1, $2)`
-	timestamp := common.MillisToTime(timepoint)
-	dataJSON, err := json.Marshal(data)
-	if err != nil {
-		return err
-	}
-	if _, err := ps.db.Exec(query, timestamp, dataJSON); err != nil {
-		return err
-	}
-	return nil
-}
-func (ps *PostgresStorage) currentOrderBookVersion(timepoint uint64) (common.Version, error) {
-	var (
-		v  common.Version
-		ts time.Time
-	)
-	timestamp := common.MillisToTime(timepoint)
-	query := `SELECT created
-FROM (
-	SELECT
-		id,
-		created
-	FROM
-		order_book_data
-	WHERE
-		created <= $1
-	ORDER BY
-		created DESC
-	LIMIT 1) a1
-WHERE
-	$1 - created <= interval '150' second` // max duration block is 10 ~ 150 second
-	if err := ps.db.Get(&ts, query, timestamp); err != nil {
-		if err == sql.ErrNoRows {
-			return v, fmt.Errorf("there is no version at timestamp: %d", timepoint)
-		}
-		return v, err
-	}
-	v = common.Version(common.TimeToMillis(ts))
-	return v, nil
 }
 
 func (ps *PostgresStorage) currentVersion(dataType fetchDataType, timepoint uint64) (common.Version, error) {
@@ -188,39 +151,28 @@ func (ps *PostgresStorage) getData(o interface{}, v common.Version) error {
 	return json.Unmarshal(data, o)
 }
 
-func (ps *PostgresStorage) getOrderBookData(v common.Version) (common.AllPriceEntry, error) {
-	var (
-		data   []byte
-		logger = ps.l.With("func", caller.GetCurrentFunctionName())
-	)
-	ts := common.MillisToTime(uint64(v))
-	query := `SELECT data FROM order_book_data WHERE created = $1`
-	if err := ps.db.Get(&data, query, ts); err != nil {
-		logger.Errorw("failed to get data from order_book_data table", "error", err)
-		return common.AllPriceEntry{}, err
-	}
-	var allPrices common.AllPriceEntry
-	err := json.Unmarshal(data, &allPrices)
-	if err != nil {
-		logger.Errorw("unmarshal order book data failed", "err", err, "data", string(data))
-	}
-	return allPrices, err
-}
-
 // StorePrice store price
 func (ps *PostgresStorage) StorePrice(priceEntry common.AllPriceEntry, timepoint uint64) error {
-	return ps.storeOrderBookData(priceEntry, timepoint)
+	ps.mu.Lock()
+	ps.orderBookData = &priceEntry
+	ps.mu.Unlock()
+	return nil
 }
 
 // CurrentPriceVersion return current price version
 func (ps *PostgresStorage) CurrentPriceVersion(timepoint uint64) (common.Version, error) {
-	return ps.currentOrderBookVersion(timepoint)
+	return common.Version(timepoint), nil
 }
 
 // GetAllPrices return all prices currently save in db
 func (ps *PostgresStorage) GetAllPrices(v common.Version) (common.AllPriceEntry, error) {
-	allPrices, err := ps.getOrderBookData(v)
-	return allPrices, err
+	ps.mu.Lock()
+	obd := ps.orderBookData
+	ps.mu.Unlock()
+	if obd == nil {
+		return common.AllPriceEntry{}, fmt.Errorf("no order book data for this version, version=%d", v)
+	}
+	return *obd, nil
 }
 
 // GetOnePrice return one price
@@ -435,12 +387,16 @@ type assetRateTriggerDB struct {
 }
 
 // GetAssetRateTriggers return a list of AssetRateTrigger, which calculate number of time an asset was record for setRate with trigger=true
+// Analytics request that number of trigger should only count on activity create by success setRate
+// because we save tx id into activity(even when it fail to send) so depend on tx != '0x00..' is no longer correct
+// an alternative solution to use expression: tx.status = submitted || activity.last_time > 0
+// last_time == 0 for immediately fail setRate(eg node rejected) => setRate return fail, we ignore them when count
 func (ps *PostgresStorage) GetAssetRateTriggers(fromTime uint64, toTime uint64) ([]common.AssetRateTrigger, error) {
 	from := common.MillisToTime(fromTime)
 	to := common.MillisToTime(toTime)
 	var res []assetRateTriggerDB
 	query := `WITH sr AS(
-	SELECT * FROM activity WHERE created BETWEEN $1 AND $2 AND data->>'action'='set_rates' AND data->'result'->>'tx' != '0x0000000000000000000000000000000000000000000000000000000000000000' 
+	SELECT * FROM activity WHERE created BETWEEN $1 AND $2 AND data->>'action'='set_rates' AND (data->>'mining_status' = $3 OR (data->>'last_time')::int8 > 0)
 )
 SELECT id AS asset_id, (SELECT count(*) FROM (
 	SELECT (data->'params'->'triggers'->(
@@ -449,7 +405,7 @@ SELECT id AS asset_id, (SELECT count(*) FROM (
 		)
 	)::BOOLEAN AS trigg FROM sr p1
 ) p2 WHERE trigg IS TRUE) AS count FROM assets`
-	err := ps.db.Select(&res, query, from, to)
+	err := ps.db.Select(&res, query, from, to, common.MiningStatusSubmitted)
 	if err != nil {
 		return nil, err
 	}

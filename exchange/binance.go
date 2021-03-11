@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/KyberNetwork/reserve-data/common/bcnetwork"
 	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -56,7 +57,8 @@ func (bn *Binance) Address(asset commonv3.Asset) (ethereum.Address, bool) {
 			symbol = exchange.Symbol
 		}
 	}
-	liveAddress, err := bn.interf.GetDepositAddress(symbol)
+	network := bcnetwork.GetPreConfig().Network
+	liveAddress, err := bn.interf.GetDepositAddress(symbol, network)
 	if err != nil || liveAddress.Address == "" {
 		bn.l.Warnw("Get Binance live deposit address for token failed or the address replied is empty . Use the currently available address instead", "assetID", asset.ID, "err", err)
 		addrs, uErr := bn.sr.GetDepositAddresses(bn.id)
@@ -67,14 +69,11 @@ func (bn *Binance) Address(asset commonv3.Asset) (ethereum.Address, bool) {
 		depositAddr, ok := addrs[asset.ID]
 		return depositAddr, ok && !commonv3.IsZeroAddress(depositAddr)
 	}
-	bn.l.Infof("Got Binance live deposit address for token %d, attempt to update it to current setting", asset.ID)
-	if err = bn.sr.UpdateDepositAddress(
-		asset.ID,
-		bn.id,
-		ethereum.HexToAddress(liveAddress.Address)); err != nil {
+	bn.l.Infow("attempt to update binance deposit address to current setting",
+		"asset", asset.ID, "deposit_address", liveAddress.Address)
+	if err = bn.sr.UpdateDepositAddress(asset.ID, bn.id, ethereum.HexToAddress(liveAddress.Address)); err != nil {
 		bn.l.Warnw("failed to update deposit address", "err", err)
 		return ethereum.Address{}, false
-
 	}
 	return ethereum.HexToAddress(liveAddress.Address), true
 }

@@ -54,7 +54,7 @@ func (hl *HuobiLive) RunUpdateAssetDetails(interval time.Duration) {
 			}
 			allAssetDetails := make(map[string]HuobiChain)
 			for _, rawAssetDetail := range rawAllAssetDetails {
-				for _, c := range rawAssetDetail.Chains {
+				for _, c := range rawAssetDetail.Chains { // TODO: this won't work for BSC chain, assume not support
 					if c.Chain == "eth" || c.BaseChain == "ETH" {
 						allAssetDetails[strings.ToUpper(rawAssetDetail.Currency)] = c
 						break

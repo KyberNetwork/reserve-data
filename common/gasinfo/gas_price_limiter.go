@@ -16,10 +16,15 @@ type GasPriceLimiter interface {
 
 // ConstGasPriceLimiter use in test only
 type ConstGasPriceLimiter struct {
+	fv float64
+}
+
+func NewConstGasPriceLimiter(fv float64) *ConstGasPriceLimiter {
+	return &ConstGasPriceLimiter{fv: fv}
 }
 
 func (c ConstGasPriceLimiter) MaxGasPrice() (float64, error) {
-	return 100.0, nil
+	return c.fv, nil
 }
 
 // KyberGasPriceLimiter manage gas price limit

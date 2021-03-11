@@ -365,7 +365,7 @@ func (bc *Blockchain) FetchRates(atBlock uint64, currentBlock uint64) (common.Al
 				"asset", s.Symbol, "addr", s.Address.Hex())
 		}
 		// TODO: add a isETH method
-		if s.Symbol != "ETH" && isListed {
+		if !s.IsNetworkAsset() && isListed {
 			tokenAddrs = append(tokenAddrs, s.Address)
 			validTokens = append(validTokens, s)
 		}

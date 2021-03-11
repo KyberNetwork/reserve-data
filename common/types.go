@@ -8,9 +8,11 @@ import (
 	"strings"
 	"time"
 
-	rtypes "github.com/KyberNetwork/reserve-data/lib/rtypes"
+	"github.com/KyberNetwork/reserve-data/common/bcnetwork"
 	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/shopspring/decimal"
+
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 )
 
 // Version indicate fetched data version
@@ -793,14 +795,16 @@ type ExStatus struct {
 	Status    bool   `json:"status"`
 }
 
-type AddressesResponse struct {
+type NetworkSpecsResponse struct {
 	Addresses map[string]ethereum.Address `json:"addresses"`
+	NodeURL   string                      `json:"node_url"`
 }
 
 // NewAddressesResponse return new addresses response
-func NewAddressesResponse(addrs map[string]ethereum.Address) *AddressesResponse {
-	return &AddressesResponse{
+func NewAddressesResponse(addrs map[string]ethereum.Address, nodeURL string) *NetworkSpecsResponse {
+	return &NetworkSpecsResponse{
 		Addresses: addrs,
+		NodeURL:   nodeURL,
 	}
 }
 
@@ -918,6 +922,8 @@ type RawConfig struct {
 		AccessKey    string `json:"access_key"`
 		AccessSecret string `json:"access_secret"`
 	} `json:"account_data"`
+
+	BlockChainNetwork bcnetwork.NetworkConfig `json:"blockchain_network"`
 }
 
 // FeedProviderResponse ...

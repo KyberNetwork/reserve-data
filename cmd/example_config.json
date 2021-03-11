@@ -71,5 +71,15 @@
     "binance_eth_usdc_10000": {
       "url": "http://localhost:8080/convert/binance/eth-usdc/10000"
     }
+  },
+  "blockchain_network": {
+    "network": "ETH",
+    "max_gas_price": 1000,
+    "bootstrap_asset": {
+      "symbol": "ETH",
+      "name": "Ethereum",
+      "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+      "decimals": 18
+    }
   }
 }

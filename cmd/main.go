@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/KyberNetwork/reserve-data/common/gasinfo"
 	"github.com/robfig/cron"
 	"github.com/urfave/cli"
 	"go.uber.org/zap"
@@ -16,6 +17,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/cmd/configuration"
 	"github.com/KyberNetwork/reserve-data/cmd/deployment"
 	"github.com/KyberNetwork/reserve-data/common"
+	"github.com/KyberNetwork/reserve-data/common/bcnetwork"
 	"github.com/KyberNetwork/reserve-data/common/profiler"
 	"github.com/KyberNetwork/reserve-data/exchange/binance"
 	apphttp "github.com/KyberNetwork/reserve-data/http"
@@ -77,7 +79,6 @@ func run(c *cli.Context) error {
 	zap.ReplaceGlobals(l.Desugar())
 
 	configFile, secretConfigFile := configuration.NewConfigFilesFromContext(c)
-
 	rcf := common.RawConfig{}
 	if err := loadConfigFromFile(configFile, &rcf); err != nil {
 		l.Errorw("error load config file", "error", err)
@@ -95,6 +96,8 @@ func run(c *cli.Context) error {
 		"fetch_delay", toJSONString(rcf.FetcherDelay),
 		"gas_config", toJSONString(rcf.GasConfig))
 
+	bcnetwork.SetActiveNetwork(rcf.BlockChainNetwork)
+
 	rcf.MigrationPath = migration.NewMigrationPathFromContext(c)
 	httpClient := &http.Client{}
 
@@ -102,12 +105,17 @@ func run(c *cli.Context) error {
 	if err != nil {
 		l.Panicw("failed to init eth client", "err", err)
 	}
-	kyberNetworkProxy, err := blockchain.NewNetworkProxy(rcf.ContractAddresses.Proxy,
-		mainNode.Client)
-	if err != nil {
-		log.Panicf("cannot create network proxy client, err %+v", err)
+	var gasPriceLimiter gasinfo.GasPriceLimiter
+	if common.IsZeroAddress(rcf.ContractAddresses.Proxy) {
+		gasPriceLimiter = gasinfo.NewConstGasPriceLimiter(bcnetwork.GetPreConfig().MaxGasPrice)
+	} else {
+		kyberNetworkProxy, err := blockchain.NewNetworkProxy(rcf.ContractAddresses.Proxy,
+			mainNode.Client)
+		if err != nil {
+			log.Panicf("cannot create network proxy client, err %+v", err)
+		}
+		gasPriceLimiter = gasinfo.NewNetworkGasPriceLimiter(kyberNetworkProxy, rcf.GasConfig.FetchMaxGasCacheSeconds)
 	}
-
 	store, err := createStorage(c, rcf.MigrationPath)
 	if err != nil {
 		l.Errorw("failed to create storage", "error", err)
@@ -132,7 +140,7 @@ func run(c *cli.Context) error {
 
 	dryRun := configuration.NewDryRunFromContext(c)
 
-	rData, rCore, gasInfo := configuration.CreateDataCore(conf, dpl, bc, kyberNetworkProxy, rcf, httpClient)
+	rData, rCore, gasInfo := configuration.CreateDataCore(conf, dpl, bc, gasPriceLimiter, rcf, httpClient)
 	if !dryRun {
 		if err = rData.Run(); err != nil {
 			l.Errorw("failed to run data service", "err", err)
@@ -158,6 +166,7 @@ func run(c *cli.Context) error {
 		conf.SettingStorage,
 		gasInfo,
 		binanceMainClient,
+		rcf,
 	)
 	if profiler.IsEnableProfilerFromContext(c) {
 		server.EnableProfiler()
