@@ -79,6 +79,7 @@ func TestGetActivities(t *testing.T) {
 		nil,                    // storage
 		nil,
 		nil,
+		common.RawConfig{},
 	)
 
 	sv.register()
