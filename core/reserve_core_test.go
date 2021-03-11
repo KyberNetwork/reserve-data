@@ -135,6 +135,10 @@ type testActivityStorage struct {
 	PendingDeposit bool
 }
 
+func (tas testActivityStorage) GetActivityForOverride(action string, minedNonce uint64) (*common.ActivityRecord, error) {
+	panic("implement me")
+}
+
 func (tas testActivityStorage) GetPendingSetRate(action string, minedNonce uint64) (*common.ActivityRecord, error) {
 	panic("implement me")
 }
