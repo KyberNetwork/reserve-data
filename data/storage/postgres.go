@@ -387,12 +387,16 @@ type assetRateTriggerDB struct {
 }
 
 // GetAssetRateTriggers return a list of AssetRateTrigger, which calculate number of time an asset was record for setRate with trigger=true
+// Analytics request that number of trigger should only count on activity create by success setRate
+// because we save tx id into activity(even when it fail to send) so depend on tx != '0x00..' is no longer correct
+// an alternative solution to use expression: tx.status = submitted || activity.last_time > 0
+// last_time == 0 for immediately fail setRate(eg node rejected) => setRate return fail, we ignore them when count
 func (ps *PostgresStorage) GetAssetRateTriggers(fromTime uint64, toTime uint64) ([]common.AssetRateTrigger, error) {
 	from := common.MillisToTime(fromTime)
 	to := common.MillisToTime(toTime)
 	var res []assetRateTriggerDB
 	query := `WITH sr AS(
-	SELECT * FROM activity WHERE created BETWEEN $1 AND $2 AND data->>'action'='set_rates' AND data->'result'->>'tx' != '0x0000000000000000000000000000000000000000000000000000000000000000' 
+	SELECT * FROM activity WHERE created BETWEEN $1 AND $2 AND data->>'action'='set_rates' AND (data->>'mining_status' = $3 OR (data->>'last_time')::int8 > 0)
 )
 SELECT id AS asset_id, (SELECT count(*) FROM (
 	SELECT (data->'params'->'triggers'->(
@@ -401,7 +405,7 @@ SELECT id AS asset_id, (SELECT count(*) FROM (
 		)
 	)::BOOLEAN AS trigg FROM sr p1
 ) p2 WHERE trigg IS TRUE) AS count FROM assets`
-	err := ps.db.Select(&res, query, from, to)
+	err := ps.db.Select(&res, query, from, to, common.MiningStatusSubmitted)
 	if err != nil {
 		return nil, err
 	}
