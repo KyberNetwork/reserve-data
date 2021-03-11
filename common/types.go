@@ -795,14 +795,16 @@ type ExStatus struct {
 	Status    bool   `json:"status"`
 }
 
-type AddressesResponse struct {
+type NetworkSpecsResponse struct {
 	Addresses map[string]ethereum.Address `json:"addresses"`
+	NodeURL   string                      `json:"node_url"`
 }
 
 // NewAddressesResponse return new addresses response
-func NewAddressesResponse(addrs map[string]ethereum.Address) *AddressesResponse {
-	return &AddressesResponse{
+func NewAddressesResponse(addrs map[string]ethereum.Address, nodeURL string) *NetworkSpecsResponse {
+	return &NetworkSpecsResponse{
 		Addresses: addrs,
+		NodeURL:   nodeURL,
 	}
 }
 

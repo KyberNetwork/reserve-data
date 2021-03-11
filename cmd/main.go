@@ -166,6 +166,7 @@ func run(c *cli.Context) error {
 		conf.SettingStorage,
 		gasInfo,
 		binanceMainClient,
+		rcf,
 	)
 	if profiler.IsEnableProfilerFromContext(c) {
 		server.EnableProfiler()

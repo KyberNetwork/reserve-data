@@ -43,6 +43,7 @@ type Server struct {
 	l                  *zap.SugaredLogger
 	gasInfo            *gasinfo.GasPriceInfo
 	binanceMainAccount *binance.Endpoint
+	rcf                common.RawConfig
 }
 
 func getTimePoint(c *gin.Context, l *zap.SugaredLogger) uint64 {
@@ -718,6 +719,7 @@ func NewHTTPServer(
 	settingStorage storage.Interface,
 	gasInfo *gasinfo.GasPriceInfo,
 	binanceMainAccount *binance.Endpoint,
+	rcf common.RawConfig,
 ) *Server {
 	r := gin.Default()
 	sentryCli, err := raven.NewWithTags(
@@ -744,5 +746,6 @@ func NewHTTPServer(
 		l:                  zap.S(),
 		gasInfo:            gasInfo,
 		binanceMainAccount: binanceMainAccount,
+		rcf:                rcf,
 	}
 }

@@ -29,10 +29,10 @@ func (s *Server) GetAddresses(c *gin.Context) {
 	if h := common.SupportedExchanges[rtypes.Huobi]; h != nil {
 		addresses[intermediateOPAddressName] = s.blockchain.GetIntermediatorOPAddress()
 	}
-	addresses[wrapper] = s.blockchain.GetWrapperAddress()
-	addresses[network] = s.blockchain.GetProxyAddress()
-	addresses[reserveAddress] = s.blockchain.GetReserveAddress()
-	addresses[rateQueryHelperAddressName] = s.blockchain.GetRateQueryHelperAddress()
-	result := common.NewAddressesResponse(addresses)
+	addresses[wrapper] = s.rcf.ContractAddresses.Wrapper
+	addresses[network] = s.rcf.ContractAddresses.Proxy
+	addresses[reserveAddress] = s.rcf.ContractAddresses.Reserve
+	addresses[rateQueryHelperAddressName] = s.rcf.ContractAddresses.RateQueryHelper
+	result := common.NewAddressesResponse(addresses, s.rcf.Nodes.Main)
 	httputil.ResponseSuccess(c, httputil.WithData(result))
 }
