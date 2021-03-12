@@ -546,13 +546,34 @@ func (ps *PostgresStorage) PendingActivityForAction(minedNonce uint64, activityT
 	return getFirstAndCountPendingAction(ps.l, pendings, minedNonce, activityType)
 }
 
-// GetPendingForOverride find in all of pending setRate(or deposit) with nonce = smallest nonce, return the latest(sorted by created field)
+// GetPendingSetRate find in all of pending setRate(or deposit) with nonce = smallest nonce, return the latest(sorted by created field)
 func (ps *PostgresStorage) GetPendingSetRate(action string, minedNonce uint64) (*common.ActivityRecord, error) {
 	var data []byte
 	query := `WITH pending AS (
 	SELECT * FROM activity WHERE is_pending IS true	AND data->>'action'=$1 AND (data->'result'->>'nonce')::int>=$2
 )
 SELECT data FROM pending WHERE (data->'result'->>'nonce')::int = (SELECT MIN((data->'result'->'nonce')::int) FROM pending) ORDER BY created DESC LIMIT 1
+`
+	if err := ps.db.Get(&data, query, action, minedNonce); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to get pending activity, %w", err)
+	}
+	var activity common.ActivityRecord
+	if err := json.Unmarshal(data, &activity); err != nil {
+		return nil, fmt.Errorf("unmarshal failed, err=%+v, data=%s", err, string(data))
+	}
+	return &activity, nil
+}
+
+// GetActivityForOverride find in all of pending setRate(or deposit) with nonce = smallest nonce, return the latest(sorted by created field)
+// this different with GetPendingSetRate as it will include failed tx with same nonce(eg underprice tx)
+func (ps *PostgresStorage) GetActivityForOverride(action string, minedNonce uint64) (*common.ActivityRecord, error) {
+	var data []byte
+	query := `SELECT data FROM activity WHERE (data->'result'->>'nonce')::int = 
+	(SELECT MIN((data->'result'->>'nonce')::int) FROM activity WHERE data->>'action'=$1 AND (data->'result'->>'nonce')::int>=$2 AND is_pending)
+	ORDER BY created DESC LIMIT 1
 `
 	if err := ps.db.Get(&data, query, action, minedNonce); err != nil {
 		if err == sql.ErrNoRows {
