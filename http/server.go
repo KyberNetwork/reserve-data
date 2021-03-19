@@ -20,6 +20,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/cmd/deployment"
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/gasinfo"
+	"github.com/KyberNetwork/reserve-data/exchange"
 	"github.com/KyberNetwork/reserve-data/exchange/binance"
 	"github.com/KyberNetwork/reserve-data/http/httputil"
 	"github.com/KyberNetwork/reserve-data/lib/caller"
@@ -443,7 +444,33 @@ func (s *Server) getBinanceMainAccountInfo(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
-	httputil.ResponseSuccess(c, httputil.WithField("data", resp))
+	mb := make(map[string]exchange.Balance)
+	for _, b := range resp.Balances {
+		mb[b.Asset] = b
+	}
+	assets, err := s.settingStorage.GetAssets()
+	if err != nil {
+		httputil.ResponseFailure(c, httputil.WithError(err))
+		return
+	}
+	var result []exchange.BinanceMainAccountBalance
+	for _, a := range assets {
+	loop:
+		for _, aex := range a.Exchanges {
+			if aex.ExchangeID == rtypes.Binance || aex.ExchangeID == rtypes.Binance2 {
+				if balance, ok := mb[aex.Symbol]; ok {
+					result = append(result, exchange.BinanceMainAccountBalance{
+						AssetID: a.ID,
+						Symbol:  aex.Symbol,
+						Free:    balance.Free,
+						Locked:  balance.Locked,
+					})
+					break loop
+				}
+			}
+		}
+	}
+	httputil.ResponseSuccess(c, httputil.WithField("data", result))
 }
 
 // DepositRequest type

@@ -2,6 +2,7 @@ package exchange
 
 import (
 	"github.com/KyberNetwork/reserve-data/common"
+	rtypes "github.com/KyberNetwork/reserve-data/lib/rtypes"
 )
 
 // Binaprice is binance order book
@@ -42,6 +43,13 @@ type Balance struct {
 	Asset  string `json:"asset"`
 	Free   string `json:"free"`
 	Locked string `json:"locked"`
+}
+
+type BinanceMainAccountBalance struct {
+	AssetID rtypes.AssetID `json:"asset_id"`
+	Symbol  string         `json:"symbol"`
+	Free    string         `json:"free"`
+	Locked  string         `json:"locked"`
 }
 
 // CrossMarginAccountDetails ...
