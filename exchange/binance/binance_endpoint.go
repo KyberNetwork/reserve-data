@@ -13,6 +13,7 @@ import (
 
 	"github.com/KyberNetwork/reserve-data/common/bcnetwork"
 	ethereum "github.com/ethereum/go-ethereum/common"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 
 	"github.com/KyberNetwork/reserve-data/cmd/deployment"
@@ -379,15 +380,17 @@ func (ep *Endpoint) Withdraw(asset commonv3.Asset, amount *big.Int, address ethe
 		}
 	}
 	result := exchange.Binawithdraw{}
+	withdrawOrderID := uuid.New().String()
 	respBody, err := ep.authHTTP.DoReq(
 		fmt.Sprintf("%s/wapi/v3/withdraw/%s", ep.accountDataBaseURL, ep.accountID),
 		http.MethodPost,
 		map[string]string{
-			"asset":   symbol,
-			"address": address.Hex(),
-			"name":    "reserve",
-			"amount":  strconv.FormatFloat(common.BigToFloat(amount, int64(asset.Decimals)), 'f', -1, 64),
-			"network": ep.network,
+			"withdrawOrderId": withdrawOrderID,
+			"asset":           symbol,
+			"address":         address.Hex(),
+			"name":            "reserve",
+			"amount":          strconv.FormatFloat(common.BigToFloat(amount, int64(asset.Decimals)), 'f', -1, 64),
+			"network":         ep.network,
 		})
 	if err == nil {
 		if err = json.Unmarshal(respBody, &result); err != nil {
@@ -396,7 +399,7 @@ func (ep *Endpoint) Withdraw(asset commonv3.Asset, amount *big.Int, address ethe
 		if !result.Success {
 			return "", errors.New(result.Msg)
 		}
-		return result.ID, nil
+		return withdrawOrderID, nil
 	}
 	return "", fmt.Errorf("withdraw rejected by Binance: %v", err)
 }

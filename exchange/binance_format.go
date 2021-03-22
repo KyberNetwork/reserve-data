@@ -204,14 +204,15 @@ type Binawithdrawals struct {
 
 // Binawithdrawal object for withdraw from binance
 type Binawithdrawal struct {
-	ID        string  `json:"id"`
-	Amount    float64 `json:"amount"`
-	Address   string  `json:"address"`
-	Asset     string  `json:"asset"`
-	TxID      string  `json:"txId"`
-	ApplyTime uint64  `json:"applyTime"`
-	Fee       float64 `json:"transactionFee"`
-	Status    int     `json:"status"`
+	ID            string  `json:"id"`
+	ClientOrderID string  `json:"client_order_id"`
+	Amount        float64 `json:"amount"`
+	Address       string  `json:"address"`
+	Asset         string  `json:"asset"`
+	TxID          string  `json:"txId"`
+	ApplyTime     uint64  `json:"applyTime"`
+	Fee           float64 `json:"transactionFee"`
+	Status        int     `json:"status"`
 }
 
 type BinaServerTime struct {
