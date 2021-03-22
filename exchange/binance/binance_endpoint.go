@@ -380,7 +380,7 @@ func (ep *Endpoint) Withdraw(asset commonv3.Asset, amount *big.Int, address ethe
 		}
 	}
 	result := exchange.Binawithdraw{}
-	withdrawOrderID := uuid.New().String()
+	withdrawOrderID := fmt.Sprintf("%s_%s", symbol, uuid.New().String())
 	respBody, err := ep.authHTTP.DoReq(
 		fmt.Sprintf("%s/wapi/v3/withdraw/%s", ep.accountDataBaseURL, ep.accountID),
 		http.MethodPost,
