@@ -28,7 +28,6 @@ require (
 	github.com/go-logfmt/logfmt v0.4.0 // indirect
 	github.com/go-ozzo/ozzo-validation v3.5.0+incompatible
 	github.com/golang-migrate/migrate/v4 v4.14.1
-	github.com/google/uuid v1.1.2
 	github.com/gorilla/websocket v1.4.1 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/jackpal/go-nat-pmp v1.0.2 // indirect
@@ -39,6 +38,7 @@ require (
 	github.com/qiangmzsx/string-adapter v0.0.0-20180323073508-38f25303bb0c
 	github.com/robfig/cron v1.2.0
 	github.com/rs/cors v1.7.0 // indirect
+	github.com/rs/xid v1.2.1
 	github.com/shopspring/decimal v0.0.0-20180709203117-cd690d0c9e24
 	github.com/status-im/keycard-go v0.0.0-20190424133014-d95853db0f48 // indirect
 	github.com/stretchr/testify v1.6.1

@@ -13,7 +13,7 @@ import (
 
 	"github.com/KyberNetwork/reserve-data/common/bcnetwork"
 	ethereum "github.com/ethereum/go-ethereum/common"
-	"github.com/google/uuid"
+	"github.com/rs/xid"
 	"go.uber.org/zap"
 
 	"github.com/KyberNetwork/reserve-data/cmd/deployment"
@@ -380,7 +380,7 @@ func (ep *Endpoint) Withdraw(asset commonv3.Asset, amount *big.Int, address ethe
 		}
 	}
 	result := exchange.Binawithdraw{}
-	withdrawOrderID := fmt.Sprintf("%s_%s", symbol, uuid.New().String())
+	withdrawOrderID := fmt.Sprintf("%s_%s", symbol, xid.New().String())
 	respBody, err := ep.authHTTP.DoReq(
 		fmt.Sprintf("%s/wapi/v3/withdraw/%s", ep.accountDataBaseURL, ep.accountID),
 		http.MethodPost,
