@@ -23,7 +23,7 @@ func TestBinance(t *testing.T) {
 type binanceTestInterface struct {
 }
 
-func (bi *binanceTestInterface) Transfer(fromAccount string, toAccount string, asset commonv3.Asset, amount *big.Int) (string, error) {
+func (bi *binanceTestInterface) Transfer(fromAccount string, toAccount string, asset commonv3.Asset, amount *big.Int, runAsync bool, referenceID string) (string, error) {
 	return "tid", nil
 }
 
