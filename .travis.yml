@@ -36,6 +36,7 @@ script:
 
 after_success:
   - docker --version
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
   - docker build -f Dockerfile.next --build-arg COMMIT=$TRAVIS_COMMIT --label "commit=$TRAVIS_COMMIT" -t kybernetwork/reserve-data:$TRAVIS_COMMIT .
   - docker build -f dockerfiles/Dockerfile.gateway --build-arg COMMIT=$TRAVIS_COMMIT --label "commit=$TRAVIS_COMMIT" -t kybernetwork/reserve-data-gateway:$TRAVIS_COMMIT .
   - docker build -f dockerfiles/Dockerfile.setting --build-arg COMMIT=$TRAVIS_COMMIT --label "commit=$TRAVIS_COMMIT" -t kybernetwork/reserve-data-setting:$TRAVIS_COMMIT .
