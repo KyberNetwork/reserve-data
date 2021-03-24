@@ -338,7 +338,7 @@ type transferResult struct {
 	Msg     string `json:"msg"`
 }
 
-func (ep *Endpoint) Transfer(fromAccount string, toAccount string, asset commonv3.Asset, amount *big.Int) (string, error) {
+func (ep *Endpoint) Transfer(fromAccount string, toAccount string, asset commonv3.Asset, amount *big.Int, runAsync bool, referenceID string) (string, error) {
 	var symbol string
 	for _, exchg := range asset.Exchanges {
 		if exchg.ExchangeID == ep.exchangeID {
@@ -354,10 +354,12 @@ func (ep *Endpoint) Transfer(fromAccount string, toAccount string, asset commonv
 		fmt.Sprintf("%s/binance/transfer", ep.accountDataBaseURL),
 		http.MethodPost,
 		map[string]string{
+			"run_async":    strconv.FormatBool(runAsync),
 			"asset":        symbol,
 			"from_account": fromAccount,
 			"to_account":   toAccount,
 			"amount":       strconv.FormatFloat(common.BigToFloat(amount, int64(asset.Decimals)), 'f', -1, 64),
+			"reference_id": referenceID,
 		})
 	if err != nil {
 		return "", fmt.Errorf("transfer rejected by Binance: %v", err)

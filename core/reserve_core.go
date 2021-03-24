@@ -54,7 +54,7 @@ func timebasedID(id string) common.ActivityID {
 
 // Transfer move fund between main and sub account
 func (rc *ReserveCore) Transfer(fromAccount, toAccount string, asset commonv3.Asset, amount *big.Int, exchange common.Exchange) (string, error) {
-	return exchange.Transfer(fromAccount, toAccount, asset, amount)
+	return exchange.Transfer(fromAccount, toAccount, asset, amount, false, "")
 }
 
 // CancelOrders cancel orders on centralized exchanges
