@@ -6,7 +6,7 @@ import (
 
 	ethereum "github.com/ethereum/go-ethereum/common"
 
-	rtypes "github.com/KyberNetwork/reserve-data/lib/rtypes"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	"github.com/KyberNetwork/reserve-data/reservesetting/common"
 )
 
@@ -36,7 +36,7 @@ type Exchange interface {
 	GetTradeHistory(fromTime, toTime uint64) (ExchangeTradeHistory, error)
 
 	LiveExchange
-	Transfer(fromAccount string, toAccount string, asset common.Asset, amount *big.Int) (string, error)
+	Transfer(fromAccount string, toAccount string, asset common.Asset, amount *big.Int, runAsync bool, referenceID string) (string, error)
 }
 
 // LiveExchange interface

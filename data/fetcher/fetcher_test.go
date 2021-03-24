@@ -99,7 +99,8 @@ func TestExchangeDown(t *testing.T) {
 
 	addressConf := &common.ContractAddressConfiguration{}
 
-	fetcher := NewFetcher(fstorage, fstorage, &world.TheWorld{}, runner, true, addressConf, nil)
+	fetcher := NewFetcher(fstorage, fstorage, &world.TheWorld{}, runner, true, addressConf,
+		nil, common.RawConfig{})
 	var KNC = rtypes.AssetID(1)
 	// mock normal data
 	var estatuses, bstatuses sync.Map

@@ -26,6 +26,7 @@ type Fetcher struct {
 	storage                Storage
 	globalStorage          GlobalStorage
 	exchanges              []Exchange
+	exchangeByIDs          map[rtypes.ExchangeID]Exchange
 	blockchain             Blockchain
 	theworld               TheWorld
 	runner                 Runner
@@ -41,10 +42,11 @@ type Fetcher struct {
 	settingStorage   storage.Interface
 
 	withdrawLostRun time.Time // we don't want to run check stuck withdraw too frequent, so record its run time
+	rawConfig       common.RawConfig
 }
 
 func NewFetcher(storage Storage, globalStorage GlobalStorage, theworld TheWorld, runner Runner, simulationMode bool,
-	contractAddressConf *common.ContractAddressConfiguration, settingStorage storage.Interface) *Fetcher {
+	contractAddressConf *common.ContractAddressConfiguration, settingStorage storage.Interface, rcf common.RawConfig) *Fetcher {
 	f := &Fetcher{
 		storage:             storage,
 		globalStorage:       globalStorage,
@@ -58,6 +60,8 @@ func NewFetcher(storage Storage, globalStorage GlobalStorage, theworld TheWorld,
 		lostTxActivities:    make(map[string]time.Time),
 		lostLock:            &sync.Mutex{},
 		settingStorage:      settingStorage,
+		exchangeByIDs:       make(map[rtypes.ExchangeID]Exchange),
+		rawConfig:           rcf,
 	}
 	return f
 }
@@ -86,6 +90,7 @@ func (f *Fetcher) SetBlockchain(blockchain Blockchain) {
 
 func (f *Fetcher) AddExchange(exchange Exchange) {
 	f.exchanges = append(f.exchanges, exchange)
+	f.exchangeByIDs[exchange.ID()] = exchange
 }
 
 func (f *Fetcher) Stop() error {
@@ -677,6 +682,7 @@ func (f *Fetcher) updateActivityWithExchangeStatus(record *common.ActivityRecord
 	} else if sts.ExchangeStatus == common.ExchangeStatusFailed {
 		record.ExchangeStatus = sts.ExchangeStatus
 		record.Result.WithdrawFee = sts.WithdrawFee
+		f.refundFailedWithdraw(record)
 	}
 
 	if record.Result.Tx == "" { // for a withdraw, we set tx into result tx(that is when cex process request and return tx id so we can monitor), deposit should already has tx when created.
@@ -695,6 +701,40 @@ func (f *Fetcher) updateActivityWithExchangeStatus(record *common.ActivityRecord
 	} else {
 		record.Result.StatusError = ""
 		record.Result.WithdrawFee = sts.WithdrawFee
+	}
+}
+
+func (f *Fetcher) refundFailedWithdraw(record *common.ActivityRecord) {
+	if record.Action == common.ActionWithdraw && record.ExchangeStatus == common.ExchangeStatusFailed &&
+		(record.Destination == rtypes.Binance.String() || record.Destination == rtypes.Binance2.String()) {
+		// trigger refund
+		exchangeID := common.ValidExchangeNames[record.Destination]
+		exchange := f.exchangeByIDs[exchangeID]
+		if exchange == nil {
+			f.l.Errorw("no such exchange", "name", record.Destination, "id", exchangeID.String())
+			return
+		}
+		asset, err := f.settingStorage.GetAsset(record.Params.Asset)
+		if err != nil {
+			f.l.Errorw("refund - failed to get asset", "asset", record.Params.Asset,
+				"activity", record.ID.String())
+		} else {
+			target := f.rawConfig.BinanceAccountID
+			if exchangeID == rtypes.Binance2 {
+				target = f.rawConfig.BinanceAccount2ID
+			}
+			// transfer fund back to sub account
+			id, err := exchange.Transfer(f.rawConfig.BinanceAccountMainID, target, asset,
+				common.FloatToBigInt(record.Params.Amount, int64(asset.Decimals)), true, record.ID.String())
+			if err != nil {
+				f.l.Errorw("refund failed", "asset", record.Params.Asset,
+					"activity", record.ID.String(), "err", err)
+				return
+			}
+			f.l.Infow("requested transfer funds to sub account", "id", id,
+				"asset", asset.ID, "symbol", asset.Symbol, "amount", record.Params.Amount,
+				"exchange", exchangeID.String())
+		}
 	}
 }
 
