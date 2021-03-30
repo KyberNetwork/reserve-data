@@ -82,6 +82,9 @@ func (tbc testBlockchain) BuildSendETHTx(opts blockchain.TxOpts, to ethereum.Add
 func (tbc testBlockchain) GetDepositOPAddress() ethereum.Address {
 	return ethereum.Address{}
 }
+func (tbc testBlockchain) GetPricingOPAddress() ethereum.Address {
+	return ethereum.Address{}
+}
 
 func (tbc testBlockchain) CurrentBlock() (uint64, error) {
 	return 0, nil
