@@ -31,6 +31,7 @@ type Blockchain interface {
 
 	BuildSendETHTx(opts blockchain.TxOpts, to ethereum.Address) (*types.Transaction, error)
 	GetDepositOPAddress() ethereum.Address
+	GetPricingOPAddress() ethereum.Address
 	SignAndBroadcast(tx *types.Transaction, from string) (*types.Transaction, error)
 	SpeedupDeposit(tx ethereum.Hash, recommendGasPrice float64, maxGasPrice float64) (*types.Transaction, error)
 	CurrentBlock() (uint64, error)
