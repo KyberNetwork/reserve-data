@@ -444,6 +444,15 @@ func (s *Server) getBinanceMainAccountInfo(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
+	// this API serving for 2 purpose
+	// 1. dashboard need token amount for render balance chart
+	// 2. analytic to monitor and stop rebalance,
+	// this will require to duplicate asset balance if it listed on 2 or more exchanges
+	if c.Query("format") == "raw" {
+		httputil.ResponseSuccess(c, httputil.WithField("data", resp.Balances))
+		return
+	}
+
 	mb := make(map[string]exchange.Balance)
 	for _, b := range resp.Balances {
 		mb[b.Asset] = b
