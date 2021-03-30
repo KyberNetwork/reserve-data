@@ -38,6 +38,7 @@ require (
 	github.com/qiangmzsx/string-adapter v0.0.0-20180323073508-38f25303bb0c
 	github.com/robfig/cron v1.2.0
 	github.com/rs/cors v1.7.0 // indirect
+	github.com/rs/xid v1.2.1
 	github.com/shopspring/decimal v0.0.0-20180709203117-cd690d0c9e24
 	github.com/status-im/keycard-go v0.0.0-20190424133014-d95853db0f48 // indirect
 	github.com/stretchr/testify v1.6.1

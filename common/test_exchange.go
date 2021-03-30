@@ -13,7 +13,7 @@ import (
 type TestExchange struct {
 }
 
-func (te TestExchange) Transfer(fromAccount string, toAccount string, asset common.Asset, amount *big.Int) (string, error) {
+func (te TestExchange) Transfer(fromAccount string, toAccount string, asset common.Asset, amount *big.Int, runAsync bool, referenceID string) (string, error) {
 	return "tid", nil
 }
 

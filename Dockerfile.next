@@ -1,8 +1,9 @@
 # build stage
 FROM golang:1.16 AS build-env
+ARG COMMIT
 COPY . /go/src/github.com/KyberNetwork/reserve-data
 WORKDIR /go/src/github.com/KyberNetwork/reserve-data/cmd
-RUN go build -ldflags '-linkmode external -w -extldflags "-static"'
+RUN go build -ldflags '-linkmode external -w -extldflags "-static"' -ldflags "-X github.com/KyberNetwork/reserve-data/common.AppVersion=`date -u +%Y%m%d.%H%M%S`_${COMMIT}"
 
 # final stage
 FROM debian:stretch

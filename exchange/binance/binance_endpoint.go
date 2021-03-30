@@ -13,6 +13,7 @@ import (
 
 	"github.com/KyberNetwork/reserve-data/common/bcnetwork"
 	ethereum "github.com/ethereum/go-ethereum/common"
+	"github.com/rs/xid"
 	"go.uber.org/zap"
 
 	"github.com/KyberNetwork/reserve-data/cmd/deployment"
@@ -337,7 +338,7 @@ type transferResult struct {
 	Msg     string `json:"msg"`
 }
 
-func (ep *Endpoint) Transfer(fromAccount string, toAccount string, asset commonv3.Asset, amount *big.Int) (string, error) {
+func (ep *Endpoint) Transfer(fromAccount string, toAccount string, asset commonv3.Asset, amount *big.Int, runAsync bool, referenceID string) (string, error) {
 	var symbol string
 	for _, exchg := range asset.Exchanges {
 		if exchg.ExchangeID == ep.exchangeID {
@@ -353,10 +354,12 @@ func (ep *Endpoint) Transfer(fromAccount string, toAccount string, asset commonv
 		fmt.Sprintf("%s/binance/transfer", ep.accountDataBaseURL),
 		http.MethodPost,
 		map[string]string{
+			"run_async":    strconv.FormatBool(runAsync),
 			"asset":        symbol,
 			"from_account": fromAccount,
 			"to_account":   toAccount,
 			"amount":       strconv.FormatFloat(common.BigToFloat(amount, int64(asset.Decimals)), 'f', -1, 64),
+			"reference_id": referenceID,
 		})
 	if err != nil {
 		return "", fmt.Errorf("transfer rejected by Binance: %v", err)
@@ -379,15 +382,17 @@ func (ep *Endpoint) Withdraw(asset commonv3.Asset, amount *big.Int, address ethe
 		}
 	}
 	result := exchange.Binawithdraw{}
+	withdrawOrderID := fmt.Sprintf("%s_%s", symbol, xid.New().String())
 	respBody, err := ep.authHTTP.DoReq(
 		fmt.Sprintf("%s/wapi/v3/withdraw/%s", ep.accountDataBaseURL, ep.accountID),
 		http.MethodPost,
 		map[string]string{
-			"asset":   symbol,
-			"address": address.Hex(),
-			"name":    "reserve",
-			"amount":  strconv.FormatFloat(common.BigToFloat(amount, int64(asset.Decimals)), 'f', -1, 64),
-			"network": ep.network,
+			"withdrawOrderId": withdrawOrderID,
+			"asset":           symbol,
+			"address":         address.Hex(),
+			"name":            "reserve",
+			"amount":          strconv.FormatFloat(common.BigToFloat(amount, int64(asset.Decimals)), 'f', -1, 64),
+			"network":         ep.network,
 		})
 	if err == nil {
 		if err = json.Unmarshal(respBody, &result); err != nil {
@@ -396,7 +401,7 @@ func (ep *Endpoint) Withdraw(asset commonv3.Asset, amount *big.Int, address ethe
 		if !result.Success {
 			return "", errors.New(result.Msg)
 		}
-		return result.ID, nil
+		return withdrawOrderID, nil
 	}
 	return "", fmt.Errorf("withdraw rejected by Binance: %v", err)
 }

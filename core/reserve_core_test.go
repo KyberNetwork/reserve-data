@@ -20,9 +20,10 @@ import (
 type testExchange struct {
 }
 
-func (te testExchange) Transfer(fromAccount string, toAccount string, asset commonv3.Asset, amount *big.Int) (string, error) {
-	return "", nil
+func (te testExchange) Transfer(fromAccount string, toAccount string, asset commonv3.Asset, amount *big.Int, runAsync bool, referenceID string) (string, error) {
+	panic("implement me")
 }
+
 func (te testExchange) ID() rtypes.ExchangeID {
 	return rtypes.Binance
 }

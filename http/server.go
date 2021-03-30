@@ -680,6 +680,10 @@ func (s *Server) getNonWithdrawableAssets(c *gin.Context) {
 	}
 }
 
+func (s *Server) getVersion(context *gin.Context) {
+	context.String(http.StatusOK, "%s", common.AppVersion)
+}
+
 func (s *Server) register() {
 	if s.core != nil && s.app != nil {
 		g := s.r.Group("/v3")
@@ -720,6 +724,7 @@ func (s *Server) register() {
 		g.GET("/binance/main", s.getBinanceMainAccountInfo)
 
 		g.GET("/non-withdrawable-assets/:exchange", s.getNonWithdrawableAssets)
+		g.GET("/version", s.getVersion)
 	}
 }
 

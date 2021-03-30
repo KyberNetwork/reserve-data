@@ -39,7 +39,7 @@ type Huobi struct {
 	HuobiLive
 }
 
-func (h *Huobi) Transfer(fromAccount string, toAccount string, asset commonv3.Asset, amount *big.Int) (string, error) {
+func (h *Huobi) Transfer(fromAccount string, toAccount string, asset commonv3.Asset, amount *big.Int, runAsync bool, referenceID string) (string, error) {
 	return "", errors.New("not supported")
 }
 

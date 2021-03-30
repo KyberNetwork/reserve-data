@@ -2,6 +2,7 @@ package http
 
 import (
 	"log"
+	"net/http"
 
 	"github.com/getsentry/sentry-go"
 	sentrygin "github.com/getsentry/sentry-go/gin"
@@ -139,11 +140,15 @@ func NewServer(storage storage.Interface, host string, supportedExchanges map[rt
 	g.POST("/gas-threshold", server.setGasThreshold)
 	g.GET("/gas-source", server.getPreferGasSource)
 	g.POST("/gas-source", server.setPreferGasSource)
+	g.GET("/version", server.getVersion)
 
 	g.DELETE("/disapprove-setting-change/:id", server.disapproveSettingChange)
 	g.GET("/number-approval-required", server.getNumberApprovalRequired)
 
 	return server
+}
+func (s *Server) getVersion(context *gin.Context) {
+	context.String(http.StatusOK, "%s", v1common.AppVersion)
 }
 
 // EnableProfiler enable profiler on path "/debug/pprof"

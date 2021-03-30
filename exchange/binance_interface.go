@@ -28,7 +28,7 @@ type BinanceInterface interface {
 		asset commonv3.Asset,
 		amount *big.Int,
 		address ethereum.Address) (string, error)
-	Transfer(fromAccount string, toAccount string, asset commonv3.Asset, amount *big.Int) (string, error)
+	Transfer(fromAccount string, toAccount string, asset commonv3.Asset, amount *big.Int, runAsync bool, referenceID string) (string, error)
 	Trade(
 		tradeType string,
 		pair commonv3.TradingPairSymbols,

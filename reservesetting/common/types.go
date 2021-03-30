@@ -5,7 +5,7 @@ import (
 
 	ethereum "github.com/ethereum/go-ethereum/common"
 
-	rtypes "github.com/KyberNetwork/reserve-data/lib/rtypes"
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 )
 
 // Exchange represents a centralized exchange in database.
