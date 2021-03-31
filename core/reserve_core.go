@@ -565,7 +565,7 @@ func (rc *ReserveCore) CancelSetRate() (common.ActivityID, error) {
 		Nonce:    big.NewInt(int64(targetActivity.Result.Nonce)),
 		Value:    big.NewInt(0),
 		GasPrice: newPrice,
-	}, rc.blockchain.GetDepositOPAddress())
+	}, rc.blockchain.GetPricingOPAddress())
 	if err != nil {
 		rc.l.Errorw("failed to build cancel setRate tx", "err", err)
 		return common.ActivityID{}, err
@@ -624,13 +624,6 @@ func (rc *ReserveCore) GetSetRateResult(tokens []commonv3.Asset,
 		tx  *types.Transaction
 		err error
 	)
-	if block.Int64() == 0 {
-		cb, err := rc.blockchain.CurrentBlock()
-		if err != nil {
-			return nil, common.NowInMillis(), fmt.Errorf("cannot get current block: %v", err)
-		}
-		block = big.NewInt(int64(cb))
-	}
 	err = requireSameLength(tokens, buys, sells, afpMids)
 	if err != nil {
 		return tx, common.NowInMillis(), err
@@ -713,7 +706,13 @@ func (rc *ReserveCore) SetRates(assets []commonv3.Asset, buys, sells []*big.Int,
 		err          error
 		miningStatus string
 	)
-
+	if block.Int64() == 0 {
+		cb, err := rc.blockchain.CurrentBlock()
+		if err != nil {
+			return common.ActivityID{}, fmt.Errorf("cannot get current block: %v", err)
+		}
+		block = big.NewInt(int64(cb))
+	}
 	tx, orgTime, err = rc.GetSetRateResult(assets, buys, sells, afpMids, block)
 	if err != nil {
 		rc.l.Errorw("failed to get set rate result", "err", err)
