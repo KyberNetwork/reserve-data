@@ -679,10 +679,9 @@ func (f *Fetcher) updateActivityWithExchangeStatus(record *common.ActivityRecord
 	f.l.Infof("In PersistSnapshot: exchange activity status for %+v: %+v", record.ID, sts)
 	if record.IsExchangePending() { // fill exchange status
 		record.ExchangeStatus = sts.ExchangeStatus
-	} else if sts.ExchangeStatus == common.ExchangeStatusFailed {
-		record.ExchangeStatus = sts.ExchangeStatus
-		record.Result.WithdrawFee = sts.WithdrawFee
-		f.refundFailedWithdraw(record)
+		if sts.ExchangeStatus == common.ExchangeStatusFailed {
+			f.refundFailedWithdraw(record) // refund when state transition from pending -> failed
+		}
 	}
 
 	if record.Result.Tx == "" { // for a withdraw, we set tx into result tx(that is when cex process request and return tx id so we can monitor), deposit should already has tx when created.
