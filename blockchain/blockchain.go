@@ -174,30 +174,26 @@ func (bc *Blockchain) SetRates(
 	// 	return nil, errors.New("Trying to set all rates to 0 but they are already 0. Skip the tx.")
 	// }
 
-	baseTokens := []ethereum.Address{}
-	newBSells := []*big.Int{}
-	newBBuys := []*big.Int{}
-	newCSells := map[ethereum.Address]byte{}
-	newCBuys := map[ethereum.Address]byte{}
+	var baseTokens []ethereum.Address
+	var newBaseSells []*big.Int
+	var newBaseBuys []*big.Int
+	newCompatSells := map[ethereum.Address]byte{}
+	newCompatBuys := map[ethereum.Address]byte{}
 	for i, token := range tokens {
-		compactSell, overflow1 := BigIntToCompactRate(sells[i], baseSells[i])
-		compactBuy, overflow2 := BigIntToCompactRate(buys[i], baseBuys[i])
+		compactSell, overflow1 := calculateCompactRate(sells[i], baseSells[i])
+		compactBuy, overflow2 := calculateCompactRate(buys[i], baseBuys[i])
 		if overflow1 || overflow2 {
 			baseTokens = append(baseTokens, token)
-			newBSells = append(newBSells, sells[i])
-			newBBuys = append(newBBuys, buys[i])
-			newCSells[token] = 0
-			newCBuys[token] = 0
+			newBaseSells = append(newBaseSells, sells[i])
+			newBaseBuys = append(newBaseBuys, buys[i])
+			newCompatSells[token] = 0
+			newCompatBuys[token] = 0
 		} else {
-			newCSells[token] = compactSell.Compact
-			newCBuys[token] = compactBuy.Compact
+			newCompatSells[token] = compactSell.Compact
+			newCompatBuys[token] = compactBuy.Compact
 		}
 	}
-	bbuys, bsells, indices := BuildCompactBulk(
-		newCBuys,
-		newCSells,
-		bc.tokenIndices,
-	)
+	bbuys, bsells, indices := buildCompactBulk(newCompatBuys, newCompatSells, bc.tokenIndices)
 	opts, err := bc.GetTxOpts(blockchain.PricingOP, nonce, gasPrice, nil)
 	if err != nil {
 		bc.l.Infow("Getting transaction opts failed", "err", err)
@@ -207,7 +203,7 @@ func (bc *Blockchain) SetRates(
 	if len(baseTokens) > 0 {
 		// set base tx
 		tx, err = bc.GeneratedSetBaseRate(
-			opts, baseTokens, newBBuys, newBSells,
+			opts, baseTokens, newBaseBuys, newBaseSells,
 			bbuys, bsells, block, indices)
 		if tx != nil {
 			bc.l.Infof(
@@ -215,8 +211,8 @@ func (bc *Blockchain) SetRates(
 				tx.Hash().Hex(),
 				buys, sells,
 				baseBuys, baseSells,
-				newBBuys, newBSells,
-				readablePrint(newCBuys), readablePrint(newCSells),
+				newBaseBuys, newBaseSells,
+				readablePrint(newCompatBuys), readablePrint(newCompatSells),
 				bbuys, bsells, indices,
 			)
 		}
@@ -230,7 +226,7 @@ func (bc *Blockchain) SetRates(
 				tx.Hash().Hex(),
 				buys, sells,
 				baseBuys, baseSells,
-				readablePrint(newCBuys), readablePrint(newCSells),
+				readablePrint(newCompatBuys), readablePrint(newCompatSells),
 				bbuys, bsells, indices,
 			)
 		}

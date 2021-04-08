@@ -11,14 +11,14 @@ import (
 )
 
 // GeneratedSetBaseRate build tx set base rate
-func (bc *Blockchain) GeneratedSetBaseRate(opts blockchain.TxOpts, tokens []ethereum.Address, baseBuy []*big.Int, baseSell []*big.Int, buy [][14]byte, sell [][14]byte, blockNumber *big.Int, indices []*big.Int) (*types.Transaction, error) {
+func (bc *Blockchain) GeneratedSetBaseRate(opts blockchain.TxOpts, tokens []ethereum.Address, baseBuy []*big.Int, baseSell []*big.Int, buy, sell []bulk, blockNumber *big.Int, indices []*big.Int) (*types.Transaction, error) {
 	timeout, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	return bc.BuildTx(timeout, opts, bc.pricing, "setBaseRate", tokens, baseBuy, baseSell, buy, sell, blockNumber, indices)
 }
 
 // GeneratedSetCompactData build tx to set compact data
-func (bc *Blockchain) GeneratedSetCompactData(opts blockchain.TxOpts, buy [][14]byte, sell [][14]byte, blockNumber *big.Int, indices []*big.Int) (*types.Transaction, error) {
+func (bc *Blockchain) GeneratedSetCompactData(opts blockchain.TxOpts, buy, sell []bulk, blockNumber *big.Int, indices []*big.Int) (*types.Transaction, error) {
 	timeout, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	return bc.BuildTx(timeout, opts, bc.pricing, "setCompactData", buy, sell, blockNumber, indices)
