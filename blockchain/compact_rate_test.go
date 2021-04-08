@@ -18,7 +18,7 @@ type BigIntToCompactRateTestCase struct {
 }
 
 func testOutcome(testcase BigIntToCompactRateTestCase, t *testing.T) {
-	rate, overflow := BigIntToCompactRate(
+	rate, overflow := calculateCompactRate(
 		testcase.RateInput,
 		testcase.BaseInput,
 	)
@@ -119,13 +119,13 @@ func TestBuildCompactBulk(t *testing.T) {
 		addr2: newTBIndex(9, 5),
 		addr3: newTBIndex(9, 6),
 	}
-	buyBulk, sellBulk, indices := BuildCompactBulk(
+	buyBulk, sellBulk, indices := buildCompactBulk(
 		buysInput, sellsInput, indicesInput)
-	expectedBuys := [][14]byte{
+	expectedBuys := []bulk{
 		{0, 0, 0, 0, 0, 0, 0, 0, 0, 23, 0, 0, 0, 0},
 		{0, 0, 0, 0, 0, 24, 25, 0, 0, 0, 0, 0, 0, 0},
 	}
-	expectedSells := [][14]byte{
+	expectedSells := []bulk{
 		{0, 0, 0, 0, 0, 0, 0, 0, 0, 26, 0, 0, 0, 0},
 		{0, 0, 0, 0, 0, 27, 28, 0, 0, 0, 0, 0, 0, 0},
 	}
@@ -134,11 +134,11 @@ func TestBuildCompactBulk(t *testing.T) {
 		big.NewInt(9),
 	}
 
-	expectedBuys1 := [][14]byte{
+	expectedBuys1 := []bulk{
 		{0, 0, 0, 0, 0, 24, 25, 0, 0, 0, 0, 0, 0, 0},
 		{0, 0, 0, 0, 0, 0, 0, 0, 0, 23, 0, 0, 0, 0},
 	}
-	expectedSells1 := [][14]byte{
+	expectedSells1 := []bulk{
 		{0, 0, 0, 0, 0, 27, 28, 0, 0, 0, 0, 0, 0, 0},
 		{0, 0, 0, 0, 0, 0, 0, 0, 0, 26, 0, 0, 0, 0},
 	}
