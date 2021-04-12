@@ -406,7 +406,7 @@ func (f *Fetcher) handleStuckWithdraw(pendings []common.ActivityRecord) {
 func (f *Fetcher) handleStuckDeposit(pendings []common.ActivityRecord) {
 	startCheckDeposit := time.Now()
 	speedDeposit := 0
-	pendingTimeMillis := uint64(45000) // TODO: to make this configurable
+	pendingTimeMillis := f.rawConfig.OverrideTxPeriodSeconds * 1000
 	for _, av := range pendings {
 		if av.Action == common.ActionDeposit && (av.MiningStatus != common.MiningStatusFailed &&
 			av.MiningStatus != common.MiningStatusMined && av.MiningStatus != common.MiningStatusLost) {
