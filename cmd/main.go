@@ -88,6 +88,11 @@ func run(c *cli.Context) error {
 		l.Errorw("error load config file", "error", err)
 		return err
 	}
+	{
+		if rcf.OverrideTxPeriodSeconds == 0 {
+			rcf.OverrideTxPeriodSeconds = 30
+		}
+	}
 	l.Debugw("start with config",
 		"world_endpoints", toJSONString(rcf.WorldEndpoints),
 		"contract_address", toJSONString(rcf.ContractAddresses),
