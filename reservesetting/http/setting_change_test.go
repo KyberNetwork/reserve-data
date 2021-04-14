@@ -90,7 +90,11 @@ func createSampleAsset(store *postgres.Storage) (rtypes.AssetID, error) {
 			Reserve:              1.0,
 			Total:                100.0,
 			MinWithdrawThreshold: 1.0,
-		}, nil, nil, 0.1, 0.2, 10000, 1, 2)
+		}, nil, nil, 0.1, 0.2, 10000, 1, 2, common.SanityInfo{
+			Provider:  "binance",
+			Threshold: 0.5,
+			Path:      []string{"ABC", "ETH"},
+		})
 	if err != nil {
 		return 0, err
 	}
@@ -279,6 +283,7 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 				require.NoError(t, err)
 				asset, err = s.GetAsset(asset.ID)
 				require.NoError(t, err)
+				require.Equal(t, common.SanityInfo{}, asset.SanityInfo)
 				require.Equal(t, 0.0, asset.StableParam.PriceUpdateThreshold)
 				assert.Equal(t, expectedAskSpread, asset.StableParam.AskSpread)
 				require.Equal(t, 0.123, asset.NormalUpdatePerPeriod)
@@ -303,6 +308,9 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 							OrderDurationMillis:   common.Uint64Pointer(15666),
 							PriceETHAmount:        common.FloatPointer(1.1),
 							ExchangeETHAmount:     common.FloatPointer(2.2),
+							SanityRateProvider:    common.StringPointer("huobi"),
+							SanityThreshold:       common.FloatPointer(0.01),
+							SanityRatePath:        []string{"ABC", "BTC", "USDT"},
 						},
 					},
 				},
@@ -323,6 +331,11 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 				require.Equal(t, uint64(15666), asset.OrderDurationMillis)
 				require.Equal(t, float64(1.1), asset.PriceETHAmount)
 				require.Equal(t, float64(2.2), asset.ExchangeETHAmount)
+				require.Equal(t, common.SanityInfo{
+					Provider:  "huobi",
+					Threshold: 0.01,
+					Path:      []string{"ABC", "BTC", "USDT"},
+				}, asset.SanityInfo)
 			},
 		},
 		{

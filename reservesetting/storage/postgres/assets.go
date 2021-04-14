@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"database/sql"
+	"database/sql/driver"
 	"fmt"
 	"strings"
 	"time"
@@ -71,6 +72,15 @@ type createAssetParams struct {
 
 	PriceETHAmount    float64 `db:"price_eth_amount"`
 	ExchangeETHAmount float64 `db:"exchange_eth_amount"`
+
+	SanityThreshold    float64            `db:"sanity_threshold"`
+	SanityRateProvider string             `db:"sanity_rate_provider"`
+	SanityRatePath     sanityRatePathData `db:"sanity_rate_path"`
+}
+
+type sanityRatePathData interface {
+	driver.Valuer
+	sql.Scanner
 }
 
 // CreateAsset create a new asset
@@ -88,7 +98,7 @@ func (s *Storage) CreateAsset(
 	stableParam *common.StableParam,
 	feedWeight *common.FeedWeight,
 	normalUpdatePerPeriod, maxImbalanceRatio float64, orderDurationMillis uint64,
-	priceETHAmount, exchangeETHAmount float64,
+	priceETHAmount, exchangeETHAmount float64, sanityInfo common.SanityInfo,
 ) (rtypes.AssetID, error) {
 	tx, err := s.db.Beginx()
 	if err != nil {
@@ -98,7 +108,7 @@ func (s *Storage) CreateAsset(
 
 	id, _, err := s.createAsset(tx, symbol, name, address, decimals, transferable,
 		setRate, rebalance, isQuote, isEnabled, pwi, rb, exchanges, target, stableParam, feedWeight,
-		normalUpdatePerPeriod, maxImbalanceRatio, orderDurationMillis, priceETHAmount, exchangeETHAmount)
+		normalUpdatePerPeriod, maxImbalanceRatio, orderDurationMillis, priceETHAmount, exchangeETHAmount, sanityInfo)
 	if err != nil {
 		return 0, err
 	}
@@ -273,7 +283,7 @@ func (s *Storage) createAsset(tx *sqlx.Tx,
 	rebalance, isQuote, isEnabled bool, pwi *common.AssetPWI, rb *common.RebalanceQuadratic,
 	exchanges []common.AssetExchange, target *common.AssetTarget, stableParam *common.StableParam,
 	feedWeight *common.FeedWeight, normalUpdatePerPeriod, maxImbalanceRatio float64, orderDurationMillis uint64,
-	priceETHAmount, exchangeETHAmount float64) (rtypes.AssetID, []rtypes.TradingPairID, error) {
+	priceETHAmount, exchangeETHAmount float64, sanityInfo common.SanityInfo) (rtypes.AssetID, []rtypes.TradingPairID, error) {
 	// create new asset
 	var assetID rtypes.AssetID
 
@@ -315,6 +325,9 @@ func (s *Storage) createAsset(tx *sqlx.Tx,
 		OrderDurationMillis:   orderDurationMillis,
 		PriceETHAmount:        priceETHAmount,
 		ExchangeETHAmount:     exchangeETHAmount,
+		SanityRateProvider:    sanityInfo.Provider,
+		SanityThreshold:       sanityInfo.Threshold,
+		SanityRatePath:        pq.Array(sanityInfo.Path),
 	}
 
 	if pwi != nil {
@@ -637,11 +650,19 @@ type assetDB struct {
 	PriceETHAmount    float64 `db:"price_eth_amount"`
 	ExchangeETHAmount float64 `db:"exchange_eth_amount"`
 
+	SanityThreshold    float64        `db:"sanity_threshold"`
+	SanityRateProvider sql.NullString `db:"sanity_rate_provider"`
+	SanityPath         pq.StringArray `db:"sanity_rate_path"`
+
 	Created time.Time `db:"created"`
 	Updated time.Time `db:"updated"`
 }
 
 func (adb *assetDB) ToCommon() (common.Asset, error) {
+	var sanityPath []string
+	if adb.SanityPath != nil {
+		sanityPath = []string(adb.SanityPath)
+	}
 	result := common.Asset{
 		ID:                    adb.ID,
 		Symbol:                adb.Symbol,
@@ -658,6 +679,11 @@ func (adb *assetDB) ToCommon() (common.Asset, error) {
 		OrderDurationMillis:   adb.OrderDurationMillis,
 		PriceETHAmount:        adb.PriceETHAmount,
 		ExchangeETHAmount:     adb.ExchangeETHAmount,
+		SanityInfo: common.SanityInfo{
+			Provider:  adb.SanityRateProvider.String,
+			Threshold: adb.SanityThreshold,
+			Path:      sanityPath,
+		},
 	}
 
 	if adb.Address.Valid {
@@ -966,19 +992,26 @@ type updateAssetParam struct {
 	TargetTransferThreshold    *float64 `db:"target_transfer_threshold"`
 	TargetMinWithdrawThreshold *float64 `db:"target_min_withdraw_threshold"`
 
-	PriceUpdateThreshold  *float64 `db:"stable_param_price_update_threshold"`
-	AskSpread             *float64 `db:"stable_param_ask_spread"`
-	BidSpread             *float64 `db:"stable_param_bid_spread"`
-	SingleFeedMaxSpread   *float64 `db:"stable_param_single_feed_max_spread"`
-	MultipleFeedsMaxDiff  *float64 `db:"stable_param_multiple_feeds_max_diff"`
-	NormalUpdatePerPeriod *float64 `db:"normal_update_per_period"`
-	MaxImbalanceRatio     *float64 `db:"max_imbalance_ratio"`
-	OrderDurationMillis   *uint64  `db:"order_duration_millis"`
-	PriceETHAmount        *float64 `db:"price_eth_amount"`
-	ExchangeETHAmount     *float64 `db:"exchange_eth_amount"`
+	PriceUpdateThreshold  *float64           `db:"stable_param_price_update_threshold"`
+	AskSpread             *float64           `db:"stable_param_ask_spread"`
+	BidSpread             *float64           `db:"stable_param_bid_spread"`
+	SingleFeedMaxSpread   *float64           `db:"stable_param_single_feed_max_spread"`
+	MultipleFeedsMaxDiff  *float64           `db:"stable_param_multiple_feeds_max_diff"`
+	NormalUpdatePerPeriod *float64           `db:"normal_update_per_period"`
+	MaxImbalanceRatio     *float64           `db:"max_imbalance_ratio"`
+	OrderDurationMillis   *uint64            `db:"order_duration_millis"`
+	PriceETHAmount        *float64           `db:"price_eth_amount"`
+	ExchangeETHAmount     *float64           `db:"exchange_eth_amount"`
+	SanityThreshold       *float64           `db:"sanity_threshold"`
+	SanityRateProvider    *string            `db:"sanity_rate_provider"`
+	SanityRatePath        sanityRatePathData `db:"sanity_rate_path"`
 }
 
 func (s *Storage) updateAsset(tx *sqlx.Tx, id rtypes.AssetID, uo storage.UpdateAssetOpts) error {
+	var sanityPath sanityRatePathData
+	if len(uo.SanityRatePath) > 0 {
+		sanityPath = pq.Array(uo.SanityRatePath)
+	}
 	arg := updateAssetParam{
 		ID:                    id,
 		Symbol:                uo.Symbol,
@@ -993,6 +1026,9 @@ func (s *Storage) updateAsset(tx *sqlx.Tx, id rtypes.AssetID, uo storage.UpdateA
 		OrderDurationMillis:   uo.OrderDurationMillis,
 		PriceETHAmount:        uo.PriceETHAmount,
 		ExchangeETHAmount:     uo.ExchangeETHAmount,
+		SanityThreshold:       uo.SanityThreshold,
+		SanityRateProvider:    uo.SanityRateProvider,
+		SanityRatePath:        sanityPath,
 	}
 
 	var updateMsgs []string
@@ -1041,6 +1077,15 @@ func (s *Storage) updateAsset(tx *sqlx.Tx, id rtypes.AssetID, uo storage.UpdateA
 	}
 	if uo.ExchangeETHAmount != nil {
 		updateMsgs = append(updateMsgs, fmt.Sprintf("exchange_eth_amount=%f", *uo.ExchangeETHAmount))
+	}
+	if uo.SanityRateProvider != nil {
+		updateMsgs = append(updateMsgs, fmt.Sprintf("sanity_rate_provider=%s", *uo.SanityRateProvider))
+	}
+	if uo.SanityThreshold != nil {
+		updateMsgs = append(updateMsgs, fmt.Sprintf("sanity_threshold=%f", *uo.SanityThreshold))
+	}
+	if uo.SanityRatePath != nil {
+		updateMsgs = append(updateMsgs, fmt.Sprintf("sanity_rate_path=%v", uo.SanityRatePath))
 	}
 	pwi := uo.PWI
 	if pwi != nil {
