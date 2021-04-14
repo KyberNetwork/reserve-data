@@ -56,9 +56,6 @@ func (ep *Endpoint) fillRequest(req *http.Request, signNeeded bool, timepoint ui
 		q.Set("timestamp", fmt.Sprintf("%d", int64(timepoint)+ep.timeDelta-1000))
 		q.Set("recvWindow", "5000")
 		sig.Set("signature", ep.signer.Sign(q.Encode()))
-		// Using separated values map for signature to ensure it is at the end
-		// of the query. This is required for /wapi apis from binance without
-		// any damn documentation about it!!!
 		req.URL.RawQuery = q.Encode() + "&" + sig.Encode()
 	}
 }
@@ -226,7 +223,7 @@ func (ep *Endpoint) GetAccountTradeHistory(
 func (ep *Endpoint) WithdrawHistory(startTime, endTime uint64) (exchange.Binawithdrawals, error) {
 	result := exchange.Binawithdrawals{}
 	respBody, err := ep.authHTTP.DoReq(
-		fmt.Sprintf("%s/wapi/v3/withdrawHistory/%s", ep.accountDataBaseURL, ep.accountID),
+		fmt.Sprintf("%s/sapi/v1/capital/withdraw/history/%s", ep.accountDataBaseURL, ep.accountID),
 		http.MethodGet,
 		map[string]string{
 			"startTime": fmt.Sprintf("%d", startTime),
@@ -235,9 +232,6 @@ func (ep *Endpoint) WithdrawHistory(startTime, endTime uint64) (exchange.Binawit
 	if err == nil {
 		if err = json.Unmarshal(respBody, &result); err != nil {
 			return result, err
-		}
-		if !result.Success {
-			err = errors.New("Getting withdraw history from Binance failed: " + result.Msg)
 		}
 	}
 	return result, err
@@ -248,7 +242,7 @@ func (ep *Endpoint) DepositHistory(startTime, endTime uint64) (exchange.Binadepo
 	result := exchange.Binadeposits{}
 	respBody, err := ep.GetResponse(
 		"GET",
-		ep.interf.AuthenticatedEndpoint()+"/wapi/v3/depositHistory.html",
+		ep.interf.AuthenticatedEndpoint()+"/sapi/v1/capital/deposit/hisrec",
 		map[string]string{
 			"startTime": fmt.Sprintf("%d", startTime),
 			"endTime":   fmt.Sprintf("%d", endTime),
@@ -259,9 +253,6 @@ func (ep *Endpoint) DepositHistory(startTime, endTime uint64) (exchange.Binadepo
 	if err == nil {
 		if err = json.Unmarshal(respBody, &result); err != nil {
 			return result, err
-		}
-		if !result.Success {
-			err = errors.New("Getting deposit history from Binance failed: " + result.Msg)
 		}
 	}
 	return result, err
@@ -333,9 +324,7 @@ func (ep *Endpoint) OrderStatus(symbol string, id uint64) (exchange.Binaorder, e
 }
 
 type transferResult struct {
-	TxnID   string `json:"txnId"`
-	Success bool   `json:"success"`
-	Msg     string `json:"msg"`
+	TransID string `json:"transId"`
 }
 
 func (ep *Endpoint) Transfer(fromAccount string, toAccount string, asset commonv3.Asset, amount *big.Int, runAsync bool, referenceID string) (string, error) {
@@ -367,10 +356,7 @@ func (ep *Endpoint) Transfer(fromAccount string, toAccount string, asset commonv
 	if err = json.Unmarshal(respBody, &result); err != nil {
 		return "", fmt.Errorf("unmarshal error %+v - %s", err, string(respBody))
 	}
-	if !result.Success {
-		return "", errors.New(result.Msg)
-	}
-	return result.TxnID, nil
+	return result.TransID, nil
 }
 
 // Withdraw token from binance
@@ -384,7 +370,7 @@ func (ep *Endpoint) Withdraw(asset commonv3.Asset, amount *big.Int, address ethe
 	result := exchange.Binawithdraw{}
 	withdrawOrderID := fmt.Sprintf("%s_%s", symbol, xid.New().String())
 	respBody, err := ep.authHTTP.DoReq(
-		fmt.Sprintf("%s/wapi/v3/withdraw/%s", ep.accountDataBaseURL, ep.accountID),
+		fmt.Sprintf("%s/sapi/v1/capital/withdraw/apply/%s", ep.accountDataBaseURL, ep.accountID),
 		http.MethodPost,
 		map[string]string{
 			"withdrawOrderId": withdrawOrderID,
@@ -397,9 +383,6 @@ func (ep *Endpoint) Withdraw(asset commonv3.Asset, amount *big.Int, address ethe
 	if err == nil {
 		if err = json.Unmarshal(respBody, &result); err != nil {
 			return "", err
-		}
-		if !result.Success {
-			return "", errors.New(result.Msg)
 		}
 		return withdrawOrderID, nil
 	}
@@ -493,7 +476,7 @@ func (ep *Endpoint) GetAllAssetDetail() (map[string]exchange.BinanceAssetDetail,
 	}{}
 	respBody, err := ep.GetResponse(
 		"GET",
-		ep.interf.AuthenticatedEndpoint()+"/wapi/v3/assetDetail.html",
+		ep.interf.AuthenticatedEndpoint()+"/sapi/v1/asset/assetDetail",
 		map[string]string{},
 		true,
 		common.NowInMillis(),
