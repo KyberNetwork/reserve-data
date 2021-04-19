@@ -20,7 +20,7 @@ import (
 // maxActivityLifeTime is the longest time of an activity. If the
 // activity is pending for more than MAX_ACVITY_LIFE_TIME, it will be
 // considered as failed.
-const maxActivityLifeTime uint64 = 6 // activity max life time in hour
+const maxActivityLifeTime uint64 = 96 // activity max life time in hour
 
 type Fetcher struct {
 	storage                Storage
