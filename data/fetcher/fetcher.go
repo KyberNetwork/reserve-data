@@ -20,7 +20,7 @@ import (
 // maxActivityLifeTime is the longest time of an activity. If the
 // activity is pending for more than MAX_ACVITY_LIFE_TIME, it will be
 // considered as failed.
-const maxActivityLifeTime uint64 = 6 // activity max life time in hour
+const maxActivityLifeTime uint64 = 96 // activity max life time in hour
 
 type Fetcher struct {
 	storage                Storage
@@ -406,7 +406,7 @@ func (f *Fetcher) handleStuckWithdraw(pendings []common.ActivityRecord) {
 func (f *Fetcher) handleStuckDeposit(pendings []common.ActivityRecord) {
 	startCheckDeposit := time.Now()
 	speedDeposit := 0
-	pendingTimeMillis := uint64(45000) // TODO: to make this configurable
+	pendingTimeMillis := f.rawConfig.OverrideTxPeriodSeconds * 1000
 	for _, av := range pendings {
 		if av.Action == common.ActionDeposit && (av.MiningStatus != common.MiningStatusFailed &&
 			av.MiningStatus != common.MiningStatusMined && av.MiningStatus != common.MiningStatusLost) {
@@ -679,10 +679,9 @@ func (f *Fetcher) updateActivityWithExchangeStatus(record *common.ActivityRecord
 	f.l.Infof("In PersistSnapshot: exchange activity status for %+v: %+v", record.ID, sts)
 	if record.IsExchangePending() { // fill exchange status
 		record.ExchangeStatus = sts.ExchangeStatus
-	} else if sts.ExchangeStatus == common.ExchangeStatusFailed {
-		record.ExchangeStatus = sts.ExchangeStatus
-		record.Result.WithdrawFee = sts.WithdrawFee
-		f.refundFailedWithdraw(record)
+		if sts.ExchangeStatus == common.ExchangeStatusFailed {
+			f.refundFailedWithdraw(record) // refund when state transition from pending -> failed
+		}
 	}
 
 	if record.Result.Tx == "" { // for a withdraw, we set tx into result tx(that is when cex process request and return tx id so we can monitor), deposit should already has tx when created.

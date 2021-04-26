@@ -923,7 +923,8 @@ type RawConfig struct {
 		AccessSecret string `json:"access_secret"`
 	} `json:"account_data"`
 
-	BlockChainNetwork bcnetwork.NetworkConfig `json:"blockchain_network"`
+	BlockChainNetwork       bcnetwork.NetworkConfig `json:"blockchain_network"`
+	OverrideTxPeriodSeconds uint64                  `json:"override_tx_period_seconds"`
 }
 
 // FeedProviderResponse ...

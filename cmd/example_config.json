@@ -81,5 +81,6 @@
       "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
       "decimals": 18
     }
-  }
+  },
+  "override_tx_period_seconds": 30
 }
