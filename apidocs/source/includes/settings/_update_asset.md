@@ -58,7 +58,10 @@ curl -X POST "https://gateway.local/v3/setting-change-main" \
             },
             "normal_update_per_period": 1.234,
             "max_imbalance_ratio": 3.456,
-            "order_duration_millis": 21000
+            "order_duration_millis": 21000,
+            "sanity_threshold": 1,
+            "sanity_rate_provider": "binance",
+            "sanity_rate_path": ["KNC", "BTC", "ETH"]
         }
     }]
 }'
