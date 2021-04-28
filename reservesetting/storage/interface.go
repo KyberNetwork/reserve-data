@@ -15,6 +15,7 @@ type Interface interface {
 	UpdateTradingPair(id rtypes.TradingPairID, opts UpdateTradingPairOpts) error
 
 	CreateSettingChange(v3.ChangeCatalog, v3.SettingChange, string) (rtypes.SettingChangeID, error)
+	UpdateSettingChangeData(obj v3.SettingChange, id rtypes.SettingChangeID) (rtypes.SettingChangeID, error)
 	GetSettingChange(id rtypes.SettingChangeID) (v3.SettingChangeResponse, error)
 	GetSettingChanges(catalog v3.ChangeCatalog, status v3.ChangeStatus) ([]v3.SettingChangeResponse, error)
 	RejectSettingChange(id rtypes.SettingChangeID, keyID string) error
@@ -32,7 +33,8 @@ type Interface interface {
 
 	SetPreferGasSource(v v3.PreferGasSource) error
 
-	GetLisApprovalSettingChange(settingChangeID uint64) ([]v3.ApprovalSettingChangeInfo, error)
+	AddCronJob(data v3.CronJobData) (uint64, error)
+	RemoveCronJob(id uint64) error
 }
 
 // SettingReader is the common interface for reading exchanges, assets configuration.
@@ -63,6 +65,10 @@ type SettingReader interface {
 
 	ApproveSettingChange(keyID string, settingChangeID uint64) error
 	DisapproveSettingChange(keyID string, settingChangeID uint64) error
+
+	GetLisApprovalSettingChange(settingChangeID uint64) ([]v3.ApprovalSettingChangeInfo, error)
+
+	GetCronJob() ([]v3.CronJobData, error)
 }
 
 // ControlInfoInterface ...

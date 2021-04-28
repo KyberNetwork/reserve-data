@@ -22,7 +22,7 @@ func TestCheckFeedConfiguration(t *testing.T) {
 	s, err := postgres.NewStorage(db)
 	require.NoError(t, err)
 	supportedExchanges := make(map[rtypes.ExchangeID]v1common.LiveExchange)
-	server := NewServer(s, "", supportedExchanges, "", nil, nil, nil, 0)
+	server := NewServer(s, "", supportedExchanges, "", nil, nil, nil, 0, nil)
 
 	feedConfigurationEntryNotSupportedTest := common.SetFeedConfigurationEntry{
 		Name: "Not supported feed",

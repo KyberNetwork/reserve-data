@@ -41,6 +41,7 @@ type preparedStmts struct {
 
 	newSettingChange          *sqlx.Stmt
 	updateSettingChangeStatus *sqlx.Stmt
+	updateSettingChangeData   *sqlx.Stmt
 	getSettingChange          *sqlx.Stmt
 
 	newPriceFactor      *sqlx.Stmt
@@ -62,6 +63,10 @@ type preparedStmts struct {
 	approveSettingChange        *sqlx.Stmt
 	getApprovalSettingChange    *sqlx.Stmt
 	deleteApprovalSettingChange *sqlx.Stmt
+
+	newCronJob    *sqlx.NamedStmt
+	getCronJob    *sqlx.Stmt
+	deleteCronJob *sqlx.Stmt
 }
 
 func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
@@ -136,7 +141,7 @@ func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
 		return nil, err
 	}
 
-	newSettingChange, updateSettingChangeStatus, getSettingChange, err := settingChangeStatements(db)
+	newSettingChange, updateSettingChangeStatus, updateSettingChangeData, getSettingChange, err := settingChangeStatements(db)
 	if err != nil {
 		return nil, err
 	}
@@ -172,6 +177,11 @@ func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
 	}
 
 	approveSettingChange, getApprovalSettingChange, deleteApprovalSettingChange, err := confirmPedingSettingStatements(db)
+	if err != nil {
+		return nil, err
+	}
+
+	newCronJob, getCronJob, deleteCronJob, err := cronJobStatements(db)
 	if err != nil {
 		return nil, err
 	}
@@ -212,6 +222,7 @@ func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
 
 		newSettingChange:          newSettingChange,
 		updateSettingChangeStatus: updateSettingChangeStatus,
+		updateSettingChangeData:   updateSettingChangeData,
 		getSettingChange:          getSettingChange,
 
 		newPriceFactor:      newPriceFactor,
@@ -233,6 +244,10 @@ func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
 		approveSettingChange:        approveSettingChange,
 		getApprovalSettingChange:    getApprovalSettingChange,
 		deleteApprovalSettingChange: deleteApprovalSettingChange,
+
+		newCronJob:    newCronJob,
+		getCronJob:    getCronJob,
+		deleteCronJob: deleteCronJob,
 	}, nil
 }
 
@@ -733,24 +748,29 @@ func tradingByStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, error
 	return tradingBy, getTradingByPairs, deleteTradingByStmt, nil
 }
 
-func settingChangeStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, error) {
+func settingChangeStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, error) {
 	const newSettingChangeQuery = `SELECT new_setting_change FROM new_setting_change($1, $2, $3)`
 	newSettingChangeStmt, err := db.Preparex(newSettingChangeQuery)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 	const updateSettingChangeStatus = `UPDATE setting_change SET status = $2, rejector = COALESCE($3, rejector) WHERE id=$1 returning id`
 	updateSettingChangeStatusStmt, err := db.Preparex(updateSettingChangeStatus)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
+	}
+	const updateSettingChangeData = `UPDATE setting_change SET data = $2 WHERE id=$1 returning id`
+	updateSettingChangeDataStmt, err := db.Preparex(updateSettingChangeData)
+	if err != nil {
+		return nil, nil, nil, nil, err
 	}
 	const listSettingChangeQuery = `SELECT id,created,data,proposer,rejector FROM setting_change WHERE id=COALESCE($1, setting_change.id) AND cat=COALESCE($2, setting_change.cat)
 	AND status=COALESCE($3, 'pending'::setting_change_status)`
 	listSettingChangeStmt, err := db.Preparex(listSettingChangeQuery)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
-	return newSettingChangeStmt, updateSettingChangeStatusStmt, listSettingChangeStmt, nil
+	return newSettingChangeStmt, updateSettingChangeStatusStmt, updateSettingChangeDataStmt, listSettingChangeStmt, nil
 }
 
 func priceFactorStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, error) {
@@ -864,4 +884,24 @@ func confirmPedingSettingStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.
 		return nil, nil, nil, err
 	}
 	return approveSettingChangeStmt, getApprovalSettingChangeStmt, deleteApprovalSettingChangeStmt, err
+}
+
+func cronJobStatements(db *sqlx.DB) (*sqlx.NamedStmt, *sqlx.Stmt, *sqlx.Stmt, error) {
+	const newQuery = `INSERT INTO cron_job(schedule_time, data, http_method, endpoint) 
+		VALUES (:schedule_time, :data, :http_method, :endpoint) RETURNING id;`
+	newCronJobStmt, err := db.PrepareNamed(newQuery)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	const getQuery = `SELECT id, schedule_time, data, http_method, endpoint FROM cron_job;`
+	getCronJobStmt, err := db.Preparex(getQuery)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	const deleteQuery = `DELETE FROM cron_job WHERE id=$1;`
+	deleteCronJobStmt, err := db.Preparex(deleteQuery)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	return newCronJobStmt, getCronJobStmt, deleteCronJobStmt, nil
 }

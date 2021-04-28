@@ -16,6 +16,7 @@ import (
 	marketdatacli "github.com/KyberNetwork/reserve-data/lib/market-data"
 	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	"github.com/KyberNetwork/reserve-data/reservesetting/common"
+	"github.com/KyberNetwork/reserve-data/reservesetting/cronjob"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage"
 )
 
@@ -30,12 +31,13 @@ type Server struct {
 	gasClient              gaspricedataclient.Client
 	marketDataClient       *marketdatacli.Client
 	numberApprovalRequired int
+	cj                     *cronjob.CronJob
 }
 
 // NewServer creates new HTTP server for reservesetting APIs.
 func NewServer(storage storage.Interface, host string, supportedExchanges map[rtypes.ExchangeID]v1common.LiveExchange,
 	sentryDSN string, coreClient *coreclient.Client, gasClient gaspricedataclient.Client,
-	marketDataClient *marketdatacli.Client, numberApprovalRequired int) *Server {
+	marketDataClient *marketdatacli.Client, numberApprovalRequired int, cj *cronjob.CronJob) *Server {
 	l := zap.S()
 	r := gin.Default()
 	if sentryDSN != "" {
@@ -57,6 +59,7 @@ func NewServer(storage storage.Interface, host string, supportedExchanges map[rt
 		gasClient:              gasClient,
 		marketDataClient:       marketDataClient,
 		numberApprovalRequired: numberApprovalRequired,
+		cj:                     cj,
 	}
 	g := r.Group("/v3")
 
@@ -141,6 +144,10 @@ func NewServer(storage storage.Interface, host string, supportedExchanges map[rt
 	g.GET("/gas-source", server.getPreferGasSource)
 	g.POST("/gas-source", server.setPreferGasSource)
 	g.GET("/version", server.getVersion)
+
+	g.POST("/cron-job", server.addCronJob)
+	g.GET("/cron-job", server.getCronJob)
+	g.DELETE("/cron-job/:id", server.stopCronJob)
 
 	g.DELETE("/disapprove-setting-change/:id", server.disapproveSettingChange)
 	g.GET("/number-approval-required", server.getNumberApprovalRequired)

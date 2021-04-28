@@ -26,6 +26,7 @@ import (
 	marketdatacli "github.com/KyberNetwork/reserve-data/lib/market-data"
 	"github.com/KyberNetwork/reserve-data/lib/migration"
 	"github.com/KyberNetwork/reserve-data/lib/rtypes"
+	"github.com/KyberNetwork/reserve-data/reservesetting/cronjob"
 	settinghttp "github.com/KyberNetwork/reserve-data/reservesetting/http"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage/postgres"
@@ -34,16 +35,18 @@ import (
 const (
 	defaultDB = "reserve_data"
 
-	binanceAPIKeyFlag    = "binance-api-key"
-	binanceSecretKeyFlag = "binance-secret-key"
-	gasPriceURLFlag      = "gas-price-url"
-	defaultGasPriceURL   = "http://localhost:8088/gas/price"
-	marketDataURLFlag    = "market-data-url"
-	defaultMarketDataURL = "http://localhost:8080"
-	cexDataURLFlag       = "cex-data-url"
-	defaultCEXDataURL    = "http://cex-data.local:8080"
-	cexAuthKey           = "cex-auth-key"
-	cexAuthSecret        = "cex-auth-secret"
+	binanceAPIKeyFlag       = "binance-api-key"
+	binanceSecretKeyFlag    = "binance-secret-key"
+	gasPriceURLFlag         = "gas-price-url"
+	defaultGasPriceURL      = "http://localhost:8088/gas/price"
+	marketDataURLFlag       = "market-data-url"
+	defaultMarketDataURL    = "http://localhost:8080"
+	cexDataURLFlag          = "cex-data-url"
+	defaultCEXDataURL       = "http://cex-data.local:8080"
+	cexAuthKey              = "cex-auth-key"
+	cexAuthSecret           = "cex-auth-secret"
+	settingChangeURL        = "setting-change-url"
+	defaultSettingChangeURL = "http://localhost:8002"
 
 	intervalUpdateWithdrawFeeDBFlag      = "interval-update-withdraw-fee-db"
 	defaultIntervalUpdateWithdrawFeeDB   = 10 * time.Minute
@@ -129,6 +132,12 @@ func main() {
 			EnvVar: "NUMBER_APPROVAL_REQUIRED",
 			Value:  defaultNumberApprovalRequired,
 		},
+		cli.StringFlag{
+			Name:   settingChangeURL,
+			Usage:  "setting change url",
+			EnvVar: "SETTING_CHANGE_URL",
+			Value:  defaultSettingChangeURL,
+		},
 	)
 
 	if err := app.Run(os.Args); err != nil {
@@ -208,9 +217,15 @@ func run(c *cli.Context) error {
 	sugar.Debugw("number approval required", "data", c.Int(numberApprovalRequiredFlag))
 
 	sentryDSN := libapp.SentryDSNFromFlag(c)
+
+	cj := cronjob.NewCronJob(sr, c.String(settingChangeURL))
+	if err := cj.Init(); err != nil {
+		sugar.Errorw("cannot init cron job", "err", err)
+		return err
+	}
 	server := settinghttp.NewServer(sr, host, liveExchanges, sentryDSN, coreClient,
 		gaspricedataclient.New(httpClient, c.String(gasPriceURLFlag)), marketdatacli.NewClient(c.String(marketDataURLFlag)),
-		c.Int(numberApprovalRequiredFlag))
+		c.Int(numberApprovalRequiredFlag), cj)
 	if profiler.IsEnableProfilerFromContext(c) {
 		server.EnableProfiler()
 	}

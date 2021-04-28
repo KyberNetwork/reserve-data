@@ -52,6 +52,29 @@ func (s *Storage) CreateSettingChange(cat common.ChangeCatalog, obj common.Setti
 	return id, nil
 }
 
+// UpdateSettingChangeData update the setting change data
+func (s *Storage) UpdateSettingChangeData(obj common.SettingChange, id rtypes.SettingChangeID) (rtypes.SettingChangeID, error) {
+	jsonData, err := json.Marshal(obj)
+	if err != nil {
+		return 0, errors.Wrapf(err, "failed to parse json data %+v", obj)
+	}
+	tx, err := s.db.Beginx()
+	if err != nil {
+		return 0, err
+	}
+	defer pgutil.RollbackUnlessCommitted(tx)
+
+	if err = tx.Stmtx(s.stmts.updateSettingChangeData).Get(&id, id, jsonData); err != nil {
+		s.l.Errorw("failed to udpate setting change data", "err", err)
+		return 0, err
+	}
+	if err = tx.Commit(); err != nil {
+		return 0, err
+	}
+	s.l.Infow("update setting change data success", "id", id)
+	return id, nil
+}
+
 type settingChangeDB struct {
 	ID       rtypes.SettingChangeID `db:"id"`
 	Created  time.Time              `db:"created"`
@@ -67,11 +90,13 @@ func (objDB settingChangeDB) ToCommon() (common.SettingChangeResponse, error) {
 		return common.SettingChangeResponse{}, err
 	}
 	return common.SettingChangeResponse{
-		ChangeList: settingChange.ChangeList,
-		ID:         objDB.ID,
-		Created:    objDB.Created,
-		Proposer:   objDB.Proposer.String,
-		Rejector:   objDB.Rejector.String,
+		ChangeList:   settingChange.ChangeList,
+		ID:           objDB.ID,
+		Created:      objDB.Created,
+		Proposer:     objDB.Proposer.String,
+		Rejector:     objDB.Rejector.String,
+		ScheduleTime: settingChange.ScheduleTime,
+		APIEndpoint:  settingChange.APIEndpoint,
 	}, nil
 }
 

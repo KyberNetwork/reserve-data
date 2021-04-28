@@ -2,6 +2,7 @@ package http
 
 import (
 	"fmt"
+	"net/http"
 	"reflect"
 	"strconv"
 	"strings"
@@ -12,6 +13,7 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/pkg/errors"
 
+	rcommon "github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/feed"
 	"github.com/KyberNetwork/reserve-data/http/httputil"
 	"github.com/KyberNetwork/reserve-data/lib/rtypes"
@@ -345,12 +347,12 @@ func (s *Server) confirmSettingChange(c *gin.Context) {
 		return
 	}
 	keyID := s.getKeyIDFromContext(c)
+	change, err := s.storage.GetSettingChange(rtypes.SettingChangeID(input.ID))
+	if err != nil {
+		httputil.ResponseFailure(c, httputil.WithError(err))
+		return
+	}
 	if keyID != "" {
-		change, err := s.storage.GetSettingChange(rtypes.SettingChangeID(input.ID))
-		if err != nil {
-			httputil.ResponseFailure(c, httputil.WithError(err))
-			return
-		}
 		if change.Proposer == keyID {
 			httputil.ResponseFailure(c, httputil.WithError(errors.New("cannot approve for the change that made by yourself")))
 			return
@@ -369,6 +371,28 @@ func (s *Server) confirmSettingChange(c *gin.Context) {
 			return
 		}
 	}
+
+	if change.ScheduleTime > 0 {
+		if err := s.cj.AddJob(common.CronJobData{
+			Endpoint:     fmt.Sprintf("%s/%d", change.APIEndpoint, input.ID),
+			HTTPMethod:   http.MethodPut,
+			Data:         nil,
+			ScheduleTime: rcommon.MillisToTime(change.ScheduleTime),
+		}, true); err != nil {
+			httputil.ResponseFailure(c, httputil.WithError(err))
+			return
+		}
+		// update the setting change without schedule time
+		if _, err := s.storage.UpdateSettingChangeData(common.SettingChange{
+			ChangeList: change.ChangeList,
+		}, change.ID); err != nil {
+			httputil.ResponseFailure(c, httputil.WithError(err))
+			return
+		}
+		httputil.ResponseSuccess(c)
+		return
+	}
+
 	additionalDataReturn, err := s.storage.ConfirmSettingChange(rtypes.SettingChangeID(input.ID), true)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
