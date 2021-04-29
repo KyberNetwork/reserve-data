@@ -70,7 +70,12 @@ curl -X POST "https://gateway.local/v3/setting-change-main" \
             },
             "normal_update_per_period": 1.234, // default value is 1
             "max_imbalance_ratio": 3.456, // default value is 2
-            "order_duration_millis": 20000
+            "order_duration_millis": 20000,
+            "sanity_info": {
+                "provider": "binance",
+                "threshold": "threshold",
+                "path": {"OMG", "ETH"}
+            }
         }
     }]
 }'
