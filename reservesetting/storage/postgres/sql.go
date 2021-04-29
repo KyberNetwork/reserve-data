@@ -420,7 +420,10 @@ func assetStatements(db *sqlx.DB) (*sqlx.NamedStmt, *sqlx.Stmt, *sqlx.NamedStmt,
 		 :order_duration_millis,
 		 :price_eth_amount,
 		 :exchange_eth_amount,
-		 :target_min_withdraw_threshold   
+		 :target_min_withdraw_threshold,
+		 :sanity_threshold,
+		 :sanity_rate_provider,  
+		 :sanity_rate_path
 		         );`
 	newAsset, err := db.PrepareNamed(newAssetQuery)
 	if err != nil {
@@ -467,7 +470,10 @@ func assetStatements(db *sqlx.DB) (*sqlx.NamedStmt, *sqlx.Stmt, *sqlx.NamedStmt,
 							assets.order_duration_millis,
 							assets.price_eth_amount,
 							assets.exchange_eth_amount,
-       						assets.target_min_withdraw_threshold,
+       				assets.target_min_withdraw_threshold,
+							assets.sanity_threshold,
+							assets.sanity_rate_provider,  
+							assets.sanity_rate_path,
 							assets.created,
 							assets.updated
 						FROM assets
@@ -578,6 +584,9 @@ func assetStatements(db *sqlx.DB) (*sqlx.NamedStmt, *sqlx.Stmt, *sqlx.NamedStmt,
 			price_eth_amount = COALESCE(:price_eth_amount,price_eth_amount),
 			exchange_eth_amount = COALESCE(:exchange_eth_amount,exchange_eth_amount),
 		    target_min_withdraw_threshold = COALESCE(:target_min_withdraw_threshold, target_min_withdraw_threshold),
+				sanity_threshold = COALESCE(:sanity_threshold, sanity_threshold),
+				sanity_rate_provider = COALESCE(:sanity_rate_provider, sanity_rate_provider),  
+				sanity_rate_path = COALESCE(:sanity_rate_path, sanity_rate_path),
 		    updated      = now()
 		WHERE id = :id RETURNING id;
 		`
