@@ -767,23 +767,33 @@ func (rc *ReserveCore) SetRates(assets []commonv3.Asset, buys, sells []*big.Int,
 	return uid, common.CombineActivityStorageErrs(err, sErr)
 }
 
-// SpeedupDeposit send a new tx with same info, with higher gas
-func (rc *ReserveCore) SpeedupDeposit(act common.ActivityRecord) (*big.Int, error) {
+// SpeedupTx send a new tx with same info, with higher gas
+func (rc *ReserveCore) SpeedupTx(act common.ActivityRecord) (*big.Int, error) {
+	action := act.Action
+	var opAccount string
+	switch action {
+	case common.ActionDeposit:
+		opAccount = blockchain.DepositOP
+	case common.ActionSetRate:
+		opAccount = blockchain.PricingOP
+	default:
+		return nil, fmt.Errorf("speedup not support for action: %s", action)
+	}
 	newGas, err := rc.gasPriceInfo.GetCurrentGas()
 	if err != nil {
-		return nil, fmt.Errorf("speedup deposit failed due can't get gas price, %w", err)
+		return nil, fmt.Errorf("speedup failed due can't get gas price, %w", err)
 	}
 	maxGas, err := rc.gasPriceInfo.MaxGas()
 	if err != nil {
 		maxGas = common.HighBoundGasPrice
 	}
-
+	l := rc.l.With("action", action, "activity", act.ID.String())
 	tx := ethereum.HexToHash(act.Result.Tx)
-	signedTx, err := rc.blockchain.SpeedupDeposit(tx, newGas, maxGas)
+	signedTx, err := rc.blockchain.SpeedupTx(tx, newGas, maxGas, opAccount)
 	if err != nil {
-		return nil, fmt.Errorf("failed to speedup deposit tx, %w", err)
+		return nil, fmt.Errorf("failed to speedup tx, %w", err)
 	}
-	rc.l.Debugw("sent speedup tx", "new_tx", signedTx.Hash().String(), "src_tx", tx.String())
+	l.Debugw("sent speedup tx", "new_tx", signedTx.Hash().String(), "src_tx", tx.String())
 
 	// store new act to storage
 	replaceUID := func(actID common.ActivityID, txhex string) common.ActivityID {
@@ -806,7 +816,7 @@ func (rc *ReserveCore) SpeedupDeposit(act common.ActivityRecord) (*big.Int, erro
 		TxTime:   common.TimeToMillis(time.Now()),
 	}
 	return signedTx.GasPrice(), rc.activityStorage.Record(
-		common.ActionDeposit,
+		action,
 		replaceUID(act.ID, signedTx.Hash().Hex()),
 		act.Params.Exchange.String(),
 		*act.Params,
