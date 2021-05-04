@@ -12,7 +12,6 @@ import (
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/blockchain"
 	"github.com/KyberNetwork/reserve-data/core"
-	storage2 "github.com/KyberNetwork/reserve-data/data/storage"
 	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage"
 )
@@ -40,9 +39,7 @@ type Fetcher struct {
 	lostTxActivities map[string]time.Time // this record how long was a tx mark as lost, we confirm it as lost after an amount of duration
 	lostLock         *sync.Mutex
 	settingStorage   storage.Interface
-
-	withdrawLostRun time.Time // we don't want to run check stuck withdraw too frequent, so record its run time
-	rawConfig       common.RawConfig
+	rawConfig        common.RawConfig
 }
 
 func NewFetcher(storage Storage, globalStorage GlobalStorage, theworld TheWorld, runner Runner, simulationMode bool,
@@ -224,7 +221,7 @@ func getLatestTxTimeByNonce(pendings []common.ActivityRecord, ac common.Activity
 		id     string
 	)
 	for _, act := range pendings {
-		if act.Result.Nonce == ac.Result.Nonce && act.Result.TxTime > result {
+		if act.Result.Nonce == ac.Result.Nonce && act.Result.TxTime > result && act.Action == ac.Action {
 			result = act.Result.TxTime
 			id = act.EID
 		}
@@ -250,8 +247,7 @@ func (f *Fetcher) FetchAllAuthData(timepoint uint64) {
 		f.l.Errorw("Getting pending activities failed", "err", err)
 		return
 	}
-	f.handleStuckDeposit(pendings)
-	f.handleStuckWithdraw(pendings)
+	f.handleStuckActivity(pendings)
 
 	wait := sync.WaitGroup{}
 	// update pendings activity again in case there is override tx
@@ -304,126 +300,27 @@ func (f *Fetcher) FetchAllAuthData(timepoint uint64) {
 	}
 }
 
-func (f *Fetcher) getExchangeByID(ex rtypes.ExchangeID) Exchange {
-	for _, e := range f.exchanges {
-		if e.ID() == ex {
-			return e
-		}
-	}
-	return nil
-}
-
-func (f *Fetcher) handleStuckWithdraw(pendings []common.ActivityRecord) {
-	now := time.Now()
-	if time.Since(f.withdrawLostRun) < time.Minute*3 {
-		return
-	}
-	f.withdrawLostRun = now
-	maxTimeMillis := uint64(30 * 60000) // withdraw stuck more than 30 mins with start this check routine
-	// TODO: there's still a case we can't find the replacement withdraw, that's
-	// if withdraw reach timeout and mark as failed, but new withdraw get a delay to show up after that
-	// => activity remove from pending list so we does not process it then.
-	for _, av := range pendings {
-		// filter for withdraw stuck for more than 30 mins
-		if av.Action == common.ActionWithdraw && (common.NowInMillis()-av.Timestamp.Millis() > maxTimeMillis) {
-			l := f.l.With("activity", av.ID.String(), "exchange", av.Params.Exchange.String(), "amount", av.Params.Amount, "asset", av.Params.Asset)
-			l.Debugw("checking withdraw", "id", av.ID.EID)
-			exh := f.getExchangeByID(av.Params.Exchange)
-			if exh == nil {
-				l.Warnw("cannot get exchange")
-				continue
-			}
-			asset, err := f.settingStorage.GetAsset(av.Params.Asset)
-			if err != nil {
-				l.Errorw("cannot find asset", "err", err)
-				continue
-			}
-			sts, _, _, err := exh.WithdrawStatus(av.ID.EID, av.Params.Asset, av.Params.Amount, av.Timestamp.Millis())
-			if err != nil {
-				l.Errorw("check withdraw status failed", "err", err)
-				continue
-			}
-			// => check if binance change status from pending(mean this withdraw show up in withdraw history before)
-			// to ExchangeStatusNA(mean it disappear in withdraw history)
-			if av.ExchangeStatus != common.ExchangeStatusPending || sts != common.ExchangeStatusNA {
-				continue
-			}
-
-			id, txID, err := exh.FindReplacedWithdraw(asset, av.Params.Amount, av.Timestamp.Millis())
-			if err != nil {
-				l.Errorw("FindReplacedWithdraw failed", "asset", av.Params.Asset, "err", err)
-				continue
-			}
-			if id == "" {
-				continue
-			}
-			l.Debugw("found similar withdraw", "id", id, "txID", txID)
-			// verify that this replaced withdraw was not use in any other withdraw activity
-			// just for sure that it wont conflict with other activity
-			_, err = f.storage.GetActivity(exh.ID(), id)
-			if err == nil {
-				continue
-			}
-			if err != storage2.ErrorNotFound {
-				l.Errorw("get activity error", "err", err, "id", id)
-				continue
-			}
-
-			timePoint := common.NowInMillis()
-			av.ExchangeStatus = common.ExchangeStatusFailed // mark current pending withdraw activity as failed
-			av.Result.Error = fmt.Sprintf("replace by %s, tx %s", id, txID)
-			err = f.storage.UpdateActivity(av.ID, av)
-			if err != nil {
-				l.Errorw("failed to update activity", "id", av.ID.String(), "err", err)
-			}
-			// save a new activity record for replacement withdraw
-			err = f.storage.Record(common.ActionWithdraw, common.NewActivityID(uint64(time.Now().UnixNano()), id), exh.ID().String(),
-				common.ActivityParams{
-					Exchange:  exh.ID(),
-					Asset:     asset.ID,
-					Amount:    av.Params.Amount,
-					Timepoint: timePoint,
-				},
-				common.ActivityResult{
-					ID:    id,
-					Tx:    txID,
-					Error: "",
-				},
-				common.ExchangeStatusNA,
-				common.MiningStatusNA,
-				timePoint,
-				true,
-				av.OrgTime,
-			)
-			if err != nil {
-				l.Errorw("failed to record activity", "id", id, "err", err)
-			}
-			l.Infow("success create new activity for replacement withdraw", "old", av.ID.EID,
-				"new", id, "asset", asset.Symbol, "asset_id", asset.ID, "amount", av.Params.Amount, "exchange", exh.ID().String())
-		}
-	}
-}
-func (f *Fetcher) handleStuckDeposit(pendings []common.ActivityRecord) {
-	startCheckDeposit := time.Now()
-	speedDeposit := 0
+func (f *Fetcher) handleStuckActivity(pendings []common.ActivityRecord) {
+	startCheck := time.Now()
+	speedCount := 0
 	pendingTimeMillis := f.rawConfig.OverrideTxPeriodSeconds * 1000
 	for _, av := range pendings {
-		if av.Action == common.ActionDeposit && (av.MiningStatus != common.MiningStatusFailed &&
+		if (av.Action == common.ActionDeposit || av.Action == common.ActionSetRate) && (av.MiningStatus != common.MiningStatusFailed &&
 			av.MiningStatus != common.MiningStatusMined && av.MiningStatus != common.MiningStatusLost) {
 			// among txs with same nonce, only override the latest one
 			if ok, latestTime := getLatestTxTimeByNonce(pendings, av); ok && (common.TimeToMillis(time.Now())-latestTime) > pendingTimeMillis {
-				speedDeposit++
-				newGas, err := f.reserveCore.SpeedupDeposit(av)
+				speedCount++
+				newGas, err := f.reserveCore.SpeedupTx(av)
 				if err != nil {
 					f.l.Infow("sending speed up tx failed", "err", err, "tx", av.Result.Tx)
 					continue
 				}
-				f.l.Infow("speed up deposit", "tx", av.Result.Tx, "new_gas", newGas.String())
+				f.l.Infow("speed up tx", "action", av.Action, "tx", av.Result.Tx, "new_gas", newGas.String())
 			}
 		}
 	}
-	f.l.Debugw("finish check override deposit", "duration", time.Since(startCheckDeposit).Seconds(),
-		"speed_up_count", speedDeposit)
+	f.l.Debugw("finish check override tx", "duration", time.Since(startCheck).Seconds(),
+		"speed_up_count", speedCount)
 }
 
 // FetchAuthDataFromBlockchain fetch account balance and update pendings activities
