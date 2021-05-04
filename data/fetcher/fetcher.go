@@ -303,6 +303,7 @@ func (f *Fetcher) FetchAllAuthData(timepoint uint64) {
 func (f *Fetcher) handleStuckActivity(pendings []common.ActivityRecord) {
 	startCheck := time.Now()
 	speedCount := 0
+	setRateDone := false // as we can have many pending setRates with same nonce, we override once only.
 	pendingTimeMillis := f.rawConfig.OverrideTxPeriodSeconds * 1000
 	for _, av := range pendings {
 		if (av.Action == common.ActionDeposit || av.Action == common.ActionSetRate) && (av.MiningStatus != common.MiningStatusFailed &&
@@ -310,10 +311,16 @@ func (f *Fetcher) handleStuckActivity(pendings []common.ActivityRecord) {
 			// among txs with same nonce, only override the latest one
 			if ok, latestTime := getLatestTxTimeByNonce(pendings, av); ok && (common.TimeToMillis(time.Now())-latestTime) > pendingTimeMillis {
 				speedCount++
+				if av.Action == common.ActionSetRate && setRateDone {
+					continue
+				}
 				newGas, err := f.reserveCore.SpeedupTx(av)
 				if err != nil {
 					f.l.Infow("sending speed up tx failed", "err", err, "tx", av.Result.Tx)
 					continue
+				}
+				if av.Action == common.ActionSetRate {
+					setRateDone = true
 				}
 				f.l.Infow("speed up tx", "action", av.Action, "tx", av.Result.Tx, "new_gas", newGas.String())
 			}
