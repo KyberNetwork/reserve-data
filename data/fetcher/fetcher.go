@@ -221,7 +221,7 @@ func getLatestTxTimeByNonce(pendings []common.ActivityRecord, ac common.Activity
 		id     string
 	)
 	for _, act := range pendings {
-		if act.Result.Nonce == ac.Result.Nonce && act.Result.TxTime > result {
+		if act.Result.Nonce == ac.Result.Nonce && act.Result.TxTime > result && act.Action == ac.Action {
 			result = act.Result.TxTime
 			id = act.EID
 		}
@@ -247,7 +247,7 @@ func (f *Fetcher) FetchAllAuthData(timepoint uint64) {
 		f.l.Errorw("Getting pending activities failed", "err", err)
 		return
 	}
-	f.handleStuckDeposit(pendings)
+	f.handleStuckActivity(pendings)
 
 	wait := sync.WaitGroup{}
 	// update pendings activity again in case there is override tx
@@ -300,27 +300,27 @@ func (f *Fetcher) FetchAllAuthData(timepoint uint64) {
 	}
 }
 
-func (f *Fetcher) handleStuckDeposit(pendings []common.ActivityRecord) {
-	startCheckDeposit := time.Now()
-	speedDeposit := 0
+func (f *Fetcher) handleStuckActivity(pendings []common.ActivityRecord) {
+	startCheck := time.Now()
+	speedCount := 0
 	pendingTimeMillis := f.rawConfig.OverrideTxPeriodSeconds * 1000
 	for _, av := range pendings {
-		if av.Action == common.ActionDeposit && (av.MiningStatus != common.MiningStatusFailed &&
+		if (av.Action == common.ActionDeposit || av.Action == common.ActionSetRate) && (av.MiningStatus != common.MiningStatusFailed &&
 			av.MiningStatus != common.MiningStatusMined && av.MiningStatus != common.MiningStatusLost) {
 			// among txs with same nonce, only override the latest one
 			if ok, latestTime := getLatestTxTimeByNonce(pendings, av); ok && (common.TimeToMillis(time.Now())-latestTime) > pendingTimeMillis {
-				speedDeposit++
-				newGas, err := f.reserveCore.SpeedupDeposit(av)
+				speedCount++
+				newGas, err := f.reserveCore.SpeedupTx(av)
 				if err != nil {
 					f.l.Infow("sending speed up tx failed", "err", err, "tx", av.Result.Tx)
 					continue
 				}
-				f.l.Infow("speed up deposit", "tx", av.Result.Tx, "new_gas", newGas.String())
+				f.l.Infow("speed up tx", "action", av.Action, "tx", av.Result.Tx, "new_gas", newGas.String())
 			}
 		}
 	}
-	f.l.Debugw("finish check override deposit", "duration", time.Since(startCheckDeposit).Seconds(),
-		"speed_up_count", speedDeposit)
+	f.l.Debugw("finish check override tx", "duration", time.Since(startCheck).Seconds(),
+		"speed_up_count", speedCount)
 }
 
 // FetchAuthDataFromBlockchain fetch account balance and update pendings activities

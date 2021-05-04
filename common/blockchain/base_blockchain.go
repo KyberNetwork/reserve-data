@@ -124,8 +124,8 @@ func (b *BaseBlockchain) SignAndBroadcast(tx *types.Transaction, from string) (*
 	return signedTx, nil
 }
 
-// SpeedupDeposit speed up tx deposit which is pending for too long
-func (b *BaseBlockchain) SpeedupDeposit(tx ethereum.Hash, recommendGasPrice float64, maxGasPrice float64) (*types.Transaction, error) {
+// SpeedupTx speed up tx deposit which is pending for too long
+func (b *BaseBlockchain) SpeedupTx(tx ethereum.Hash, recommendGasPrice float64, maxGasPrice float64, opAccount string) (*types.Transaction, error) {
 	pendingTx, pending, err := b.client.TransactionByHash(context.Background(), tx)
 	if err != nil {
 		return nil, err
@@ -140,17 +140,17 @@ func (b *BaseBlockchain) SpeedupDeposit(tx ethereum.Hash, recommendGasPrice floa
 	currentPrice := common.BigToFloat(pendingTx.GasPrice(), 9)
 	newGasPrice := common.CalculateNewPrice(currentPrice, recommendGasPrice)
 
-	l := b.l.With("current_tx", tx.String(), "current_price", currentPrice, "new_price", newGasPrice)
+	l := b.l.With("current_tx", tx.String(), "current_price", currentPrice, "new_price", newGasPrice, "account", opAccount)
 	if newGasPrice > maxGasPrice {
-		l.Debugw("abort speedup deposit tx due exceed maxGas", "max_gas", maxGasPrice)
-		return nil, fmt.Errorf("abort replace deposit tx due exceed maxGas %v / %v", newGasPrice, maxGasPrice)
+		l.Debugw("abort speedup tx due exceed maxGas", "max_gas", maxGasPrice)
+		return nil, fmt.Errorf("abort replace tx due exceed maxGas %v / %v", newGasPrice, maxGasPrice)
 	}
-	l.Debugw("try to replace deposit tx")
+	l.Debugw("replacing tx ...")
 	overrideTx := types.NewTransaction(pendingTx.Nonce(), *pendingTx.To(), pendingTx.Value(), pendingTx.Gas(),
 		common.FloatToBigInt(newGasPrice, 9), pendingTx.Data())
-	signed, err := b.SignAndBroadcast(overrideTx, DepositOP)
+	signed, err := b.SignAndBroadcast(overrideTx, opAccount)
 	if err != nil {
-		l.Errorw("sending override deposit tx failed", "err", err)
+		l.Errorw("sending override tx failed", "err", err)
 		return signed, err
 	}
 	return signed, err
