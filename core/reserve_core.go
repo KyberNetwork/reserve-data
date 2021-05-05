@@ -735,6 +735,7 @@ func (rc *ReserveCore) SetRates(assets []commonv3.Asset, buys, sells []*big.Int,
 		Nonce:    txnonce,
 		GasPrice: txprice,
 		Error:    "",
+		TxTime:   common.TimeToMillis(time.Now()),
 	}
 	if err != nil {
 		activityResult.Error = err.Error()
@@ -796,17 +797,22 @@ func (rc *ReserveCore) SpeedupTx(act common.ActivityRecord) (*big.Int, error) {
 	l.Debugw("sent speedup tx", "new_tx", signedTx.Hash().String(), "src_tx", tx.String())
 
 	// store new act to storage
-	replaceUID := func(actID common.ActivityID, txhex string) common.ActivityID {
-		parts := strings.Split(actID.EID, "|")
-		if len(parts) != 3 {
-			return actID // uid somehow malform
+	replaceUID := func(actID common.ActivityID, txhex, action string) common.ActivityID {
+		switch action {
+		case common.ActionSetRate:
+			return common.NewActivityID(uint64(time.Now().UnixNano()), txhex)
+		default:
+			parts := strings.Split(actID.EID, "|")
+			if len(parts) != 3 {
+				return actID // uid somehow malform
+			}
+			id := fmt.Sprintf("%s|%s|%s",
+				txhex,
+				parts[1],
+				parts[2],
+			)
+			return timebasedID(id)
 		}
-		id := fmt.Sprintf("%s|%s|%s",
-			txhex,
-			parts[1],
-			parts[2],
-		)
-		return timebasedID(id)
 	}
 	activityResult := common.ActivityResult{
 		Tx:       signedTx.Hash().Hex(),
@@ -817,8 +823,8 @@ func (rc *ReserveCore) SpeedupTx(act common.ActivityRecord) (*big.Int, error) {
 	}
 	return signedTx.GasPrice(), rc.activityStorage.Record(
 		action,
-		replaceUID(act.ID, signedTx.Hash().Hex()),
-		act.Params.Exchange.String(),
+		replaceUID(act.ID, signedTx.Hash().Hex(), action),
+		act.Destination,
 		*act.Params,
 		activityResult,
 		common.ExchangeStatusNA,
