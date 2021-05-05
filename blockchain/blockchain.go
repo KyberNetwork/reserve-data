@@ -12,7 +12,6 @@ import (
 
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/blockchain"
-	huobiblockchain "github.com/KyberNetwork/reserve-data/exchange/huobi/blockchain"
 	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	commonv3 "github.com/KyberNetwork/reserve-data/reservesetting/common"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage"
@@ -496,8 +495,8 @@ func (bc *Blockchain) GetDepositOPAddress() ethereum.Address {
 }
 
 // GetIntermediatorOPAddress return intermediator op address
-func (bc *Blockchain) GetIntermediatorOPAddress() ethereum.Address {
-	return bc.MustGetOperator(huobiblockchain.HuobiOP).Address
+func (bc *Blockchain) GetIntermediatorOPAddress(opName string) ethereum.Address {
+	return bc.MustGetOperator(opName).Address
 }
 
 // GetWrapperAddress return wrapper address

@@ -19,6 +19,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/exchange"
 	"github.com/KyberNetwork/reserve-data/exchange/binance"
 	binanceStorage "github.com/KyberNetwork/reserve-data/exchange/binance/storage"
+	binblockchain "github.com/KyberNetwork/reserve-data/exchange/blockchain"
 	"github.com/KyberNetwork/reserve-data/exchange/huobi"
 	huobiStorage "github.com/KyberNetwork/reserve-data/exchange/huobi/storage"
 	authhttp "github.com/KyberNetwork/reserve-data/lib/auth-http"
@@ -189,11 +190,19 @@ func NewExchangePool(
 			if err != nil {
 				return nil, fmt.Errorf("cannot create Binance storage: (%s)", err.Error())
 			}
+			intermediatorSigner := blockchaincommon.NewEthereumSigner(rcf.BinanceIntermediateKeystore, rcf.BinanceIntermediatePassphrase, chainID)
+			intermediatorNonce := nonce.NewTimeWindow(intermediatorSigner.GetAddress(), 10000)
+			bc, err := binblockchain.NewBlockchain(blockchain, intermediatorSigner, intermediatorNonce, blockchaincommon.BinanceOP)
+			if err != nil {
+				return nil, fmt.Errorf("cannot create binance blockchain: %s", err.Error())
+			}
 			bin, err = exchange.NewBinance(
 				exparam,
 				be,
 				binancestorage,
-				assetStorage)
+				assetStorage,
+				bc,
+			)
 			if err != nil {
 				return nil, fmt.Errorf("cannot create exchange Binance: (%s)", err.Error())
 			}

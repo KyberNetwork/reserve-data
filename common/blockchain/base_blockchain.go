@@ -23,7 +23,9 @@ import (
 )
 
 const (
-	zeroAddress string = "0x0000000000000000000000000000000000000000"
+	ZeroAddress = "0x0000000000000000000000000000000000000000"
+	BinanceOP   = "binance_op"
+	HuobiOP     = "huobi_op"
 )
 
 var (
@@ -163,7 +165,7 @@ func (b *BaseBlockchain) Call(timeOut time.Duration, opts CallOpts, contract *Co
 		return err
 	}
 	var (
-		msg    = ether.CallMsg{From: ethereum.HexToAddress(zeroAddress), To: &contract.Address, Data: input}
+		msg    = ether.CallMsg{From: ethereum.HexToAddress(ZeroAddress), To: &contract.Address, Data: input}
 		code   []byte
 		output []byte
 	)

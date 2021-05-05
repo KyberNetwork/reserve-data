@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/KyberNetwork/reserve-data/common"
+	"github.com/KyberNetwork/reserve-data/common/blockchain"
 	"github.com/KyberNetwork/reserve-data/http/httputil"
 	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 )
@@ -27,7 +28,7 @@ func (s *Server) GetAddresses(c *gin.Context) {
 	addresses[pricingOPAddressName] = s.blockchain.GetPricingOPAddress()
 	addresses[depositOPAddressName] = s.blockchain.GetDepositOPAddress()
 	if h := common.SupportedExchanges[rtypes.Huobi]; h != nil {
-		addresses[intermediateOPAddressName] = s.blockchain.GetIntermediatorOPAddress()
+		addresses[intermediateOPAddressName] = s.blockchain.GetIntermediatorOPAddress(blockchain.HuobiOP)
 	}
 	addresses[wrapper] = s.rcf.ContractAddresses.Wrapper
 	addresses[network] = s.rcf.ContractAddresses.Proxy

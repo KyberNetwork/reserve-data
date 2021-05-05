@@ -6,6 +6,7 @@ RUN go build -v -o /setting -ldflags "-X github.com/KyberNetwork/reserve-data/co
 
 FROM debian:stretch
 COPY --from=build-env /setting /
+RUN rm -rf /migrations
 ADD  ./cmd/migrations /migrations
 RUN apt-get update && \
     apt-get install -y ca-certificates && \

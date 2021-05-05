@@ -1142,8 +1142,7 @@ func (s *Storage) updateAsset(tx *sqlx.Tx, id rtypes.AssetID, uo storage.UpdateA
 		s.l.Infow("nothing set for update asset")
 		return nil
 	}
-	var sts = s.stmts.updateAsset
-	sts = tx.NamedStmt(s.stmts.updateAsset)
+	var sts = tx.NamedStmt(s.stmts.updateAsset)
 
 	s.l.Infow("updating asset", "id", id, "fields", strings.Join(updateMsgs, " "))
 	var updatedID uint64

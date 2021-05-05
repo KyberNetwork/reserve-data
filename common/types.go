@@ -915,6 +915,9 @@ type RawConfig struct {
 	IntermediatorKeystore   string `json:"keystore_intermediator_path"`
 	IntermediatorPassphrase string `json:"passphrase_intermediate_account"`
 
+	BinanceIntermediateKeystore   string `json:"binance_intermediate_keystore"`
+	BinanceIntermediatePassphrase string `json:"binance_intermediate_passphrase"`
+
 	MigrationPath     string `json:"migration_folder_path"`
 	MarketDataBaseURL string `json:"market_data_base_url"`
 	AccountData       struct {

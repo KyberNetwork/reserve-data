@@ -7,13 +7,18 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
-	"github.com/KyberNetwork/reserve-data/common/bcnetwork"
 	ethereum "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
 	"github.com/KyberNetwork/reserve-data/common"
+	"github.com/KyberNetwork/reserve-data/common/bcnetwork"
+	"github.com/KyberNetwork/reserve-data/common/blockchain"
+	"github.com/KyberNetwork/reserve-data/common/gasinfo"
+	binblockchain "github.com/KyberNetwork/reserve-data/exchange/blockchain"
 	"github.com/KyberNetwork/reserve-data/lib/caller"
 	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	commonv3 "github.com/KyberNetwork/reserve-data/reservesetting/common"
@@ -22,6 +27,8 @@ import (
 
 const (
 	binanceEpsilon float64 = 0.0000001 // 10e-7
+	BSCNetwork             = "BSC"
+	BNBSymbol              = "BNB"
 )
 
 // Binance instance for binance exchange
@@ -31,7 +38,8 @@ type Binance struct {
 	sr      storage.Interface
 	l       *zap.SugaredLogger
 	BinanceLive
-	id rtypes.ExchangeID
+	id            rtypes.ExchangeID
+	binBlockchain *binblockchain.Blockchain
 }
 
 // TokenAddresses return deposit addresses of token
@@ -57,6 +65,14 @@ func (bn *Binance) Address(asset commonv3.Asset) (ethereum.Address, bool) {
 		}
 	}
 	network := bcnetwork.GetPreConfig().Network
+	// Special case for BNB on bsc
+	if network == BSCNetwork && symbol == BNBSymbol {
+		return bn.binBlockchain.GetIntermediatorAddr(blockchain.BinanceOP), false
+	}
+	return bn.GetLiveDepositAddress(asset, symbol, network)
+}
+
+func (bn *Binance) GetLiveDepositAddress(asset commonv3.Asset, symbol, network string) (ethereum.Address, bool) {
 	liveAddress, err := bn.interf.GetDepositAddress(symbol, network)
 	if err != nil || liveAddress.Address == "" {
 		bn.l.Warnw("Get Binance live deposit address for token failed or the address replied is empty . Use the currently available address instead", "assetID", asset.ID, "err", err)
@@ -353,8 +369,168 @@ func (bn *Binance) GetTradeHistory(fromTime, toTime uint64) (common.ExchangeTrad
 	return bn.storage.GetTradeHistory(bn.ID(), fromTime, toTime)
 }
 
+func (bn *Binance) SendBNBToExchange(bc *blockchain.BaseBlockchain, amount *big.Int, exchangeAddress ethereum.Address, gasPrice *big.Int) (*types.Transaction, error) {
+	opts, err := bc.GetTxOpts(blockchain.BinanceOP, nil, gasPrice, amount)
+	if err != nil {
+		return nil, err
+	}
+	tx, err := bc.BuildSendETHTx(opts, exchangeAddress)
+	if err != nil {
+		return nil, err
+	}
+	return bc.SignAndBroadcast(tx, blockchain.BinanceOP)
+}
+
+// Send2ndTransaction send the second transaction
+func (bn *Binance) Send2ndTransaction(amount float64, asset commonv3.Asset, exchangeAddress ethereum.Address) (*types.Transaction, error) {
+	IAmount := common.FloatToBigInt(amount, int64(asset.Decimals))
+	var tx *types.Transaction
+	gasInfo := gasinfo.GetGlobal()
+	if gasInfo == nil {
+		bn.l.Errorw("gasInfo not setup, retry later")
+		return nil, fmt.Errorf("gasInfo not setup, retry later")
+	}
+	recommendedPrice, err := gasInfo.GetCurrentGas()
+	if err != nil {
+		bn.l.Errorw("failed to get gas price", "err", err)
+		return nil, fmt.Errorf("can not get gas, retry later")
+	}
+	var gasPrice *big.Int
+	highBoundGasPrice, err := gasInfo.MaxGas()
+	if err != nil {
+		bn.l.Errorw("failed to receive high bound gas, use default", "err", err)
+		highBoundGasPrice = common.HighBoundGasPrice
+	}
+	if recommendedPrice == 0 || recommendedPrice > highBoundGasPrice {
+		bn.l.Errorw("gas price invalid", "gas", recommendedPrice, "highBound", highBoundGasPrice)
+		return nil, fmt.Errorf("gas price invalid (gas=%v, highBound=%v), retry later", recommendedPrice, highBoundGasPrice)
+	}
+	gasPrice = common.GweiToWei(recommendedPrice)
+	bn.l.Infof("Send2ndTransaction, gas price: %s", gasPrice.String())
+	tx, err = bn.binBlockchain.SendETHFromAccountToExchange(IAmount, exchangeAddress, gasPrice, blockchain.BinanceOP) // we only use this we to deposit BNB on BSC
+	if err != nil {
+		bn.l.Warnw("ERROR: Can not send transaction to exchange", "err", err)
+		return nil, err
+	}
+	bn.l.Infof("Transaction submitted. Tx is: %v", tx)
+	return tx, nil
+
+}
+
+func (bn *Binance) process1stTx(id common.ActivityID, asset commonv3.Asset, txHash, network string, amount float64) error {
+	miningStatus, _, err := bn.binBlockchain.TxStatus(ethereum.HexToHash(txHash))
+	if err != nil {
+		return err
+	}
+	var (
+		data common.TXEntry
+	)
+	if miningStatus == common.MiningStatusMined {
+		// as auth data will call DepositStatus more than 1 time, store pending tx can be call multiple times,
+		// so we handle it as on conflict update ...
+		// if uErr := bn.storage.StoreIntermediateDeposit(id, data, false); uErr != nil {
+		// 	return common.ExchangeStatusNA, nil
+		// }
+		depositAddress, _ := bn.GetLiveDepositAddress(asset, asset.Symbol, network)
+		tx, err := bn.Send2ndTransaction(amount, asset, depositAddress)
+		if err != nil {
+			bn.l.Errorw("binance deposit failed to send 2nd transaction", "error", err)
+			return err
+		}
+		data = common.NewTXEntry(
+			tx.Hash().Hex(),
+			bn.ID().String(),
+			asset.ID,
+			common.MiningStatusFailed,
+			common.ExchangeStatusFailed,
+			amount,
+			common.GetTimestamp(),
+		)
+		// update tx to activity, set blockchain status to pending
+		return bn.storage.StoreIntermediateDeposit(id, data, false)
+	}
+	return nil
+}
+
 // DepositStatus return status of a deposit on binance
 func (bn *Binance) DepositStatus(id common.ActivityID, txHash string, assetID rtypes.AssetID, amount float64, timepoint uint64) (string, error) {
+	network := bcnetwork.GetPreConfig().Network
+	asset, err := bn.sr.GetAsset(assetID)
+	if err != nil {
+		return common.ExchangeStatusNA, err
+	}
+	if network == BSCNetwork && asset.Symbol == "BNB" { // this only apply for deposit BNB on BSC
+		// find second tx
+		txEntry, err := bn.storage.GetPendingIntermediateTx(id)
+		// if there is no second tx then process the first 1
+		if err == sql.ErrNoRows {
+			err := bn.process1stTx(id, asset, txHash, network, amount)
+			return common.ExchangeStatusNA, err
+		}
+
+		if err != nil {
+			return "", err
+		}
+
+		var (
+			data common.TXEntry
+		)
+		// if there is tx2Entry, check it blockchain status and handle the status accordingly:
+		txHash = txEntry.Hash
+		miningStatus, _, err := bn.binBlockchain.TxStatus(ethereum.HexToHash(txHash))
+		if err != nil {
+			return common.ExchangeStatusNA, err
+		}
+		switch miningStatus {
+		case common.MiningStatusMined:
+			data = common.NewTXEntry(
+				txEntry.Hash,
+				bn.ID().String(),
+				assetID,
+				common.MiningStatusMined,
+				common.ExchangeStatusNA,
+				amount,
+				common.GetTimestamp())
+			if uErr := bn.storage.StoreIntermediateDeposit(id, data, false); uErr != nil { // update tx2 status
+				return common.ExchangeStatusNA, nil
+			} // 2nd tx mined, check exchange status as normal
+		case common.MiningStatusFailed:
+			data = common.NewTXEntry(
+				txEntry.Hash,
+				bn.ID().String(),
+				assetID,
+				common.MiningStatusFailed,
+				common.ExchangeStatusFailed,
+				amount,
+				common.GetTimestamp(),
+			)
+			if err = bn.storage.StoreIntermediateDeposit(id, data, false); err != nil {
+				return common.ExchangeStatusNA, nil
+			}
+			return common.ExchangeStatusFailed, nil
+		case common.MiningStatusLost:
+			elapsed := common.NowInMillis() - txEntry.Timestamp.Millis()
+			if elapsed > uint64(15*time.Minute/time.Millisecond) {
+				data = common.NewTXEntry(
+					txEntry.Hash,
+					bn.ID().String(),
+					assetID,
+					common.MiningStatusLost,
+					common.ExchangeStatusLost,
+					amount,
+					common.GetTimestamp(),
+				)
+				if err = bn.storage.StoreIntermediateDeposit(id, data, false); err != nil {
+					return common.ExchangeStatusNA, nil
+				}
+				bn.l.Infof("Binance deposit tx is not found for over 15mins, it is considered as lost and the deposit failed")
+				return common.ExchangeStatusFailed, nil
+			}
+			return common.ExchangeStatusNA, nil
+		}
+	}
+
+	// checking as normal
 	startTime := timepoint - 86400000
 	endTime := timepoint
 	deposits, err := bn.interf.DepositHistory(startTime, endTime)
@@ -503,7 +679,8 @@ func (bn *Binance) OpenOrders(pair commonv3.TradingPairSymbols) ([]common.Order,
 }
 
 // NewBinance init new binance instance
-func NewBinance(id rtypes.ExchangeID, interf BinanceInterface, storage BinanceStorage, sr storage.Interface) (*Binance, error) {
+func NewBinance(id rtypes.ExchangeID, interf BinanceInterface,
+	storage BinanceStorage, sr storage.Interface, bc *binblockchain.Blockchain) (*Binance, error) {
 	binance := &Binance{
 		interf:  interf,
 		storage: storage,
@@ -511,8 +688,9 @@ func NewBinance(id rtypes.ExchangeID, interf BinanceInterface, storage BinanceSt
 		BinanceLive: BinanceLive{
 			interf: interf,
 		},
-		id: id,
-		l:  zap.S(),
+		id:            id,
+		l:             zap.S(),
+		binBlockchain: bc,
 	}
 	return binance, nil
 }

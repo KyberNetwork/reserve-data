@@ -11,4 +11,7 @@ type BinanceStorage interface {
 
 	GetTradeHistory(exchangeID rtypes.ExchangeID, fromTime, toTime uint64) (common.ExchangeTradeHistory, error)
 	GetLastIDTradeHistory(pairID rtypes.TradingPairID) (string, error)
+
+	StoreIntermediateDeposit(id common.ActivityID, activity common.TXEntry, isPending bool) error
+	GetPendingIntermediateTx(id common.ActivityID) (common.TXEntry, error)
 }

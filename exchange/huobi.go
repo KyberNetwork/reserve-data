@@ -17,7 +17,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/blockchain"
 	"github.com/KyberNetwork/reserve-data/common/gasinfo"
-	huobiblockchain "github.com/KyberNetwork/reserve-data/exchange/huobi/blockchain"
+	huobiblockchain "github.com/KyberNetwork/reserve-data/exchange/blockchain"
 	huobihttp "github.com/KyberNetwork/reserve-data/exchange/huobi/http"
 	"github.com/KyberNetwork/reserve-data/lib/caller"
 	"github.com/KyberNetwork/reserve-data/lib/rtypes"
@@ -90,7 +90,7 @@ func (h *Huobi) Address(asset commonv3.Asset) (ethereum.Address, bool) {
 			exhSymbol = exchange.Symbol
 		}
 	}
-	result := h.blockchain.GetIntermediatorAddr()
+	result := h.blockchain.GetIntermediatorAddr(blockchain.HuobiOP)
 	_, err := h.RealDepositAddress(exhSymbol, asset)
 	//if the realDepositAddress can not be querried, that mean the token isn't supported on Huobi
 	if err != nil {
@@ -402,9 +402,9 @@ func (h *Huobi) Send2ndTransaction(amount float64, asset commonv3.Asset, exchang
 	gasPrice = common.GweiToWei(recommendedPrice)
 	h.l.Infof("Send2ndTransaction, gas price: %s", gasPrice.String())
 	if asset.IsNetworkAsset() {
-		tx, err = h.blockchain.SendETHFromAccountToExchange(IAmount, exchangeAddress, gasPrice)
+		tx, err = h.blockchain.SendETHFromAccountToExchange(IAmount, exchangeAddress, gasPrice, blockchain.HuobiOP)
 	} else {
-		tx, err = h.blockchain.SendTokenFromAccountToExchange(IAmount, exchangeAddress, asset.Address, gasPrice)
+		tx, err = h.blockchain.SendTokenFromAccountToExchange(IAmount, exchangeAddress, asset.Address, gasPrice, blockchain.HuobiOP)
 	}
 	if err != nil {
 		h.l.Warnw("ERROR: Can not send transaction to exchange", "err", err)
@@ -763,14 +763,14 @@ func (h *Huobi) OpenOrders(pair commonv3.TradingPairSymbols) ([]common.Order, er
 //NewHuobi creates new Huobi exchange instance
 func NewHuobi(
 	interf HuobiInterface,
-	blockchain *blockchain.BaseBlockchain,
+	blchain *blockchain.BaseBlockchain,
 	signer blockchain.Signer,
 	nonce blockchain.NonceCorpus,
 	storage HuobiStorage,
 	sr storage.SettingReader,
 ) (*Huobi, error) {
 
-	bc, err := huobiblockchain.NewBlockchain(blockchain, signer, nonce)
+	bc, err := huobiblockchain.NewBlockchain(blchain, signer, nonce, blockchain.HuobiOP)
 	if err != nil {
 		return nil, err
 	}

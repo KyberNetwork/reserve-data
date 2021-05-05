@@ -1,6 +1,8 @@
 package storage
 
 import (
+	"encoding/json"
+
 	"github.com/jmoiron/sqlx"
 
 	"github.com/KyberNetwork/reserve-data/common"
@@ -125,4 +127,37 @@ func (s *postgresStorage) GetLastIDTradeHistory(pairID rtypes.TradingPairID) (st
 		return "", err
 	}
 	return record.TradeID, nil
+}
+
+// StoreIntermediateDeposit ...
+func (s *postgresStorage) StoreIntermediateDeposit(id common.ActivityID, activity common.TXEntry, isPending bool) error {
+	query := `INSERT INTO "binance_intermediate_tx" (timepoint, eid, data, isPending) 
+	VALUES ($1, $2, $3, $4) ON CONFLICT (timepoint, eid) DO UPDATE SET isPending = EXCLUDED.isPending;`
+	timepoint := id.Timepoint
+	dataJSON, err := json.Marshal(activity)
+	if err != nil {
+		return err
+	}
+	if _, err := s.db.Exec(query, timepoint, id.EID, dataJSON, isPending); err != nil {
+		return err
+	}
+	return nil
+}
+
+type TxData struct {
+	Data []byte `db:"data"`
+}
+
+// GetPendingIntermediateTx ...
+func (s *postgresStorage) GetPendingIntermediateTx(id common.ActivityID) (common.TXEntry, error) {
+	var (
+		result common.TXEntry
+		data   TxData
+	)
+	query := `SELECT data FROM "binance_intermediate_tx" WHERE eid = $1 AND isPending;`
+	if err := s.db.Get(&data, query, id.EID); err != nil {
+		return result, err
+	}
+	err := json.Unmarshal(data.Data, &result)
+	return result, err
 }

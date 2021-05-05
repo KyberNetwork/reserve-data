@@ -812,7 +812,7 @@ func (s *Server) checkChangeAssetAddressParams(changeAssetAddressEntry common.Ch
 }
 
 func (s *Server) checkUpdateExchangeParams(updateExchangeEntry common.UpdateExchangeEntry) error {
-	//check if exchange exist
+	// check if exchange exist
 	_, err := s.storage.GetExchange(updateExchangeEntry.ExchangeID)
 	return err
 }
