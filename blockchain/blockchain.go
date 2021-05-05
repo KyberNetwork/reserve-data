@@ -207,8 +207,7 @@ func (bc *Blockchain) SetRates(
 			bbuys, bsells, block, indices)
 		if tx != nil {
 			bc.l.Infof(
-				"broadcasting setbase tx %s, target buys(%s), target sells(%s), old base buy(%s) || old base sell(%s) || new base buy(%s) || new base sell(%s) || new compact buy(%s) || new compact sell(%s) || new buy bulk(%v) || new sell bulk(%v) || indices(%v)",
-				tx.Hash().Hex(),
+				"broadcasting setbase, target buys(%s), target sells(%s), old base buy(%s) || old base sell(%s) || new base buy(%s) || new base sell(%s) || new compact buy(%s) || new compact sell(%s) || new buy bulk(%v) || new sell bulk(%v) || indices(%v)",
 				buys, sells,
 				baseBuys, baseSells,
 				newBaseBuys, newBaseSells,
@@ -222,8 +221,7 @@ func (bc *Blockchain) SetRates(
 			opts, bbuys, bsells, block, indices)
 		if tx != nil {
 			bc.l.Infof(
-				"broadcasting setcompact tx %s, target buys(%s), target sells(%s), old base buy(%s) || old base sell(%s) || new compact buy(%s) || new compact sell(%s) || new buy bulk(%v) || new sell bulk(%v) || indices(%v)",
-				tx.Hash().Hex(),
+				"broadcasting setcompact, target buys(%s), target sells(%s), old base buy(%s) || old base sell(%s) || new compact buy(%s) || new compact sell(%s) || new buy bulk(%v) || new sell bulk(%v) || indices(%v)",
 				buys, sells,
 				baseBuys, baseSells,
 				readablePrint(newCompatBuys), readablePrint(newCompatSells),
