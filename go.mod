@@ -28,11 +28,15 @@ require (
 	github.com/go-logfmt/logfmt v0.4.0 // indirect
 	github.com/go-ozzo/ozzo-validation v3.5.0+incompatible
 	github.com/golang-migrate/migrate/v4 v4.14.1
+	github.com/google/go-cmp v0.5.5 // indirect
 	github.com/gorilla/websocket v1.4.1 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/jackpal/go-nat-pmp v1.0.2 // indirect
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/lib/pq v1.8.0
+	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
+	github.com/onsi/ginkgo v1.14.2 // indirect
+	github.com/onsi/gomega v1.10.3 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/tsdb v0.8.0 // indirect
 	github.com/qiangmzsx/string-adapter v0.0.0-20180323073508-38f25303bb0c
@@ -41,12 +45,13 @@ require (
 	github.com/rs/xid v1.2.1
 	github.com/shopspring/decimal v0.0.0-20180709203117-cd690d0c9e24
 	github.com/status-im/keycard-go v0.0.0-20190424133014-d95853db0f48 // indirect
-	github.com/stretchr/testify v1.6.1
+	github.com/stretchr/testify v1.7.0
 	github.com/urfave/cli v1.22.4
 	go.uber.org/zap v1.16.0
-	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83 // indirect
+	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2 // indirect
 	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
-	golang.org/x/sys v0.0.0-20210303074136-134d130e1a04 // indirect
+	golang.org/x/sys v0.0.0-20210320140829-1e4c9ba3b0c4 // indirect
+	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/go-playground/validator.v8 v8.18.2
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 )

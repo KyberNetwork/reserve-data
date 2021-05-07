@@ -70,11 +70,18 @@ curl -X POST "https://gateway.local/v3/setting-change-main" \
             },
             "normal_update_per_period": 1.234, // default value is 1
             "max_imbalance_ratio": 3.456, // default value is 2
-            "order_duration_millis": 20000
+            "order_duration_millis": 20000,
+            "sanity_info": {
+                "provider": "binance",
+                "threshold": "threshold",
+                "path": ["OMG", "ETH"]
+            }
         }
     }]
 }'
 ```
+
+`NOTE`: The `path` in `sanity_info` (and `sanity_rate_path` in object data to update asset) is established by the ticker on provider. E.g we want the rate KNC -> USDT with provider is binance, binance has ticker for symbol KNCETH and ETHUSDT so the sainity path should be ["KNC", "ETH", "USDT"], or if we want the rate KNC -> ETH and binance has ticker for symbol KNCUSDT and ETHUSDT we can use the path ["KNC", "USDT", "ETH"].
 
 > sample response
 
