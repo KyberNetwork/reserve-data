@@ -32,7 +32,6 @@ before_script:
 
 script:
   - golangci-lint run --config .golangci.yml ./...
-  - ls -l ./cmd/migrations
   - go test -v -race ./...
 
 after_success:

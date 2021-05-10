@@ -11,7 +11,6 @@ ENV KYBER_EXCHANGES huobi,binance
 COPY --from=build-env /go/src/github.com/KyberNetwork/reserve-data/cmd/cmd /cmd
 COPY ./entrypoint.sh /entrypoint.sh
 COPY ./cmd/deposit_keystore ./cmd/keystore ./cmd/intermediate_account_keystore /setting/
-RUN rm -rf /migrations
 ADD  ./cmd/migrations /migrations
 
 RUN apt-get update && \
