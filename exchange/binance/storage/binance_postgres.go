@@ -130,15 +130,15 @@ func (s *postgresStorage) GetLastIDTradeHistory(pairID rtypes.TradingPairID) (st
 }
 
 // StoreIntermediateDeposit ...
-func (s *postgresStorage) StoreIntermediateDeposit(id common.ActivityID, activity common.TXEntry, isPending bool) error {
-	query := `INSERT INTO "binance_intermediate_tx" (timepoint, eid, data, isPending) 
-	VALUES ($1, $2, $3, $4) ON CONFLICT (timepoint, eid) DO UPDATE SET isPending = EXCLUDED.isPending;`
+func (s *postgresStorage) StoreIntermediateDeposit(id common.ActivityID, activity common.TXEntry) error {
+	query := `INSERT INTO "binance_intermediate_tx" (timepoint, eid, data) 
+	VALUES ($1, $2, $3) ON CONFLICT (timepoint, eid) DO UPDATE SET data= EXCLUDED.data;`
 	timepoint := id.Timepoint
 	dataJSON, err := json.Marshal(activity)
 	if err != nil {
 		return err
 	}
-	if _, err := s.db.Exec(query, timepoint, id.EID, dataJSON, isPending); err != nil {
+	if _, err := s.db.Exec(query, timepoint, id.EID, dataJSON); err != nil {
 		return err
 	}
 	return nil
@@ -154,7 +154,7 @@ func (s *postgresStorage) GetPendingIntermediateTx(id common.ActivityID) (common
 		result common.TXEntry
 		data   TxData
 	)
-	query := `SELECT data FROM "binance_intermediate_tx" WHERE eid = $1 AND isPending;`
+	query := `SELECT data FROM "binance_intermediate_tx" WHERE eid = $1;`
 	if err := s.db.Get(&data, query, id.EID); err != nil {
 		return result, err
 	}

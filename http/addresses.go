@@ -11,13 +11,14 @@ import (
 )
 
 const (
-	pricingOPAddressName       = "pricing_operator"
-	depositOPAddressName       = "deposit_operator"
-	intermediateOPAddressName  = "intermediate_operator"
-	wrapper                    = "wrapper"
-	network                    = "network"
-	reserveAddress             = "reserve"
-	rateQueryHelperAddressName = "rate_query_helper"
+	pricingOPAddressName             = "pricing_operator"
+	depositOPAddressName             = "deposit_operator"
+	intermediateOPAddressName        = "intermediate_operator"
+	wrapper                          = "wrapper"
+	network                          = "network"
+	reserveAddress                   = "reserve"
+	rateQueryHelperAddressName       = "rate_query_helper"
+	binanceIntermediateOPAddressName = "binance_intermediate_operator"
 )
 
 // GetAddresses get address config from core
@@ -29,6 +30,9 @@ func (s *Server) GetAddresses(c *gin.Context) {
 	addresses[depositOPAddressName] = s.blockchain.GetDepositOPAddress()
 	if h := common.SupportedExchanges[rtypes.Huobi]; h != nil {
 		addresses[intermediateOPAddressName] = s.blockchain.GetIntermediatorOPAddress(blockchain.HuobiOP)
+	}
+	if b := common.SupportedExchanges[rtypes.Binance]; b != nil {
+		addresses[binanceIntermediateOPAddressName] = s.blockchain.GetIntermediatorOPAddress(blockchain.BinanceOP)
 	}
 	addresses[wrapper] = s.rcf.ContractAddresses.Wrapper
 	addresses[network] = s.rcf.ContractAddresses.Proxy

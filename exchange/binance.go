@@ -447,7 +447,7 @@ func (bn *Binance) process1stTx(id common.ActivityID, asset commonv3.Asset, txHa
 			common.GetTimestamp(),
 		)
 		// update tx to activity, set blockchain status to pending
-		return bn.storage.StoreIntermediateDeposit(id, data, false)
+		return bn.storage.StoreIntermediateDeposit(id, data)
 	}
 	return nil
 }
@@ -491,7 +491,7 @@ func (bn *Binance) DepositStatus(id common.ActivityID, txHash string, assetID rt
 				common.ExchangeStatusNA,
 				amount,
 				common.GetTimestamp())
-			if uErr := bn.storage.StoreIntermediateDeposit(id, data, false); uErr != nil { // update tx2 status
+			if uErr := bn.storage.StoreIntermediateDeposit(id, data); uErr != nil { // update tx2 status
 				return common.ExchangeStatusNA, nil
 			} // 2nd tx mined, check exchange status as normal
 		case common.MiningStatusFailed:
@@ -504,7 +504,7 @@ func (bn *Binance) DepositStatus(id common.ActivityID, txHash string, assetID rt
 				amount,
 				common.GetTimestamp(),
 			)
-			if err = bn.storage.StoreIntermediateDeposit(id, data, false); err != nil {
+			if err = bn.storage.StoreIntermediateDeposit(id, data); err != nil {
 				return common.ExchangeStatusNA, nil
 			}
 			return common.ExchangeStatusFailed, nil
@@ -520,7 +520,7 @@ func (bn *Binance) DepositStatus(id common.ActivityID, txHash string, assetID rt
 					amount,
 					common.GetTimestamp(),
 				)
-				if err = bn.storage.StoreIntermediateDeposit(id, data, false); err != nil {
+				if err = bn.storage.StoreIntermediateDeposit(id, data); err != nil {
 					return common.ExchangeStatusNA, nil
 				}
 				bn.l.Infof("Binance deposit tx is not found for over 15mins, it is considered as lost and the deposit failed")

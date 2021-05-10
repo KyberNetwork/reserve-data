@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"database/sql"
 	"reflect"
 	"testing"
 
@@ -93,17 +92,13 @@ func Test_BinanceIntermediateTx(t *testing.T) {
 		Hash:     "0x9ab1774626d4fdb88ac375ca442f18c5c9edff754d0676c09c4cd8faa0664ca3",
 		Exchange: "binance",
 	}
-	err = storage.StoreIntermediateDeposit(id, activity, true)
+	err = storage.StoreIntermediateDeposit(id, activity)
 	require.NoError(t, err)
 
 	txEntry, err := storage.GetPendingIntermediateTx(id)
 	require.NoError(t, err)
 	assert.Equal(t, "0x9ab1774626d4fdb88ac375ca442f18c5c9edff754d0676c09c4cd8faa0664ca3", txEntry.Hash)
 
-	err = storage.StoreIntermediateDeposit(id, activity, false) // update activity to be done
+	err = storage.StoreIntermediateDeposit(id, activity) // update activity to be done
 	require.NoError(t, err)
-
-	// this should error no row
-	_, err = storage.GetPendingIntermediateTx(id)
-	assert.Equal(t, err, sql.ErrNoRows)
 }
