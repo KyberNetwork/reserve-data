@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/KyberNetwork/reserve-data/common/ethutil"
 	ether "github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -304,7 +305,7 @@ func (b *BaseBlockchain) PackERC20Data(method string, params ...interface{}) ([]
 }
 
 func (b *BaseBlockchain) BalanceOf(token ethereum.Address, wallet ethereum.Address) (*big.Int, error) {
-	if common.IsEthereumAddress(token) {
+	if ethutil.IsEthereumAddress(token) {
 		return b.client.BalanceAt(context.Background(), wallet, nil)
 	}
 	var balance *big.Int

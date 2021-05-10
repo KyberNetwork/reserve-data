@@ -28,7 +28,6 @@ import (
 const (
 	binanceEpsilon float64 = 0.0000001 // 10e-7
 	BSCNetwork             = "BSC"
-	BNBSymbol              = "BNB"
 )
 
 // Binance instance for binance exchange
@@ -66,7 +65,7 @@ func (bn *Binance) Address(asset commonv3.Asset) (ethereum.Address, bool) {
 	}
 	network := bcnetwork.GetPreConfig().Network
 	// Special case for BNB on bsc
-	if network == BSCNetwork && symbol == BNBSymbol {
+	if network == BSCNetwork && asset.IsNetworkAsset() {
 		return bn.binBlockchain.GetIntermediatorAddr(blockchain.BinanceOP), false
 	}
 	return bn.GetLiveDepositAddress(asset, symbol, network)
@@ -459,7 +458,7 @@ func (bn *Binance) DepositStatus(id common.ActivityID, txHash string, assetID rt
 	if err != nil {
 		return common.ExchangeStatusNA, err
 	}
-	if network == BSCNetwork && asset.Symbol == "BNB" { // this only apply for deposit BNB on BSC
+	if network == BSCNetwork && asset.IsNetworkAsset() { // this only apply for deposit BNB on BSC
 		// find second tx
 		txEntry, err := bn.storage.GetPendingIntermediateTx(id)
 		// if there is no second tx then process the first 1

@@ -357,8 +357,8 @@ func (bc *Blockchain) FetchRates(atBlock uint64, currentBlock uint64) (common.Al
 			bc.l.Errorw("token/asset not listed and will be ignore from get rate",
 				"asset", s.Symbol, "addr", s.Address.Hex())
 		}
-		// TODO: add a isETH method
-		if !s.IsNetworkAsset() && isListed {
+		// no rate for itself
+		if !s.IsMainQuoteAsset() && isListed {
 			tokenAddrs = append(tokenAddrs, s.Address)
 			validTokens = append(validTokens, s)
 		}

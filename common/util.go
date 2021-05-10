@@ -87,11 +87,6 @@ func CombineActivityStorageErrs(err, sErr error) error {
 	return fmt.Errorf("action error: %v, storage error: %v", err, sErr)
 }
 
-// IsEthereumAddress returns true if the given address is ethereum.
-func IsEthereumAddress(addr common.Address) bool {
-	return addr == common.HexToAddress("0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
-}
-
 // GetCallerFunctionName return caller function name
 func GetCallerFunctionName() string {
 	fn := getFrame(2).Function
