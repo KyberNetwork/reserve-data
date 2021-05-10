@@ -430,7 +430,11 @@ func (bn *Binance) process1stTx(id common.ActivityID, asset commonv3.Asset, txHa
 		// if uErr := bn.storage.StoreIntermediateDeposit(id, data, false); uErr != nil {
 		// 	return common.ExchangeStatusNA, nil
 		// }
-		depositAddress, _ := bn.GetLiveDepositAddress(asset, asset.Symbol, network)
+		depositAddress, ok := bn.GetLiveDepositAddress(asset, asset.Symbol, network)
+		if !ok {
+			bn.l.Errorw("cannot get live deposit address", "asset", asset.ID, "symbol", asset.Symbol)
+			return fmt.Errorf("cannot get deposit address for %s", asset.Symbol)
+		}
 		tx, err := bn.Send2ndTransaction(amount, asset, depositAddress)
 		if err != nil {
 			bn.l.Errorw("binance deposit failed to send 2nd transaction", "error", err)
