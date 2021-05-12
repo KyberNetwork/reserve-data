@@ -416,8 +416,8 @@ func (bn *Binance) Send2ndTransaction(amount float64, asset commonv3.Asset, exch
 
 }
 
-func (bn *Binance) process1stTx(id common.ActivityID, asset commonv3.Asset, txHash, network string, amount float64) error {
-	miningStatus, _, err := bn.binBlockchain.TxStatus(ethereum.HexToHash(txHash))
+func (bn *Binance) checkAndsend2ndTx(id common.ActivityID, asset commonv3.Asset, tx1Hash, network string, amount float64) error {
+	miningStatus, _, err := bn.binBlockchain.TxStatus(ethereum.HexToHash(tx1Hash))
 	if err != nil {
 		return err
 	}
@@ -425,7 +425,7 @@ func (bn *Binance) process1stTx(id common.ActivityID, asset commonv3.Asset, txHa
 		data common.TXEntry
 	)
 	if miningStatus == common.MiningStatusMined {
-		// as auth data will call DepositStatus more than 1 time, store pending tx can be call multiple times,
+		// as auth data will call DepositStatus more than 1 time, store pending tx2 can be call multiple times,
 		// so we handle it as on conflict update ...
 		// if uErr := bn.storage.StoreIntermediateDeposit(id, data, false); uErr != nil {
 		// 	return common.ExchangeStatusNA, nil
@@ -435,13 +435,13 @@ func (bn *Binance) process1stTx(id common.ActivityID, asset commonv3.Asset, txHa
 			bn.l.Errorw("cannot get live deposit address", "asset", asset.ID, "symbol", asset.Symbol)
 			return fmt.Errorf("cannot get deposit address for %s", asset.Symbol)
 		}
-		tx, err := bn.Send2ndTransaction(amount, asset, depositAddress)
+		tx2, err := bn.Send2ndTransaction(amount, asset, depositAddress)
 		if err != nil {
 			bn.l.Errorw("binance deposit failed to send 2nd transaction", "error", err)
 			return err
 		}
 		data = common.NewTXEntry(
-			tx.Hash().Hex(),
+			tx2.Hash().Hex(),
 			bn.ID().String(),
 			asset.ID,
 			common.MiningStatusFailed,
@@ -449,7 +449,7 @@ func (bn *Binance) process1stTx(id common.ActivityID, asset commonv3.Asset, txHa
 			amount,
 			common.GetTimestamp(),
 		)
-		// update tx to activity, set blockchain status to pending
+		// update tx2 to activity, set blockchain status to pending
 		return bn.storage.StoreIntermediateDeposit(id, data)
 	}
 	return nil
@@ -464,10 +464,10 @@ func (bn *Binance) DepositStatus(id common.ActivityID, txHash string, assetID rt
 	}
 	if network == BSCNetwork && asset.IsNetworkAsset() { // this only apply for deposit BNB on BSC
 		// find second tx
-		txEntry, err := bn.storage.GetPendingIntermediateTx(id)
+		tx2Entry, err := bn.storage.GetPendingIntermediateTx(id)
 		// if there is no second tx then process the first 1
 		if err == sql.ErrNoRows {
-			err := bn.process1stTx(id, asset, txHash, network, amount)
+			err := bn.checkAndsend2ndTx(id, asset, txHash, network, amount)
 			return common.ExchangeStatusNA, err
 		}
 
@@ -479,7 +479,7 @@ func (bn *Binance) DepositStatus(id common.ActivityID, txHash string, assetID rt
 			data common.TXEntry
 		)
 		// if there is tx2Entry, check it blockchain status and handle the status accordingly:
-		txHash = txEntry.Hash
+		txHash = tx2Entry.Hash
 		miningStatus, _, err := bn.binBlockchain.TxStatus(ethereum.HexToHash(txHash))
 		if err != nil {
 			return common.ExchangeStatusNA, err
@@ -487,7 +487,7 @@ func (bn *Binance) DepositStatus(id common.ActivityID, txHash string, assetID rt
 		switch miningStatus {
 		case common.MiningStatusMined:
 			data = common.NewTXEntry(
-				txEntry.Hash,
+				txHash,
 				bn.ID().String(),
 				assetID,
 				common.MiningStatusMined,
@@ -499,7 +499,7 @@ func (bn *Binance) DepositStatus(id common.ActivityID, txHash string, assetID rt
 			} // 2nd tx mined, check exchange status as normal
 		case common.MiningStatusFailed:
 			data = common.NewTXEntry(
-				txEntry.Hash,
+				txHash,
 				bn.ID().String(),
 				assetID,
 				common.MiningStatusFailed,
@@ -512,10 +512,10 @@ func (bn *Binance) DepositStatus(id common.ActivityID, txHash string, assetID rt
 			}
 			return common.ExchangeStatusFailed, nil
 		case common.MiningStatusLost:
-			elapsed := common.NowInMillis() - txEntry.Timestamp.Millis()
+			elapsed := common.NowInMillis() - tx2Entry.Timestamp.Millis()
 			if elapsed > uint64(15*time.Minute/time.Millisecond) {
 				data = common.NewTXEntry(
-					txEntry.Hash,
+					txHash,
 					bn.ID().String(),
 					assetID,
 					common.MiningStatusLost,
