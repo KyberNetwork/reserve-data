@@ -190,19 +190,17 @@ func NewExchangePool(
 			if err != nil {
 				return nil, fmt.Errorf("cannot create Binance storage: (%s)", err.Error())
 			}
-			intermediatorSigner := blockchaincommon.NewEthereumSigner(rcf.BinanceIntermediateKeystore, rcf.BinanceIntermediatePassphrase, chainID)
-			intermediatorNonce := nonce.NewTimeWindow(intermediatorSigner.GetAddress(), 10000)
-			bc, err := binblockchain.NewBlockchain(blockchain, intermediatorSigner, intermediatorNonce, blockchaincommon.BinanceOP)
+			if rcf.BinanceIntermediateKeystore != "" && rcf.BinanceIntermediatePassphrase != "" {
+				txSigner := blockchaincommon.NewEthereumSigner(rcf.BinanceIntermediateKeystore, rcf.BinanceIntermediatePassphrase, chainID)
+				nonceIns := nonce.NewTimeWindow(txSigner.GetAddress(), 10000)
+				blockchain.MustRegisterOperator(blockchaincommon.BinanceOP, blockchaincommon.NewOperator(txSigner, nonceIns))
+			}
+
+			bc, err := binblockchain.NewBlockchain(blockchain)
 			if err != nil {
 				return nil, fmt.Errorf("cannot create binance blockchain: %s", err.Error())
 			}
-			bin, err = exchange.NewBinance(
-				exparam,
-				be,
-				binancestorage,
-				assetStorage,
-				bc,
-			)
+			bin, err = exchange.NewBinance(exparam, be, binancestorage, assetStorage, bc)
 			if err != nil {
 				return nil, fmt.Errorf("cannot create exchange Binance: (%s)", err.Error())
 			}
@@ -214,16 +212,11 @@ func NewExchangePool(
 			if err != nil {
 				return nil, fmt.Errorf("cannot create Binance storage: (%s)", err.Error())
 			}
-			intermediatorSigner := blockchaincommon.NewEthereumSigner(rcf.IntermediatorKeystore, rcf.IntermediatorPassphrase, chainID)
-			intermediatorNonce := nonce.NewTimeWindow(intermediatorSigner.GetAddress(), 10000)
-			hb, err = exchange.NewHuobi(
-				he,
-				blockchain,
-				intermediatorSigner,
-				intermediatorNonce,
-				huobistorage,
-				assetStorage,
-			)
+
+			txSigner := blockchaincommon.NewEthereumSigner(rcf.IntermediatorKeystore, rcf.IntermediatorPassphrase, chainID)
+			nonceIns := nonce.NewTimeWindow(txSigner.GetAddress(), 10000)
+			blockchain.MustRegisterOperator(blockchaincommon.HuobiOP, blockchaincommon.NewOperator(txSigner, nonceIns))
+			hb, err = exchange.NewHuobi(he, blockchain, huobistorage, assetStorage)
 			if err != nil {
 				return nil, fmt.Errorf("cannot create exchange Huobi: (%s)", err.Error())
 			}

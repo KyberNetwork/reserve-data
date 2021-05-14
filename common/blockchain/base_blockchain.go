@@ -448,6 +448,10 @@ func (b *BaseBlockchain) EthClient() *ethclient.Client {
 	return b.client
 }
 
+func (b *BaseBlockchain) GetOperator(name string) *Operator {
+	return b.operators[name]
+}
+
 func NewBaseBlockchain(
 	rpcClient *rpc.Client,
 	client *ethclient.Client,

@@ -2,6 +2,8 @@ package exchange
 
 import (
 	"strconv"
+
+	blockchain "github.com/KyberNetwork/reserve-data/exchange/blockchain"
 )
 
 const (
@@ -19,4 +21,8 @@ func remainingQty(orgQty, executedQty string) (float64, error) {
 		return 0, err
 	}
 	return oAmount - oExecutedQty, nil
+}
+
+func isOPAvailable(blockchain *blockchain.Blockchain, opName string) bool {
+	return blockchain.GetOperator(opName) != nil
 }

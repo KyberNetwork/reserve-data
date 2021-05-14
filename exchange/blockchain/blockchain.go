@@ -41,13 +41,7 @@ func (b *Blockchain) SendETHFromAccountToExchange(amount *big.Int, exchangeAddre
 }
 
 func NewBlockchain(
-	base *blockchain.BaseBlockchain,
-	signer blockchain.Signer,
-	nonce blockchain.NonceCorpus,
-	opName string) (*Blockchain, error) {
-
-	base.MustRegisterOperator(opName, blockchain.NewOperator(signer, nonce))
-
+	base *blockchain.BaseBlockchain) (*Blockchain, error) {
 	return &Blockchain{
 		BaseBlockchain: base,
 	}, nil

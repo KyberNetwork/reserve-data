@@ -764,13 +764,11 @@ func (h *Huobi) OpenOrders(pair commonv3.TradingPairSymbols) ([]common.Order, er
 func NewHuobi(
 	interf HuobiInterface,
 	blchain *blockchain.BaseBlockchain,
-	signer blockchain.Signer,
-	nonce blockchain.NonceCorpus,
 	storage HuobiStorage,
 	sr storage.SettingReader,
 ) (*Huobi, error) {
 
-	bc, err := huobiblockchain.NewBlockchain(blchain, signer, nonce, blockchain.HuobiOP)
+	bc, err := huobiblockchain.NewBlockchain(blchain)
 	if err != nil {
 		return nil, err
 	}

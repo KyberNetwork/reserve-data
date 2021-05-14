@@ -462,7 +462,10 @@ func (bn *Binance) DepositStatus(id common.ActivityID, txHash string, assetID rt
 	if err != nil {
 		return common.ExchangeStatusNA, err
 	}
-	if network == BSCNetwork && asset.IsNetworkAsset() { // this only apply for deposit BNB on BSC
+	if isOPAvailable(bn.binBlockchain, blockchain.BinanceOP) && network == BSCNetwork && asset.IsNetworkAsset() {
+		// this only apply for deposit BNB on BSC, when intermediate operator configured
+		// deposit usually has trouble with NetworkAsset(BNB/ETH) sent from contract, as it did not emit event
+		// that cex can track.
 		// find second tx
 		tx2Entry, err := bn.storage.GetPendingIntermediateTx(id)
 		// if there is no second tx then process the first 1
@@ -475,9 +478,6 @@ func (bn *Binance) DepositStatus(id common.ActivityID, txHash string, assetID rt
 			return "", err
 		}
 
-		var (
-			data common.TXEntry
-		)
 		// if there is tx2Entry, check it blockchain status and handle the status accordingly:
 		txHash = tx2Entry.Hash
 		miningStatus, _, err := bn.binBlockchain.TxStatus(ethereum.HexToHash(txHash))
@@ -486,7 +486,7 @@ func (bn *Binance) DepositStatus(id common.ActivityID, txHash string, assetID rt
 		}
 		switch miningStatus {
 		case common.MiningStatusMined:
-			data = common.NewTXEntry(
+			data := common.NewTXEntry(
 				txHash,
 				bn.ID().String(),
 				assetID,
@@ -498,7 +498,7 @@ func (bn *Binance) DepositStatus(id common.ActivityID, txHash string, assetID rt
 				return common.ExchangeStatusNA, nil
 			} // 2nd tx mined, check exchange status as normal
 		case common.MiningStatusFailed:
-			data = common.NewTXEntry(
+			data := common.NewTXEntry(
 				txHash,
 				bn.ID().String(),
 				assetID,
@@ -514,7 +514,7 @@ func (bn *Binance) DepositStatus(id common.ActivityID, txHash string, assetID rt
 		case common.MiningStatusLost:
 			elapsed := common.NowInMillis() - tx2Entry.Timestamp.Millis()
 			if elapsed > uint64(15*time.Minute/time.Millisecond) {
-				data = common.NewTXEntry(
+				data := common.NewTXEntry(
 					txHash,
 					bn.ID().String(),
 					assetID,
