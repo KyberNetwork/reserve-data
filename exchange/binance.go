@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/KyberNetwork/reserve-data/common/ethutil"
 	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
@@ -82,7 +83,7 @@ func (bn *Binance) GetLiveDepositAddress(asset commonv3.Asset, symbol, network s
 			return ethereum.Address{}, false
 		}
 		depositAddr, ok := addrs[asset.ID]
-		return depositAddr, ok && !commonv3.IsZeroAddress(depositAddr)
+		return depositAddr, ok && !ethutil.IsZeroAddress(depositAddr)
 	}
 	bn.l.Infow("attempt to update binance deposit address to current setting",
 		"asset", asset.ID, "deposit_address", liveAddress.Address)

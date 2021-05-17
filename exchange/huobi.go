@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/KyberNetwork/reserve-data/common/ethutil"
 	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
@@ -72,7 +73,7 @@ func (h *Huobi) RealDepositAddress(tokenID string, asset commonv3.Asset) (ethere
 			return ethereum.Address{}, uErr
 		}
 		result, supported := addrs[asset.ID]
-		if !supported || commonv3.IsZeroAddress(result) {
+		if !supported || ethutil.IsZeroAddress(result) {
 			return result, fmt.Errorf("real deposit address of token %s is not available", tokenID)
 		}
 		return result, nil

@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/KyberNetwork/reserve-data/common/ethutil"
 	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -498,7 +499,7 @@ func (s *Server) checkUpdateAssetParams(updateEntry common.UpdateAssetEntry) err
 
 	if updateEntry.Transferable != nil && *updateEntry.Transferable {
 		for _, exchange := range asset.Exchanges {
-			if common.IsZeroAddress(exchange.DepositAddress) {
+			if ethutil.IsZeroAddress(exchange.DepositAddress) {
 				return errors.Errorf("%v at asset id: %v and asset_exchange: %v", common.ErrDepositAddressMissing, updateEntry.AssetID, exchange.ID)
 			}
 		}
@@ -521,7 +522,7 @@ func (s *Server) checkUpdateAssetExchangeParams(updateEntry common.UpdateAssetEx
 		return errors.Wrap(err, "asset not found")
 	}
 
-	if asset.Transferable && updateEntry.DepositAddress != nil && common.IsZeroAddress(*updateEntry.DepositAddress) {
+	if asset.Transferable && updateEntry.DepositAddress != nil && ethutil.IsZeroAddress(*updateEntry.DepositAddress) {
 		return common.ErrDepositAddressMissing
 	}
 	return nil
@@ -543,7 +544,7 @@ func (s *Server) checkCreateAssetExchangeParams(createEntry common.CreateAssetEx
 			return common.ErrAssetExchangeAlreadyExist
 		}
 	}
-	if asset.Transferable && common.IsZeroAddress(createEntry.DepositAddress) {
+	if asset.Transferable && ethutil.IsZeroAddress(createEntry.DepositAddress) {
 		return common.ErrDepositAddressMissing
 	}
 	for _, tradingPair := range createEntry.TradingPairs {
@@ -714,7 +715,7 @@ func (s *Server) checkCreateAssetParams(createEntry common.CreateAssetEntry) err
 	}
 
 	for _, exchange := range createEntry.Exchanges {
-		if common.IsZeroAddress(exchange.DepositAddress) && createEntry.Transferable {
+		if ethutil.IsZeroAddress(exchange.DepositAddress) && createEntry.Transferable {
 			return errors.Wrapf(common.ErrDepositAddressMissing, "exchange %v", exchange.Symbol)
 		}
 

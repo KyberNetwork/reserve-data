@@ -194,6 +194,7 @@ func NewExchangePool(
 				txSigner := blockchaincommon.NewEthereumSigner(rcf.BinanceIntermediateKeystore, rcf.BinanceIntermediatePassphrase, chainID)
 				nonceIns := nonce.NewTimeWindow(txSigner.GetAddress(), 10000)
 				blockchain.MustRegisterOperator(blockchaincommon.BinanceOP, blockchaincommon.NewOperator(txSigner, nonceIns))
+				s.Debugw("register binance op")
 			}
 
 			bc, err := binblockchain.NewBlockchain(blockchain)

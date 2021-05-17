@@ -1,10 +1,14 @@
 package common
 
+import (
+	"github.com/KyberNetwork/reserve-data/common/ethutil"
+)
+
 // AssetsHaveAddress filter return assets have address
 func AssetsHaveAddress(assets []Asset) []Asset {
 	var result []Asset
 	for _, asset := range assets {
-		if !IsZeroAddress(asset.Address) {
+		if !ethutil.IsZeroAddress(asset.Address) {
 			result = append(result, asset)
 		}
 	}
