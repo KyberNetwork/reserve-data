@@ -68,7 +68,7 @@ func (bn *Binance) Address(asset commonv3.Asset) (ethereum.Address, bool) {
 	network := bcnetwork.GetPreConfig().Network
 	// Special case for BNB on bsc
 	if network == BSCNetwork && asset.IsNetworkAsset() {
-		return bn.binBlockchain.GetIntermediatorAddr(blockchain.BinanceOP), false
+		return bn.binBlockchain.GetIntermediatorAddr(blockchain.BinanceOP), true
 	}
 	return bn.GetLiveDepositAddress(asset, symbol, network)
 }
