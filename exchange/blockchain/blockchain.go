@@ -28,8 +28,9 @@ func (b *Blockchain) SendTokenFromAccountToExchange(amount *big.Int, exchangeAdd
 	return b.SignAndBroadcast(tx, opName)
 }
 
-func (b *Blockchain) SendETHFromAccountToExchange(amount *big.Int, exchangeAddress ethereum.Address, gasPrice *big.Int, opName string) (*types.Transaction, error) {
-	opts, err := b.GetTxOpts(opName, nil, gasPrice, amount)
+func (b *Blockchain) SendETHFromAccountToExchange(amount *big.Int, exchangeAddress ethereum.Address, gasPrice *big.Int,
+	opName string, nonce *big.Int) (*types.Transaction, error) {
+	opts, err := b.GetTxOpts(opName, nonce, gasPrice, amount)
 	if err != nil {
 		return nil, err
 	}

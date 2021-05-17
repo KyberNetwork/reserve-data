@@ -200,7 +200,7 @@ func NewExchangePool(
 			if err != nil {
 				return nil, fmt.Errorf("cannot create binance blockchain: %s", err.Error())
 			}
-			bin, err = exchange.NewBinance(exparam, be, binancestorage, assetStorage, bc)
+			bin, err = exchange.NewBinance(exparam, be, binancestorage, assetStorage, bc, rcf.OverrideTxPeriodSeconds)
 			if err != nil {
 				return nil, fmt.Errorf("cannot create exchange Binance: (%s)", err.Error())
 			}

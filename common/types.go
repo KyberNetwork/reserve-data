@@ -732,6 +732,20 @@ func NewTXEntry(hash, exchange string, assetID rtypes.AssetID, miningStatus, exc
 	}
 }
 
+type IntermediateTX struct {
+	ID         int               `json:"id,omitempty"`
+	TimePoint  uint64            `json:"time_point,omitempty"`
+	EID        string            `json:"eid,omitempty"`
+	TxHash     string            `json:"tx_hash,omitempty"`
+	Nonce      uint64            `json:"nonce,omitempty"`
+	AssetID    rtypes.AssetID    `json:"asset_id,omitempty"`
+	ExchangeID rtypes.ExchangeID `json:"exchange_id,omitempty"`
+	GasPrice   float64           `json:"gas_price,omitempty"`
+	Amount     float64           `json:"amount,omitempty"`
+	Status     string            `json:"status,omitempty"`
+	Created    time.Time         `json:"created"`
+}
+
 // RateResponse is the human friendly format of a rate entry to returns in HTTP APIs.
 type RateResponse struct {
 	Timestamp   Timestamp `json:"timestamp"`

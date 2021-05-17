@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"testing"
 
+	common2 "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -88,17 +89,19 @@ func Test_BinanceIntermediateTx(t *testing.T) {
 		Timepoint: 1620381149259,
 		EID:       "0x9ab1774626d4fdb88ac375ca442f18c5c9edff754d0676c09c4cd8faa0664ca3|BNB|0.5",
 	}
-	activity := common.TXEntry{
-		Hash:     "0x9ab1774626d4fdb88ac375ca442f18c5c9edff754d0676c09c4cd8faa0664ca3",
-		Exchange: "binance",
+	hash := common2.HexToHash("0x9ab1774626d4fdb88ac375ca442f18c5c9edff754d0676c09c4cd8faa0664ca4")
+	intermediateTX := common.IntermediateTX{
+		TxHash:     hash.String(),
+		ExchangeID: rtypes.Binance,
+		Status:     common.MiningStatusNA,
 	}
-	err = storage.StoreIntermediateDeposit(id, activity)
+	err = storage.StoreIntermediateDeposit(id, intermediateTX)
 	require.NoError(t, err)
 
-	txEntry, err := storage.GetPendingIntermediateTx(id)
+	txEntry, err := storage.GetIntermediateTX(id)
 	require.NoError(t, err)
-	assert.Equal(t, "0x9ab1774626d4fdb88ac375ca442f18c5c9edff754d0676c09c4cd8faa0664ca3", txEntry.Hash)
+	assert.Equal(t, hash.String(), txEntry[0].TxHash)
 
-	err = storage.StoreIntermediateDeposit(id, activity) // update activity to be done
+	err = storage.SetDoneIntermediateTX(id, hash, common.MiningStatusMined) // update activity to be done
 	require.NoError(t, err)
 }
