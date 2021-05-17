@@ -396,6 +396,8 @@ func (bn *Binance) Send2ndTransaction(amount float64, asset commonv3.Asset, exch
 		bn.l.Errorw("failed to get gas price", "err", err)
 		return nil, fmt.Errorf("can not get gas, retry later")
 	}
+	// for override tx, skip send override tx if node does not report higher gas
+	// this usually because bsc network congest, not because of gas price
 	if refTx != nil && recommendedPrice <= refTx.GasPrice {
 		bn.l.Infow("recommend price <= latest tx price, abort",
 			"price", recommendedPrice, "latest_tx_price", refTx.GasPrice)
