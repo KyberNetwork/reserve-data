@@ -113,7 +113,7 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 		supportedExchanges = make(map[rtypes.ExchangeID]v1common.LiveExchange)
 	)
 
-	//create map of test exchange
+	// create map of test exchange
 	for _, exchangeID := range []rtypes.ExchangeID{rtypes.Binance, rtypes.Huobi} {
 		exchange := v1common.TestExchange{}
 		supportedExchanges[exchangeID] = exchange
@@ -174,11 +174,11 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 			method:   http.MethodPut,
 			assert: func(t *testing.T, resp *httptest.ResponseRecorder) {
 				httputil.ExpectSuccess(t, resp)
-				//check update asset exchange
+				// check update asset exchange
 				assetExchange, err := s.GetAssetExchange(2)
 				require.NoError(t, err)
 				require.Equal(t, 6.0, assetExchange.MinDeposit)
-				//check create asset exchange
+				// check create asset exchange
 				asset, err := s.GetAsset(assetID)
 				require.NoError(t, err)
 				found := false
@@ -639,7 +639,7 @@ func TestHTTPServerAssetExchangeWithOptionalTradingPair(t *testing.T) {
 		supportedExchanges = make(map[rtypes.ExchangeID]v1common.LiveExchange)
 	)
 
-	//create map of test exchange
+	// create map of test exchange
 	for _, exchangeID := range []rtypes.ExchangeID{rtypes.Binance, rtypes.Huobi} {
 		exchange := v1common.TestExchange{}
 		supportedExchanges[exchangeID] = exchange
@@ -1046,7 +1046,7 @@ func TestHTTPServer_ChangeAssetAddress(t *testing.T) {
 		supportedExchanges = make(map[rtypes.ExchangeID]v1common.LiveExchange)
 	)
 
-	//create map of test exchange
+	// create map of test exchange
 	for _, exchangeID := range []rtypes.ExchangeID{rtypes.Binance, rtypes.Huobi} {
 		exchange := v1common.TestExchange{}
 		supportedExchanges[exchangeID] = exchange
@@ -1141,7 +1141,7 @@ func TestHTTPServer_DeleteTradingPair(t *testing.T) {
 		supportedExchanges = make(map[rtypes.ExchangeID]v1common.LiveExchange)
 	)
 
-	//create map of test exchange
+	// create map of test exchange
 	for _, exchangeID := range []rtypes.ExchangeID{rtypes.Binance, rtypes.Huobi} {
 		exchange := v1common.TestExchange{}
 		supportedExchanges[exchangeID] = exchange
@@ -1230,7 +1230,7 @@ func TestHTTPServer_DeleteAssetExchange(t *testing.T) {
 		supportedExchanges = make(map[rtypes.ExchangeID]v1common.LiveExchange)
 	)
 
-	//create map of test exchange
+	// create map of test exchange
 	for _, exchangeID := range []rtypes.ExchangeID{rtypes.Binance, rtypes.Huobi} {
 		exchange := v1common.TestExchange{}
 		supportedExchanges[exchangeID] = exchange

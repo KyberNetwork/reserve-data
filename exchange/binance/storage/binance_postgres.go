@@ -1,6 +1,9 @@
 package storage
 
 import (
+	"time"
+
+	common2 "github.com/ethereum/go-ethereum/common"
 	"github.com/jmoiron/sqlx"
 
 	"github.com/KyberNetwork/reserve-data/common"
@@ -125,4 +128,79 @@ func (s *postgresStorage) GetLastIDTradeHistory(pairID rtypes.TradingPairID) (st
 		return "", err
 	}
 	return record.TradeID, nil
+}
+
+type intermediateTx struct {
+	ID         int               `db:"id"`
+	TimePoint  uint64            `db:"timepoint"`
+	EID        string            `db:"eid"`
+	TxHash     string            `db:"txhash"`
+	Nonce      uint64            `db:"nonce"`
+	AssetID    rtypes.AssetID    `db:"asset_id"`
+	ExchangeID rtypes.ExchangeID `db:"exchange_id"`
+	GasPrice   float64           `db:"gas_price"`
+	Amount     float64           `db:"amount"`
+	Status     string            `db:"status"`
+	Created    time.Time         `db:"created"`
+}
+
+// StoreIntermediateDeposit ...
+func (s *postgresStorage) StoreIntermediateDeposit(id common.ActivityID, activity common.IntermediateTX) error {
+	var rid int64
+	query := `INSERT INTO "binance_intermediate_tx" (timepoint, eid, txhash, nonce,asset_id,exchange_id,gas_price,amount,status) 
+	VALUES (:timepoint,:eid,:txhash,:nonce,:asset_id,:exchange_id,:gas_price,:amount,:status) RETURNING id`
+	rec := intermediateTx{
+		TimePoint:  id.Timepoint,
+		EID:        id.EID,
+		TxHash:     activity.TxHash,
+		Nonce:      activity.Nonce,
+		AssetID:    activity.AssetID,
+		ExchangeID: activity.ExchangeID,
+		GasPrice:   activity.GasPrice,
+		Amount:     activity.Amount,
+		Status:     activity.Status,
+	}
+	sts, err := s.db.PrepareNamed(query)
+	if err != nil {
+		return err
+	}
+	if err := sts.Get(&rid, rec); err != nil {
+		return err
+	}
+	return nil
+}
+
+// GetIntermediateTX ...
+func (s *postgresStorage) GetIntermediateTX(id common.ActivityID) ([]common.IntermediateTX, error) {
+	var (
+		tempRes []intermediateTx
+	)
+	query := `SELECT * FROM "binance_intermediate_tx" WHERE eid = $1 ORDER BY created DESC;`
+	if err := s.db.Select(&tempRes, query, id.EID); err != nil {
+		return nil, err
+	}
+	result := make([]common.IntermediateTX, 0, len(tempRes))
+	for _, v := range tempRes {
+		result = append(result, common.IntermediateTX{
+			ID:         v.ID,
+			TimePoint:  v.TimePoint,
+			EID:        v.EID,
+			TxHash:     v.TxHash,
+			Nonce:      v.Nonce,
+			AssetID:    v.AssetID,
+			ExchangeID: v.ExchangeID,
+			GasPrice:   v.GasPrice,
+			Amount:     v.Amount,
+			Status:     v.Status,
+			Created:    v.Created,
+		})
+	}
+	return result, nil
+}
+
+func (s *postgresStorage) SetDoneIntermediateTX(id common.ActivityID, hash common2.Hash, status string) error {
+	var rec int64
+	err := s.db.Get(&rec, "UPDATE binance_intermediate_tx SET status=$1 WHERE eid=$2 AND txhash = $3 RETURNING id",
+		status, id.EID, hash.String())
+	return err
 }

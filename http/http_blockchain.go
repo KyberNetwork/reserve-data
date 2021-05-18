@@ -11,7 +11,7 @@ type Blockchain interface {
 	CheckTokenIndices(ethereum.Address) error
 	GetPricingOPAddress() ethereum.Address
 	GetDepositOPAddress() ethereum.Address
-	GetIntermediatorOPAddress() ethereum.Address
+	GetIntermediatorOPAddress(opName string) ethereum.Address
 	GetWrapperAddress() ethereum.Address
 	GetProxyAddress() ethereum.Address
 	GetReserveAddress() ethereum.Address

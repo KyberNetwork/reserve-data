@@ -6,9 +6,9 @@ import (
 	"math"
 	"math/big"
 	"strconv"
-	"strings"
 	"time"
 
+	storagev3 "github.com/KyberNetwork/reserve-data/reservesetting/storage"
 	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"go.uber.org/zap"
@@ -30,21 +30,20 @@ type ReserveCore struct {
 	l               *zap.SugaredLogger
 	gasPriceInfo    *gasinfo.GasPriceInfo
 	// nonce value will be use in deposit transaction
-	depositNonce int64
+	depositNonce   int64
+	settingStorage storagev3.Interface
 }
 
 // NewReserveCore return reserve core
-func NewReserveCore(
-	blockchain Blockchain,
-	storage ActivityStorage,
-	addressConf *common.ContractAddressConfiguration,
-	gasPriceInfo *gasinfo.GasPriceInfo) *ReserveCore {
+func NewReserveCore(blockchain Blockchain, storage ActivityStorage, addressConf *common.ContractAddressConfiguration,
+	gasPriceInfo *gasinfo.GasPriceInfo, settingStorage storagev3.Interface) *ReserveCore {
 	return &ReserveCore{
 		blockchain:      blockchain,
 		activityStorage: storage,
 		addressConf:     addressConf,
 		l:               zap.S(),
 		gasPriceInfo:    gasPriceInfo,
+		settingStorage:  settingStorage,
 	}
 }
 
@@ -241,6 +240,14 @@ func (rc *ReserveCore) validateNonceInRange(op string, nonce uint64, action stri
 	}
 	return nil
 }
+func uidGenerator(txhex, assetSymbol string, amountFloat float64) common.ActivityID {
+	id := fmt.Sprintf("%s|%s|%s",
+		txhex,
+		assetSymbol,
+		strconv.FormatFloat(amountFloat, 'f', -1, 64),
+	)
+	return timebasedID(id)
+}
 
 // Deposit deposit token into centralized exchange
 func (rc *ReserveCore) Deposit(
@@ -249,16 +256,9 @@ func (rc *ReserveCore) Deposit(
 	amount *big.Int,
 	timepoint uint64) (common.ActivityID, error) {
 	amountFloat := common.BigToFloat(amount, int64(asset.Decimals))
-	uidGenerator := func(txhex string) common.ActivityID {
-		id := fmt.Sprintf("%s|%s|%s",
-			txhex,
-			asset.Symbol,
-			strconv.FormatFloat(amountFloat, 'f', -1, 64),
-		)
-		return timebasedID(id)
-	}
+
 	recordActivity := func(status, txhex string, txnonce uint64, txprice string, err error) error {
-		uid := uidGenerator(txhex)
+		uid := uidGenerator(txhex, asset.Symbol, amountFloat)
 		rc.l.Infof(
 			"Core ----------> Deposit to %s: token: %s, amount: %s, timestamp: %d ==> Result: tx: %s, error: %v",
 			exchange.ID().String(), asset.Symbol, amount.Text(10), timepoint, txhex, err,
@@ -318,7 +318,7 @@ func (rc *ReserveCore) Deposit(
 		tx.GasPrice().Text(10),
 		nil,
 	)
-	return uidGenerator(tx.Hash().Hex()), common.CombineActivityStorageErrs(err, sErr)
+	return uidGenerator(tx.Hash().Hex(), asset.Symbol, amountFloat), common.CombineActivityStorageErrs(err, sErr)
 }
 
 func (rc *ReserveCore) maxGasPrice() float64 {
@@ -772,9 +772,15 @@ func (rc *ReserveCore) SetRates(assets []commonv3.Asset, buys, sells []*big.Int,
 func (rc *ReserveCore) SpeedupTx(act common.ActivityRecord) (*big.Int, error) {
 	action := act.Action
 	var opAccount string
+	var asset commonv3.Asset
+	var err error
 	switch action {
 	case common.ActionDeposit:
 		opAccount = blockchain.DepositOP
+		asset, err = rc.settingStorage.GetAsset(act.Params.Asset)
+		if err != nil {
+			return nil, fmt.Errorf("find asset failed: %w", err)
+		}
 	case common.ActionSetRate:
 		opAccount = blockchain.PricingOP
 	default:
@@ -801,17 +807,10 @@ func (rc *ReserveCore) SpeedupTx(act common.ActivityRecord) (*big.Int, error) {
 		switch action {
 		case common.ActionSetRate:
 			return common.NewActivityID(uint64(time.Now().UnixNano()), txhex)
+		case common.ActionDeposit:
+			return uidGenerator(txhex, asset.Symbol, act.Params.Amount)
 		default:
-			parts := strings.Split(actID.EID, "|")
-			if len(parts) != 3 {
-				return actID // uid somehow malform
-			}
-			id := fmt.Sprintf("%s|%s|%s",
-				txhex,
-				parts[1],
-				parts[2],
-			)
-			return timebasedID(id)
+			return timebasedID(fmt.Sprintf("%s|%s", action, tx))
 		}
 	}
 	activityResult := common.ActivityResult{
