@@ -29,10 +29,10 @@ func (s *Server) GetAddresses(c *gin.Context) {
 	addresses[pricingOPAddressName] = s.blockchain.GetPricingOPAddress()
 	addresses[depositOPAddressName] = s.blockchain.GetDepositOPAddress()
 	if h := common.SupportedExchanges[rtypes.Huobi]; h != nil {
-		addresses[intermediateOPAddressName] = s.blockchain.GetIntermediatorOPAddress(blockchain.HuobiOP)
+		addresses[intermediateOPAddressName] = s.blockchain.MustGetOPAddress(blockchain.HuobiOP)
 	}
 	if b := common.SupportedExchanges[rtypes.Binance]; b != nil {
-		addresses[binanceIntermediateOPAddressName] = s.blockchain.GetIntermediatorOPAddress(blockchain.BinanceOP)
+		addresses[binanceIntermediateOPAddressName], _ = s.blockchain.GetOPAddress(blockchain.BinanceOP)
 	}
 	addresses[wrapper] = s.rcf.ContractAddresses.Wrapper
 	addresses[network] = s.rcf.ContractAddresses.Proxy
