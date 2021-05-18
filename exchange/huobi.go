@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/KyberNetwork/reserve-data/common/ethutil"
 	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
@@ -17,7 +18,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/blockchain"
 	"github.com/KyberNetwork/reserve-data/common/gasinfo"
-	huobiblockchain "github.com/KyberNetwork/reserve-data/exchange/huobi/blockchain"
+	huobiblockchain "github.com/KyberNetwork/reserve-data/exchange/blockchain"
 	huobihttp "github.com/KyberNetwork/reserve-data/exchange/huobi/http"
 	"github.com/KyberNetwork/reserve-data/lib/caller"
 	"github.com/KyberNetwork/reserve-data/lib/rtypes"
@@ -72,7 +73,7 @@ func (h *Huobi) RealDepositAddress(tokenID string, asset commonv3.Asset) (ethere
 			return ethereum.Address{}, uErr
 		}
 		result, supported := addrs[asset.ID]
-		if !supported || commonv3.IsZeroAddress(result) {
+		if !supported || ethutil.IsZeroAddress(result) {
 			return result, fmt.Errorf("real deposit address of token %s is not available", tokenID)
 		}
 		return result, nil
@@ -90,7 +91,7 @@ func (h *Huobi) Address(asset commonv3.Asset) (ethereum.Address, bool) {
 			exhSymbol = exchange.Symbol
 		}
 	}
-	result := h.blockchain.GetIntermediatorAddr()
+	result := h.blockchain.GetIntermediatorAddr(blockchain.HuobiOP)
 	_, err := h.RealDepositAddress(exhSymbol, asset)
 	//if the realDepositAddress can not be querried, that mean the token isn't supported on Huobi
 	if err != nil {
@@ -402,9 +403,9 @@ func (h *Huobi) Send2ndTransaction(amount float64, asset commonv3.Asset, exchang
 	gasPrice = common.GweiToWei(recommendedPrice)
 	h.l.Infof("Send2ndTransaction, gas price: %s", gasPrice.String())
 	if asset.IsNetworkAsset() {
-		tx, err = h.blockchain.SendETHFromAccountToExchange(IAmount, exchangeAddress, gasPrice)
+		tx, err = h.blockchain.SendETHFromAccountToExchange(IAmount, exchangeAddress, gasPrice, blockchain.HuobiOP, nil)
 	} else {
-		tx, err = h.blockchain.SendTokenFromAccountToExchange(IAmount, exchangeAddress, asset.Address, gasPrice)
+		tx, err = h.blockchain.SendTokenFromAccountToExchange(IAmount, exchangeAddress, asset.Address, gasPrice, blockchain.HuobiOP)
 	}
 	if err != nil {
 		h.l.Warnw("ERROR: Can not send transaction to exchange", "err", err)
@@ -763,14 +764,12 @@ func (h *Huobi) OpenOrders(pair commonv3.TradingPairSymbols) ([]common.Order, er
 //NewHuobi creates new Huobi exchange instance
 func NewHuobi(
 	interf HuobiInterface,
-	blockchain *blockchain.BaseBlockchain,
-	signer blockchain.Signer,
-	nonce blockchain.NonceCorpus,
+	blchain *blockchain.BaseBlockchain,
 	storage HuobiStorage,
 	sr storage.SettingReader,
 ) (*Huobi, error) {
 
-	bc, err := huobiblockchain.NewBlockchain(blockchain, signer, nonce)
+	bc, err := huobiblockchain.NewBlockchain(blchain)
 	if err != nil {
 		return nil, err
 	}

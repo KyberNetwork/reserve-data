@@ -4,12 +4,8 @@ import (
 	"fmt"
 	"math"
 	"math/big"
-	"path"
-	"path/filepath"
 	"runtime"
 	"strings"
-
-	"github.com/ethereum/go-ethereum/common"
 )
 
 const truncLength int = 256
@@ -20,19 +16,6 @@ func TruncStr(src []byte) []byte {
 		return []byte(result)
 	}
 	return src
-}
-
-// CurrentDir returns current directory of the caller.
-func CurrentDir() string {
-	_, current, _, _ := runtime.Caller(1)
-	return filepath.Join(path.Dir(current))
-}
-
-// CmdDirLocation returns the absolute location of cmd directory where
-// public settings will be read.
-func CmdDirLocation() string {
-	_, fileName, _, _ := runtime.Caller(0)
-	return filepath.Join(filepath.Dir(filepath.Dir(fileName)), "cmd")
 }
 
 // FloatToBigInt converts a float to a big int with specific decimal
@@ -87,11 +70,6 @@ func CombineActivityStorageErrs(err, sErr error) error {
 	return fmt.Errorf("action error: %v, storage error: %v", err, sErr)
 }
 
-// IsEthereumAddress returns true if the given address is ethereum.
-func IsEthereumAddress(addr common.Address) bool {
-	return addr == common.HexToAddress("0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
-}
-
 // GetCallerFunctionName return caller function name
 func GetCallerFunctionName() string {
 	fn := getFrame(2).Function
@@ -133,9 +111,4 @@ func CalculateNewPrice(pendingPrice float64, recommendPrice float64) float64 {
 	default:
 		return math.Max(recommendPrice, pendingPrice*1.1) // recommendPrice should > pendingPrice at least 10% gwei
 	}
-}
-
-// IsZeroAddress check if address is zero
-func IsZeroAddress(a common.Address) bool {
-	return a.Hash().Big().BitLen() == 0
 }

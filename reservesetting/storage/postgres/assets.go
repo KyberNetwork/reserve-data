@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/KyberNetwork/reserve-data/common/ethutil"
 	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -149,7 +150,7 @@ func (s *Storage) createAssetExchange(tx *sqlx.Tx, exchangeID rtypes.ExchangeID,
 
 	// TODO: validate depositAddress, require if transferable
 
-	if !common.IsZeroAddress(depositAddress) {
+	if !ethutil.IsZeroAddress(depositAddress) {
 		depositAddressHex := depositAddress.String()
 		depositAddressParam = &depositAddressHex
 	}
@@ -287,12 +288,12 @@ func (s *Storage) createAsset(tx *sqlx.Tx,
 	// create new asset
 	var assetID rtypes.AssetID
 
-	if transferable && common.IsZeroAddress(address) {
+	if transferable && ethutil.IsZeroAddress(address) {
 		return 0, nil, common.ErrAddressMissing
 	}
 
 	for _, exchange := range exchanges {
-		if transferable && common.IsZeroAddress(exchange.DepositAddress) {
+		if transferable && ethutil.IsZeroAddress(exchange.DepositAddress) {
 			return 0, nil, common.ErrDepositAddressMissing
 		}
 	}
@@ -300,7 +301,7 @@ func (s *Storage) createAsset(tx *sqlx.Tx,
 	s.l.Infow("creating new asset", "symbol", symbol, "address", address.String())
 
 	var addressParam *string
-	if !common.IsZeroAddress(address) {
+	if !ethutil.IsZeroAddress(address) {
 		addressHex := address.String()
 		addressParam = &addressHex
 	}
@@ -415,7 +416,7 @@ func (s *Storage) createAsset(tx *sqlx.Tx,
 			assetExchangeID     rtypes.AssetExchangeID
 			depositAddressParam *string
 		)
-		if !common.IsZeroAddress(exchange.DepositAddress) {
+		if !ethutil.IsZeroAddress(exchange.DepositAddress) {
 			depositAddressHex := exchange.DepositAddress.String()
 			depositAddressParam = &depositAddressHex
 		}
@@ -1142,8 +1143,7 @@ func (s *Storage) updateAsset(tx *sqlx.Tx, id rtypes.AssetID, uo storage.UpdateA
 		s.l.Infow("nothing set for update asset")
 		return nil
 	}
-	var sts = s.stmts.updateAsset
-	sts = tx.NamedStmt(s.stmts.updateAsset)
+	var sts = tx.NamedStmt(s.stmts.updateAsset)
 
 	s.l.Infow("updating asset", "id", id, "fields", strings.Join(updateMsgs, " "))
 	var updatedID uint64

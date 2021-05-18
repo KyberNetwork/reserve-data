@@ -12,7 +12,6 @@ import (
 
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/blockchain"
-	huobiblockchain "github.com/KyberNetwork/reserve-data/exchange/huobi/blockchain"
 	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	commonv3 "github.com/KyberNetwork/reserve-data/reservesetting/common"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage"
@@ -358,8 +357,8 @@ func (bc *Blockchain) FetchRates(atBlock uint64, currentBlock uint64) (common.Al
 			bc.l.Errorw("token/asset not listed and will be ignore from get rate",
 				"asset", s.Symbol, "addr", s.Address.Hex())
 		}
-		// TODO: add a isETH method
-		if !s.IsNetworkAsset() && isListed {
+		// no rate for itself
+		if !s.IsMainQuoteAsset() && isListed {
 			tokenAddrs = append(tokenAddrs, s.Address)
 			validTokens = append(validTokens, s)
 		}
@@ -496,8 +495,8 @@ func (bc *Blockchain) GetDepositOPAddress() ethereum.Address {
 }
 
 // GetIntermediatorOPAddress return intermediator op address
-func (bc *Blockchain) GetIntermediatorOPAddress() ethereum.Address {
-	return bc.MustGetOperator(huobiblockchain.HuobiOP).Address
+func (bc *Blockchain) GetIntermediatorOPAddress(opName string) ethereum.Address {
+	return bc.MustGetOperator(opName).Address
 }
 
 // GetWrapperAddress return wrapper address

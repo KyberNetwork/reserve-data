@@ -63,12 +63,7 @@ func TestGetActivities(t *testing.T) {
 		nil, // settingStorage
 	)
 
-	rCore := core.NewReserveCore(
-		nil,
-		s,
-		nil,
-		nil,
-	)
+	rCore := core.NewReserveCore(nil, s, nil, nil, nil)
 
 	sv := NewHTTPServer(
 		rData,                  // reserve data
