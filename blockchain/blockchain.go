@@ -494,9 +494,17 @@ func (bc *Blockchain) GetDepositOPAddress() ethereum.Address {
 	return bc.MustGetOperator(blockchain.DepositOP).Address
 }
 
-// GetIntermediatorOPAddress return intermediator op address
-func (bc *Blockchain) GetIntermediatorOPAddress(opName string) ethereum.Address {
+// MustGetOPAddress return op address
+func (bc *Blockchain) MustGetOPAddress(opName string) ethereum.Address {
 	return bc.MustGetOperator(opName).Address
+}
+
+// GetOPAddress return op address
+func (bc *Blockchain) GetOPAddress(opName string) (ethereum.Address, error) {
+	if op := bc.GetOperator(opName); op != nil {
+		return op.Address, nil
+	}
+	return ethereum.Address{}, fmt.Errorf("no such operator")
 }
 
 // GetWrapperAddress return wrapper address
