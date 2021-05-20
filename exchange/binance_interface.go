@@ -45,4 +45,5 @@ type BinanceInterface interface {
 	OrderStatus(symbol string, id uint64) (Binaorder, error)
 
 	GetAllAssetDetail() (map[string]BinanceAssetDetail, error)
+	GetAssetWithdrawFee(coin string) (float64, error)
 }
