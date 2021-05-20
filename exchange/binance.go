@@ -619,7 +619,8 @@ func (bn *Binance) WithdrawStatus(id string, assetID rtypes.AssetID, amount floa
 			case binanceRejected, binanceFailure: // 3 = rejected, 5 = failed
 				return common.ExchangeStatusFailed, withdraw.TxID, 0, nil
 			case binanceCompleted: // 6 = success
-				return common.ExchangeStatusDone, withdraw.TxID, 0, nil
+				withdrawFee, err := bn.interf.GetAssetWithdrawFee(withdraw.Coin)
+				return common.ExchangeStatusDone, withdraw.TxID, withdrawFee, err
 			case binanceCancelled: // 1 = cancelled
 				return common.ExchangeStatusCancelled, withdraw.TxID, 0, nil
 			case binanceAwaitingApproval, binanceProcessing: // no action, just leave it as pending

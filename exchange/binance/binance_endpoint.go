@@ -567,6 +567,35 @@ func (ep *Endpoint) GetAllAssetWithdrawStatus() (map[string]bool, error) {
 	return result, nil
 }
 
+// GetAssetWithdrawFee ...
+func (ep *Endpoint) GetAssetWithdrawFee(coin string) (float64, error) {
+	var (
+		response []CoinInfo
+	)
+	respBody, err := ep.authHTTP.DoReq(
+		fmt.Sprintf("%s/binance/all-coin-info", ep.accountDataBaseURL),
+		http.MethodGet,
+		make(map[string]string),
+	)
+	if err != nil {
+		return 0, err
+	}
+	if err := json.Unmarshal(respBody, &response); err != nil {
+		return 0, err
+	}
+	for _, ci := range response {
+		if ci.Coin == coin {
+			for _, n := range ci.NetworkList {
+				if n.Network == ep.network {
+					withdrawFee, err := strconv.ParseFloat(n.WithdrawFee, 64)
+					return withdrawFee, err
+				}
+			}
+		}
+	}
+	return 0, nil
+}
+
 func (ep *Endpoint) getServerTime() (uint64, error) {
 	result := exchange.BinaServerTime{}
 	respBody, err := ep.GetResponse(
