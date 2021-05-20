@@ -593,7 +593,7 @@ func (ep *Endpoint) GetAssetWithdrawFee(coin string) (float64, error) {
 			}
 		}
 	}
-	return 0, nil
+	return 0, fmt.Errorf("cannot find the withdraw fee for coin: %s", coin)
 }
 
 func (ep *Endpoint) getServerTime() (uint64, error) {
