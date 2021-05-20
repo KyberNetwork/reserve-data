@@ -575,10 +575,10 @@ func (bn *Binance) DepositStatus(id common.ActivityID, txHash string, assetID rt
 	startTime := timepoint - 86400000
 	endTime := timepoint
 	deposits, err := bn.interf.DepositHistory(startTime, endTime)
-	if err != nil || !deposits.Success {
+	if err != nil {
 		return common.ExchangeStatusNA, err
 	}
-	for _, deposit := range deposits.Deposits {
+	for _, deposit := range deposits {
 		if deposit.TxID == txHash {
 			if deposit.Status == 1 {
 				return common.ExchangeStatusDone, nil
@@ -610,24 +610,25 @@ func (bn *Binance) WithdrawStatus(id string, assetID rtypes.AssetID, amount floa
 	startTime := timepoint - 86400000
 	endTime := timepoint
 	withdraws, err := bn.interf.WithdrawHistory(startTime, endTime)
-	if err != nil || !withdraws.Success {
+	if err != nil {
 		return common.ExchangeStatusNA, "", 0, err
 	}
-	for _, withdraw := range withdraws.Withdrawals {
+	for _, withdraw := range withdraws {
 		if withdraw.WithdrawOrderID == id {
 			switch withdraw.Status {
 			case binanceRejected, binanceFailure: // 3 = rejected, 5 = failed
-				return common.ExchangeStatusFailed, withdraw.TxID, withdraw.Fee, nil
+				return common.ExchangeStatusFailed, withdraw.TxID, 0, nil
 			case binanceCompleted: // 6 = success
-				return common.ExchangeStatusDone, withdraw.TxID, withdraw.Fee, nil
+				withdrawFee, err := bn.interf.GetAssetWithdrawFee(withdraw.Coin)
+				return common.ExchangeStatusDone, withdraw.TxID, withdrawFee, err
 			case binanceCancelled: // 1 = cancelled
-				return common.ExchangeStatusCancelled, withdraw.TxID, withdraw.Fee, nil
+				return common.ExchangeStatusCancelled, withdraw.TxID, 0, nil
 			case binanceAwaitingApproval, binanceProcessing: // no action, just leave it as pending
-				return common.ExchangeStatusPending, withdraw.TxID, withdraw.Fee, nil
+				return common.ExchangeStatusPending, withdraw.TxID, 0, nil
 			default:
 				bn.l.Errorw("got unexpected withdraw status", "status", withdraw.Status,
 					"withdrawID", id, "assetID", assetID, "amount", amount)
-				return common.ExchangeStatusNA, withdraw.TxID, withdraw.Fee, nil
+				return common.ExchangeStatusNA, withdraw.TxID, 0, nil
 			}
 		}
 	}
