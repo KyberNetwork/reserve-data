@@ -9,25 +9,27 @@ import (
 	"time"
 
 	"github.com/KyberNetwork/reserve-data/common"
+	"github.com/KyberNetwork/reserve-data/common/bcnetwork"
 	commonv3 "github.com/KyberNetwork/reserve-data/reservesetting/common"
+	"github.com/shopspring/decimal"
 	"go.uber.org/zap"
 )
 
 //BinanceLive implement live info for binance
 type BinanceLive struct {
-	sugar           *zap.SugaredLogger
-	mu              *sync.RWMutex
-	interf          BinanceInterface
-	allAssetDetails map[string]BinanceAssetDetail
+	sugar       *zap.SugaredLogger
+	mu          *sync.RWMutex
+	interf      BinanceInterface
+	allCoinInfo map[string]CoinInfo
 }
 
 // NewBinanceLive return new BinanceLive instance
 func NewBinanceLive(interf BinanceInterface) *BinanceLive {
 	return &BinanceLive{
-		sugar:           zap.S(),
-		mu:              &sync.RWMutex{},
-		interf:          interf,
-		allAssetDetails: make(map[string]BinanceAssetDetail),
+		sugar:       zap.S(),
+		mu:          &sync.RWMutex{},
+		interf:      interf,
+		allCoinInfo: make(map[string]CoinInfo),
 	}
 }
 
@@ -37,11 +39,11 @@ func (bl *BinanceLive) RunUpdateAssetDetails(interval time.Duration) {
 	for {
 		func() {
 			var (
-				allAssetDetails map[string]BinanceAssetDetail
-				err             error
+				allCoinInfo map[string]CoinInfo
+				err         error
 			)
 			for i := 0; i < 2; i++ {
-				allAssetDetails, err = bl.interf.GetAllAssetDetail()
+				allCoinInfo, err = bl.interf.AllCoinInfo()
 				if err != nil {
 					time.Sleep(3 * time.Second)
 					continue
@@ -53,7 +55,7 @@ func (bl *BinanceLive) RunUpdateAssetDetails(interval time.Duration) {
 				return
 			}
 			bl.mu.Lock()
-			bl.allAssetDetails = allAssetDetails
+			bl.allCoinInfo = allCoinInfo
 			bl.mu.Unlock()
 		}()
 		<-t.C
@@ -64,11 +66,22 @@ func (bl *BinanceLive) RunUpdateAssetDetails(interval time.Duration) {
 func (bl *BinanceLive) GetLiveWithdrawFee(asset string) (float64, error) {
 	bl.mu.RLock()
 	defer bl.mu.RUnlock()
-	assetDetail, ok := bl.allAssetDetails[asset]
+	coinInfo, ok := bl.allCoinInfo[asset]
 	if !ok {
-		return 0, fmt.Errorf("asset detail of token is not available, asset: %s", asset)
+		return 0, fmt.Errorf("coin info of asset is not available, asset: %s", asset)
 	}
-	return assetDetail.WithdrawFee, nil
+	nw := bcnetwork.GetPreConfig().Network
+	for _, listed := range coinInfo.NetworkList {
+		if listed.Network == nw {
+			fee, err := decimal.NewFromString(listed.WithdrawFee)
+			if err != nil {
+				return 0, fmt.Errorf("parse withdraw fee[%s] failed: %w", listed.WithdrawFee, err)
+			}
+			v, _ := fee.Float64()
+			return v, nil
+		}
+	}
+	return 0, fmt.Errorf("no entry withdraw fee for %s network %s", asset, nw)
 }
 
 // GetLiveExchangeInfos queries the Exchange Endpoint for exchange precision and limit of a certain pair ID

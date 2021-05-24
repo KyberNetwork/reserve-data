@@ -37,7 +37,7 @@ type Binance struct {
 	storage BinanceStorage
 	sr      storage.Interface
 	l       *zap.SugaredLogger
-	BinanceLive
+	*BinanceLive
 	id                rtypes.ExchangeID
 	binBlockchain     *binblockchain.Blockchain
 	overrideTxPeriods uint64
@@ -619,7 +619,10 @@ func (bn *Binance) WithdrawStatus(id string, assetID rtypes.AssetID, amount floa
 			case binanceRejected, binanceFailure: // 3 = rejected, 5 = failed
 				return common.ExchangeStatusFailed, withdraw.TxID, 0, nil
 			case binanceCompleted: // 6 = success
-				withdrawFee, err := bn.interf.GetAssetWithdrawFee(withdraw.Coin)
+				withdrawFee, err := bn.GetLiveWithdrawFee(withdraw.Coin)
+				if err != nil {
+					bn.l.Errorw("get withdraw fee failed: %w", err)
+				} // in case error we just make it pass and check err manual later, so it wont stuck on withdraw
 				return common.ExchangeStatusDone, withdraw.TxID, withdrawFee, err
 			case binanceCancelled: // 1 = cancelled
 				return common.ExchangeStatusCancelled, withdraw.TxID, 0, nil
@@ -742,12 +745,10 @@ func (bn *Binance) sendSpeedupTX(tx common.IntermediateTX, network string) (*typ
 func NewBinance(id rtypes.ExchangeID, interf BinanceInterface, storage BinanceStorage, sr storage.Interface,
 	bc *binblockchain.Blockchain, overrideTXPeriodSeconds uint64) (*Binance, error) {
 	binance := &Binance{
-		interf:  interf,
-		storage: storage,
-		sr:      sr,
-		BinanceLive: BinanceLive{
-			interf: interf,
-		},
+		interf:            interf,
+		storage:           storage,
+		sr:                sr,
+		BinanceLive:       NewBinanceLive(interf),
 		id:                id,
 		l:                 zap.S(),
 		binBlockchain:     bc,
