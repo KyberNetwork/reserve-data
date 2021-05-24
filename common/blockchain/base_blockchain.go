@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/KyberNetwork/reserve-data/common/ethutil"
 	ether "github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -23,7 +24,9 @@ import (
 )
 
 const (
-	zeroAddress string = "0x0000000000000000000000000000000000000000"
+	ZeroAddress = "0x0000000000000000000000000000000000000000"
+	BinanceOP   = "binance_op"
+	HuobiOP     = "huobi_op"
 )
 
 var (
@@ -163,7 +166,7 @@ func (b *BaseBlockchain) Call(timeOut time.Duration, opts CallOpts, contract *Co
 		return err
 	}
 	var (
-		msg    = ether.CallMsg{From: ethereum.HexToAddress(zeroAddress), To: &contract.Address, Data: input}
+		msg    = ether.CallMsg{From: ethereum.HexToAddress(ZeroAddress), To: &contract.Address, Data: input}
 		code   []byte
 		output []byte
 	)
@@ -302,7 +305,7 @@ func (b *BaseBlockchain) PackERC20Data(method string, params ...interface{}) ([]
 }
 
 func (b *BaseBlockchain) BalanceOf(token ethereum.Address, wallet ethereum.Address) (*big.Int, error) {
-	if common.IsEthereumAddress(token) {
+	if ethutil.IsEthereumAddress(token) {
 		return b.client.BalanceAt(context.Background(), wallet, nil)
 	}
 	var balance *big.Int
@@ -443,6 +446,10 @@ func (b *BaseBlockchain) TxStatus(hash ethereum.Hash) (string, uint64, error) {
 // EthClient return main client that BaseBlockchain use
 func (b *BaseBlockchain) EthClient() *ethclient.Client {
 	return b.client
+}
+
+func (b *BaseBlockchain) GetOperator(name string) *Operator {
+	return b.operators[name]
 }
 
 func NewBaseBlockchain(

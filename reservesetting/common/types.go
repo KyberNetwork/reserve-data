@@ -3,6 +3,7 @@ package common
 import (
 	"time"
 
+	"github.com/KyberNetwork/reserve-data/common/ethutil"
 	ethereum "github.com/ethereum/go-ethereum/common"
 
 	"github.com/KyberNetwork/reserve-data/lib/rtypes"
@@ -163,9 +164,14 @@ type Asset struct {
 	SanityInfo            SanityInfo          `json:"sanity_info"`
 }
 
+// IsMainQuoteAsset check if token is main coin
+func (a Asset) IsMainQuoteAsset() bool {
+	return a.ID == 1
+}
+
 // IsNetworkAsset check if token is main coin
 func (a Asset) IsNetworkAsset() bool {
-	return a.ID == 1
+	return ethutil.IsEthereumAddress(a.Address)
 }
 
 // TODO: write custom marshal json for created/updated fields

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/KyberNetwork/reserve-data/common/ethutil"
 	"github.com/KyberNetwork/reserve-data/common/gasinfo"
 	"github.com/robfig/cron"
 	"github.com/urfave/cli"
@@ -111,7 +112,7 @@ func run(c *cli.Context) error {
 		l.Panicw("failed to init eth client", "err", err)
 	}
 	var gasPriceLimiter gasinfo.GasPriceLimiter
-	if common.IsZeroAddress(rcf.ContractAddresses.Proxy) {
+	if ethutil.IsZeroAddress(rcf.ContractAddresses.Proxy) {
 		gasPriceLimiter = gasinfo.NewConstGasPriceLimiter(bcnetwork.GetPreConfig().MaxGasPrice)
 	} else {
 		kyberNetworkProxy, err := blockchain.NewNetworkProxy(rcf.ContractAddresses.Proxy,

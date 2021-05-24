@@ -5,18 +5,20 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/KyberNetwork/reserve-data/common"
+	"github.com/KyberNetwork/reserve-data/common/blockchain"
 	"github.com/KyberNetwork/reserve-data/http/httputil"
 	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 )
 
 const (
-	pricingOPAddressName       = "pricing_operator"
-	depositOPAddressName       = "deposit_operator"
-	intermediateOPAddressName  = "intermediate_operator"
-	wrapper                    = "wrapper"
-	network                    = "network"
-	reserveAddress             = "reserve"
-	rateQueryHelperAddressName = "rate_query_helper"
+	pricingOPAddressName             = "pricing_operator"
+	depositOPAddressName             = "deposit_operator"
+	intermediateOPAddressName        = "intermediate_operator"
+	wrapper                          = "wrapper"
+	network                          = "network"
+	reserveAddress                   = "reserve"
+	rateQueryHelperAddressName       = "rate_query_helper"
+	binanceIntermediateOPAddressName = "binance_intermediate_operator"
 )
 
 // GetAddresses get address config from core
@@ -27,7 +29,10 @@ func (s *Server) GetAddresses(c *gin.Context) {
 	addresses[pricingOPAddressName] = s.blockchain.GetPricingOPAddress()
 	addresses[depositOPAddressName] = s.blockchain.GetDepositOPAddress()
 	if h := common.SupportedExchanges[rtypes.Huobi]; h != nil {
-		addresses[intermediateOPAddressName] = s.blockchain.GetIntermediatorOPAddress()
+		addresses[intermediateOPAddressName] = s.blockchain.MustGetOPAddress(blockchain.HuobiOP)
+	}
+	if b := common.SupportedExchanges[rtypes.Binance]; b != nil {
+		addresses[binanceIntermediateOPAddressName], _ = s.blockchain.GetOPAddress(blockchain.BinanceOP)
 	}
 	addresses[wrapper] = s.rcf.ContractAddresses.Wrapper
 	addresses[network] = s.rcf.ContractAddresses.Proxy

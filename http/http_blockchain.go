@@ -11,7 +11,8 @@ type Blockchain interface {
 	CheckTokenIndices(ethereum.Address) error
 	GetPricingOPAddress() ethereum.Address
 	GetDepositOPAddress() ethereum.Address
-	GetIntermediatorOPAddress() ethereum.Address
+	MustGetOPAddress(opName string) ethereum.Address
+	GetOPAddress(opName string) (ethereum.Address, error) // some op is optional, different with above func
 	GetWrapperAddress() ethereum.Address
 	GetProxyAddress() ethereum.Address
 	GetReserveAddress() ethereum.Address

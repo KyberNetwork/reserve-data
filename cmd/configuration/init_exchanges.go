@@ -19,6 +19,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/exchange"
 	"github.com/KyberNetwork/reserve-data/exchange/binance"
 	binanceStorage "github.com/KyberNetwork/reserve-data/exchange/binance/storage"
+	binblockchain "github.com/KyberNetwork/reserve-data/exchange/blockchain"
 	"github.com/KyberNetwork/reserve-data/exchange/huobi"
 	huobiStorage "github.com/KyberNetwork/reserve-data/exchange/huobi/storage"
 	authhttp "github.com/KyberNetwork/reserve-data/lib/auth-http"
@@ -144,6 +145,12 @@ func updateDepositAddress(assetStorage storage.Interface, exchanges map[rtypes.E
 	}
 }
 
+func registerOP(bc *blockchaincommon.BaseBlockchain, op, file, pass string, chainID *big.Int) {
+	txSigner := blockchaincommon.NewEthereumSigner(file, pass, chainID)
+	nonceIns := nonce.NewTimeWindow(txSigner.GetAddress(), 10000)
+	bc.MustRegisterOperator(op, blockchaincommon.NewOperator(txSigner, nonceIns))
+}
+
 func NewExchangePool(
 	c *cli.Context,
 	rcf common.RawConfig,
@@ -173,6 +180,15 @@ func NewExchangePool(
 	}
 	httpClient := &http.Client{Transport: exchange.NewTransportRateLimiter(&http.Client{Timeout: time.Second * 30})}
 	marketDataBaseURL := strings.TrimSuffix(rcf.MarketDataBaseURL, "/")
+
+	if rcf.BinanceIntermediateKeystore != "" && rcf.BinanceIntermediatePassphrase != "" {
+		registerOP(blockchain, blockchaincommon.BinanceOP, rcf.BinanceIntermediateKeystore, rcf.BinanceIntermediatePassphrase, chainID)
+		s.Debug("register binance op")
+	}
+	if rcf.IntermediatorKeystore != "" && rcf.IntermediatorPassphrase != "" {
+		registerOP(blockchain, blockchaincommon.HuobiOP, rcf.IntermediatorKeystore, rcf.IntermediatorPassphrase, chainID)
+		s.Debug("register huobi op")
+	}
 	for _, exparam := range enabledExchanges {
 		switch exparam {
 		case rtypes.Binance, rtypes.Binance2:
@@ -189,11 +205,11 @@ func NewExchangePool(
 			if err != nil {
 				return nil, fmt.Errorf("cannot create Binance storage: (%s)", err.Error())
 			}
-			bin, err = exchange.NewBinance(
-				exparam,
-				be,
-				binancestorage,
-				assetStorage)
+			bc, err := binblockchain.NewBlockchain(blockchain)
+			if err != nil {
+				return nil, fmt.Errorf("cannot create binance blockchain: %s", err.Error())
+			}
+			bin, err = exchange.NewBinance(exparam, be, binancestorage, assetStorage, bc, rcf.OverrideTxPeriodSeconds)
 			if err != nil {
 				return nil, fmt.Errorf("cannot create exchange Binance: (%s)", err.Error())
 			}
@@ -205,16 +221,7 @@ func NewExchangePool(
 			if err != nil {
 				return nil, fmt.Errorf("cannot create Binance storage: (%s)", err.Error())
 			}
-			intermediatorSigner := blockchaincommon.NewEthereumSigner(rcf.IntermediatorKeystore, rcf.IntermediatorPassphrase, chainID)
-			intermediatorNonce := nonce.NewTimeWindow(intermediatorSigner.GetAddress(), 10000)
-			hb, err = exchange.NewHuobi(
-				he,
-				blockchain,
-				intermediatorSigner,
-				intermediatorNonce,
-				huobistorage,
-				assetStorage,
-			)
+			hb, err = exchange.NewHuobi(he, blockchain, huobistorage, assetStorage)
 			if err != nil {
 				return nil, fmt.Errorf("cannot create exchange Huobi: (%s)", err.Error())
 			}

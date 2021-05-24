@@ -135,84 +135,35 @@ type Binacancel struct {
 	ClientOrderID     string `json:"clientOrderId"`
 }
 
-// {
-// 	"depositList": [
-// 		{
-// 			"insertTime": 1508198532000,
-// 			"amount": 0.04670582,
-// 			"asset": "ETH",
-// 			"address": "0x6915f16f8791d0a1cc2bf47c13a6b2a92000504b",
-// 			"txId": "0xdf33b22bdb2b28b1f75ccd201a4a4m6e7g83jy5fc5d5a9d1340961598cfcb0a1",
-// 			"status": 1
-// 		},
-// 		{
-// 			"insertTime": 1508298532000,
-// 			"amount": 1000,
-// 			"asset": "XMR",
-// 			"address": "463tWEBn5XZJSxLU34r6g7h8jtxuNcDbjLSjkn3XAXHCbLrTTErJrBWYgHJQyrCwkNgYvyV3z8zctJLPCZy24jvb3NiTcTJ",
-// 			"addressTag": "342341222",
-// 			"txId": "b3c6219639c8ae3f9cf010cdc24fw7f7yt8j1e063f9b4bd1a05cb44c4b6e2509",
-// 			"status": 1
-// 		}
-// 	],
-// 	"success": true
-// }
-type Binadeposits struct {
-	Success  bool          `json:"success"`
-	Msg      string        `json:"msg"`
-	Deposits []Binadeposit `json:"depositList"`
-}
+// Binadeposit ...
+type Binadeposits []Binadeposit
 
 type Binadeposit struct {
-	InsertTime uint64  `json:"insertTime"`
-	Amount     float64 `json:"amount"`
-	Asset      string  `json:"asset"`
-	Address    string  `json:"address"`
-	TxID       string  `json:"txId"`
-	Status     int     `json:"status"`
+	InsertTime   uint64 `json:"insertTime"`
+	Amount       string `json:"amount"`
+	Coin         string `json:"coin"`
+	Address      string `json:"address"`
+	TxID         string `json:"txId"`
+	Status       int    `json:"status"`
+	Network      string `json:"network"`
+	TransferType int    `json:"transferType"` // 1 for internal, 0 for external
+	ConfirmTimes string `json:"confirmTimes"` // exp: "12/12"
 }
 
-// {
-// 	"withdrawList": [
-// 		{
-// 			"id":"7213fea8e94b4a5593d507237e5a555b"
-// 			"amount": 1,
-// 			"address": "0x6915f16f8791d0a1cc2bf47c13a6b2a92000504b",
-// 			"asset": "ETH",
-// 			"txId": "0xdf33b22bdb2b28b1f75ccd201a4a4m6e7g83jy5fc5d5a9d1340961598cfcb0a1",
-// 			"applyTime": 1508198532000
-// 			"status": 4
-// 		},
-// 		{
-// 			"id":"7213fea8e94b4a5534ggsd237e5a555b"
-// 			"amount": 1000,
-// 			"address": "463tWEBn5XZJSxLU34r6g7h8jtxuNcDbjLSjkn3XAXHCbLrTTErJrBWYgHJQyrCwkNgYvyV3z8zctJLPCZy24jvb3NiTcTJ",
-// 			"addressTag": "342341222",
-// 			"txId": "b3c6219639c8ae3f9cf010cdc24fw7f7yt8j1e063f9b4bd1a05cb44c4b6e2509",
-// 			"asset": "XMR",
-// 			"applyTime": 1508198532000,
-// 			"status": 4
-// 		}
-// 	],
-// 	"success": true
-// }
-type Binawithdrawals struct {
-	Success     bool             `json:"success"`
-	Msg         string           `json:"msg"`
-	Withdrawals []Binawithdrawal `json:"withdrawList"`
-}
+// Binawithdrawals ...
+type Binawithdrawals []Binawithdrawal
 
 // Binawithdrawal object for withdraw from binance
 type Binawithdrawal struct {
-	ID              string  `json:"id"`
-	WithdrawOrderID string  `json:"withdrawOrderId"`
-	Amount          float64 `json:"amount"`
-	Address         string  `json:"address"`
-	Asset           string  `json:"asset"`
-	TxID            string  `json:"txId"`
-	ApplyTime       uint64  `json:"applyTime"`
-	Fee             float64 `json:"transactionFee"`
-	Status          int     `json:"status"`
+	ID              string `json:"id"`
+	WithdrawOrderID string `json:"withdrawOrderId"`
+	Coin            string `json:"coin"`
+	Amount          string `json:"amount"`
+	Address         string `json:"address"`
+	TxID            string `json:"txId"`
+	ApplyTime       string `json:"applyTime"`
+	Status          int    `json:"status"`
+	Network         string `json:"network"`
 }
 
 type BinaServerTime struct {
