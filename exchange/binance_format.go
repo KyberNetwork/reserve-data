@@ -204,3 +204,32 @@ type BinanceAssetDetail struct {
 	WithdrawStatus    bool    `json:"withdrawStatus"`
 	DepositTip        string  `json:"depositTip"` // reason if deposit status is false
 }
+
+// CoinInfo ...
+type CoinInfo struct {
+	Coin             string `json:"coin"`
+	DepositAllEnable bool   `json:"depositAllEnable"`
+	Free             string `json:"free"`
+	Freeze           string `json:"freeze"`
+	IPOable          string `json:"ipoable"`
+	IsLegalMoney     bool   `json:"isLegalMoney"`
+	Locked           string `json:"locked"`
+	Name             string `json:"name"`
+	NetworkList      []struct {
+		AddressRegex       string `json:"addressRegex"`
+		Coin               string `json:"coin"`
+		DepositDesc        string `json:"depositDesc"`
+		DepositEnable      bool   `json:"depositEnable"`
+		IsDefault          bool   `json:"isDefault"`
+		MinConfirm         int64  `json:"minConfirm"`
+		Name               string `json:"name"`
+		Network            string `json:"network"`
+		ResetAddressStatus bool   `json:"resetAddressStatus"`
+		SpecialTips        string `json:"specialTips"`
+		UnLockConfirm      int64  `json:"unLockConfirm"`
+		WithdrawDesc       string `json:"withdrawDesc"`
+		WithdrawEnable     bool   `json:"withdrawEnable"`
+		WithdrawFee        string `json:"withdrawFee"`
+		WithdrawMin        string `json:"withdrawMin"`
+	} `json:"networkList"`
+}
