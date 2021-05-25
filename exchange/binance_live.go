@@ -45,6 +45,7 @@ func (bl *BinanceLive) RunUpdateAssetDetails(interval time.Duration) {
 			for i := 0; i < 2; i++ {
 				allCoinInfo, err = bl.interf.AllCoinInfo()
 				if err != nil {
+					bl.sugar.Errorw("fetch all coin info failed", "err", err)
 					time.Sleep(3 * time.Second)
 					continue
 				}

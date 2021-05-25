@@ -39,6 +39,8 @@ const (
 	defaultGasPriceURL   = "http://localhost:8088/gas/price"
 	marketDataURLFlag    = "market-data-url"
 	defaultMarketDataURL = "http://localhost:8080"
+	cexDataURLFlag       = "cex-data-url"
+	defaultCEXDataURL    = "http://cex-data.local:8080"
 
 	intervalUpdateWithdrawFeeDBFlag      = "interval-update-withdraw-fee-db"
 	defaultIntervalUpdateWithdrawFeeDB   = 10 * time.Minute
@@ -100,6 +102,12 @@ func main() {
 			EnvVar: "MARKET_DATA_URL",
 			Value:  defaultMarketDataURL,
 		},
+		cli.StringFlag{
+			Name:   cexDataURLFlag,
+			Usage:  "cex data url",
+			EnvVar: "CEX_DATA_URL",
+			Value:  defaultCEXDataURL,
+		},
 		cli.IntFlag{
 			Name:   numberApprovalRequiredFlag,
 			Usage:  "number approval required to apply setting change",
@@ -148,7 +156,8 @@ func run(c *cli.Context) error {
 
 	binanceSigner := binance.NewSigner(c.String(binanceAPIKeyFlag), c.String(binanceSecretKeyFlag))
 	httpClient := &http.Client{Timeout: time.Second * 30}
-	binanceEndpoint := binance.NewBinanceEndpoint(binanceSigner, bi, dpl, httpClient, rtypes.Binance, "", "", "", nil)
+	binanceEndpoint := binance.NewBinanceEndpoint(binanceSigner, bi, dpl, httpClient, rtypes.Binance,
+		c.String(marketDataURLFlag), c.String(cexDataURLFlag), "", nil) // cex
 	hi := configuration.NewhuobiInterfaceFromContext(c)
 
 	// dummy signer as live infos does not need to sign
