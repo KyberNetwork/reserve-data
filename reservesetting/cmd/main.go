@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	authhttp "github.com/KyberNetwork/reserve-data/lib/auth-http"
 	"github.com/urfave/cli"
 	"go.uber.org/zap"
 
@@ -41,6 +42,8 @@ const (
 	defaultMarketDataURL = "http://localhost:8080"
 	cexDataURLFlag       = "cex-data-url"
 	defaultCEXDataURL    = "http://cex-data.local:8080"
+	cexAuthKey           = "cex-auth-key"
+	cexAuthSecret        = "cex-auth-secret"
 
 	intervalUpdateWithdrawFeeDBFlag      = "interval-update-withdraw-fee-db"
 	defaultIntervalUpdateWithdrawFeeDB   = 10 * time.Minute
@@ -108,6 +111,18 @@ func main() {
 			EnvVar: "CEX_DATA_URL",
 			Value:  defaultCEXDataURL,
 		},
+		cli.StringFlag{
+			Name:   cexAuthKey,
+			Usage:  "cex auth key",
+			EnvVar: "CEX_AUTH_KEY",
+			Value:  "",
+		},
+		cli.StringFlag{
+			Name:   cexAuthSecret,
+			Usage:  "cex auth secret",
+			EnvVar: "CEX_AUTH_SECRET",
+			Value:  "",
+		},
 		cli.IntFlag{
 			Name:   numberApprovalRequiredFlag,
 			Usage:  "number approval required to apply setting change",
@@ -156,8 +171,9 @@ func run(c *cli.Context) error {
 
 	binanceSigner := binance.NewSigner(c.String(binanceAPIKeyFlag), c.String(binanceSecretKeyFlag))
 	httpClient := &http.Client{Timeout: time.Second * 30}
+	authHTTP := authhttp.NewAuthHTTP(c.String(cexAuthKey), c.String(cexAuthSecret))
 	binanceEndpoint := binance.NewBinanceEndpoint(binanceSigner, bi, dpl, httpClient, rtypes.Binance,
-		c.String(marketDataURLFlag), c.String(cexDataURLFlag), "", nil) // cex
+		c.String(marketDataURLFlag), c.String(cexDataURLFlag), "", authHTTP) // cex
 	hi := configuration.NewhuobiInterfaceFromContext(c)
 
 	// dummy signer as live infos does not need to sign
