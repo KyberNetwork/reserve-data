@@ -467,32 +467,6 @@ func (ep *Endpoint) GetDepositAddress(coin, network string) (exchange.CoinDeposi
 	return result, err
 }
 
-// GetAllAssetDetail all asset detail on binance
-func (ep *Endpoint) GetAllAssetDetail() (map[string]exchange.BinanceAssetDetail, error) {
-	resp := struct {
-		Success     bool                                   `json:"success"`
-		Msg         string                                 `json:"msg"`
-		AssetDetail map[string]exchange.BinanceAssetDetail `json:"assetDetail"`
-	}{}
-	respBody, err := ep.GetResponse(
-		"GET",
-		ep.interf.AuthenticatedEndpoint()+"/sapi/v1/asset/assetDetail",
-		map[string]string{},
-		true,
-		common.NowInMillis(),
-	)
-	if err != nil {
-		return nil, err
-	}
-	if err := json.Unmarshal(respBody, &resp); err != nil {
-		return nil, fmt.Errorf("cannot unmarshal asset info data from binance, err = %s", err)
-	}
-	if !resp.Success {
-		return nil, fmt.Errorf("failed to get asset detail, msg: %s", resp.Msg)
-	}
-	return resp.AssetDetail, nil
-}
-
 // GetExchangeInfo return exchange info
 // including base, quote precision for tokens
 // min, max price, min notional
@@ -511,40 +485,10 @@ func (ep *Endpoint) GetExchangeInfo() (exchange.BinanceExchangeInfo, error) {
 	return result, err
 }
 
-// CoinInfo ...
-type CoinInfo struct {
-	Coin             string `json:"coin"`
-	DepositAllEnable bool   `json:"depositAllEnable"`
-	Free             string `json:"free"`
-	Freeze           string `json:"freeze"`
-	IPOable          string `json:"ipoable"`
-	IsLegalMoney     bool   `json:"isLegalMoney"`
-	Locked           string `json:"locked"`
-	Name             string `json:"name"`
-	NetworkList      []struct {
-		AddressRegex       string `json:"addressRegex"`
-		Coin               string `json:"coin"`
-		DepositDesc        string `json:"depositDesc"`
-		DepositEnable      bool   `json:"depositEnable"`
-		IsDefault          bool   `json:"isDefault"`
-		MinConfirm         int64  `json:"minConfirm"`
-		Name               string `json:"name"`
-		Network            string `json:"network"`
-		ResetAddressStatus bool   `json:"resetAddressStatus"`
-		SpecialTips        string `json:"specialTips"`
-		UnLockConfirm      int64  `json:"unLockConfirm"`
-		WithdrawDesc       string `json:"withdrawDesc"`
-		WithdrawEnable     bool   `json:"withdrawEnable"`
-		WithdrawFee        string `json:"withdrawFee"`
-		WithdrawMin        string `json:"withdrawMin"`
-	} `json:"networkList"`
-}
-
-// GetAllAssetWithdrawStatus return all asset withdraw status
-func (ep *Endpoint) GetAllAssetWithdrawStatus() (map[string]bool, error) {
+func (ep *Endpoint) AllCoinInfo() (map[string]exchange.CoinInfo, error) {
 	var (
-		response []CoinInfo
-		result   = make(map[string]bool)
+		response []exchange.CoinInfo
+		result   = make(map[string]exchange.CoinInfo)
 	)
 	respBody, err := ep.authHTTP.DoReq(
 		fmt.Sprintf("%s/binance/all-coin-info", ep.accountDataBaseURL),
@@ -556,7 +500,22 @@ func (ep *Endpoint) GetAllAssetWithdrawStatus() (map[string]bool, error) {
 	if err := json.Unmarshal(respBody, &response); err != nil {
 		return result, err
 	}
-	for _, ci := range response {
+	for _, c := range response {
+		result[c.Coin] = c
+	}
+	return result, nil
+}
+
+// GetAllAssetWithdrawStatus return all asset withdraw status
+func (ep *Endpoint) GetAllAssetWithdrawStatus() (map[string]bool, error) {
+	var (
+		result = make(map[string]bool)
+	)
+	ac, err := ep.AllCoinInfo()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get coin info %w", err)
+	}
+	for _, ci := range ac {
 		for _, n := range ci.NetworkList {
 			if n.Network == ep.network {
 				result[ci.Coin] = n.WithdrawEnable
@@ -565,35 +524,6 @@ func (ep *Endpoint) GetAllAssetWithdrawStatus() (map[string]bool, error) {
 		}
 	}
 	return result, nil
-}
-
-// GetAssetWithdrawFee ...
-func (ep *Endpoint) GetAssetWithdrawFee(coin string) (float64, error) {
-	var (
-		response []CoinInfo
-	)
-	respBody, err := ep.authHTTP.DoReq(
-		fmt.Sprintf("%s/binance/all-coin-info", ep.accountDataBaseURL),
-		http.MethodGet,
-		make(map[string]string),
-	)
-	if err != nil {
-		return 0, err
-	}
-	if err := json.Unmarshal(respBody, &response); err != nil {
-		return 0, err
-	}
-	for _, ci := range response {
-		if ci.Coin == coin {
-			for _, n := range ci.NetworkList {
-				if n.Network == ep.network {
-					withdrawFee, err := strconv.ParseFloat(n.WithdrawFee, 64)
-					return withdrawFee, err
-				}
-			}
-		}
-	}
-	return 0, fmt.Errorf("cannot find the withdraw fee for coin: %s", coin)
 }
 
 func (ep *Endpoint) getServerTime() (uint64, error) {
