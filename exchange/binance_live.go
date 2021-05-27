@@ -55,6 +55,7 @@ func (bl *BinanceLive) RunUpdateAssetDetails(interval time.Duration) {
 				bl.sugar.Errorw("cannot get asset detail", "err", err)
 				return
 			}
+			bl.sugar.Infow("update coin info", "count", len(allCoinInfo))
 			bl.mu.Lock()
 			bl.allCoinInfo = allCoinInfo
 			bl.mu.Unlock()
