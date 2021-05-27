@@ -308,9 +308,9 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 							OrderDurationMillis:   common.Uint64Pointer(15666),
 							PriceETHAmount:        common.FloatPointer(1.1),
 							ExchangeETHAmount:     common.FloatPointer(2.2),
-							SanityInfo: common.SanityUpdateInfo{
-								Provider:  common.StringPointer("huobi"),
-								Threshold: common.FloatPointer(0.01),
+							SanityInfo: common.SanityInfo{
+								Provider:  "huobi",
+								Threshold: 0.01,
 								Path:      []string{"ABC", "BTC", "USDT"},
 							},
 						},

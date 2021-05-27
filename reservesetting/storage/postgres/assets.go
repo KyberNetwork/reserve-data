@@ -1008,9 +1008,19 @@ type updateAssetParam struct {
 }
 
 func (s *Storage) updateAsset(tx *sqlx.Tx, id rtypes.AssetID, uo storage.UpdateAssetOpts) error {
-	var sanityPath sanityRatePathData
+	var (
+		sanityRatePath     sanityRatePathData
+		sanityRateProvider *string
+		sanityThreshold    *float64
+	)
 	if len(uo.SanityInfo.Path) > 0 {
-		sanityPath = pq.Array(uo.SanityInfo.Path)
+		sanityRatePath = pq.Array(uo.SanityInfo.Path)
+	}
+	if uo.SanityInfo.Provider != "" {
+		sanityRateProvider = common.StringPointer(uo.SanityInfo.Provider)
+	}
+	if uo.SanityInfo.Threshold != 0 {
+		sanityThreshold = common.FloatPointer(uo.SanityInfo.Threshold)
 	}
 	arg := updateAssetParam{
 		ID:                    id,
@@ -1026,9 +1036,9 @@ func (s *Storage) updateAsset(tx *sqlx.Tx, id rtypes.AssetID, uo storage.UpdateA
 		OrderDurationMillis:   uo.OrderDurationMillis,
 		PriceETHAmount:        uo.PriceETHAmount,
 		ExchangeETHAmount:     uo.ExchangeETHAmount,
-		SanityThreshold:       uo.SanityInfo.Threshold,
-		SanityRateProvider:    uo.SanityInfo.Provider,
-		SanityRatePath:        sanityPath,
+		SanityThreshold:       sanityThreshold,
+		SanityRateProvider:    sanityRateProvider,
+		SanityRatePath:        sanityRatePath,
 	}
 
 	var updateMsgs []string
@@ -1078,11 +1088,11 @@ func (s *Storage) updateAsset(tx *sqlx.Tx, id rtypes.AssetID, uo storage.UpdateA
 	if uo.ExchangeETHAmount != nil {
 		updateMsgs = append(updateMsgs, fmt.Sprintf("exchange_eth_amount=%f", *uo.ExchangeETHAmount))
 	}
-	if uo.SanityInfo.Provider != nil {
-		updateMsgs = append(updateMsgs, fmt.Sprintf("sanity_rate_provider=%s", *uo.SanityInfo.Provider))
+	if sanityRateProvider != nil {
+		updateMsgs = append(updateMsgs, fmt.Sprintf("sanity_rate_provider=%s", *sanityRateProvider))
 	}
-	if uo.SanityInfo.Threshold != nil {
-		updateMsgs = append(updateMsgs, fmt.Sprintf("sanity_threshold=%f", *uo.SanityInfo.Threshold))
+	if sanityThreshold != nil {
+		updateMsgs = append(updateMsgs, fmt.Sprintf("sanity_threshold=%f", *sanityThreshold))
 	}
 	if uo.SanityInfo.Path != nil {
 		updateMsgs = append(updateMsgs, fmt.Sprintf("sanity_rate_path=%v", uo.SanityInfo.Path))
