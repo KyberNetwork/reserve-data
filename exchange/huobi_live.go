@@ -21,18 +21,20 @@ type HuobiLive struct {
 }
 
 // NewHuobiLive return new HuobiLive instance
-func NewHuobiLive(interf HuobiInterface) *HuobiLive {
-	return &HuobiLive{
+func NewHuobiLive(interf HuobiInterface, updateInterval time.Duration) *HuobiLive {
+	r := &HuobiLive{
 		sugar:           zap.S(),
 		interf:          interf,
 		mu:              &sync.RWMutex{},
 		allAssetDetails: make(map[string]HuobiChain),
 	}
+	go r.runUpdateAssetDetails(updateInterval)
+	return r
 }
 
-// RunUpdateAssetDetails just update asset info of eth and erc20 tokens
+// runUpdateAssetDetails just update asset info of eth and erc20 tokens
 // eth has chain is "ETH" and erc20 tokens has base chain is ETH
-func (hl *HuobiLive) RunUpdateAssetDetails(interval time.Duration) {
+func (hl *HuobiLive) runUpdateAssetDetails(interval time.Duration) {
 	t := time.NewTicker(interval)
 	for {
 		func() {

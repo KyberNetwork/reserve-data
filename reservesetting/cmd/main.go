@@ -228,12 +228,10 @@ func getLiveExchanges(enabledExchanges []rtypes.ExchangeID,
 	for _, exchangeID := range enabledExchanges {
 		switch exchangeID {
 		case rtypes.Binance, rtypes.Binance2:
-			binanceLive := exchange.NewBinanceLive(bi)
-			go binanceLive.RunUpdateAssetDetails(intervalUpdateWithdrawFee)
+			binanceLive := exchange.NewBinanceLive(bi, intervalUpdateWithdrawFee)
 			liveExchanges[exchangeID] = binanceLive
 		case rtypes.Huobi:
-			huobiLive := exchange.NewHuobiLive(hi)
-			go huobiLive.RunUpdateAssetDetails(intervalUpdateWithdrawFee)
+			huobiLive := exchange.NewHuobiLive(hi, intervalUpdateWithdrawFee)
 			liveExchanges[exchangeID] = huobiLive
 		}
 	}

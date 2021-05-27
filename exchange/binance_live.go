@@ -24,17 +24,19 @@ type BinanceLive struct {
 }
 
 // NewBinanceLive return new BinanceLive instance
-func NewBinanceLive(interf BinanceInterface) *BinanceLive {
-	return &BinanceLive{
+func NewBinanceLive(interf BinanceInterface, updateInterval time.Duration) *BinanceLive {
+	r := &BinanceLive{
 		sugar:       zap.S(),
 		mu:          &sync.RWMutex{},
 		interf:      interf,
 		allCoinInfo: make(map[string]CoinInfo),
 	}
+	go r.runUpdateAssetDetails(updateInterval)
+	return r
 }
 
-// RunUpdateAssetDetails run interval get asset detail
-func (bl *BinanceLive) RunUpdateAssetDetails(interval time.Duration) {
+// runUpdateAssetDetails run interval get asset detail
+func (bl *BinanceLive) runUpdateAssetDetails(interval time.Duration) {
 	t := time.NewTicker(interval)
 	for {
 		func() {
@@ -55,6 +57,7 @@ func (bl *BinanceLive) RunUpdateAssetDetails(interval time.Duration) {
 				bl.sugar.Errorw("cannot get asset detail", "err", err)
 				return
 			}
+			bl.sugar.Infow("update coin info", "count", len(allCoinInfo))
 			bl.mu.Lock()
 			bl.allCoinInfo = allCoinInfo
 			bl.mu.Unlock()
