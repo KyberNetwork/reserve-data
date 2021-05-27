@@ -251,9 +251,13 @@ type UpdateAssetEntry struct {
 	OrderDurationMillis   *uint64             `json:"order_duration_millis"`
 	PriceETHAmount        *float64            `json:"price_eth_amount"`
 	ExchangeETHAmount     *float64            `json:"exchange_eth_amount"`
-	SanityThreshold       *float64            `json:"sanity_threshold"`
-	SanityRateProvider    *string             `json:"sanity_rate_provider"`
-	SanityRatePath        []string            `json:"sanity_rate_path"`
+	SanityInfo            SanityUpdateInfo    `json:"sanity_info"`
+}
+
+type SanityUpdateInfo struct {
+	Provider  *string  `json:"provider"`
+	Threshold *float64 `json:"threshold"`
+	Path      []string `json:"path"`
 }
 
 type UpdateExchangeEntry struct {
