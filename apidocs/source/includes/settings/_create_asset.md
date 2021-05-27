@@ -73,7 +73,7 @@ curl -X POST "https://gateway.local/v3/setting-change-main" \
             "order_duration_millis": 20000,
             "sanity_info": {
                 "provider": "binance",
-                "threshold": "threshold",
+                "threshold": 0.05,
                 "path": ["OMG", "ETH"]
             }
         }
