@@ -621,7 +621,7 @@ func (bn *Binance) WithdrawStatus(id string, assetID rtypes.AssetID, amount floa
 			case binanceCompleted: // 6 = success
 				withdrawFee, err := bn.GetLiveWithdrawFee(withdraw.Coin)
 				if err != nil {
-					bn.l.Errorw("get withdraw fee failed: %w", err)
+					bn.l.Errorw("get withdraw fee failed", "err", err)
 				} // in case error we just make it pass and check err manual later, so it wont stuck on withdraw
 				return common.ExchangeStatusDone, withdraw.TxID, withdrawFee, err
 			case binanceCancelled: // 1 = cancelled
@@ -748,7 +748,7 @@ func NewBinance(id rtypes.ExchangeID, interf BinanceInterface, storage BinanceSt
 		interf:            interf,
 		storage:           storage,
 		sr:                sr,
-		BinanceLive:       NewBinanceLive(interf),
+		BinanceLive:       NewBinanceLive(interf, time.Minute*5),
 		id:                id,
 		l:                 zap.S(),
 		binBlockchain:     bc,
