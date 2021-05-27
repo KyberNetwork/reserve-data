@@ -748,7 +748,7 @@ func NewBinance(id rtypes.ExchangeID, interf BinanceInterface, storage BinanceSt
 		interf:            interf,
 		storage:           storage,
 		sr:                sr,
-		BinanceLive:       NewBinanceLive(interf),
+		BinanceLive:       NewBinanceLive(interf, time.Minute*5),
 		id:                id,
 		l:                 zap.S(),
 		binBlockchain:     bc,
