@@ -623,6 +623,13 @@ func (bn *Binance) WithdrawStatus(id string, assetID rtypes.AssetID, amount floa
 				if err != nil {
 					bn.l.Errorw("get withdraw fee failed: %w", err)
 				} // in case error we just make it pass and check err manual later, so it wont stuck on withdraw
+				txStatus, _, err := bn.binBlockchain.TxStatus(ethereum.HexToHash(withdraw.TxID))
+				if err != nil {
+					bn.l.Warnw("failed to get status of withdraw transaction from binance", "error", err)
+				}
+				if txStatus != common.MiningStatusMined {
+					bn.l.Warnw("binance return withdraw done but tx is not mined", "tx status", txStatus)
+				}
 				return common.ExchangeStatusDone, withdraw.TxID, withdrawFee, err
 			case binanceCancelled: // 1 = cancelled
 				return common.ExchangeStatusCancelled, withdraw.TxID, 0, nil
