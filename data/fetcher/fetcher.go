@@ -698,6 +698,12 @@ func (f *Fetcher) PersistSnapshot(
 		if activity.IsPending() {
 			pendingActivities = append(pendingActivities, activity)
 		}
+		// check if withdraw status is persistent
+		if activity.Action == common.ActionWithdraw {
+			if activity.ExchangeStatus == common.ExchangeStatusDone && activity.MiningStatus != common.MiningStatusMined {
+				f.l.Warnw("exchange return status done but tx is not mined", "tx status", activity.MiningStatus)
+			}
+		}
 		err := f.storage.UpdateActivity(activity.ID, activity)
 		if err != nil {
 			snapshot.Valid = false
