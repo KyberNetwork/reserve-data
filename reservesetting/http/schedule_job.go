@@ -32,7 +32,7 @@ func (s *Server) addScheduleJob(c *gin.Context) {
 		Endpoint:     strings.TrimPrefix(input.Endpoint, "/"),
 		HTTPMethod:   input.HTTPMethod,
 		Data:         input.Data,
-		ScheduleTime: rcommon.MillisToTime(input.ScheduleTime).UTC(),
+		ScheduleTime: rcommon.MillisToTime(input.ScheduleTime),
 	})
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))

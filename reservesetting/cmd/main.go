@@ -141,6 +141,12 @@ func main() {
 			EnvVar: "SETTING_CHANGE_URL",
 			Value:  defaultSettingChangeURL,
 		},
+		cli.DurationFlag{
+			Name:   intervalCheckScheduleJob,
+			Usage:  "interval time to check the job",
+			EnvVar: "INTERVAL_CHECK_SCHEDULE_JOB",
+			Value:  defaultIntervalCheckScheduleJob,
+		},
 	)
 
 	if err := app.Run(os.Args); err != nil {

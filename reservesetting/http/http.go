@@ -16,7 +16,6 @@ import (
 	marketdatacli "github.com/KyberNetwork/reserve-data/lib/market-data"
 	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	"github.com/KyberNetwork/reserve-data/reservesetting/common"
-	sj "github.com/KyberNetwork/reserve-data/reservesetting/schedule-job"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage"
 )
 
@@ -31,7 +30,6 @@ type Server struct {
 	gasClient              gaspricedataclient.Client
 	marketDataClient       *marketdatacli.Client
 	numberApprovalRequired int
-	sj                     *sj.ScheduleJob
 }
 
 // NewServer creates new HTTP server for reservesetting APIs.
