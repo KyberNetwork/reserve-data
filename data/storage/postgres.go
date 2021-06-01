@@ -485,6 +485,20 @@ func (ps *PostgresStorage) GetActivity(exchangeID rtypes.ExchangeID, id string) 
 	}
 	return activityRecord, nil
 }
+
+func (ps *PostgresStorage) GetLatestSetRatesActivityMined() (common.ActivityRecord, error) {
+	var (
+		activityRecord common.ActivityRecord
+		data           []byte
+	)
+	query := `SELECT data FROM activity WHERE data->>'mining_status' = 'mined' ORDER BY timestamp DESC limit 1;`
+	if err := ps.db.Get(&data, query); err != nil {
+		return activityRecord, err
+	}
+	err := json.Unmarshal(data, &activityRecord)
+	return activityRecord, err
+}
+
 func getFirstAndCountPendingAction(
 	l *zap.SugaredLogger,
 	pendings []common.ActivityRecord,

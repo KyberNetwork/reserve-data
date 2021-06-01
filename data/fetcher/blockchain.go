@@ -16,4 +16,5 @@ type Blockchain interface {
 	TxStatus(tx ethereum.Hash) (string, uint64, error)
 	CurrentBlock() (uint64, error)
 	blockchain.MinedNoncePicker
+	ValidateBlockDuration() (uint64, error)
 }

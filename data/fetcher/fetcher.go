@@ -443,6 +443,24 @@ func (f *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord) (m
 					f.l.Infof("TX_STATUS set rate transaction is mined, id: %s", activity.ID.EID)
 				}
 				result[activity.ID] = common.NewActivityStatus(activity.ExchangeStatus, txStr, blockNum, common.MiningStatusMined, 0, 0, false, err)
+				// check if set rate is out of valid block duration
+				minedBlockNumber := blockNum
+				latestSetRate, err := f.storage.GetLatestSetRatesActivityMined()
+				if err != nil {
+					// it is not important to break here, only log warning
+					f.l.Warnw("failed to get latest set rate activity", "err", err)
+					continue
+				}
+				validBlockDuration, err := f.blockchain.ValidateBlockDuration()
+				if err != nil {
+					// it is not important to break here, only log warning
+					f.l.Warnw("failed to get latest set rate activity", "err", err)
+					continue
+				}
+				if minedBlockNumber-latestSetRate.Result.BlockNumber > validBlockDuration {
+					f.l.Warnw("set rate activity is out of valid block duration", "valid block duration", validBlockDuration,
+						"last mined block", latestSetRate.Result.BlockNumber, "current mined block", minedBlockNumber)
+				}
 			case common.MiningStatusFailed:
 				f.l.Warnw("transaction failed to mine", "tx", tx.String())
 				result[activity.ID] = common.NewActivityStatus(activity.ExchangeStatus, txStr, blockNum, common.MiningStatusFailed, 0, 0, false, err)

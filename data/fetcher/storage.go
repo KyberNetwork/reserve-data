@@ -16,6 +16,7 @@ type Storage interface {
 	Record(action string, id common.ActivityID, destination string, params common.ActivityParams,
 		result common.ActivityResult, estatus string, mstatus string, timepoint uint64, isPending bool, orgTime uint64) error
 	GetActivity(exchangeID rtypes.ExchangeID, id string) (common.ActivityRecord, error)
+	GetLatestSetRatesActivityMined() (common.ActivityRecord, error)
 
 	CurrentAuthDataVersion(timepoint uint64) (common.Version, error)
 	GetAuthData(common.Version) (common.AuthDataSnapshot, error)
