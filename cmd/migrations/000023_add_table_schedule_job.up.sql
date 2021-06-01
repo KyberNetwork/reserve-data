@@ -1,4 +1,4 @@
-CREATE TABLE cron_job (
+CREATE TABLE schedule_job (
   id             SERIAL PRIMARY KEY,
   schedule_time  TIMESTAMPTZ NOT NULL,
   data           JSON NOT NULL,

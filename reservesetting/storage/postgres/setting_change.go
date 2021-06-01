@@ -96,7 +96,6 @@ func (objDB settingChangeDB) ToCommon() (common.SettingChangeResponse, error) {
 		Proposer:     objDB.Proposer.String,
 		Rejector:     objDB.Rejector.String,
 		ScheduleTime: settingChange.ScheduleTime,
-		APIEndpoint:  settingChange.APIEndpoint,
 	}, nil
 }
 

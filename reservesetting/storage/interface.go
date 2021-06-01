@@ -33,8 +33,8 @@ type Interface interface {
 
 	SetPreferGasSource(v v3.PreferGasSource) error
 
-	AddCronJob(data v3.CronJobData) (uint64, error)
-	RemoveCronJob(id uint64) error
+	AddScheduleJob(data v3.ScheduleJobData) (uint64, error)
+	RemoveScheduleJob(id uint64) error
 }
 
 // SettingReader is the common interface for reading exchanges, assets configuration.
@@ -68,7 +68,8 @@ type SettingReader interface {
 
 	GetLisApprovalSettingChange(settingChangeID uint64) ([]v3.ApprovalSettingChangeInfo, error)
 
-	GetCronJob() ([]v3.CronJobData, error)
+	GetAllScheduleJob() ([]v3.ScheduleJobData, error)
+	GetScheduleJob(id uint64) (v3.ScheduleJobData, error)
 }
 
 // ControlInfoInterface ...

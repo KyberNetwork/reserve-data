@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	authhttp "github.com/KyberNetwork/reserve-data/lib/auth-http"
@@ -26,8 +27,8 @@ import (
 	marketdatacli "github.com/KyberNetwork/reserve-data/lib/market-data"
 	"github.com/KyberNetwork/reserve-data/lib/migration"
 	"github.com/KyberNetwork/reserve-data/lib/rtypes"
-	"github.com/KyberNetwork/reserve-data/reservesetting/cronjob"
 	settinghttp "github.com/KyberNetwork/reserve-data/reservesetting/http"
+	sj "github.com/KyberNetwork/reserve-data/reservesetting/schedule-job"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage/postgres"
 )
@@ -52,6 +53,8 @@ const (
 	defaultIntervalUpdateWithdrawFeeDB   = 10 * time.Minute
 	intervalUpdateWithdrawFeeLiveFlag    = "interval-update-withdraw-fee-live"
 	defaultIntervalUpdateWithdrawFeeLive = 5 * time.Minute
+	intervalCheckScheduleJob             = "interval-check-schedule-job"
+	defaultIntervalCheckScheduleJob      = 10 * time.Second
 
 	numberApprovalRequiredFlag    = "number-approval-required"
 	defaultNumberApprovalRequired = 1
@@ -218,14 +221,11 @@ func run(c *cli.Context) error {
 
 	sentryDSN := libapp.SentryDSNFromFlag(c)
 
-	cj := cronjob.NewCronJob(sr, c.String(settingChangeURL))
-	if err := cj.Init(); err != nil {
-		sugar.Errorw("cannot init cron job", "err", err)
-		return err
-	}
+	go sj.NewScheduleJob(sr, strings.TrimSuffix(c.String(settingChangeURL), "/")).Run(c.Duration(intervalCheckScheduleJob))
+
 	server := settinghttp.NewServer(sr, host, liveExchanges, sentryDSN, coreClient,
 		gaspricedataclient.New(httpClient, c.String(gasPriceURLFlag)), marketdatacli.NewClient(c.String(marketDataURLFlag)),
-		c.Int(numberApprovalRequiredFlag), cj)
+		c.Int(numberApprovalRequiredFlag))
 	if profiler.IsEnableProfilerFromContext(c) {
 		server.EnableProfiler()
 	}

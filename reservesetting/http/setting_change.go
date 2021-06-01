@@ -366,19 +366,23 @@ func (s *Server) confirmSettingChange(c *gin.Context) {
 			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
 		}
+		if s.numberApprovalRequired > 0 && len(listApprovalSettingChange) > s.numberApprovalRequired {
+			httputil.ResponseSuccess(c)
+			return
+		}
 		if len(listApprovalSettingChange) < s.numberApprovalRequired {
 			httputil.ResponseSuccess(c)
 			return
 		}
 	}
 
-	if change.ScheduleTime > 0 {
-		if err := s.cj.AddJob(common.CronJobData{
-			Endpoint:     fmt.Sprintf("%s/%d", change.APIEndpoint, input.ID),
+	if change.ScheduleTime > rcommon.NowInMillis() {
+		if _, err := s.storage.AddScheduleJob(common.ScheduleJobData{
+			Endpoint:     fmt.Sprintf("v3/setting-change-main/%d", input.ID),
 			HTTPMethod:   http.MethodPut,
 			Data:         nil,
 			ScheduleTime: rcommon.MillisToTime(change.ScheduleTime),
-		}, true); err != nil {
+		}); err != nil {
 			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
 		}

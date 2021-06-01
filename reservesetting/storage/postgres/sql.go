@@ -64,9 +64,10 @@ type preparedStmts struct {
 	getApprovalSettingChange    *sqlx.Stmt
 	deleteApprovalSettingChange *sqlx.Stmt
 
-	newCronJob    *sqlx.NamedStmt
-	getCronJob    *sqlx.Stmt
-	deleteCronJob *sqlx.Stmt
+	newScheduleJob    *sqlx.NamedStmt
+	getAllScheduleJob *sqlx.Stmt
+	getScheduleJob    *sqlx.Stmt
+	deleteScheduleJob *sqlx.Stmt
 }
 
 func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
@@ -181,7 +182,7 @@ func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
 		return nil, err
 	}
 
-	newCronJob, getCronJob, deleteCronJob, err := cronJobStatements(db)
+	newScheduleJob, getAllScheduleJob, getScheduleJob, deleteScheduleJob, err := scheduleJobStatements(db)
 	if err != nil {
 		return nil, err
 	}
@@ -245,9 +246,10 @@ func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
 		getApprovalSettingChange:    getApprovalSettingChange,
 		deleteApprovalSettingChange: deleteApprovalSettingChange,
 
-		newCronJob:    newCronJob,
-		getCronJob:    getCronJob,
-		deleteCronJob: deleteCronJob,
+		newScheduleJob:    newScheduleJob,
+		getScheduleJob:    getScheduleJob,
+		getAllScheduleJob: getAllScheduleJob,
+		deleteScheduleJob: deleteScheduleJob,
 	}, nil
 }
 
@@ -886,22 +888,27 @@ func confirmPedingSettingStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.
 	return approveSettingChangeStmt, getApprovalSettingChangeStmt, deleteApprovalSettingChangeStmt, err
 }
 
-func cronJobStatements(db *sqlx.DB) (*sqlx.NamedStmt, *sqlx.Stmt, *sqlx.Stmt, error) {
-	const newQuery = `INSERT INTO cron_job(schedule_time, data, http_method, endpoint) 
+func scheduleJobStatements(db *sqlx.DB) (*sqlx.NamedStmt, *sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, error) {
+	const newQuery = `INSERT INTO schedule_job(schedule_time, data, http_method, endpoint) 
 		VALUES (:schedule_time, :data, :http_method, :endpoint) RETURNING id;`
-	newCronJobStmt, err := db.PrepareNamed(newQuery)
+	newScheduleJobStmt, err := db.PrepareNamed(newQuery)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
-	const getQuery = `SELECT id, schedule_time, data, http_method, endpoint FROM cron_job;`
-	getCronJobStmt, err := db.Preparex(getQuery)
+	const getAllQuery = `SELECT id, schedule_time, data, http_method, endpoint FROM schedule_job;`
+	getAllScheduleJobStmt, err := db.Preparex(getAllQuery)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
-	const deleteQuery = `DELETE FROM cron_job WHERE id=$1;`
-	deleteCronJobStmt, err := db.Preparex(deleteQuery)
+	const getQuery = `SELECT id, schedule_time, data, http_method, endpoint FROM schedule_job WHERE id=$1;`
+	getScheduleJobStmt, err := db.Preparex(getQuery)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
-	return newCronJobStmt, getCronJobStmt, deleteCronJobStmt, nil
+	const deleteQuery = `DELETE FROM schedule_job WHERE id=$1;`
+	deleteScheduleJobStmt, err := db.Preparex(deleteQuery)
+	if err != nil {
+		return nil, nil, nil, nil, err
+	}
+	return newScheduleJobStmt, getAllScheduleJobStmt, getScheduleJobStmt, deleteScheduleJobStmt, nil
 }

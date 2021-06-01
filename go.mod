@@ -41,7 +41,6 @@ require (
 	github.com/prometheus/tsdb v0.8.0 // indirect
 	github.com/qiangmzsx/string-adapter v0.0.0-20180323073508-38f25303bb0c
 	github.com/robfig/cron v1.2.0
-	github.com/robfig/cron/v3 v3.0.0
 	github.com/rs/cors v1.7.0 // indirect
 	github.com/rs/xid v1.2.1
 	github.com/shopspring/decimal v0.0.0-20180709203117-cd690d0c9e24

@@ -41,7 +41,7 @@ func TestServer_StableTokenParams(t *testing.T) {
 	s, err := postgres.NewStorage(db)
 	require.NoError(t, err)
 
-	server := NewServer(s, "", supportedExchanges, "", nil, nil, nil, 0, nil)
+	server := NewServer(s, "", supportedExchanges, "", nil, nil, nil, 0)
 
 	require.NoError(t, err)
 	var tests = []testCase{
@@ -89,5 +89,4 @@ func TestServer_StableTokenParams(t *testing.T) {
 		t.Log(tc.msg)
 		t.Run(tc.msg, func(t *testing.T) { testHTTPRequest(t, tc, server.r) })
 	}
-
 }

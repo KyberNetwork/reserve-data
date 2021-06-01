@@ -378,7 +378,6 @@ type SettingChangeEntry struct {
 type SettingChange struct {
 	ChangeList   []SettingChangeEntry `json:"change_list"`
 	ScheduleTime uint64               `json:"schedule_time"`
-	APIEndpoint  string               `json:"api_endpoint"`
 	Message      string               `json:"message"`
 }
 
@@ -388,7 +387,6 @@ type SettingChangeResponse struct {
 	Created      time.Time                   `json:"created"`
 	ChangeList   []SettingChangeEntry        `json:"change_list"`
 	ScheduleTime uint64                      `json:"schedule_time,omitempty"`
-	APIEndpoint  string                      `json:"api_endpoint,omitempty"`
 	Proposer     string                      `json:"proposer,omitempty"`
 	Rejector     string                      `json:"rejector,omitempty"`
 	ListApproval []ApprovalSettingChangeInfo `json:"list_approval,omitempty"`
@@ -443,8 +441,8 @@ type ApprovalSettingChangeInfo struct {
 	Timestamp time.Time `json:"timestamp" db:"timestamp"`
 }
 
-// CronJobData ...
-type CronJobData struct {
+// ScheduleJobData ...
+type ScheduleJobData struct {
 	ID           uint64      `json:"id"`
 	Endpoint     string      `json:"endpoint"`
 	HTTPMethod   string      `json:"http_method"`
