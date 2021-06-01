@@ -486,17 +486,28 @@ func (ps *PostgresStorage) GetActivity(exchangeID rtypes.ExchangeID, id string) 
 	return activityRecord, nil
 }
 
-func (ps *PostgresStorage) GetLatestSetRatesActivityMined() (common.ActivityRecord, error) {
+func (ps *PostgresStorage) GetLatestSetRatesActivitiesMined() ([]common.ActivityRecord, error) {
 	var (
-		activityRecord common.ActivityRecord
-		data           []byte
+		activityRecords []common.ActivityRecord
+		data            [][]byte
 	)
-	query := `SELECT data FROM activity WHERE data->>'mining_status' = 'mined' ORDER BY timestamp DESC limit 1;`
-	if err := ps.db.Get(&data, query); err != nil {
-		return activityRecord, err
+	query := `SELECT data FROM activity WHERE data->>'mining_status' = 'mined' ORDER BY timestamp DESC limit 2;`
+	err := ps.db.Select(&data, query)
+	if err == sql.ErrNoRows {
+		return activityRecords, nil
 	}
-	err := json.Unmarshal(data, &activityRecord)
-	return activityRecord, err
+	if err != nil {
+		return activityRecords, err
+	}
+	for _, d := range data {
+		var act common.ActivityRecord
+		err := json.Unmarshal(d, &act)
+		if err != nil {
+			return activityRecords, err
+		}
+		activityRecords = append(activityRecords, act)
+	}
+	return activityRecords, nil
 }
 
 func getFirstAndCountPendingAction(

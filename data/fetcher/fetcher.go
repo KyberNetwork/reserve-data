@@ -36,14 +36,21 @@ type Fetcher struct {
 	l                      *zap.SugaredLogger
 	reserveCore            *core.ReserveCore
 
-	lostTxActivities map[string]time.Time // this record how long was a tx mark as lost, we confirm it as lost after an amount of duration
-	lostLock         *sync.Mutex
-	settingStorage   storage.Interface
-	rawConfig        common.RawConfig
+	lostTxActivities   map[string]time.Time // this record how long was a tx mark as lost, we confirm it as lost after an amount of duration
+	lostLock           *sync.Mutex
+	settingStorage     storage.Interface
+	rawConfig          common.RawConfig
+	ValidBlockDuration *ValidBlockDuration
+}
+
+type ValidBlockDuration struct {
+	mu                     *sync.RWMutex
+	ValidRateBlockDuration uint64
 }
 
 func NewFetcher(storage Storage, globalStorage GlobalStorage, theworld TheWorld, runner Runner, simulationMode bool,
 	contractAddressConf *common.ContractAddressConfiguration, settingStorage storage.Interface, rcf common.RawConfig) *Fetcher {
+
 	f := &Fetcher{
 		storage:             storage,
 		globalStorage:       globalStorage,
@@ -59,6 +66,14 @@ func NewFetcher(storage Storage, globalStorage GlobalStorage, theworld TheWorld,
 		settingStorage:      settingStorage,
 		exchangeByIDs:       make(map[rtypes.ExchangeID]Exchange),
 		rawConfig:           rcf,
+	}
+	validBlockDuration, err := f.blockchain.ValidateBlockDuration()
+	if err != nil {
+		f.l.Fatalw("cannot update valid rate block duration", "error", err)
+	}
+	f.ValidBlockDuration = &ValidBlockDuration{
+		mu:                     &sync.RWMutex{},
+		ValidRateBlockDuration: validBlockDuration,
 	}
 	return f
 }
@@ -94,6 +109,19 @@ func (f *Fetcher) Stop() error {
 	return f.runner.Stop()
 }
 
+func (f *Fetcher) UpdateValidRateBlockDuration() {
+	for {
+		validBlockDuration, err := f.blockchain.ValidateBlockDuration()
+		if err != nil {
+			f.l.Warnw("cannot update valid rate block duration", "error", err)
+		}
+		f.ValidBlockDuration.mu.Lock()
+		f.ValidBlockDuration.ValidRateBlockDuration = validBlockDuration
+		f.ValidBlockDuration.mu.Unlock()
+		time.Sleep(1 * time.Hour)
+	}
+}
+
 func (f *Fetcher) Run() error {
 	f.l.Info("Fetcher runner is starting...")
 	if err := f.runner.Start(); err != nil {
@@ -105,6 +133,7 @@ func (f *Fetcher) Run() error {
 	go f.RunBlockFetcher()
 	go f.RunGlobalDataFetcher()
 	go f.RunFetchExchangeHistory()
+	go f.UpdateValidRateBlockDuration()
 	f.l.Infof("Fetcher runner is running...")
 	return nil
 }
@@ -298,6 +327,26 @@ func (f *Fetcher) FetchAllAuthData(timepoint uint64) {
 		f.l.Warnw("Storing exchange balances failed", "err", err)
 		return
 	}
+	f.checkValidSetRateDuration()
+}
+
+func (f *Fetcher) checkValidSetRateDuration() {
+	// check valid block duration
+	activities, err := f.storage.GetLatestSetRatesActivitiesMined()
+	if err != nil {
+		f.l.Warnw("failed to get activities", "err", err)
+		return
+	}
+	if len(activities) != 2 {
+		f.l.Warn("there should have 2 set rates record")
+		return
+	}
+	latestSetRate := activities[0]
+	previousSetRate := activities[1]
+	if latestSetRate.Result.BlockNumber-previousSetRate.Result.BlockNumber > f.ValidBlockDuration.ValidRateBlockDuration {
+		f.l.Warnw("set rate activity is out of valid block duration", "valid block duration", f.ValidBlockDuration.ValidRateBlockDuration,
+			"last mined block", previousSetRate.Result.BlockNumber, "current mined block", latestSetRate.Result.BlockNumber)
+	}
 }
 
 func (f *Fetcher) handleStuckActivity(pendings []common.ActivityRecord) {
@@ -443,24 +492,6 @@ func (f *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord) (m
 					f.l.Infof("TX_STATUS set rate transaction is mined, id: %s", activity.ID.EID)
 				}
 				result[activity.ID] = common.NewActivityStatus(activity.ExchangeStatus, txStr, blockNum, common.MiningStatusMined, 0, 0, false, err)
-				// check if set rate is out of valid block duration
-				minedBlockNumber := blockNum
-				latestSetRate, err := f.storage.GetLatestSetRatesActivityMined()
-				if err != nil {
-					// it is not important to break here, only log warning
-					f.l.Warnw("failed to get latest set rate activity", "err", err)
-					continue
-				}
-				validBlockDuration, err := f.blockchain.ValidateBlockDuration()
-				if err != nil {
-					// it is not important to break here, only log warning
-					f.l.Warnw("failed to get latest set rate activity", "err", err)
-					continue
-				}
-				if minedBlockNumber-latestSetRate.Result.BlockNumber > validBlockDuration {
-					f.l.Warnw("set rate activity is out of valid block duration", "valid block duration", validBlockDuration,
-						"last mined block", latestSetRate.Result.BlockNumber, "current mined block", minedBlockNumber)
-				}
 			case common.MiningStatusFailed:
 				f.l.Warnw("transaction failed to mine", "tx", tx.String())
 				result[activity.ID] = common.NewActivityStatus(activity.ExchangeStatus, txStr, blockNum, common.MiningStatusFailed, 0, 0, false, err)
