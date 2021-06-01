@@ -67,14 +67,6 @@ func NewFetcher(storage Storage, globalStorage GlobalStorage, theworld TheWorld,
 		exchangeByIDs:       make(map[rtypes.ExchangeID]Exchange),
 		rawConfig:           rcf,
 	}
-	validBlockDuration, err := f.blockchain.ValidateBlockDuration()
-	if err != nil {
-		f.l.Fatalw("cannot update valid rate block duration", "error", err)
-	}
-	f.ValidBlockDuration = &ValidBlockDuration{
-		mu:                     &sync.RWMutex{},
-		ValidRateBlockDuration: validBlockDuration,
-	}
 	return f
 }
 
@@ -110,6 +102,12 @@ func (f *Fetcher) Stop() error {
 }
 
 func (f *Fetcher) UpdateValidRateBlockDuration() {
+	// init ValidBlockDuration mutex
+	if f.ValidBlockDuration == nil {
+		f.ValidBlockDuration = &ValidBlockDuration{
+			mu: &sync.RWMutex{},
+		}
+	}
 	for {
 		validBlockDuration, err := f.blockchain.ValidateBlockDuration()
 		if err != nil {
