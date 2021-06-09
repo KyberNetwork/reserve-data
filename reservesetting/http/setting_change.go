@@ -477,6 +477,10 @@ func (s *Server) checkUpdateAssetParams(updateEntry common.UpdateAssetEntry) err
 		return errors.Wrapf(err, "failed to get asset id: %v from db ", updateEntry.AssetID)
 	}
 
+	if len(updateEntry.SanityInfo.Path) == 1 {
+		return errors.New("sanity path cannot be a single symbol")
+	}
+
 	if updateEntry.Rebalance != nil && *updateEntry.Rebalance {
 		if asset.RebalanceQuadratic == nil && updateEntry.RebalanceQuadratic == nil {
 			return errors.Errorf("%v at asset id: %v", common.ErrRebalanceQuadraticMissing.Error(), updateEntry.AssetID)
@@ -693,6 +697,9 @@ func (s *Server) checkTokenIndices(tokenAddress ethereum.Address) error {
 }
 
 func (s *Server) checkCreateAssetParams(createEntry common.CreateAssetEntry) error {
+	if len(createEntry.SanityInfo.Path) == 1 {
+		return errors.New("sanity path cannot be a single symbol")
+	}
 	if createEntry.SetRate != common.SetRateNotSet {
 		if err := s.checkTokenIndices(createEntry.Address); err != nil {
 			return err
