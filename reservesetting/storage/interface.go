@@ -65,7 +65,7 @@ type SettingReader interface {
 	ApproveSettingChange(keyID string, settingChangeID uint64) error
 	DisapproveSettingChange(keyID string, settingChangeID uint64) error
 
-	GetLisApprovalSettingChange(settingChangeID uint64) ([]v3.ApprovalSettingChangeInfo, error)
+	GetListApprovalSettingChange(settingChangeID uint64) ([]v3.ApprovalSettingChangeInfo, error)
 	GetScheduleSettingChange() ([]rtypes.SettingChangeID, error)
 
 	GetAllScheduleJob() ([]v3.ScheduleJobData, error)

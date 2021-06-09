@@ -358,7 +358,7 @@ func (s *Server) confirmSettingChange(c *gin.Context) {
 			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
 		}
-		listApprovalSettingChange, err := s.storage.GetLisApprovalSettingChange(input.ID)
+		listApprovalSettingChange, err := s.storage.GetListApprovalSettingChange(input.ID)
 		if err != nil {
 			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
