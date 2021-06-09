@@ -15,7 +15,6 @@ type Interface interface {
 	UpdateTradingPair(id rtypes.TradingPairID, opts UpdateTradingPairOpts) error
 
 	CreateSettingChange(v3.ChangeCatalog, v3.SettingChange, string) (rtypes.SettingChangeID, error)
-	UpdateSettingChangeData(obj v3.SettingChange, id rtypes.SettingChangeID) (rtypes.SettingChangeID, error)
 	GetSettingChange(id rtypes.SettingChangeID) (v3.SettingChangeResponse, error)
 	GetSettingChanges(catalog v3.ChangeCatalog, status v3.ChangeStatus) ([]v3.SettingChangeResponse, error)
 	RejectSettingChange(id rtypes.SettingChangeID, keyID string) error
@@ -67,9 +66,11 @@ type SettingReader interface {
 	DisapproveSettingChange(keyID string, settingChangeID uint64) error
 
 	GetLisApprovalSettingChange(settingChangeID uint64) ([]v3.ApprovalSettingChangeInfo, error)
+	GetScheduleSettingChange() ([]rtypes.SettingChangeID, error)
 
 	GetAllScheduleJob() ([]v3.ScheduleJobData, error)
 	GetScheduleJob(id uint64) (v3.ScheduleJobData, error)
+	GetEligibleScheduleJob() ([]v3.ScheduleJobData, error)
 }
 
 // ControlInfoInterface ...

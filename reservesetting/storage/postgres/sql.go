@@ -41,7 +41,7 @@ type preparedStmts struct {
 
 	newSettingChange          *sqlx.Stmt
 	updateSettingChangeStatus *sqlx.Stmt
-	updateSettingChangeData   *sqlx.Stmt
+	getScheduleSettingChange  *sqlx.Stmt
 	getSettingChange          *sqlx.Stmt
 
 	newPriceFactor      *sqlx.Stmt
@@ -142,7 +142,7 @@ func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
 		return nil, err
 	}
 
-	newSettingChange, updateSettingChangeStatus, updateSettingChangeData, getSettingChange, err := settingChangeStatements(db)
+	newSettingChange, updateSettingChangeStatus, getScheduleSettingChange, getSettingChange, err := settingChangeStatements(db)
 	if err != nil {
 		return nil, err
 	}
@@ -223,7 +223,7 @@ func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
 
 		newSettingChange:          newSettingChange,
 		updateSettingChangeStatus: updateSettingChangeStatus,
-		updateSettingChangeData:   updateSettingChangeData,
+		getScheduleSettingChange:  getScheduleSettingChange,
 		getSettingChange:          getSettingChange,
 
 		newPriceFactor:      newPriceFactor,
@@ -761,8 +761,9 @@ func settingChangeStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, *
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
-	const updateSettingChangeData = `UPDATE setting_change SET data = $2 WHERE id=$1 returning id`
-	updateSettingChangeDataStmt, err := db.Preparex(updateSettingChangeData)
+	const getScheduleSettingChange = `SELECT changes.id FROM (SELECT id, CAST (data ->> 'schedule_time' AS BIGINT) AS schedule_time FROM setting_change WHERE status='pending') AS changes
+	WHERE changes.schedule_time > 0 AND changes.schedule_time <= EXTRACT(EPOCH FROM now()) * 1000;`
+	getScheduleSettingChangeStmt, err := db.Preparex(getScheduleSettingChange)
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
@@ -772,7 +773,7 @@ func settingChangeStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, *
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
-	return newSettingChangeStmt, updateSettingChangeStatusStmt, updateSettingChangeDataStmt, listSettingChangeStmt, nil
+	return newSettingChangeStmt, updateSettingChangeStatusStmt, getScheduleSettingChangeStmt, listSettingChangeStmt, nil
 }
 
 func priceFactorStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, error) {
@@ -895,7 +896,8 @@ func scheduleJobStatements(db *sqlx.DB) (*sqlx.NamedStmt, *sqlx.Stmt, *sqlx.Stmt
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
-	const getAllQuery = `SELECT id, schedule_time, data, http_method, endpoint FROM schedule_job;`
+	const getAllQuery = `SELECT id, schedule_time, data, http_method, endpoint FROM schedule_job 
+		WHERE schedule_time <= COALESCE($1, schedule_job.schedule_time);`
 	getAllScheduleJobStmt, err := db.Preparex(getAllQuery)
 	if err != nil {
 		return nil, nil, nil, nil, err

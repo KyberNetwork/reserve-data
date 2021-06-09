@@ -57,7 +57,34 @@ func (s *Storage) GetAllScheduleJob() ([]v3.ScheduleJobData, error) {
 		dbResult []scheduleJobDB
 		result   []v3.ScheduleJobData
 	)
-	if err := s.stmts.getAllScheduleJob.Select(&dbResult); err != nil {
+	if err := s.stmts.getAllScheduleJob.Select(&dbResult, nil); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	for _, dbr := range dbResult {
+		var data interface{}
+		if err := json.Unmarshal(dbr.Data, &data); err != nil {
+			return nil, err
+		}
+		result = append(result, v3.ScheduleJobData{
+			ID:           dbr.ID,
+			Endpoint:     dbr.Endpoint,
+			HTTPMethod:   dbr.HTTPMethod,
+			Data:         data,
+			ScheduleTime: dbr.ScheduleTime,
+		})
+	}
+	return result, nil
+}
+
+func (s *Storage) GetEligibleScheduleJob() ([]v3.ScheduleJobData, error) {
+	var (
+		dbResult []scheduleJobDB
+		result   []v3.ScheduleJobData
+	)
+	if err := s.stmts.getAllScheduleJob.Select(&dbResult, time.Now()); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}

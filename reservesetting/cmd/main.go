@@ -227,10 +227,12 @@ func run(c *cli.Context) error {
 
 	sentryDSN := libapp.SentryDSNFromFlag(c)
 
-	go sj.NewScheduleJob(sr, strings.TrimSuffix(c.String(settingChangeURL), "/")).Run(c.Duration(intervalCheckScheduleJob))
+	marketDataCli := marketdatacli.NewClient(c.String(marketDataURLFlag))
+
+	go sj.NewScheduleJob(sr, strings.TrimSuffix(c.String(settingChangeURL), "/"), marketDataCli).Run(c.Duration(intervalCheckScheduleJob))
 
 	server := settinghttp.NewServer(sr, host, liveExchanges, sentryDSN, coreClient,
-		gaspricedataclient.New(httpClient, c.String(gasPriceURLFlag)), marketdatacli.NewClient(c.String(marketDataURLFlag)),
+		gaspricedataclient.New(httpClient, c.String(gasPriceURLFlag)), marketDataCli,
 		c.Int(numberApprovalRequiredFlag))
 	if profiler.IsEnableProfilerFromContext(c) {
 		server.EnableProfiler()

@@ -52,27 +52,25 @@ func (s *Storage) CreateSettingChange(cat common.ChangeCatalog, obj common.Setti
 	return id, nil
 }
 
-// UpdateSettingChangeData update the setting change data
-func (s *Storage) UpdateSettingChangeData(obj common.SettingChange, id rtypes.SettingChangeID) (rtypes.SettingChangeID, error) {
-	jsonData, err := json.Marshal(obj)
-	if err != nil {
-		return 0, errors.Wrapf(err, "failed to parse json data %+v", obj)
-	}
-	tx, err := s.db.Beginx()
-	if err != nil {
-		return 0, err
-	}
-	defer pgutil.RollbackUnlessCommitted(tx)
+type scheduleSettingChangeDB struct {
+	ID rtypes.SettingChangeID `db:"id"`
+}
 
-	if err = tx.Stmtx(s.stmts.updateSettingChangeData).Get(&id, id, jsonData); err != nil {
-		s.l.Errorw("failed to udpate setting change data", "err", err)
-		return 0, err
+// GetScheduleSettingChange update the setting change data
+func (s *Storage) GetScheduleSettingChange() ([]rtypes.SettingChangeID, error) {
+	var dbResult []scheduleSettingChangeDB
+	err := s.stmts.getScheduleSettingChange.Select(&dbResult)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, common.ErrNotFound
+		}
+		return nil, err
 	}
-	if err = tx.Commit(); err != nil {
-		return 0, err
+	var result []rtypes.SettingChangeID
+	for _, r := range dbResult {
+		result = append(result, r.ID)
 	}
-	s.l.Infow("update setting change data success", "id", id)
-	return id, nil
+	return result, nil
 }
 
 type settingChangeDB struct {

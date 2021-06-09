@@ -2,10 +2,8 @@ package http
 
 import (
 	"fmt"
-	"net/http"
 	"reflect"
 	"strconv"
-	"strings"
 
 	"github.com/KyberNetwork/reserve-data/common/ethutil"
 	ethereum "github.com/ethereum/go-ethereum/common"
@@ -13,7 +11,6 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/pkg/errors"
 
-	rcommon "github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/feed"
 	"github.com/KyberNetwork/reserve-data/http/httputil"
 	"github.com/KyberNetwork/reserve-data/lib/rtypes"
@@ -366,33 +363,13 @@ func (s *Server) confirmSettingChange(c *gin.Context) {
 			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
 		}
-		if s.numberApprovalRequired > 0 && len(listApprovalSettingChange) > s.numberApprovalRequired {
-			httputil.ResponseSuccess(c)
-			return
-		}
 		if len(listApprovalSettingChange) < s.numberApprovalRequired {
 			httputil.ResponseSuccess(c)
 			return
 		}
 	}
 
-	if change.ScheduleTime > rcommon.NowInMillis() {
-		if _, err := s.storage.AddScheduleJob(common.ScheduleJobData{
-			Endpoint:     fmt.Sprintf("v3/setting-change-main/%d", input.ID),
-			HTTPMethod:   http.MethodPut,
-			Data:         nil,
-			ScheduleTime: rcommon.MillisToTime(change.ScheduleTime),
-		}); err != nil {
-			httputil.ResponseFailure(c, httputil.WithError(err))
-			return
-		}
-		// update the setting change without schedule time
-		if _, err := s.storage.UpdateSettingChangeData(common.SettingChange{
-			ChangeList: change.ChangeList,
-		}, change.ID); err != nil {
-			httputil.ResponseFailure(c, httputil.WithError(err))
-			return
-		}
+	if change.ScheduleTime > 0 {
 		httputil.ResponseSuccess(c)
 		return
 	}
@@ -411,7 +388,7 @@ func (s *Server) confirmSettingChange(c *gin.Context) {
 				httputil.ResponseFailure(c, httputil.WithError(err))
 				return
 			}
-			exchange, sourceSymbol, publicSymbol, err := dataForMarketDataByExchange(tradingPair.ExchangeID, tradingPair.BaseSymbol, tradingPair.QuoteSymbol)
+			exchange, sourceSymbol, publicSymbol, err := common.DataForMarketDataByExchange(tradingPair.ExchangeID, tradingPair.BaseSymbol, tradingPair.QuoteSymbol)
 			if err != nil {
 				httputil.ResponseFailure(c, httputil.WithError(err))
 				return
@@ -423,22 +400,6 @@ func (s *Server) confirmSettingChange(c *gin.Context) {
 		}
 	}
 	httputil.ResponseSuccess(c)
-}
-
-func dataForMarketDataByExchange(exchangeID rtypes.ExchangeID, base, quote string) (string, string, string, error) {
-	var (
-		lowerBase  = strings.ToLower(base)
-		lowerQuote = strings.ToLower(quote)
-	)
-	publicSymbol := fmt.Sprintf("%s-%s", lowerBase, lowerQuote)
-	switch exchangeID {
-	case rtypes.Binance, rtypes.Binance2:
-		return rtypes.Binance.String(), fmt.Sprintf("%s%s", lowerBase, lowerQuote), publicSymbol, nil
-	case rtypes.Huobi:
-		return rtypes.Huobi.String(), fmt.Sprintf("%s%s", lowerBase, lowerQuote), publicSymbol, nil
-	default:
-		return "", "", "", fmt.Errorf("%s exchange is not supported", exchangeID)
-	}
 }
 
 func (s *Server) checkCreateTradingPairParams(createEntry common.CreateTradingPairEntry) (string, string, error) {
@@ -474,7 +435,7 @@ func (s *Server) checkCreateTradingPairParams(createEntry common.CreateTradingPa
 		return "", "", errors.Wrap(common.ErrQuoteAssetInvalid, "quote asset not config on exchange")
 	}
 	if s.marketDataClient != nil {
-		exchange, symbol, _, err := dataForMarketDataByExchange(createEntry.ExchangeID, baseAssetEx.Symbol, quoteAssetEx.Symbol)
+		exchange, symbol, _, err := common.DataForMarketDataByExchange(createEntry.ExchangeID, baseAssetEx.Symbol, quoteAssetEx.Symbol)
 		if err != nil {
 			return "", "", errors.Wrap(err, "cannot create params for market data client")
 		}
@@ -607,7 +568,7 @@ func (s *Server) checkCreateAssetExchangeParams(createEntry common.CreateAssetEx
 				if quoteAssetExchangeSymbol == "" {
 					return errors.New(fmt.Sprintf("quote asset didn't have asset exchange, quote id: %v", tradingPair.Quote))
 				}
-				exchange, symbol, _, err := dataForMarketDataByExchange(createEntry.ExchangeID, createEntry.Symbol, quoteAssetExchangeSymbol)
+				exchange, symbol, _, err := common.DataForMarketDataByExchange(createEntry.ExchangeID, createEntry.Symbol, quoteAssetExchangeSymbol)
 				if err != nil {
 					return errors.Wrap(err, "cannot create params for market data client")
 				}
@@ -641,7 +602,7 @@ func (s *Server) checkCreateAssetExchangeParams(createEntry common.CreateAssetEx
 				if baseAssetExchangeSymbol == "" {
 					return errors.New(fmt.Sprintf("base asset didn't have asset exchange, base id: %v", tradingPair.Base))
 				}
-				exchange, symbol, _, err := dataForMarketDataByExchange(createEntry.ExchangeID, baseAssetExchangeSymbol, createEntry.Symbol)
+				exchange, symbol, _, err := common.DataForMarketDataByExchange(createEntry.ExchangeID, baseAssetExchangeSymbol, createEntry.Symbol)
 				if err != nil {
 					return errors.Wrap(err, "cannot create params for market data client")
 				}
@@ -783,7 +744,7 @@ func (s *Server) checkCreateAssetParams(createEntry common.CreateAssetEntry) err
 					if quoteAssetExchangeSymbol == "" {
 						return errors.New(fmt.Sprintf("quote asset didn't have asset exchange, quote id: %v", tradingPair.Quote))
 					}
-					exchange, symbol, _, err := dataForMarketDataByExchange(exchange.ExchangeID, exchange.Symbol, quoteAssetExchangeSymbol)
+					exchange, symbol, _, err := common.DataForMarketDataByExchange(exchange.ExchangeID, exchange.Symbol, quoteAssetExchangeSymbol)
 					if err != nil {
 						return errors.Wrap(err, "cannot create params for market data client")
 					}
@@ -817,7 +778,7 @@ func (s *Server) checkCreateAssetParams(createEntry common.CreateAssetEntry) err
 					if baseAssetExchangeSymbol == "" {
 						return errors.New(fmt.Sprintf("base asset didn't have asset exchange, base id: %v", tradingPair.Base))
 					}
-					exchange, symbol, _, err := dataForMarketDataByExchange(exchange.ExchangeID, baseAssetExchangeSymbol, exchange.Symbol)
+					exchange, symbol, _, err := common.DataForMarketDataByExchange(exchange.ExchangeID, baseAssetExchangeSymbol, exchange.Symbol)
 					if err != nil {
 						return errors.Wrap(err, "cannot create params for market data client")
 					}
