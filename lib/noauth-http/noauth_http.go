@@ -49,11 +49,9 @@ func (c *Client) DoReq(url, method string, data interface{}) ([]byte, error) {
 		return nil, errors.Wrap(err, "failed to do get req")
 	}
 	rspBody, err := ioutil.ReadAll(rsp.Body)
+	_ = rsp.Body.Close()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read body")
-	}
-	if err := rsp.Body.Close(); err != nil {
-		return nil, errors.Wrap(err, "failed to close body")
 	}
 	if rsp.StatusCode != 200 {
 		var rspData interface{}
