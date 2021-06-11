@@ -141,10 +141,10 @@ func WithSettingEndpoint(settingEndpoint string, noAuth bool) Option {
 		g.DELETE("/disapprove-setting-change/:id", settingProxyMW)
 		g.GET("/number-approval-required", settingProxyMW)
 
-		g.POST("/schedule-job", settingProxyMW)
-		g.GET("/schedule-job", settingProxyMW)
-		g.GET("/schedule-job/:id", settingProxyMW)
-		g.DELETE("/schedule-job/:id", settingProxyMW)
+		g.POST("/scheduled-job", settingProxyMW)
+		g.GET("/scheduled-job", settingProxyMW)
+		g.GET("/scheduled-job/:id", settingProxyMW)
+		g.DELETE("/scheduled-job/:id", settingProxyMW)
 
 		return nil
 	}

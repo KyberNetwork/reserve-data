@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"encoding/json"
 	"net/http"
 	"testing"
 	"time"
@@ -21,28 +22,31 @@ func TestScheduleJob(t *testing.T) {
 	s, err := NewStorage(db)
 	require.NoError(t, err)
 
-	testData := common.ScheduleJobData{
-		Endpoint:     "test endpoint",
-		HTTPMethod:   http.MethodPost,
-		Data:         nil,
-		ScheduleTime: time.Now(),
+	testJSON, err := json.Marshal(nil)
+	require.NoError(t, err)
+
+	testData := common.ScheduledJobData{
+		Endpoint:      "test endpoint",
+		HTTPMethod:    http.MethodPost,
+		Data:          testJSON,
+		ScheduledTime: time.Now(),
 	}
-	id, err := s.AddScheduleJob(testData)
+	id, err := s.AddScheduledJob(testData)
 	require.NoError(t, err)
 
 	testData.ID = id
-	sj, err := s.GetScheduleJob(id)
+	sj, err := s.GetScheduledJob(id)
 	require.NoError(t, err)
 
-	require.Equal(t, testData.ScheduleTime.Unix(), sj.ScheduleTime.Unix())
+	require.Equal(t, testData.ScheduledTime.Unix(), sj.ScheduledTime.Unix())
 	require.Equal(t, testData.Endpoint, sj.Endpoint)
 	require.Equal(t, testData.HTTPMethod, sj.HTTPMethod)
 	require.Equal(t, testData.Data, sj.Data)
 
-	err = s.RemoveScheduleJob(id)
+	err = s.RemoveScheduledJob(id)
 	require.NoError(t, err)
 
-	allSJ, err := s.GetAllScheduleJob()
+	allSJ, err := s.GetAllScheduledJob()
 	require.NoError(t, err)
 	require.Zero(t, len(allSJ))
 }

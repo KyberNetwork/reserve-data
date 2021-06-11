@@ -28,7 +28,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/lib/migration"
 	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	settinghttp "github.com/KyberNetwork/reserve-data/reservesetting/http"
-	sj "github.com/KyberNetwork/reserve-data/reservesetting/schedule-job"
+	sj "github.com/KyberNetwork/reserve-data/reservesetting/scheduled-job"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage/postgres"
 )
@@ -53,8 +53,8 @@ const (
 	defaultIntervalUpdateWithdrawFeeDB   = 10 * time.Minute
 	intervalUpdateWithdrawFeeLiveFlag    = "interval-update-withdraw-fee-live"
 	defaultIntervalUpdateWithdrawFeeLive = 5 * time.Minute
-	intervalCheckScheduleJob             = "interval-check-schedule-job"
-	defaultIntervalCheckScheduleJob      = 10 * time.Second
+	intervalCheckScheduledJob            = "interval-check-schedule-job"
+	defaultIntervalCheckScheduledJob     = 10 * time.Second
 
 	numberApprovalRequiredFlag    = "number-approval-required"
 	defaultNumberApprovalRequired = 1
@@ -142,10 +142,10 @@ func main() {
 			Value:  defaultSettingChangeURL,
 		},
 		cli.DurationFlag{
-			Name:   intervalCheckScheduleJob,
+			Name:   intervalCheckScheduledJob,
 			Usage:  "interval time to check the job",
-			EnvVar: "INTERVAL_CHECK_SCHEDULE_JOB",
-			Value:  defaultIntervalCheckScheduleJob,
+			EnvVar: "INTERVAL_CHECK_SCHEDULED_JOB",
+			Value:  defaultIntervalCheckScheduledJob,
 		},
 	)
 
@@ -229,7 +229,7 @@ func run(c *cli.Context) error {
 
 	marketDataCli := marketdatacli.NewClient(c.String(marketDataURLFlag))
 
-	go sj.NewScheduleJob(sr, strings.TrimSuffix(c.String(settingChangeURL), "/"), marketDataCli).Run(c.Duration(intervalCheckScheduleJob))
+	go sj.NewScheduledJob(sr, strings.TrimSuffix(c.String(settingChangeURL), "/"), marketDataCli).Run(c.Duration(intervalCheckScheduledJob))
 
 	server := settinghttp.NewServer(sr, host, liveExchanges, sentryDSN, coreClient,
 		gaspricedataclient.New(httpClient, c.String(gasPriceURLFlag)), marketDataCli,

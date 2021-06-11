@@ -32,8 +32,8 @@ type Interface interface {
 
 	SetPreferGasSource(v v3.PreferGasSource) error
 
-	AddScheduleJob(data v3.ScheduleJobData) (uint64, error)
-	RemoveScheduleJob(id uint64) error
+	AddScheduledJob(data v3.ScheduledJobData) (uint64, error)
+	RemoveScheduledJob(id uint64) error
 }
 
 // SettingReader is the common interface for reading exchanges, assets configuration.
@@ -66,11 +66,11 @@ type SettingReader interface {
 	DisapproveSettingChange(keyID string, settingChangeID uint64) error
 
 	GetListApprovalSettingChange(settingChangeID uint64) ([]v3.ApprovalSettingChangeInfo, error)
-	GetScheduleSettingChange() ([]rtypes.SettingChangeID, error)
+	GetScheduledSettingChange() ([]rtypes.SettingChangeID, error)
 
-	GetAllScheduleJob() ([]v3.ScheduleJobData, error)
-	GetScheduleJob(id uint64) (v3.ScheduleJobData, error)
-	GetEligibleScheduleJob() ([]v3.ScheduleJobData, error)
+	GetAllScheduledJob() ([]v3.ScheduledJobData, error)
+	GetScheduledJob(id uint64) (v3.ScheduledJobData, error)
+	GetEligibleScheduledJob() ([]v3.ScheduledJobData, error)
 }
 
 // ControlInfoInterface ...

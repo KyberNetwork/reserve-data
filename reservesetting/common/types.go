@@ -1,6 +1,7 @@
 package common
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/KyberNetwork/reserve-data/common/ethutil"
@@ -376,20 +377,20 @@ type SettingChangeEntry struct {
 
 // SettingChange present for setting change request
 type SettingChange struct {
-	ChangeList   []SettingChangeEntry `json:"change_list"`
-	ScheduleTime uint64               `json:"schedule_time"`
-	Message      string               `json:"message"`
+	ChangeList    []SettingChangeEntry `json:"change_list"`
+	ScheduledTime uint64               `json:"scheduled_time"`
+	Message       string               `json:"message"`
 }
 
 // SettingChangeResponse setting change response
 type SettingChangeResponse struct {
-	ID           rtypes.SettingChangeID      `json:"id"`
-	Created      time.Time                   `json:"created"`
-	ChangeList   []SettingChangeEntry        `json:"change_list"`
-	ScheduleTime uint64                      `json:"schedule_time,omitempty"`
-	Proposer     string                      `json:"proposer,omitempty"`
-	Rejector     string                      `json:"rejector,omitempty"`
-	ListApproval []ApprovalSettingChangeInfo `json:"list_approval,omitempty"`
+	ID            rtypes.SettingChangeID      `json:"id"`
+	Created       time.Time                   `json:"created"`
+	ChangeList    []SettingChangeEntry        `json:"change_list"`
+	ScheduledTime uint64                      `json:"scheduled_time,omitempty"`
+	Proposer      string                      `json:"proposer,omitempty"`
+	Rejector      string                      `json:"rejector,omitempty"`
+	ListApproval  []ApprovalSettingChangeInfo `json:"list_approval,omitempty"`
 }
 
 // DeleteTradingPairEntry hold data to delete a trading pair entry
@@ -441,11 +442,11 @@ type ApprovalSettingChangeInfo struct {
 	Timestamp time.Time `json:"timestamp" db:"timestamp"`
 }
 
-// ScheduleJobData ...
-type ScheduleJobData struct {
-	ID           uint64      `json:"id"`
-	Endpoint     string      `json:"endpoint"`
-	HTTPMethod   string      `json:"http_method"`
-	Data         interface{} `json:"data"`
-	ScheduleTime time.Time   `json:"schedule_time"`
+// ScheduledJobData ...
+type ScheduledJobData struct {
+	ID            uint64          `json:"id"`
+	Endpoint      string          `json:"endpoint"`
+	HTTPMethod    string          `json:"http_method"`
+	Data          json.RawMessage `json:"data"`
+	ScheduledTime time.Time       `json:"scheduled_time"`
 }

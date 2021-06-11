@@ -53,12 +53,8 @@ func (c *Client) DoReq(url, method string, data interface{}) ([]byte, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read body")
 	}
-	if rsp.StatusCode != 200 {
-		var rspData interface{}
-		if err := json.Unmarshal(rspBody, &rspData); err != nil {
-			return nil, errors.Wrap(err, "cannot unmarshal response data")
-		}
-		return nil, errors.Errorf("receive unexpected code, actual code: %d, data: %+v", rsp.StatusCode, rspData)
+	if rsp.StatusCode != http.StatusOK {
+		return nil, errors.Errorf("receive unexpected code, actual code: %d, data: %s", rsp.StatusCode, string(rspBody))
 	}
 	return rspBody, nil
 }

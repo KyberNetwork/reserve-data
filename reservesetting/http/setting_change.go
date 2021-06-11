@@ -369,7 +369,7 @@ func (s *Server) confirmSettingChange(c *gin.Context) {
 		}
 	}
 
-	if change.ScheduleTime > 0 {
+	if change.ScheduledTime > 0 {
 		httputil.ResponseSuccess(c)
 		return
 	}

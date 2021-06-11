@@ -3,13 +3,13 @@
 ## Add schedule job
 
 ``` shell
-curl -X POST "https://gateway.local/v3/schedule-job" \
+curl -X POST "https://gateway.local/v3/scheduled-job" \
 -H 'Content-Type: application/json' \
 -d '{
 		  "endpoint"`: "/v3/setting-change-main/2",
 	    "http_method": "PUT",
       "data": null,
-	    "schedule_time": 123456789
+	    "scheduled_time": 123456789
 	  }'
 ```
 
@@ -24,14 +24,14 @@ curl -X POST "https://gateway.local/v3/schedule-job" \
 
 ### HTTP Request
 
-`POST https://gateway.local/v3/schedule-job`
+`POST https://gateway.local/v3/scheduled-job`
 
 Params | Type | Required | Default | Description
 ------ | ---- | -------- | ------- | -----------
 endpoint | string | yes |  | the endpoint the job should call
 http_method | string | yes |  | http method
 data | json | no | | data to call
-schedule_time | uint64 | yes | | the time to execute the job
+scheduled_time | uint64 | yes | | the time to execute the job
 
 <aside class="notice">Admin key is required</aside>
 
@@ -39,7 +39,7 @@ schedule_time | uint64 | yes | | the time to execute the job
 
 
 ```shell
-curl -X GET "https://gateway.local/v3/schedule-job"
+curl -X GET "https://gateway.local/v3/scheduled-job"
 ```
 
 > sample response
@@ -51,7 +51,7 @@ curl -X GET "https://gateway.local/v3/schedule-job"
       "endpoint"`: "/v3/setting-change-main/2",
 	    "http_method": "PUT",
       "data": null,
-	    "schedule_time": 123456789
+	    "scheduled_time": 123456789
     },
     ...
   ],
@@ -61,7 +61,7 @@ curl -X GET "https://gateway.local/v3/schedule-job"
 
 ### HTTP Request
 
-`GET https://gateway.local/v3/schedule-job`
+`GET https://gateway.local/v3/scheduled-job`
 <aside class="notice">All keys are accepted</aside>
 
 
@@ -69,7 +69,7 @@ curl -X GET "https://gateway.local/v3/schedule-job"
 
 
 ```shell
-curl -X GET "https://gateway.local/v3/schedule-job/:id"
+curl -X GET "https://gateway.local/v3/scheduled-job/:id"
 ```
 
 > sample response
@@ -80,7 +80,7 @@ curl -X GET "https://gateway.local/v3/schedule-job/:id"
       "endpoint"`: "/v3/setting-change-main/2",
 	    "http_method": "PUT",
       "data": null,
-	    "schedule_time": 123456789
+	    "scheduled_time": 123456789
     },
   "success": true
 }
@@ -88,14 +88,14 @@ curl -X GET "https://gateway.local/v3/schedule-job/:id"
 
 ### HTTP Request
 
-`GET https://gateway.local/v3/schedule-job/:id`
+`GET https://gateway.local/v3/scheduled-job/:id`
 <aside class="notice">All keys are accepted</aside>
 
 ## Remove schedule job
 
 
 ```shell
-curl -X DELETE "https://gateway.local/v3/schedule-job/:id"
+curl -X DELETE "https://gateway.local/v3/scheduled-job/:id"
 ```
 
 > sample response
@@ -108,5 +108,5 @@ curl -X DELETE "https://gateway.local/v3/schedule-job/:id"
 
 ### HTTP Request
 
-`DELETE https://gateway.local/v3/schedule-job/:id`
+`DELETE https://gateway.local/v3/scheduled-job/:id`
 <aside class="notice">Admin and manage keys are accepted</aside>

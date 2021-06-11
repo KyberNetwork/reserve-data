@@ -1,4 +1,4 @@
-package schedulejob
+package scheduledjob
 
 import (
 	"fmt"
@@ -13,7 +13,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage"
 )
 
-type ScheduleJob struct {
+type ScheduledJob struct {
 	l             *zap.SugaredLogger
 	cli           *nh.Client
 	s             storage.Interface
@@ -21,8 +21,8 @@ type ScheduleJob struct {
 	marketDataCli *marketdatacli.Client
 }
 
-func NewScheduleJob(s storage.Interface, settingURL string, marketDataCli *marketdatacli.Client) *ScheduleJob {
-	return &ScheduleJob{
+func NewScheduledJob(s storage.Interface, settingURL string, marketDataCli *marketdatacli.Client) *ScheduledJob {
+	return &ScheduledJob{
 		l:             zap.S(),
 		cli:           nh.New(),
 		s:             s,
@@ -31,43 +31,47 @@ func NewScheduleJob(s storage.Interface, settingURL string, marketDataCli *marke
 	}
 }
 
-func (sj *ScheduleJob) Run(interval time.Duration) {
+func (sj *ScheduledJob) Run(interval time.Duration) {
 	for {
-		sj.ExecuteScheduleSettingChange()
-		sj.ExecuteEligibleScheduleJob()
+		sj.ExecuteScheduledSettingChange()
+		sj.ExecuteEligibleScheduledJob()
 		time.Sleep(interval)
 	}
 }
 
-func (sj *ScheduleJob) ExecuteEligibleScheduleJob() {
-	l := sj.l.With("func", "ExecuteEligibleScheduleJob")
-	jobs, err := sj.s.GetEligibleScheduleJob()
+func (sj *ScheduledJob) ExecuteEligibleScheduledJob() {
+	l := sj.l.With("func", "ExecuteEligibleScheduledJob")
+	jobs, err := sj.s.GetEligibleScheduledJob()
 	if err != nil {
 		l.Errorw("cannot get job from db", "err", err)
 		return
 	}
 	for _, j := range jobs {
+		l.Infow("job info", "info", j)
 		_, err := sj.cli.DoReq(fmt.Sprintf("%s/%s", sj.settingURL, j.Endpoint), j.HTTPMethod, j.Data)
 		if err != nil {
 			sj.l.Errorw("failed to execute request", "err", err)
 		}
-		if err := sj.s.RemoveScheduleJob(j.ID); err != nil {
+		if err := sj.s.RemoveScheduledJob(j.ID); err != nil {
 			sj.l.Errorw("failed to remove the job from db", "id", j.ID)
 		}
 	}
 }
 
-func (sj *ScheduleJob) ExecuteScheduleSettingChange() {
-	l := sj.l.With("func", "ExecuteScheduleSettingChange")
-	ids, err := sj.s.GetScheduleSettingChange()
+func (sj *ScheduledJob) ExecuteScheduledSettingChange() {
+	l := sj.l.With("func", "ExecuteScheduledSettingChange")
+	ids, err := sj.s.GetScheduledSettingChange()
 	if err != nil {
 		l.Errorw("cannot get job from db", "err", err)
 		return
 	}
+	if len(ids) > 0 {
+		l.Infow("list scheduled setting change will be executed", "ids", ids)
+	}
 	for _, id := range ids {
 		additionalDataReturn, err := sj.s.ConfirmSettingChange(id, true)
 		if err != nil {
-			l.Errorw("cannot confirm setting change", "err", err)
+			l.Errorw("cannot confirm setting change", "err", err, "id", id)
 			return
 		}
 		if err := sj.tryToAddFeed(additionalDataReturn); err != nil {
@@ -77,7 +81,7 @@ func (sj *ScheduleJob) ExecuteScheduleSettingChange() {
 	}
 }
 
-func (sj *ScheduleJob) tryToAddFeed(data *common.AdditionalDataReturn) error {
+func (sj *ScheduledJob) tryToAddFeed(data *common.AdditionalDataReturn) error {
 	if sj.marketDataCli != nil {
 		// add pair to market data
 		for _, tpID := range data.AddedTradingPairs {

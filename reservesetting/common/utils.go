@@ -3,6 +3,7 @@ package common
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 
@@ -37,6 +38,11 @@ func Uint64Pointer(i uint64) *uint64 {
 // SetRatePointer return SetRate pointer
 func SetRatePointer(i SetRate) *SetRate {
 	return &i
+}
+
+// TimePointer is helper use in optional parameter
+func TimePointer(t time.Time) *time.Time {
+	return &t
 }
 
 // SettingChangeFromType create an empty object for correspond type

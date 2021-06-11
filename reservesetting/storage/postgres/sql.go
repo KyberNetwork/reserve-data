@@ -41,7 +41,7 @@ type preparedStmts struct {
 
 	newSettingChange          *sqlx.Stmt
 	updateSettingChangeStatus *sqlx.Stmt
-	getScheduleSettingChange  *sqlx.Stmt
+	getScheduledSettingChange *sqlx.Stmt
 	getSettingChange          *sqlx.Stmt
 
 	newPriceFactor      *sqlx.Stmt
@@ -64,10 +64,10 @@ type preparedStmts struct {
 	getApprovalSettingChange    *sqlx.Stmt
 	deleteApprovalSettingChange *sqlx.Stmt
 
-	newScheduleJob    *sqlx.NamedStmt
-	getAllScheduleJob *sqlx.Stmt
-	getScheduleJob    *sqlx.Stmt
-	deleteScheduleJob *sqlx.Stmt
+	newScheduledJob    *sqlx.NamedStmt
+	getAllScheduledJob *sqlx.Stmt
+	getScheduledJob    *sqlx.Stmt
+	deleteScheduledJob *sqlx.Stmt
 }
 
 func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
@@ -142,7 +142,7 @@ func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
 		return nil, err
 	}
 
-	newSettingChange, updateSettingChangeStatus, getScheduleSettingChange, getSettingChange, err := settingChangeStatements(db)
+	newSettingChange, updateSettingChangeStatus, getScheduledSettingChange, getSettingChange, err := settingChangeStatements(db)
 	if err != nil {
 		return nil, err
 	}
@@ -182,7 +182,7 @@ func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
 		return nil, err
 	}
 
-	newScheduleJob, getAllScheduleJob, getScheduleJob, deleteScheduleJob, err := scheduleJobStatements(db)
+	newScheduledJob, getAllScheduledJob, getScheduledJob, deleteScheduledJob, err := scheduledJobStatements(db)
 	if err != nil {
 		return nil, err
 	}
@@ -223,7 +223,7 @@ func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
 
 		newSettingChange:          newSettingChange,
 		updateSettingChangeStatus: updateSettingChangeStatus,
-		getScheduleSettingChange:  getScheduleSettingChange,
+		getScheduledSettingChange: getScheduledSettingChange,
 		getSettingChange:          getSettingChange,
 
 		newPriceFactor:      newPriceFactor,
@@ -246,10 +246,10 @@ func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
 		getApprovalSettingChange:    getApprovalSettingChange,
 		deleteApprovalSettingChange: deleteApprovalSettingChange,
 
-		newScheduleJob:    newScheduleJob,
-		getScheduleJob:    getScheduleJob,
-		getAllScheduleJob: getAllScheduleJob,
-		deleteScheduleJob: deleteScheduleJob,
+		newScheduledJob:    newScheduledJob,
+		getScheduledJob:    getScheduledJob,
+		getAllScheduledJob: getAllScheduledJob,
+		deleteScheduledJob: deleteScheduledJob,
 	}, nil
 }
 
@@ -751,7 +751,7 @@ func tradingByStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, error
 }
 
 func settingChangeStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, error) {
-	const newSettingChangeQuery = `SELECT new_setting_change FROM new_setting_change($1, $2, $3)`
+	const newSettingChangeQuery = `SELECT new_setting_change FROM new_setting_change($1, $2, $3, $4)`
 	newSettingChangeStmt, err := db.Preparex(newSettingChangeQuery)
 	if err != nil {
 		return nil, nil, nil, nil, err
@@ -761,9 +761,8 @@ func settingChangeStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, *
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
-	const getScheduleSettingChange = `SELECT changes.id FROM (SELECT id, CAST (data ->> 'schedule_time' AS BIGINT) AS schedule_time FROM setting_change WHERE status='pending') AS changes
-	WHERE changes.schedule_time > 0 AND changes.schedule_time <= EXTRACT(EPOCH FROM now()) * 1000;`
-	getScheduleSettingChangeStmt, err := db.Preparex(getScheduleSettingChange)
+	const getScheduledSettingChange = `SELECT id FROM setting_change WHERE status='pending' AND scheduled_time <= now();`
+	getScheduledSettingChangeStmt, err := db.Preparex(getScheduledSettingChange)
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
@@ -773,7 +772,7 @@ func settingChangeStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, *
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
-	return newSettingChangeStmt, updateSettingChangeStatusStmt, getScheduleSettingChangeStmt, listSettingChangeStmt, nil
+	return newSettingChangeStmt, updateSettingChangeStatusStmt, getScheduledSettingChangeStmt, listSettingChangeStmt, nil
 }
 
 func priceFactorStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, error) {
@@ -889,28 +888,28 @@ func confirmPedingSettingStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.
 	return approveSettingChangeStmt, getApprovalSettingChangeStmt, deleteApprovalSettingChangeStmt, err
 }
 
-func scheduleJobStatements(db *sqlx.DB) (*sqlx.NamedStmt, *sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, error) {
-	const newQuery = `INSERT INTO schedule_job(schedule_time, data, http_method, endpoint) 
-		VALUES (:schedule_time, :data, :http_method, :endpoint) RETURNING id;`
-	newScheduleJobStmt, err := db.PrepareNamed(newQuery)
+func scheduledJobStatements(db *sqlx.DB) (*sqlx.NamedStmt, *sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, error) {
+	const newQuery = `INSERT INTO scheduled_job(scheduled_time, data, http_method, endpoint) 
+		VALUES (:scheduled_time, :data, :http_method, :endpoint) RETURNING id;`
+	newScheduledJobStmt, err := db.PrepareNamed(newQuery)
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
-	const getAllQuery = `SELECT id, schedule_time, data, http_method, endpoint FROM schedule_job 
-		WHERE schedule_time <= COALESCE($1, schedule_job.schedule_time);`
-	getAllScheduleJobStmt, err := db.Preparex(getAllQuery)
+	const getAllQuery = `SELECT id, scheduled_time, data, http_method, endpoint FROM scheduled_job 
+		WHERE scheduled_time <= COALESCE($1, scheduled_job.scheduled_time);`
+	getAllScheduledJobStmt, err := db.Preparex(getAllQuery)
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
-	const getQuery = `SELECT id, schedule_time, data, http_method, endpoint FROM schedule_job WHERE id=$1;`
-	getScheduleJobStmt, err := db.Preparex(getQuery)
+	const getQuery = `SELECT id, scheduled_time, data, http_method, endpoint FROM scheduled_job WHERE id=$1;`
+	getScheduledJobStmt, err := db.Preparex(getQuery)
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
-	const deleteQuery = `DELETE FROM schedule_job WHERE id=$1;`
-	deleteScheduleJobStmt, err := db.Preparex(deleteQuery)
+	const deleteQuery = `DELETE FROM scheduled_job WHERE id=$1;`
+	deleteScheduledJobStmt, err := db.Preparex(deleteQuery)
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
-	return newScheduleJobStmt, getAllScheduleJobStmt, getScheduleJobStmt, deleteScheduleJobStmt, nil
+	return newScheduledJobStmt, getAllScheduledJobStmt, getScheduledJobStmt, deleteScheduledJobStmt, nil
 }
