@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
-	"strings"
 
 	"github.com/KyberNetwork/reserve-data/common/ethutil"
 	ethereum "github.com/ethereum/go-ethereum/common"
@@ -345,12 +344,12 @@ func (s *Server) confirmSettingChange(c *gin.Context) {
 		return
 	}
 	keyID := s.getKeyIDFromContext(c)
+	change, err := s.storage.GetSettingChange(rtypes.SettingChangeID(input.ID))
+	if err != nil {
+		httputil.ResponseFailure(c, httputil.WithError(err))
+		return
+	}
 	if keyID != "" {
-		change, err := s.storage.GetSettingChange(rtypes.SettingChangeID(input.ID))
-		if err != nil {
-			httputil.ResponseFailure(c, httputil.WithError(err))
-			return
-		}
 		if change.Proposer == keyID {
 			httputil.ResponseFailure(c, httputil.WithError(errors.New("cannot approve for the change that made by yourself")))
 			return
@@ -359,7 +358,7 @@ func (s *Server) confirmSettingChange(c *gin.Context) {
 			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
 		}
-		listApprovalSettingChange, err := s.storage.GetLisApprovalSettingChange(input.ID)
+		listApprovalSettingChange, err := s.storage.GetListApprovalSettingChange(input.ID)
 		if err != nil {
 			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
@@ -369,6 +368,12 @@ func (s *Server) confirmSettingChange(c *gin.Context) {
 			return
 		}
 	}
+
+	if change.ScheduledTime > 0 {
+		httputil.ResponseSuccess(c)
+		return
+	}
+
 	additionalDataReturn, err := s.storage.ConfirmSettingChange(rtypes.SettingChangeID(input.ID), true)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
@@ -383,7 +388,7 @@ func (s *Server) confirmSettingChange(c *gin.Context) {
 				httputil.ResponseFailure(c, httputil.WithError(err))
 				return
 			}
-			exchange, sourceSymbol, publicSymbol, err := dataForMarketDataByExchange(tradingPair.ExchangeID, tradingPair.BaseSymbol, tradingPair.QuoteSymbol)
+			exchange, sourceSymbol, publicSymbol, err := common.DataForMarketDataByExchange(tradingPair.ExchangeID, tradingPair.BaseSymbol, tradingPair.QuoteSymbol)
 			if err != nil {
 				httputil.ResponseFailure(c, httputil.WithError(err))
 				return
@@ -395,22 +400,6 @@ func (s *Server) confirmSettingChange(c *gin.Context) {
 		}
 	}
 	httputil.ResponseSuccess(c)
-}
-
-func dataForMarketDataByExchange(exchangeID rtypes.ExchangeID, base, quote string) (string, string, string, error) {
-	var (
-		lowerBase  = strings.ToLower(base)
-		lowerQuote = strings.ToLower(quote)
-	)
-	publicSymbol := fmt.Sprintf("%s-%s", lowerBase, lowerQuote)
-	switch exchangeID {
-	case rtypes.Binance, rtypes.Binance2:
-		return rtypes.Binance.String(), fmt.Sprintf("%s%s", lowerBase, lowerQuote), publicSymbol, nil
-	case rtypes.Huobi:
-		return rtypes.Huobi.String(), fmt.Sprintf("%s%s", lowerBase, lowerQuote), publicSymbol, nil
-	default:
-		return "", "", "", fmt.Errorf("%s exchange is not supported", exchangeID)
-	}
 }
 
 func (s *Server) checkCreateTradingPairParams(createEntry common.CreateTradingPairEntry) (string, string, error) {
@@ -446,7 +435,7 @@ func (s *Server) checkCreateTradingPairParams(createEntry common.CreateTradingPa
 		return "", "", errors.Wrap(common.ErrQuoteAssetInvalid, "quote asset not config on exchange")
 	}
 	if s.marketDataClient != nil {
-		exchange, symbol, _, err := dataForMarketDataByExchange(createEntry.ExchangeID, baseAssetEx.Symbol, quoteAssetEx.Symbol)
+		exchange, symbol, _, err := common.DataForMarketDataByExchange(createEntry.ExchangeID, baseAssetEx.Symbol, quoteAssetEx.Symbol)
 		if err != nil {
 			return "", "", errors.Wrap(err, "cannot create params for market data client")
 		}
@@ -475,6 +464,10 @@ func (s *Server) checkUpdateAssetParams(updateEntry common.UpdateAssetEntry) err
 	asset, err := s.storage.GetAsset(updateEntry.AssetID)
 	if err != nil {
 		return errors.Wrapf(err, "failed to get asset id: %v from db ", updateEntry.AssetID)
+	}
+
+	if len(updateEntry.SanityInfo.Path) == 1 {
+		return errors.New("sanity path cannot be a single symbol")
 	}
 
 	if updateEntry.Rebalance != nil && *updateEntry.Rebalance {
@@ -575,7 +568,7 @@ func (s *Server) checkCreateAssetExchangeParams(createEntry common.CreateAssetEx
 				if quoteAssetExchangeSymbol == "" {
 					return errors.New(fmt.Sprintf("quote asset didn't have asset exchange, quote id: %v", tradingPair.Quote))
 				}
-				exchange, symbol, _, err := dataForMarketDataByExchange(createEntry.ExchangeID, createEntry.Symbol, quoteAssetExchangeSymbol)
+				exchange, symbol, _, err := common.DataForMarketDataByExchange(createEntry.ExchangeID, createEntry.Symbol, quoteAssetExchangeSymbol)
 				if err != nil {
 					return errors.Wrap(err, "cannot create params for market data client")
 				}
@@ -609,7 +602,7 @@ func (s *Server) checkCreateAssetExchangeParams(createEntry common.CreateAssetEx
 				if baseAssetExchangeSymbol == "" {
 					return errors.New(fmt.Sprintf("base asset didn't have asset exchange, base id: %v", tradingPair.Base))
 				}
-				exchange, symbol, _, err := dataForMarketDataByExchange(createEntry.ExchangeID, baseAssetExchangeSymbol, createEntry.Symbol)
+				exchange, symbol, _, err := common.DataForMarketDataByExchange(createEntry.ExchangeID, baseAssetExchangeSymbol, createEntry.Symbol)
 				if err != nil {
 					return errors.Wrap(err, "cannot create params for market data client")
 				}
@@ -693,6 +686,9 @@ func (s *Server) checkTokenIndices(tokenAddress ethereum.Address) error {
 }
 
 func (s *Server) checkCreateAssetParams(createEntry common.CreateAssetEntry) error {
+	if len(createEntry.SanityInfo.Path) == 1 {
+		return errors.New("sanity path cannot be a single symbol")
+	}
 	if createEntry.SetRate != common.SetRateNotSet {
 		if err := s.checkTokenIndices(createEntry.Address); err != nil {
 			return err
@@ -748,7 +744,7 @@ func (s *Server) checkCreateAssetParams(createEntry common.CreateAssetEntry) err
 					if quoteAssetExchangeSymbol == "" {
 						return errors.New(fmt.Sprintf("quote asset didn't have asset exchange, quote id: %v", tradingPair.Quote))
 					}
-					exchange, symbol, _, err := dataForMarketDataByExchange(exchange.ExchangeID, exchange.Symbol, quoteAssetExchangeSymbol)
+					exchange, symbol, _, err := common.DataForMarketDataByExchange(exchange.ExchangeID, exchange.Symbol, quoteAssetExchangeSymbol)
 					if err != nil {
 						return errors.Wrap(err, "cannot create params for market data client")
 					}
@@ -782,7 +778,7 @@ func (s *Server) checkCreateAssetParams(createEntry common.CreateAssetEntry) err
 					if baseAssetExchangeSymbol == "" {
 						return errors.New(fmt.Sprintf("base asset didn't have asset exchange, base id: %v", tradingPair.Base))
 					}
-					exchange, symbol, _, err := dataForMarketDataByExchange(exchange.ExchangeID, baseAssetExchangeSymbol, exchange.Symbol)
+					exchange, symbol, _, err := common.DataForMarketDataByExchange(exchange.ExchangeID, baseAssetExchangeSymbol, exchange.Symbol)
 					if err != nil {
 						return errors.Wrap(err, "cannot create params for market data client")
 					}

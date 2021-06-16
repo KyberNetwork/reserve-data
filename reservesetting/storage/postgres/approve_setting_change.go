@@ -28,8 +28,8 @@ func (s *Storage) ApproveSettingChange(keyID string, settingChangeID uint64) err
 	return nil
 }
 
-// GetLisApprovalSettingChange ...
-func (s *Storage) GetLisApprovalSettingChange(settingChangeID uint64) ([]v3.ApprovalSettingChangeInfo, error) {
+// GetListApprovalSettingChange ...
+func (s *Storage) GetListApprovalSettingChange(settingChangeID uint64) ([]v3.ApprovalSettingChangeInfo, error) {
 	var (
 		result []v3.ApprovalSettingChangeInfo
 	)

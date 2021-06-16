@@ -10,6 +10,7 @@ import (
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
 
+	rcommon "github.com/KyberNetwork/reserve-data/common"
 	pgutil "github.com/KyberNetwork/reserve-data/common/postgres"
 	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	"github.com/KyberNetwork/reserve-data/reservesetting/common"
@@ -27,13 +28,18 @@ func (s *Storage) CreateSettingChange(cat common.ChangeCatalog, obj common.Setti
 	if err != nil {
 		return 0, errors.Wrapf(err, "failed to parse json data %+v", obj)
 	}
+	var scheduledTime *time.Time
+	if obj.ScheduledTime > 0 {
+		scheduledTime = common.TimePointer(rcommon.MillisToTime(obj.ScheduledTime))
+	}
+
 	tx, err := s.db.Beginx()
 	if err != nil {
 		return 0, err
 	}
 	defer pgutil.RollbackUnlessCommitted(tx)
 
-	if err = tx.Stmtx(s.stmts.newSettingChange).Get(&id, cat.String(), jsonData, common.StringPointer(keyID)); err != nil {
+	if err = tx.Stmtx(s.stmts.newSettingChange).Get(&id, cat.String(), jsonData, common.StringPointer(keyID), scheduledTime); err != nil {
 		pErr, ok := err.(*pq.Error)
 		if !ok {
 			return 0, fmt.Errorf("unknown returned err=%s", err.Error())
@@ -52,6 +58,27 @@ func (s *Storage) CreateSettingChange(cat common.ChangeCatalog, obj common.Setti
 	return id, nil
 }
 
+type scheduleSettingChangeDB struct {
+	ID rtypes.SettingChangeID `db:"id"`
+}
+
+// GetScheduledSettingChange ...
+func (s *Storage) GetScheduledSettingChange() ([]rtypes.SettingChangeID, error) {
+	var dbResult []scheduleSettingChangeDB
+	err := s.stmts.getScheduledSettingChange.Select(&dbResult)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	var result []rtypes.SettingChangeID
+	for _, r := range dbResult {
+		result = append(result, r.ID)
+	}
+	return result, nil
+}
+
 type settingChangeDB struct {
 	ID       rtypes.SettingChangeID `db:"id"`
 	Created  time.Time              `db:"created"`
@@ -67,11 +94,12 @@ func (objDB settingChangeDB) ToCommon() (common.SettingChangeResponse, error) {
 		return common.SettingChangeResponse{}, err
 	}
 	return common.SettingChangeResponse{
-		ChangeList: settingChange.ChangeList,
-		ID:         objDB.ID,
-		Created:    objDB.Created,
-		Proposer:   objDB.Proposer.String,
-		Rejector:   objDB.Rejector.String,
+		ChangeList:    settingChange.ChangeList,
+		ID:            objDB.ID,
+		Created:       objDB.Created,
+		Proposer:      objDB.Proposer.String,
+		Rejector:      objDB.Rejector.String,
+		ScheduledTime: settingChange.ScheduledTime,
 	}, nil
 }
 
@@ -98,7 +126,7 @@ func (s *Storage) getSettingChange(tx *sqlx.Tx, id rtypes.SettingChangeID) (comm
 		s.l.Errorw("failed to convert to common setting change", "err", err)
 		return common.SettingChangeResponse{}, err
 	}
-	listApproval, err := s.GetLisApprovalSettingChange(uint64(id))
+	listApproval, err := s.GetListApprovalSettingChange(uint64(id))
 	if err != nil {
 		s.l.Errorw("failed to get approval info of setting change", "err", err)
 		return common.SettingChangeResponse{}, err
@@ -124,7 +152,7 @@ func (s *Storage) GetSettingChanges(cat common.ChangeCatalog, status common.Chan
 		if err != nil {
 			return nil, err
 		}
-		listApproval, err := s.GetLisApprovalSettingChange(uint64(rr.ID))
+		listApproval, err := s.GetListApprovalSettingChange(uint64(rr.ID))
 		if err != nil {
 			s.l.Errorw("failed to get approval info of setting change", "err", err, "setting change id", rr.ID)
 			return nil, err

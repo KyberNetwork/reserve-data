@@ -89,5 +89,4 @@ func TestServer_StableTokenParams(t *testing.T) {
 		t.Log(tc.msg)
 		t.Run(tc.msg, func(t *testing.T) { testHTTPRequest(t, tc, server.r) })
 	}
-
 }

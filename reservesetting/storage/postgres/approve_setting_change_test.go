@@ -40,7 +40,7 @@ func TestApproveSettingChange(t *testing.T) {
 	require.NoError(t, err)
 	err = s.ApproveSettingChange("123", uint64(stID))
 	require.NoError(t, err)
-	listApproval, err := s.GetLisApprovalSettingChange(uint64(stID))
+	listApproval, err := s.GetListApprovalSettingChange(uint64(stID))
 	require.NoError(t, err)
 	require.Equal(t, 1, len(listApproval))
 	require.Equal(t, "123", listApproval[0].KeyID)
@@ -48,7 +48,7 @@ func TestApproveSettingChange(t *testing.T) {
 	// test disapprove
 	err = s.DisapproveSettingChange("123", uint64(stID))
 	require.NoError(t, err)
-	listApproval, err = s.GetLisApprovalSettingChange(uint64(stID))
+	listApproval, err = s.GetListApprovalSettingChange(uint64(stID))
 	require.NoError(t, err)
 	require.Equal(t, 0, len(listApproval))
 }

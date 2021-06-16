@@ -42,3 +42,13 @@ func (bc *Blockchain) GeneratedGetListedTokens(opts blockchain.CallOpts) ([]ethe
 	err := bc.Call(timeout, opts, bc.pricing, out, "getListedTokens")
 	return *ret0, err
 }
+
+// GeneratedValidRateDurationInBlocks ....
+func (bc *Blockchain) GeneratedValidRateDurationInBlocks(opts blockchain.CallOpts) (uint64, error) {
+	var (
+		ret0 uint64
+	)
+	timeout := 2 * time.Second
+	err := bc.Call(timeout, opts, bc.pricing, ret0, "validRateDurationInBlocks")
+	return ret0, err
+}

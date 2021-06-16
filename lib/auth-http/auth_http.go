@@ -63,13 +63,12 @@ func (ah *AuthHTTP) DoReq(url string, method string, params map[string]string) (
 	}
 
 	body, err := ioutil.ReadAll(rsp.Body)
+	_ = rsp.Body.Close()
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot read response's body")
 	}
-	if err := rsp.Body.Close(); err != nil {
-		return nil, errors.Wrap(err, "cannot close response's body")
-	}
-	if rsp.StatusCode != 200 {
+
+	if rsp.StatusCode != http.StatusOK {
 		var er errorResponse
 		if err := json.Unmarshal(body, &er); err != nil {
 			return nil, fmt.Errorf("cannot unmarshal response data: %+v - %s", err, string(body))
