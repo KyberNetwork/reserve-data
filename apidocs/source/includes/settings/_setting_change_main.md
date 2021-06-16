@@ -15,7 +15,7 @@ curl -X POST "https://gateway.local/v3/setting-change-main" \
         },
         ...
     ],
-    "scheduled_time": 123456789 // to do as a schedule job
+    "scheduled_time": 123456789 // to do as a schedule job (the time is in millisecond)
 }'
 ```
 

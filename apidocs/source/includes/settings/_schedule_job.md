@@ -31,7 +31,7 @@ Params | Type | Required | Default | Description
 endpoint | string | yes |  | the endpoint the job should call
 http_method | string | yes |  | http method
 data | json | no | | data to call
-scheduled_time | uint64 | yes | | the time to execute the job
+scheduled_time | uint64 | yes | | the time (in millisecond) to execute the job
 
 <aside class="notice">Admin key is required</aside>
 

@@ -19,7 +19,7 @@ type cronJobInputData struct {
 	ScheduledTime uint64      `json:"scheduled_time" binding:"required"`
 }
 
-func (s *Server) addScheduledJob(c *gin.Context) {
+func (s *Server) createScheduledJob(c *gin.Context) {
 	var input cronJobInputData
 	if err := c.ShouldBindJSON(&input); err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
@@ -34,7 +34,7 @@ func (s *Server) addScheduledJob(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
-	id, err := s.storage.AddScheduledJob(common.ScheduledJobData{
+	id, err := s.storage.CreateScheduledJob(common.ScheduledJobData{
 		Endpoint:      strings.TrimPrefix(input.Endpoint, "/"),
 		HTTPMethod:    input.HTTPMethod,
 		Data:          byteData,
@@ -49,7 +49,8 @@ func (s *Server) addScheduledJob(c *gin.Context) {
 }
 
 func (s *Server) getAllScheduledJob(c *gin.Context) {
-	data, err := s.storage.GetAllScheduledJob()
+	status := c.Query("status")
+	data, err := s.storage.GetAllScheduledJob(status)
 	if err != nil {
 		s.l.Errorw("cannot get scheduled job from db", "err", err)
 		httputil.ResponseFailure(c, httputil.WithError(err))
@@ -75,7 +76,7 @@ func (s *Server) getScheduledJob(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithData(data))
 }
 
-func (s *Server) removeScheduledJob(c *gin.Context) {
+func (s *Server) rejectScheduledJob(c *gin.Context) {
 	var input struct {
 		ID uint64 `uri:"id" binding:"required"`
 	}
@@ -83,8 +84,8 @@ func (s *Server) removeScheduledJob(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
-	if err := s.storage.RemoveScheduledJob(input.ID); err != nil {
-		s.l.Errorw("cannot remove scheduled job from db", "err", err)
+	if err := s.storage.UpdateScheduledJobStatus("canceled", input.ID); err != nil {
+		s.l.Errorw("cannot update scheduled job status", "err", err)
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}

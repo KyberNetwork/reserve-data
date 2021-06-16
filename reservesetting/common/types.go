@@ -449,4 +449,5 @@ type ScheduledJobData struct {
 	HTTPMethod    string          `json:"http_method"`
 	Data          json.RawMessage `json:"data"`
 	ScheduledTime time.Time       `json:"scheduled_time"`
+	Status        string          `json:"status"`
 }

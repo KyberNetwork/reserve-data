@@ -52,8 +52,8 @@ func (sj *ScheduledJob) ExecuteEligibleScheduledJob() {
 		if err != nil {
 			sj.l.Errorw("failed to execute request", "err", err)
 		}
-		if err := sj.s.RemoveScheduledJob(j.ID); err != nil {
-			sj.l.Errorw("failed to remove the job from db", "id", j.ID)
+		if err := sj.s.UpdateScheduledJobStatus("done", j.ID); err != nil {
+			sj.l.Errorw("failed to update job's status", "id", j.ID)
 		}
 	}
 }

@@ -142,10 +142,10 @@ func NewServer(storage storage.Interface, host string, supportedExchanges map[rt
 	g.POST("/gas-source", server.setPreferGasSource)
 	g.GET("/version", server.getVersion)
 
-	g.POST("/scheduled-job", server.addScheduledJob)
+	g.POST("/scheduled-job", server.createScheduledJob)
 	g.GET("/scheduled-job", server.getAllScheduledJob)
 	g.GET("/scheduled-job/:id", server.getScheduledJob)
-	g.DELETE("/scheduled-job/:id", server.removeScheduledJob)
+	g.DELETE("/scheduled-job/:id", server.rejectScheduledJob)
 
 	g.DELETE("/disapprove-setting-change/:id", server.disapproveSettingChange)
 	g.GET("/number-approval-required", server.getNumberApprovalRequired)

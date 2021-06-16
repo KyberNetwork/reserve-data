@@ -64,10 +64,10 @@ type preparedStmts struct {
 	getApprovalSettingChange    *sqlx.Stmt
 	deleteApprovalSettingChange *sqlx.Stmt
 
-	newScheduledJob    *sqlx.NamedStmt
-	getAllScheduledJob *sqlx.Stmt
-	getScheduledJob    *sqlx.Stmt
-	deleteScheduledJob *sqlx.Stmt
+	newScheduledJob              *sqlx.NamedStmt
+	getAllScheduledJob           *sqlx.Stmt
+	getScheduledJob              *sqlx.Stmt
+	updateStatusScheduledJobStmt *sqlx.Stmt
 }
 
 func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
@@ -182,7 +182,7 @@ func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
 		return nil, err
 	}
 
-	newScheduledJob, getAllScheduledJob, getScheduledJob, deleteScheduledJob, err := scheduledJobStatements(db)
+	newScheduledJob, getAllScheduledJob, getScheduledJob, updateStatusScheduledJobStmt, err := scheduledJobStatements(db)
 	if err != nil {
 		return nil, err
 	}
@@ -246,10 +246,10 @@ func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
 		getApprovalSettingChange:    getApprovalSettingChange,
 		deleteApprovalSettingChange: deleteApprovalSettingChange,
 
-		newScheduledJob:    newScheduledJob,
-		getScheduledJob:    getScheduledJob,
-		getAllScheduledJob: getAllScheduledJob,
-		deleteScheduledJob: deleteScheduledJob,
+		newScheduledJob:              newScheduledJob,
+		getScheduledJob:              getScheduledJob,
+		getAllScheduledJob:           getAllScheduledJob,
+		updateStatusScheduledJobStmt: updateStatusScheduledJobStmt,
 	}, nil
 }
 
@@ -895,21 +895,21 @@ func scheduledJobStatements(db *sqlx.DB) (*sqlx.NamedStmt, *sqlx.Stmt, *sqlx.Stm
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
-	const getAllQuery = `SELECT id, scheduled_time, data, http_method, endpoint FROM scheduled_job 
-		WHERE scheduled_time <= COALESCE($1, scheduled_job.scheduled_time);`
+	const getAllQuery = `SELECT id, scheduled_time, data, http_method, endpoint, status FROM scheduled_job 
+		WHERE status = COALESCE($1, 'pending'::scheduled_job_status) AND scheduled_time <= COALESCE($2, scheduled_job.scheduled_time);`
 	getAllScheduledJobStmt, err := db.Preparex(getAllQuery)
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
-	const getQuery = `SELECT id, scheduled_time, data, http_method, endpoint FROM scheduled_job WHERE id=$1;`
+	const getQuery = `SELECT id, scheduled_time, data, http_method, endpoint, status FROM scheduled_job WHERE id=$1;`
 	getScheduledJobStmt, err := db.Preparex(getQuery)
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
-	const deleteQuery = `DELETE FROM scheduled_job WHERE id=$1;`
-	deleteScheduledJobStmt, err := db.Preparex(deleteQuery)
+	const updateStatus = `UPDATE scheduled_job SET status=$1 WHERE id=$2 RETURNING id;`
+	updateStatusScheduledJobStmt, err := db.Preparex(updateStatus)
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
-	return newScheduledJobStmt, getAllScheduledJobStmt, getScheduledJobStmt, deleteScheduledJobStmt, nil
+	return newScheduledJobStmt, getAllScheduledJobStmt, getScheduledJobStmt, updateStatusScheduledJobStmt, nil
 }

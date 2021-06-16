@@ -31,7 +31,7 @@ func TestScheduleJob(t *testing.T) {
 		Data:          testJSON,
 		ScheduledTime: time.Now(),
 	}
-	id, err := s.AddScheduledJob(testData)
+	id, err := s.CreateScheduledJob(testData)
 	require.NoError(t, err)
 
 	testData.ID = id
@@ -43,10 +43,10 @@ func TestScheduleJob(t *testing.T) {
 	require.Equal(t, testData.HTTPMethod, sj.HTTPMethod)
 	require.Equal(t, testData.Data, sj.Data)
 
-	err = s.RemoveScheduledJob(id)
+	err = s.UpdateScheduledJobStatus("canceled", id)
 	require.NoError(t, err)
 
-	allSJ, err := s.GetAllScheduledJob()
+	allSJ, err := s.GetAllScheduledJob("")
 	require.NoError(t, err)
 	require.Zero(t, len(allSJ))
 }

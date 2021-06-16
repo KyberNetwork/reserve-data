@@ -14,7 +14,7 @@ type scheduledJobDataInput struct {
 	ScheduledTime time.Time `json:"scheduled_time" db:"scheduled_time"`
 }
 
-func (s *Storage) AddScheduledJob(input v3.ScheduledJobData) (uint64, error) {
+func (s *Storage) CreateScheduledJob(input v3.ScheduledJobData) (uint64, error) {
 	var id uint64
 	if err := s.stmts.newScheduledJob.Get(&id, scheduledJobDataInput{
 		Endpoint:      input.Endpoint,
@@ -33,14 +33,19 @@ type scheduledJobDB struct {
 	HTTPMethod    string    `db:"http_method"`
 	Data          []byte    `db:"data"`
 	ScheduledTime time.Time `db:"scheduled_time"`
+	Status        string    `db:"status"`
 }
 
-func (s *Storage) GetAllScheduledJob() ([]v3.ScheduledJobData, error) {
+func (s *Storage) GetAllScheduledJob(status string) ([]v3.ScheduledJobData, error) {
 	var (
-		dbResult []scheduledJobDB
-		result   []v3.ScheduledJobData
+		dbResult    []scheduledJobDB
+		result      []v3.ScheduledJobData
+		statusParam *string
 	)
-	if err := s.stmts.getAllScheduledJob.Select(&dbResult, nil); err != nil {
+	if status != "" {
+		statusParam = v3.StringPointer(status)
+	}
+	if err := s.stmts.getAllScheduledJob.Select(&dbResult, statusParam, nil); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
@@ -53,6 +58,7 @@ func (s *Storage) GetAllScheduledJob() ([]v3.ScheduledJobData, error) {
 			HTTPMethod:    dbr.HTTPMethod,
 			Data:          dbr.Data,
 			ScheduledTime: dbr.ScheduledTime,
+			Status:        dbr.Status,
 		})
 	}
 	return result, nil
@@ -63,7 +69,7 @@ func (s *Storage) GetEligibleScheduledJob() ([]v3.ScheduledJobData, error) {
 		dbResult []scheduledJobDB
 		result   []v3.ScheduledJobData
 	)
-	if err := s.stmts.getAllScheduledJob.Select(&dbResult, time.Now()); err != nil {
+	if err := s.stmts.getAllScheduledJob.Select(&dbResult, nil, time.Now()); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
@@ -76,6 +82,7 @@ func (s *Storage) GetEligibleScheduledJob() ([]v3.ScheduledJobData, error) {
 			HTTPMethod:    dbr.HTTPMethod,
 			Data:          dbr.Data,
 			ScheduledTime: dbr.ScheduledTime,
+			Status:        dbr.Status,
 		})
 	}
 	return result, nil
@@ -94,12 +101,15 @@ func (s *Storage) GetScheduledJob(id uint64) (v3.ScheduledJobData, error) {
 		HTTPMethod:    dbResult.HTTPMethod,
 		Data:          dbResult.Data,
 		ScheduledTime: dbResult.ScheduledTime,
+		Status:        dbResult.Status,
 	}, nil
 }
 
-func (s *Storage) RemoveScheduledJob(id uint64) error {
-	if _, err := s.stmts.deleteScheduledJob.Exec(id); err != nil {
+func (s *Storage) UpdateScheduledJobStatus(status string, id uint64) error {
+	var idDB uint64
+	if err := s.stmts.updateStatusScheduledJobStmt.Get(&idDB, status, id); err != nil {
 		return err
 	}
+	s.l.Infow("update job status successfully", "id", idDB)
 	return nil
 }
