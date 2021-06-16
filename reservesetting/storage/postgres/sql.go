@@ -41,6 +41,7 @@ type preparedStmts struct {
 
 	newSettingChange          *sqlx.Stmt
 	updateSettingChangeStatus *sqlx.Stmt
+	getScheduledSettingChange *sqlx.Stmt
 	getSettingChange          *sqlx.Stmt
 
 	newPriceFactor      *sqlx.Stmt
@@ -62,6 +63,11 @@ type preparedStmts struct {
 	approveSettingChange        *sqlx.Stmt
 	getApprovalSettingChange    *sqlx.Stmt
 	deleteApprovalSettingChange *sqlx.Stmt
+
+	newScheduledJob              *sqlx.NamedStmt
+	getAllScheduledJob           *sqlx.Stmt
+	getScheduledJob              *sqlx.Stmt
+	updateStatusScheduledJobStmt *sqlx.Stmt
 }
 
 func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
@@ -136,7 +142,7 @@ func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
 		return nil, err
 	}
 
-	newSettingChange, updateSettingChangeStatus, getSettingChange, err := settingChangeStatements(db)
+	newSettingChange, updateSettingChangeStatus, getScheduledSettingChange, getSettingChange, err := settingChangeStatements(db)
 	if err != nil {
 		return nil, err
 	}
@@ -172,6 +178,11 @@ func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
 	}
 
 	approveSettingChange, getApprovalSettingChange, deleteApprovalSettingChange, err := confirmPedingSettingStatements(db)
+	if err != nil {
+		return nil, err
+	}
+
+	newScheduledJob, getAllScheduledJob, getScheduledJob, updateStatusScheduledJobStmt, err := scheduledJobStatements(db)
 	if err != nil {
 		return nil, err
 	}
@@ -212,6 +223,7 @@ func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
 
 		newSettingChange:          newSettingChange,
 		updateSettingChangeStatus: updateSettingChangeStatus,
+		getScheduledSettingChange: getScheduledSettingChange,
 		getSettingChange:          getSettingChange,
 
 		newPriceFactor:      newPriceFactor,
@@ -233,6 +245,11 @@ func newPreparedStmts(db *sqlx.DB) (*preparedStmts, error) {
 		approveSettingChange:        approveSettingChange,
 		getApprovalSettingChange:    getApprovalSettingChange,
 		deleteApprovalSettingChange: deleteApprovalSettingChange,
+
+		newScheduledJob:              newScheduledJob,
+		getScheduledJob:              getScheduledJob,
+		getAllScheduledJob:           getAllScheduledJob,
+		updateStatusScheduledJobStmt: updateStatusScheduledJobStmt,
 	}, nil
 }
 
@@ -733,24 +750,29 @@ func tradingByStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, error
 	return tradingBy, getTradingByPairs, deleteTradingByStmt, nil
 }
 
-func settingChangeStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, error) {
-	const newSettingChangeQuery = `SELECT new_setting_change FROM new_setting_change($1, $2, $3)`
+func settingChangeStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, error) {
+	const newSettingChangeQuery = `SELECT new_setting_change FROM new_setting_change($1, $2, $3, $4)`
 	newSettingChangeStmt, err := db.Preparex(newSettingChangeQuery)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 	const updateSettingChangeStatus = `UPDATE setting_change SET status = $2, rejector = COALESCE($3, rejector) WHERE id=$1 returning id`
 	updateSettingChangeStatusStmt, err := db.Preparex(updateSettingChangeStatus)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
+	}
+	const getScheduledSettingChange = `SELECT id FROM setting_change WHERE status='pending' AND scheduled_time <= now();`
+	getScheduledSettingChangeStmt, err := db.Preparex(getScheduledSettingChange)
+	if err != nil {
+		return nil, nil, nil, nil, err
 	}
 	const listSettingChangeQuery = `SELECT id,created,data,proposer,rejector FROM setting_change WHERE id=COALESCE($1, setting_change.id) AND cat=COALESCE($2, setting_change.cat)
 	AND status=COALESCE($3, 'pending'::setting_change_status)`
 	listSettingChangeStmt, err := db.Preparex(listSettingChangeQuery)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
-	return newSettingChangeStmt, updateSettingChangeStatusStmt, listSettingChangeStmt, nil
+	return newSettingChangeStmt, updateSettingChangeStatusStmt, getScheduledSettingChangeStmt, listSettingChangeStmt, nil
 }
 
 func priceFactorStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, error) {
@@ -864,4 +886,30 @@ func confirmPedingSettingStatements(db *sqlx.DB) (*sqlx.Stmt, *sqlx.Stmt, *sqlx.
 		return nil, nil, nil, err
 	}
 	return approveSettingChangeStmt, getApprovalSettingChangeStmt, deleteApprovalSettingChangeStmt, err
+}
+
+func scheduledJobStatements(db *sqlx.DB) (*sqlx.NamedStmt, *sqlx.Stmt, *sqlx.Stmt, *sqlx.Stmt, error) {
+	const newQuery = `INSERT INTO scheduled_job(scheduled_time, data, http_method, endpoint) 
+		VALUES (:scheduled_time, :data, :http_method, :endpoint) RETURNING id;`
+	newScheduledJobStmt, err := db.PrepareNamed(newQuery)
+	if err != nil {
+		return nil, nil, nil, nil, err
+	}
+	const getAllQuery = `SELECT id, scheduled_time, data, http_method, endpoint, status FROM scheduled_job 
+		WHERE status = COALESCE($1, 'pending'::scheduled_job_status) AND scheduled_time <= COALESCE($2, scheduled_job.scheduled_time);`
+	getAllScheduledJobStmt, err := db.Preparex(getAllQuery)
+	if err != nil {
+		return nil, nil, nil, nil, err
+	}
+	const getQuery = `SELECT id, scheduled_time, data, http_method, endpoint, status FROM scheduled_job WHERE id=$1;`
+	getScheduledJobStmt, err := db.Preparex(getQuery)
+	if err != nil {
+		return nil, nil, nil, nil, err
+	}
+	const updateStatus = `UPDATE scheduled_job SET status=$1 WHERE id=$2 RETURNING id;`
+	updateStatusScheduledJobStmt, err := db.Preparex(updateStatus)
+	if err != nil {
+		return nil, nil, nil, nil, err
+	}
+	return newScheduledJobStmt, getAllScheduledJobStmt, getScheduledJobStmt, updateStatusScheduledJobStmt, nil
 }

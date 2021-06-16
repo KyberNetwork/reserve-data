@@ -1,7 +1,13 @@
 package common
 
 import (
+	"fmt"
+	"strings"
+	"time"
+
 	"github.com/ethereum/go-ethereum/common"
+
+	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 )
 
 // FloatPointer is helper use in optional parameter
@@ -34,6 +40,11 @@ func SetRatePointer(i SetRate) *SetRate {
 	return &i
 }
 
+// TimePointer is helper use in optional parameter
+func TimePointer(t time.Time) *time.Time {
+	return &t
+}
+
 // SettingChangeFromType create an empty object for correspond type
 func SettingChangeFromType(t ChangeType) (SettingChangeType, error) {
 	var i SettingChangeType
@@ -64,4 +75,20 @@ func SettingChangeFromType(t ChangeType) (SettingChangeType, error) {
 		i = &UpdateTradingPairEntry{}
 	}
 	return i, nil
+}
+
+func DataForMarketDataByExchange(exchangeID rtypes.ExchangeID, base, quote string) (string, string, string, error) {
+	var (
+		lowerBase  = strings.ToLower(base)
+		lowerQuote = strings.ToLower(quote)
+	)
+	publicSymbol := fmt.Sprintf("%s-%s", lowerBase, lowerQuote)
+	switch exchangeID {
+	case rtypes.Binance, rtypes.Binance2:
+		return rtypes.Binance.String(), fmt.Sprintf("%s%s", lowerBase, lowerQuote), publicSymbol, nil
+	case rtypes.Huobi:
+		return rtypes.Huobi.String(), fmt.Sprintf("%s%s", lowerBase, lowerQuote), publicSymbol, nil
+	default:
+		return "", "", "", fmt.Errorf("%s exchange is not supported", exchangeID)
+	}
 }

@@ -47,7 +47,8 @@ p, %[1]s, /v3/setting-change-main/:id, (PUT)|(DELETE)
 p, %[1]s, /v3/setting-change-tpair/:id, (PUT)|(DELETE)
 p, %[1]s, /v3/setting-change-stable/:id, (PUT)|(DELETE)
 p, %[1]s, /v3/setting-change-feed-configuration/:id, (PUT)|(DELETE)
-p, %[1]s, /v3/disapprove-setting-change/:id, DELETE`, manageRole)
+p, %[1]s, /v3/disapprove-setting-change/:id, DELETE
+p, %[1]s, /v3/scheduled-job/:id, DELETE`, manageRole)
 }
 
 func addAdminRolePolicy() string {
@@ -61,7 +62,8 @@ p, %[1]s, /v3/set-exchange-enabled/:id, PUT
 p, %[1]s, /v3/enable-set-rate, POST
 p, %[1]s, /v3/rate-trigger-period, POST
 p, %[1]s, /v3/gas-source, POST
-p, %[1]s, /v3/update-feed-status/:name, PUT`, adminRole)
+p, %[1]s, /v3/update-feed-status/:name, PUT
+p, %[1]s, /v3/scheduled-job, POST`, adminRole)
 }
 
 func addRebalanceRolePolicy() string {

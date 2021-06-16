@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	authhttp "github.com/KyberNetwork/reserve-data/lib/auth-http"
@@ -27,6 +28,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/lib/migration"
 	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	settinghttp "github.com/KyberNetwork/reserve-data/reservesetting/http"
+	sj "github.com/KyberNetwork/reserve-data/reservesetting/scheduled-job"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage/postgres"
 )
@@ -34,21 +36,25 @@ import (
 const (
 	defaultDB = "reserve_data"
 
-	binanceAPIKeyFlag    = "binance-api-key"
-	binanceSecretKeyFlag = "binance-secret-key"
-	gasPriceURLFlag      = "gas-price-url"
-	defaultGasPriceURL   = "http://localhost:8088/gas/price"
-	marketDataURLFlag    = "market-data-url"
-	defaultMarketDataURL = "http://localhost:8080"
-	cexDataURLFlag       = "cex-data-url"
-	defaultCEXDataURL    = "http://cex-data.local:8080"
-	cexAuthKey           = "cex-auth-key"
-	cexAuthSecret        = "cex-auth-secret"
+	binanceAPIKeyFlag       = "binance-api-key"
+	binanceSecretKeyFlag    = "binance-secret-key"
+	gasPriceURLFlag         = "gas-price-url"
+	defaultGasPriceURL      = "http://localhost:8088/gas/price"
+	marketDataURLFlag       = "market-data-url"
+	defaultMarketDataURL    = "http://localhost:8080"
+	cexDataURLFlag          = "cex-data-url"
+	defaultCEXDataURL       = "http://cex-data.local:8080"
+	cexAuthKey              = "cex-auth-key"
+	cexAuthSecret           = "cex-auth-secret"
+	settingChangeURL        = "setting-change-url"
+	defaultSettingChangeURL = "http://localhost:8002"
 
 	intervalUpdateWithdrawFeeDBFlag      = "interval-update-withdraw-fee-db"
 	defaultIntervalUpdateWithdrawFeeDB   = 10 * time.Minute
 	intervalUpdateWithdrawFeeLiveFlag    = "interval-update-withdraw-fee-live"
 	defaultIntervalUpdateWithdrawFeeLive = 5 * time.Minute
+	intervalCheckScheduledJob            = "interval-check-schedule-job"
+	defaultIntervalCheckScheduledJob     = 10 * time.Second
 
 	numberApprovalRequiredFlag    = "number-approval-required"
 	defaultNumberApprovalRequired = 1
@@ -129,6 +135,18 @@ func main() {
 			EnvVar: "NUMBER_APPROVAL_REQUIRED",
 			Value:  defaultNumberApprovalRequired,
 		},
+		cli.StringFlag{
+			Name:   settingChangeURL,
+			Usage:  "setting change url",
+			EnvVar: "SETTING_CHANGE_URL",
+			Value:  defaultSettingChangeURL,
+		},
+		cli.DurationFlag{
+			Name:   intervalCheckScheduledJob,
+			Usage:  "interval time to check the job",
+			EnvVar: "INTERVAL_CHECK_SCHEDULED_JOB",
+			Value:  defaultIntervalCheckScheduledJob,
+		},
 	)
 
 	if err := app.Run(os.Args); err != nil {
@@ -208,8 +226,13 @@ func run(c *cli.Context) error {
 	sugar.Debugw("number approval required", "data", c.Int(numberApprovalRequiredFlag))
 
 	sentryDSN := libapp.SentryDSNFromFlag(c)
+
+	marketDataCli := marketdatacli.NewClient(c.String(marketDataURLFlag))
+
+	go sj.NewScheduledJob(sr, strings.TrimSuffix(c.String(settingChangeURL), "/"), marketDataCli).Run(c.Duration(intervalCheckScheduledJob))
+
 	server := settinghttp.NewServer(sr, host, liveExchanges, sentryDSN, coreClient,
-		gaspricedataclient.New(httpClient, c.String(gasPriceURLFlag)), marketdatacli.NewClient(c.String(marketDataURLFlag)),
+		gaspricedataclient.New(httpClient, c.String(gasPriceURLFlag)), marketDataCli,
 		c.Int(numberApprovalRequiredFlag))
 	if profiler.IsEnableProfilerFromContext(c) {
 		server.EnableProfiler()
