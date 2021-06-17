@@ -161,6 +161,10 @@ func (s *Server) EnableProfiler() {
 	pprof.Register(s.r)
 }
 
+func (s *Server) Handler() http.Handler {
+	return s.r
+}
+
 // Run the server
 func (s *Server) Run() {
 	if err := s.r.Run(s.host); err != nil {
