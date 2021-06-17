@@ -3,7 +3,6 @@ package http
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	rcommon "github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/http/httputil"
@@ -35,7 +34,7 @@ func (s *Server) createScheduledJob(c *gin.Context) {
 		return
 	}
 	id, err := s.storage.CreateScheduledJob(common.ScheduledJobData{
-		Endpoint:      strings.TrimPrefix(input.Endpoint, "/"),
+		Endpoint:      input.Endpoint,
 		HTTPMethod:    input.HTTPMethod,
 		Data:          byteData,
 		ScheduledTime: rcommon.MillisToTime(input.ScheduledTime),

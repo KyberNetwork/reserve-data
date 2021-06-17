@@ -1,33 +1,32 @@
 package scheduledjob
 
 import (
-	"fmt"
+	"bytes"
+	"net/http"
+	"net/http/httptest"
 	"strconv"
 	"time"
 
 	"go.uber.org/zap"
 
 	marketdatacli "github.com/KyberNetwork/reserve-data/lib/market-data"
-	nh "github.com/KyberNetwork/reserve-data/lib/noauth-http"
 	"github.com/KyberNetwork/reserve-data/reservesetting/common"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage"
 )
 
 type ScheduledJob struct {
 	l             *zap.SugaredLogger
-	cli           *nh.Client
 	s             storage.Interface
-	settingURL    string
 	marketDataCli *marketdatacli.Client
+	httpHandler   http.Handler
 }
 
-func NewScheduledJob(s storage.Interface, settingURL string, marketDataCli *marketdatacli.Client) *ScheduledJob {
+func NewScheduledJob(s storage.Interface, marketDataCli *marketdatacli.Client, httpHandler http.Handler) *ScheduledJob {
 	return &ScheduledJob{
 		l:             zap.S(),
-		cli:           nh.New(),
 		s:             s,
-		settingURL:    settingURL,
 		marketDataCli: marketDataCli,
+		httpHandler:   httpHandler,
 	}
 }
 
@@ -48,12 +47,19 @@ func (sj *ScheduledJob) ExecuteEligibleScheduledJob() {
 	}
 	for _, j := range jobs {
 		l.Infow("job info", "info", j)
-		_, err := sj.cli.DoReq(fmt.Sprintf("%s/%s", sj.settingURL, j.Endpoint), j.HTTPMethod, j.Data)
+		req, err := http.NewRequest(j.HTTPMethod, j.Endpoint, bytes.NewReader(j.Data))
 		if err != nil {
-			sj.l.Errorw("failed to execute request", "err", err)
+			sj.l.Errorw("failed to build request", "err", err)
+			continue
+		}
+		req.Header.Add("Content-Type", "application/json")
+		res := httptest.NewRecorder()
+		sj.httpHandler.ServeHTTP(res, req)
+		if res.Code != http.StatusOK {
+			l.Errorw("received unexpected code", "code", res.Code, "job id", j.ID)
 		}
 		if err := sj.s.UpdateScheduledJobStatus("done", j.ID); err != nil {
-			sj.l.Errorw("failed to update job's status", "id", j.ID)
+			l.Errorw("failed to update job's status", "job id", j.ID)
 		}
 	}
 }

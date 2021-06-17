@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	authhttp "github.com/KyberNetwork/reserve-data/lib/auth-http"
@@ -36,18 +35,16 @@ import (
 const (
 	defaultDB = "reserve_data"
 
-	binanceAPIKeyFlag       = "binance-api-key"
-	binanceSecretKeyFlag    = "binance-secret-key"
-	gasPriceURLFlag         = "gas-price-url"
-	defaultGasPriceURL      = "http://localhost:8088/gas/price"
-	marketDataURLFlag       = "market-data-url"
-	defaultMarketDataURL    = "http://localhost:8080"
-	cexDataURLFlag          = "cex-data-url"
-	defaultCEXDataURL       = "http://cex-data.local:8080"
-	cexAuthKey              = "cex-auth-key"
-	cexAuthSecret           = "cex-auth-secret"
-	settingChangeURL        = "setting-change-url"
-	defaultSettingChangeURL = "http://localhost:8002"
+	binanceAPIKeyFlag    = "binance-api-key"
+	binanceSecretKeyFlag = "binance-secret-key"
+	gasPriceURLFlag      = "gas-price-url"
+	defaultGasPriceURL   = "http://localhost:8088/gas/price"
+	marketDataURLFlag    = "market-data-url"
+	defaultMarketDataURL = "http://localhost:8080"
+	cexDataURLFlag       = "cex-data-url"
+	defaultCEXDataURL    = "http://cex-data.local:8080"
+	cexAuthKey           = "cex-auth-key"
+	cexAuthSecret        = "cex-auth-secret"
 
 	intervalUpdateWithdrawFeeDBFlag      = "interval-update-withdraw-fee-db"
 	defaultIntervalUpdateWithdrawFeeDB   = 10 * time.Minute
@@ -134,12 +131,6 @@ func main() {
 			Usage:  "number approval required to apply setting change",
 			EnvVar: "NUMBER_APPROVAL_REQUIRED",
 			Value:  defaultNumberApprovalRequired,
-		},
-		cli.StringFlag{
-			Name:   settingChangeURL,
-			Usage:  "setting change url",
-			EnvVar: "SETTING_CHANGE_URL",
-			Value:  defaultSettingChangeURL,
 		},
 		cli.DurationFlag{
 			Name:   intervalCheckScheduledJob,
@@ -229,14 +220,13 @@ func run(c *cli.Context) error {
 
 	marketDataCli := marketdatacli.NewClient(c.String(marketDataURLFlag))
 
-	go sj.NewScheduledJob(sr, strings.TrimSuffix(c.String(settingChangeURL), "/"), marketDataCli).Run(c.Duration(intervalCheckScheduledJob))
-
 	server := settinghttp.NewServer(sr, host, liveExchanges, sentryDSN, coreClient,
 		gaspricedataclient.New(httpClient, c.String(gasPriceURLFlag)), marketDataCli,
 		c.Int(numberApprovalRequiredFlag))
 	if profiler.IsEnableProfilerFromContext(c) {
 		server.EnableProfiler()
 	}
+	go sj.NewScheduledJob(sr, marketDataCli, server.Handler()).Run(c.Duration(intervalCheckScheduledJob))
 	server.Run()
 	return nil
 }
