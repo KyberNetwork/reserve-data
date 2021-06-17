@@ -2,7 +2,6 @@ package scheduledjob
 
 import (
 	"bytes"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -48,15 +47,12 @@ func (sj *ScheduledJob) ExecuteEligibleScheduledJob() {
 	}
 	for _, j := range jobs {
 		l.Infow("job info", "info", j)
-		req, err := http.NewRequest(j.HTTPMethod, j.Endpoint, nil)
+		req, err := http.NewRequest(j.HTTPMethod, j.Endpoint, bytes.NewReader(j.Data))
 		if err != nil {
 			sj.l.Errorw("failed to build request", "err", err)
 			continue
 		}
-		if j.Data != nil {
-			req.Body = ioutil.NopCloser(bytes.NewReader(j.Data))
-			req.Header.Add("Content-Type", "application/json")
-		}
+		req.Header.Add("Content-Type", "application/json")
 		res := httptest.NewRecorder()
 		sj.httpHandler.ServeHTTP(res, req)
 		if res.Code != http.StatusOK {
