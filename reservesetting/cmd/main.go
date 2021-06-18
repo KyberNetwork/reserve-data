@@ -27,6 +27,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/lib/migration"
 	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	settinghttp "github.com/KyberNetwork/reserve-data/reservesetting/http"
+	marketdata "github.com/KyberNetwork/reserve-data/reservesetting/market-data"
 	sj "github.com/KyberNetwork/reserve-data/reservesetting/scheduled-job"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage/postgres"
@@ -214,19 +215,19 @@ func run(c *cli.Context) error {
 		}()
 	}
 
-	sugar.Debugw("number approval required", "data", c.Int(numberApprovalRequiredFlag))
+	nar := c.Int(numberApprovalRequiredFlag)
+	sugar.Debugw("number approval required", "data", nar)
 
 	sentryDSN := libapp.SentryDSNFromFlag(c)
 
-	marketDataCli := marketdatacli.NewClient(c.String(marketDataURLFlag))
+	md := marketdata.New(marketdatacli.NewClient(c.String(marketDataURLFlag)), sr)
 
 	server := settinghttp.NewServer(sr, host, liveExchanges, sentryDSN, coreClient,
-		gaspricedataclient.New(httpClient, c.String(gasPriceURLFlag)), marketDataCli,
-		c.Int(numberApprovalRequiredFlag))
+		gaspricedataclient.New(httpClient, c.String(gasPriceURLFlag)), md, nar)
 	if profiler.IsEnableProfilerFromContext(c) {
 		server.EnableProfiler()
 	}
-	go sj.NewScheduledJob(sr, marketDataCli, server.Handler()).Run(c.Duration(intervalCheckScheduledJob))
+	go sj.NewScheduledJob(sr, md, server.Handler(), nar).Run(c.Duration(intervalCheckScheduledJob))
 	server.Run()
 	return nil
 }
