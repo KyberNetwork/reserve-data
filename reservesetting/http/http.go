@@ -13,9 +13,9 @@ import (
 	v1common "github.com/KyberNetwork/reserve-data/common"
 	gaspricedataclient "github.com/KyberNetwork/reserve-data/common/gaspricedata-client"
 	coreclient "github.com/KyberNetwork/reserve-data/lib/core-client"
-	marketdatacli "github.com/KyberNetwork/reserve-data/lib/market-data"
 	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	"github.com/KyberNetwork/reserve-data/reservesetting/common"
+	marketdata "github.com/KyberNetwork/reserve-data/reservesetting/market-data"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage"
 )
 
@@ -28,14 +28,14 @@ type Server struct {
 	l                      *zap.SugaredLogger
 	coreClient             *coreclient.Client
 	gasClient              gaspricedataclient.Client
-	marketDataClient       *marketdatacli.Client
+	md                     *marketdata.MarketData
 	numberApprovalRequired int
 }
 
 // NewServer creates new HTTP server for reservesetting APIs.
 func NewServer(storage storage.Interface, host string, supportedExchanges map[rtypes.ExchangeID]v1common.LiveExchange,
 	sentryDSN string, coreClient *coreclient.Client, gasClient gaspricedataclient.Client,
-	marketDataClient *marketdatacli.Client, numberApprovalRequired int) *Server {
+	md *marketdata.MarketData, numberApprovalRequired int) *Server {
 	l := zap.S()
 	r := gin.Default()
 	if sentryDSN != "" {
@@ -55,7 +55,7 @@ func NewServer(storage storage.Interface, host string, supportedExchanges map[rt
 		l:                      l,
 		coreClient:             coreClient,
 		gasClient:              gasClient,
-		marketDataClient:       marketDataClient,
+		md:                     md,
 		numberApprovalRequired: numberApprovalRequired,
 	}
 	g := r.Group("/v3")

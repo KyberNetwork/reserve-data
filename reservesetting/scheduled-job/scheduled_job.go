@@ -4,29 +4,29 @@ import (
 	"bytes"
 	"net/http"
 	"net/http/httptest"
-	"strconv"
 	"time"
 
 	"go.uber.org/zap"
 
-	marketdatacli "github.com/KyberNetwork/reserve-data/lib/market-data"
-	"github.com/KyberNetwork/reserve-data/reservesetting/common"
+	marketdata "github.com/KyberNetwork/reserve-data/reservesetting/market-data"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage"
 )
 
 type ScheduledJob struct {
-	l             *zap.SugaredLogger
-	s             storage.Interface
-	marketDataCli *marketdatacli.Client
-	httpHandler   http.Handler
+	l                      *zap.SugaredLogger
+	s                      storage.Interface
+	md                     *marketdata.MarketData
+	httpHandler            http.Handler
+	numberApprovalRequired int
 }
 
-func NewScheduledJob(s storage.Interface, marketDataCli *marketdatacli.Client, httpHandler http.Handler) *ScheduledJob {
+func NewScheduledJob(s storage.Interface, md *marketdata.MarketData, httpHandler http.Handler, numberApprovalRequired int) *ScheduledJob {
 	return &ScheduledJob{
-		l:             zap.S(),
-		s:             s,
-		marketDataCli: marketDataCli,
-		httpHandler:   httpHandler,
+		l:                      zap.S(),
+		s:                      s,
+		md:                     md,
+		httpHandler:            httpHandler,
+		numberApprovalRequired: numberApprovalRequired,
 	}
 }
 
@@ -75,36 +75,21 @@ func (sj *ScheduledJob) ExecuteScheduledSettingChange() {
 		l.Infow("list scheduled setting change will be executed", "ids", ids)
 	}
 	for _, id := range ids {
-		additionalDataReturn, err := sj.s.ConfirmSettingChange(id, true)
+		la, err := sj.s.GetListApprovalSettingChange(uint64(id))
 		if err != nil {
-			l.Errorw("cannot confirm setting change", "err", err, "id", id)
-			return
-		}
-		if err := sj.tryToAddFeed(additionalDataReturn); err != nil {
-			l.Errorw("cannot add feed to market data", "err", err)
-			return
-		}
-	}
-}
-
-func (sj *ScheduledJob) tryToAddFeed(data *common.AdditionalDataReturn) error {
-	if sj.marketDataCli != nil {
-		// add pair to market data
-		for _, tpID := range data.AddedTradingPairs {
-			tradingPair, err := sj.s.GetTradingPair(tpID, false)
-			if err != nil {
-				sj.l.Errorw("cannot get trading pair", "id", tpID)
-				return err
-			}
-			exchange, sourceSymbol, publicSymbol, err := common.DataForMarketDataByExchange(tradingPair.ExchangeID, tradingPair.BaseSymbol, tradingPair.QuoteSymbol)
-			if err != nil {
-				return err
-			}
-			if err := sj.marketDataCli.AddFeed(exchange, sourceSymbol, publicSymbol, strconv.FormatInt(int64(tpID), 10)); err != nil {
-				sj.l.Errorw("cannot add feed to market data", "err", err, "exchange", exchange, "source symbol", sourceSymbol)
+			if len(la) < sj.numberApprovalRequired {
+				l.Warnw("it's time to apply the scheduled setting change but it still doesn't have enough approval", "id", id)
 				continue
 			}
 		}
+		additionalDataReturn, err := sj.s.ConfirmSettingChange(id, true)
+		if err != nil {
+			l.Errorw("cannot confirm setting change", "err", err, "id", id)
+			continue
+		}
+		if err := sj.md.TryToAddFeed(additionalDataReturn); err != nil {
+			l.Errorw("cannot add feed to market data", "err", err)
+			continue
+		}
 	}
-	return nil
 }
