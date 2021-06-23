@@ -531,3 +531,9 @@ func (bc *Blockchain) getListedTokens() ([]ethereum.Address, error) {
 	opts := bc.GetCallOpts(0)
 	return bc.GeneratedGetListedTokens(opts)
 }
+
+// ValidateBlockDuration ...
+func (bc *Blockchain) ValidateBlockDuration() (uint64, error) {
+	opts := bc.GetCallOpts(0)
+	return bc.GeneratedValidRateDurationInBlocks(opts)
+}

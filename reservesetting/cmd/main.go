@@ -27,6 +27,8 @@ import (
 	"github.com/KyberNetwork/reserve-data/lib/migration"
 	"github.com/KyberNetwork/reserve-data/lib/rtypes"
 	settinghttp "github.com/KyberNetwork/reserve-data/reservesetting/http"
+	marketdata "github.com/KyberNetwork/reserve-data/reservesetting/market-data"
+	sj "github.com/KyberNetwork/reserve-data/reservesetting/scheduled-job"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage"
 	"github.com/KyberNetwork/reserve-data/reservesetting/storage/postgres"
 )
@@ -49,6 +51,8 @@ const (
 	defaultIntervalUpdateWithdrawFeeDB   = 10 * time.Minute
 	intervalUpdateWithdrawFeeLiveFlag    = "interval-update-withdraw-fee-live"
 	defaultIntervalUpdateWithdrawFeeLive = 5 * time.Minute
+	intervalCheckScheduledJob            = "interval-check-schedule-job"
+	defaultIntervalCheckScheduledJob     = 10 * time.Second
 
 	numberApprovalRequiredFlag    = "number-approval-required"
 	defaultNumberApprovalRequired = 1
@@ -129,6 +133,12 @@ func main() {
 			EnvVar: "NUMBER_APPROVAL_REQUIRED",
 			Value:  defaultNumberApprovalRequired,
 		},
+		cli.DurationFlag{
+			Name:   intervalCheckScheduledJob,
+			Usage:  "interval time to check the job",
+			EnvVar: "INTERVAL_CHECK_SCHEDULED_JOB",
+			Value:  defaultIntervalCheckScheduledJob,
+		},
 	)
 
 	if err := app.Run(os.Args); err != nil {
@@ -205,15 +215,19 @@ func run(c *cli.Context) error {
 		}()
 	}
 
-	sugar.Debugw("number approval required", "data", c.Int(numberApprovalRequiredFlag))
+	nar := c.Int(numberApprovalRequiredFlag)
+	sugar.Debugw("number approval required", "data", nar)
 
 	sentryDSN := libapp.SentryDSNFromFlag(c)
+
+	md := marketdata.New(marketdatacli.NewClient(c.String(marketDataURLFlag)), sr)
+
 	server := settinghttp.NewServer(sr, host, liveExchanges, sentryDSN, coreClient,
-		gaspricedataclient.New(httpClient, c.String(gasPriceURLFlag)), marketdatacli.NewClient(c.String(marketDataURLFlag)),
-		c.Int(numberApprovalRequiredFlag))
+		gaspricedataclient.New(httpClient, c.String(gasPriceURLFlag)), md, nar)
 	if profiler.IsEnableProfilerFromContext(c) {
 		server.EnableProfiler()
 	}
+	go sj.NewScheduledJob(sr, md, server.Handler(), nar).Run(c.Duration(intervalCheckScheduledJob))
 	server.Run()
 	return nil
 }

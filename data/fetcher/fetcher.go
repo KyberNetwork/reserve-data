@@ -36,14 +36,21 @@ type Fetcher struct {
 	l                      *zap.SugaredLogger
 	reserveCore            *core.ReserveCore
 
-	lostTxActivities map[string]time.Time // this record how long was a tx mark as lost, we confirm it as lost after an amount of duration
-	lostLock         *sync.Mutex
-	settingStorage   storage.Interface
-	rawConfig        common.RawConfig
+	lostTxActivities   map[string]time.Time // this record how long was a tx mark as lost, we confirm it as lost after an amount of duration
+	lostLock           *sync.Mutex
+	settingStorage     storage.Interface
+	rawConfig          common.RawConfig
+	validBlockDuration *validBlockDuration
+}
+
+type validBlockDuration struct {
+	mu                     *sync.RWMutex
+	validRateBlockDuration uint64
 }
 
 func NewFetcher(storage Storage, globalStorage GlobalStorage, theworld TheWorld, runner Runner, simulationMode bool,
 	contractAddressConf *common.ContractAddressConfiguration, settingStorage storage.Interface, rcf common.RawConfig) *Fetcher {
+
 	f := &Fetcher{
 		storage:             storage,
 		globalStorage:       globalStorage,
@@ -94,6 +101,27 @@ func (f *Fetcher) Stop() error {
 	return f.runner.Stop()
 }
 
+func (f *Fetcher) UpdateValidRateBlockDuration() {
+	// init ValidBlockDuration mutex
+	if f.validBlockDuration == nil {
+		f.validBlockDuration = &validBlockDuration{
+			mu: &sync.RWMutex{},
+		}
+	}
+	for {
+		validBlockDuration, err := f.blockchain.ValidateBlockDuration()
+		if err != nil {
+			f.l.Warnw("cannot update valid rate block duration", "error", err)
+			time.Sleep(1 * time.Hour) // try again in 1 hour
+			continue
+		}
+		f.validBlockDuration.mu.Lock()
+		f.validBlockDuration.validRateBlockDuration = validBlockDuration
+		f.validBlockDuration.mu.Unlock()
+		time.Sleep(1 * time.Hour)
+	}
+}
+
 func (f *Fetcher) Run() error {
 	f.l.Info("Fetcher runner is starting...")
 	if err := f.runner.Start(); err != nil {
@@ -105,6 +133,7 @@ func (f *Fetcher) Run() error {
 	go f.RunBlockFetcher()
 	go f.RunGlobalDataFetcher()
 	go f.RunFetchExchangeHistory()
+	go f.UpdateValidRateBlockDuration()
 	f.l.Infof("Fetcher runner is running...")
 	return nil
 }
@@ -297,6 +326,26 @@ func (f *Fetcher) FetchAllAuthData(timepoint uint64) {
 	if err != nil {
 		f.l.Warnw("Storing exchange balances failed", "err", err)
 		return
+	}
+	f.checkValidSetRateDuration()
+}
+
+func (f *Fetcher) checkValidSetRateDuration() {
+	// check valid block duration
+	activities, err := f.storage.GetLatestSetRatesActivitiesMined()
+	if err != nil {
+		f.l.Warnw("failed to get activities", "err", err)
+		return
+	}
+	if len(activities) != 2 {
+		f.l.Warn("there should have 2 set rates record")
+		return
+	}
+	latestSetRate := activities[0]
+	previousSetRate := activities[1]
+	if latestSetRate.Result.BlockNumber-previousSetRate.Result.BlockNumber > f.validBlockDuration.validRateBlockDuration {
+		f.l.Warnw("set rate activity is out of valid block duration", "valid block duration", f.validBlockDuration.validRateBlockDuration,
+			"last mined block", previousSetRate.Result.BlockNumber, "current mined block", latestSetRate.Result.BlockNumber)
 	}
 }
 
@@ -697,6 +746,12 @@ func (f *Fetcher) PersistSnapshot(
 		f.l.Debugf("Aggregate statuses, final activity: %+v", activity)
 		if activity.IsPending() {
 			pendingActivities = append(pendingActivities, activity)
+		}
+		// check if withdraw status is persistent
+		if activity.Action == common.ActionWithdraw {
+			if activity.ExchangeStatus == common.ExchangeStatusDone && activity.MiningStatus != common.MiningStatusMined {
+				f.l.Warnw("exchange return status done but tx is not mined", "tx status", activity.MiningStatus)
+			}
 		}
 		err := f.storage.UpdateActivity(activity.ID, activity)
 		if err != nil {
