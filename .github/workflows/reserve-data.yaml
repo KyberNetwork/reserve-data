@@ -122,7 +122,7 @@ jobs:
           context: .
           file: Dockerfile.next
           push: true
-          tags: $IMAGE_NAME:$BRANCH, $IMAGE_NAME:$SHA_TAG
+          tags: ${{ env.IMAGE_NAME }}:${{ env.BRANCH }},${{ env.IMAGE_NAME }}:${{ env.SHA_TAG }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
 
@@ -169,7 +169,7 @@ jobs:
           context: .
           file: Dockerfile.gateway
           push: true
-          tags: $IMAGE_NAME:$BRANCH, $IMAGE_NAME:$SHA_TAG
+          tags: ${{ env.IMAGE_NAME }}:${{ env.BRANCH }},${{ env.IMAGE_NAME }}:${{ env.SHA_TAG }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
 
@@ -216,7 +216,7 @@ jobs:
           context: dockerfiles
           file: Dockerfile.setting
           push: true
-          tags: $IMAGE_NAME:$BRANCH, $IMAGE_NAME:$SHA_TAG
+          tags: ${{ env.IMAGE_NAME }}:${{ env.BRANCH }},${{ env.IMAGE_NAME }}:${{ env.SHA_TAG }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
 
