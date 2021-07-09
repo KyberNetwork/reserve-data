@@ -49,7 +49,7 @@ jobs:
     container:
       image: kybernetwork/slate:latest
       volumes:
-        - ./apidocs/source:/slate/source:ro
+        - ./apidocs/source:/slate/source
         - ./apidocs/build:/slate/build
     steps:
       - uses: actions/checkout@v2
