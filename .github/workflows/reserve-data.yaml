@@ -226,7 +226,7 @@ jobs:
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
   # deploy awx using HTTP call
-  # allow branchs: v3-develop, v3-stagion
+  # allow branchs: v3-develop, v3-staging
   deploy-awx:
     needs:
       - prepare
