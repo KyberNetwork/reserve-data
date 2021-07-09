@@ -53,5 +53,10 @@ jobs:
         - ./apidocs/build:/slate/build
     steps:
       - uses: actions/checkout@v2
+      - name: Build docs
+        run: |
+          docker run -v $PWD/apidocs/source:/slate/source \
+            -v $PWD/apidocs/build:/slate/build \
+            kybernetwork/slate:latest 
       - name: Test
         run: ls -lah ./apidocs
