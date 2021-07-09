@@ -7,7 +7,7 @@ env:
 
 jobs:
   # prepare the outputs to serve the next phases
-  # allow branchs: all 
+  # allow branchs: all
   prepare:
     runs-on: ubuntu-18.04
     outputs:
@@ -26,9 +26,9 @@ jobs:
         run: |
           TAG="$(echo $GITHUB_SHA | head -c7)"
           echo "::set-output name=value::$TAG"
-  
+
   # run lint check
-  # allow branchs: all 
+  # allow branchs: all
   lint:
     runs-on: ubuntu-18.04
     steps:
@@ -38,13 +38,14 @@ jobs:
         with:
           version: v1.39.0
           args: -v --config .golangci.yml
-  
+
   # test phase
   # allow branchs: all
   test:
     needs:
       - lint
     runs-on: ubuntu-18.04
+    # start postgresql as a container
     services:
       postgres:
         image: postgres:12-alpine
@@ -225,7 +226,7 @@ jobs:
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
-  # deploy awx using HTTP call
+  # notify to awx server using HTTP call
   # allow branchs: v3-develop, v3-staging
   deploy-awx:
     needs:
@@ -243,12 +244,9 @@ jobs:
       AWX_V3_STG: ${{ secrets.AWX_V3_STG }}
     steps:
       - name: Notify to server
+        shell: bash
         run: |
-          AWX_URL=$AWX_V3_DEV
-
-          if [[ "$BRANCH" == "v3-staging" ]]; then
-            AWX_URL=$AWX_V3_STG
-          fi
+          [[ "$BRANCH" == "v3-develop" ]] && AWX_URL="$AWX_V3_DEV" || AWX_URL="$AWX_V3_STG"
 
           CODE=$(curl -XPOST -sSfL -w "%{http_code}" --user "$awx_username:$awx_password" $AWX_URL)
           [[ "$CODE" == 20* ]] || exit 1
