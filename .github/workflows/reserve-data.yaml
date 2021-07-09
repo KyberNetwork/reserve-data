@@ -118,7 +118,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-next-buildx-${{ github.sha }}
+          key: ${{ runner.os }}-next-buildx
 
       - name: Build and push
         uses: docker/build-push-action@v2
@@ -163,7 +163,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-gateway-buildx-${{ github.sha }}
+          key: ${{ runner.os }}-gateway-buildx
 
       - name: Build and push
         uses: docker/build-push-action@v2
@@ -208,7 +208,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-setting-buildx-${{ github.sha }}
+          key: ${{ runner.os }}-setting-buildx
 
       - name: Build and push
         uses: docker/build-push-action@v2
