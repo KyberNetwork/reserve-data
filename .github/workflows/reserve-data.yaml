@@ -90,7 +90,7 @@ jobs:
     needs:
       - prepare
       - test
-    if: contains(['v3-develop', 'develop', 'v3-staging', 'staging', 'master', 'github-action'], needs.prepare.outputs.current_branch)
+    if: contains(fromJson('["v3-develop", "develop", "v3-staging", "staging", "master", "github-action"]'), needs.prepare.outputs.current_branch)
     runs-on: ubuntu-18.04
     env:
       IMAGE_NAME: kybernetwork/reserve-data
@@ -137,7 +137,7 @@ jobs:
     needs:
       - prepare
       - test
-    if: contains(['v3-develop', 'develop', 'v3-staging', 'staging', 'master', 'github-action'], needs.prepare.outputs.current_branch)
+    if: contains(fromJson('["v3-develop", "develop", "v3-staging", "staging", "master", "github-action"]'), needs.prepare.outputs.current_branch)
     runs-on: ubuntu-18.04
     env:
       IMAGE_NAME: kybernetwork/reserve-data-gateway
@@ -184,7 +184,7 @@ jobs:
     needs:
       - prepare
       - test
-    if: contains(['v3-develop', 'develop', 'v3-staging', 'staging', 'master', 'github-action'], needs.prepare.outputs.current_branch)
+    if: contains(fromJson('["v3-develop", "develop", "v3-staging", "staging", "master", "github-action"]'), needs.prepare.outputs.current_branch)
     runs-on: ubuntu-18.04
     env:
       IMAGE_NAME: kybernetwork/reserve-data-setting
