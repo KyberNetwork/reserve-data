@@ -127,7 +127,13 @@ jobs:
           context: .
           file: Dockerfile.next
           push: true
-          tags: ${{ env.IMAGE_NAME }}:${{ env.BRANCH }},${{ env.IMAGE_NAME }}:${{ env.SHA_TAG }}
+          labels: |
+            commit=${{ github.sha }}
+          build-args: |
+            COMMIT=${{ github.sha }}
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ env.BRANCH }}
+            ${{ env.IMAGE_NAME }}:${{ env.SHA_TAG }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
 
@@ -172,7 +178,13 @@ jobs:
           context: .
           file: dockerfiles/Dockerfile.gateway
           push: true
-          tags: ${{ env.IMAGE_NAME }}:${{ env.BRANCH }},${{ env.IMAGE_NAME }}:${{ env.SHA_TAG }}
+          labels: |
+            commit=${{ github.sha }}
+          build-args: |
+            COMMIT=${{ github.sha }}
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ env.BRANCH }}
+            ${{ env.IMAGE_NAME }}:${{ env.SHA_TAG }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
 
@@ -217,7 +229,13 @@ jobs:
           context: .
           file: dockerfiles/Dockerfile.setting
           push: true
-          tags: ${{ env.IMAGE_NAME }}:${{ env.BRANCH }},${{ env.IMAGE_NAME }}:${{ env.SHA_TAG }}
+          labels: |
+            commit=${{ github.sha }}
+          build-args: |
+            COMMIT=${{ github.sha }}
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ env.BRANCH }}
+            ${{ env.IMAGE_NAME }}:${{ env.SHA_TAG }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
 
