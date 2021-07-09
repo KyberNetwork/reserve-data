@@ -1,0 +1,57 @@
+name: "Reserve Data CI"
+
+on: push
+
+jobs:
+  prepare:
+    runs-on: ubuntu-18.04
+    outputs:
+      current_branch: ${{ steps.current_branch.outputs.name }}
+    steps:
+      - name: Extract branch
+        shell: bash
+        id: current_branch
+        run: |
+          BRANCH="${GITHUB_REF#refs/heads/}"
+          echo "::set-output name=name::$BRANCH"
+
+  # test:
+  #   runs-on: ubuntu-18.04
+  #   services:
+  #     postgres:
+  #       image: postgres:12-alpine
+  #       env:
+  #         POSTGRES_PASSWORD: reserve_data
+  #         POSTGRES_USER: reserve_data
+  #         POSTGRES_DB: reserve_data
+  #       # health checks to wait until postgres has started
+  #       options: >-
+  #         --health-cmd pg_isready
+  #         --health-interval 10s
+  #         --health-timeout 5s
+  #         --health-retries 5
+  #       ports:
+  #         # map tcp port on container to the host
+  #         - 5432:5432
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - name: Lint check
+  #       run: golangci-lint run --config .golangci.yml ./...
+  #     - name: Run test
+  #       run: go test -v race ./...
+
+  deploy-docs:
+    needs:
+      - prepare
+    #   - test
+    # if: needs.prepare.outputs.current_branch == 'v3-develop'
+    runs-on: ubuntu-18.04
+    container:
+      image: kybernetwork/slate:lates
+      volumes:
+        - ./apidocs/source:/slate/source:ro
+        - ./apidocs/build:/slate/build
+    steps:
+      - uses: actions/checkout@v2
+      - name: Test
+        run: ls -lah ./apidocs
