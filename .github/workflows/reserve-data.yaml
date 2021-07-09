@@ -44,7 +44,7 @@ jobs:
       - name: Golangci-lint
         uses: golangci/golangci-lint-action@v2
         with:
-          args: --config .golangci.yml
+          args: --config .golangci.yml ./...
 
       - name: Run test
         run: go test -v race ./...
