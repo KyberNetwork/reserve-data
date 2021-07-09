@@ -50,8 +50,8 @@ jobs:
       - uses: actions/checkout@v2
       - name: Build docs
         run: |
-          docker run -v $PWD/apidocs/source:/slate/source \
+          docker run -v $PWD/apidocs/source:/slate/source:ro \
             -v $PWD/apidocs/build:/slate/build \
             kybernetwork/slate:latest 
       - name: Test
-        run: ls -lah ./apidocs
+        run: ls -lah ./apidocs/build
