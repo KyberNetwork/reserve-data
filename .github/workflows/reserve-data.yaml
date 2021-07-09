@@ -46,11 +46,6 @@ jobs:
     #   - test
     # if: needs.prepare.outputs.current_branch == 'v3-develop'
     runs-on: ubuntu-18.04
-    container:
-      image: kybernetwork/slate:latest
-      volumes:
-        - ./apidocs/source:/slate/source
-        - ./apidocs/build:/slate/build
     steps:
       - uses: actions/checkout@v2
       - name: Build docs
