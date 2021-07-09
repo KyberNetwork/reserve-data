@@ -167,7 +167,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: Dockerfile.gateway
+          file: dockerfiles/Dockerfile.gateway
           push: true
           tags: ${{ env.IMAGE_NAME }}:${{ env.BRANCH }},${{ env.IMAGE_NAME }}:${{ env.SHA_TAG }}
           cache-from: type=local,src=/tmp/.buildx-cache
@@ -213,8 +213,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
-          context: dockerfiles
-          file: Dockerfile.setting
+          context: .
+          file: dockerfiles/Dockerfile.setting
           push: true
           tags: ${{ env.IMAGE_NAME }}:${{ env.BRANCH }},${{ env.IMAGE_NAME }}:${{ env.SHA_TAG }}
           cache-from: type=local,src=/tmp/.buildx-cache
