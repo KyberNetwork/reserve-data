@@ -36,17 +36,16 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Setup golangci-lint 
-        uses: golangci/golangci-lint-action@v2
-      
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
           go-version: 1.16
-      
-      - name: Lint check
-        run: golangci-lint run --config .golangci.yml ./...
-      
+
+      - name: Golangci-lint
+        uses: golangci/golangci-lint-action@v2
+        with:
+          args: --config .golangci.yml
+
       - name: Run test
         run: go test -v race ./...
 
@@ -62,9 +61,8 @@ jobs:
         run: |
           docker run -v $PWD/apidocs/source:/slate/source:ro \
             -v $PWD/apidocs/build:/slate/build \
-            kybernetwork/slate:latest 
+            kybernetwork/slate:latest
       - name: Test
         run: |
           ls -lah ./apidocs/build
-          echo "${{ needs.prepare.outputs.current_branch }}" 
-    
+          echo "${{ needs.prepare.outputs.current_branch }}"
