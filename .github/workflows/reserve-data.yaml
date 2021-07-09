@@ -3,6 +3,7 @@ name: "Reserve Data CI"
 on: push
 env:
   GO111MODULE: on
+  GOFLAGS: ""
 
 jobs:
   prepare:
@@ -17,7 +18,19 @@ jobs:
           BRANCH="${GITHUB_REF#refs/heads/}"
           echo "::set-output name=name::$BRANCH"
 
+  lint:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Golangci-lint
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: v1.39.0
+          args: -v --config .golangci.yml
+
   test:
+    needs:
+      - lint
     runs-on: ubuntu-18.04
     services:
       postgres:
@@ -41,14 +54,14 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.16
-      
+          go-version: "1.16.x"
+
       - name: Get Go cache paths
         id: cache_paths
         run: |
           echo "::set-output name=go-build::$(go env GOCACHE)"
           echo "::set-output name=go-mod::$(go env GOMODCACHE)"
-      
+
       - name: Go Build Cache
         uses: actions/cache@v2
         with:
@@ -60,13 +73,6 @@ jobs:
         with:
           path: ${{ steps.cache_paths.outputs.go-mod }}
           key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
-
-      - name: Golangci-lint
-        uses: golangci/golangci-lint-action@v2
-        with:
-          version: v1.39.0
-          args: -v --config .golangci.yml
-          skip-go-installation: true
 
       - name: Run test
         run: go test -v race ./...
