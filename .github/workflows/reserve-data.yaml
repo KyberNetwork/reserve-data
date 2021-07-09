@@ -6,6 +6,8 @@ env:
   GOFLAGS: ""
 
 jobs:
+  # prepare the outputs to serve the next phases
+  # allow branchs: all 
   prepare:
     runs-on: ubuntu-18.04
     outputs:
@@ -24,7 +26,9 @@ jobs:
         run: |
           TAG="$(echo $GITHUB_SHA | head -c7)"
           echo "::set-output name=value::$TAG"
-
+  
+  # run lint check
+  # allow branchs: all 
   lint:
     runs-on: ubuntu-18.04
     steps:
@@ -34,7 +38,9 @@ jobs:
         with:
           version: v1.39.0
           args: -v --config .golangci.yml
-
+  
+  # test phase
+  # allow branchs: all
   test:
     needs:
       - lint
@@ -113,8 +119,6 @@ jobs:
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-next-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx
 
       - name: Build and push
         uses: docker/build-push-action@v2
@@ -160,8 +164,6 @@ jobs:
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-gateway-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx
 
       - name: Build and push
         uses: docker/build-push-action@v2
@@ -207,8 +209,6 @@ jobs:
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-setting-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx
 
       - name: Build and push
         uses: docker/build-push-action@v2
@@ -224,6 +224,34 @@ jobs:
         run: |
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+  # deploy awx using HTTP call
+  # allow branchs: v3-develop, v3-stagion
+  deploy-awx:
+    needs:
+      - prepare
+      - build-next
+      - build-gateway
+      - build-setting
+    if: contains(fromJson('["v3-develop", "v3-staging"]'), needs.prepare.outputs.current_branch)
+    runs-on: ubuntu-18.04
+    env:
+      BRANCH: ${{ needs.prepare.outputs.current_branch }}
+      AWX_USERNAME: ${{ secrets.AWX_USERNAME }}
+      AWX_PASSWORD: ${{ secrets.AWX_PASSWORD }}
+      AWX_V3_DEV: ${{ secrets.AWX_V3_DEV }}
+      AWX_V3_STG: ${{ secrets.AWX_V3_STG }}
+    steps:
+      - name: Notify to server
+        run: |
+          AWX_URL=$AWX_V3_DEV
+
+          if [[ "$BRANCH" == "v3-staging" ]]; then
+            AWX_URL=$AWX_V3_STG
+          fi
+
+          CODE=$(curl -XPOST -sSfL -w "%{http_code}" --user "$awx_username:$awx_password" $AWX_URL)
+          [[ "$CODE" == 20* ]] || exit 1
 
   # deploy API docs to GCS
   # only branch `v3-develop`
