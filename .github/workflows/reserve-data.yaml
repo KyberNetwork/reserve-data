@@ -271,17 +271,29 @@ jobs:
 
   # deploy API docs to GCS
   # only branch `v3-develop`
-  # TODO: need complete
   deploy-docs:
     needs:
       - prepare
       - test
-    if: needs.prepare.outputs.current_branch == 'v3-develop'
+    # if: needs.prepare.outputs.current_branch == 'v3-develop'
+    env:
+      GCS_BUCKET: ${{ secrets.GCS_BUCKET }}
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
+      - name: Setup GCloud
+        uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          export_default_credentials: true
+
       - name: Build docs
         run: |
           docker run -v $PWD/apidocs/source:/slate/source:ro \
             -v $PWD/apidocs/build:/slate/build \
             kybernetwork/slate:latest
+
+      - name: Deploy to GCS
+        run: |
+          gsutil -m rsync -R $PWD/apidocs/build gs://$GCS_BUCKET
