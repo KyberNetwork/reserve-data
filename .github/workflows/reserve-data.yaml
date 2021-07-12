@@ -275,7 +275,7 @@ jobs:
     needs:
       - prepare
       - test
-    # if: needs.prepare.outputs.current_branch == 'v3-develop'
+    if: needs.prepare.outputs.current_branch == 'v3-develop'
     env:
       GCS_BUCKET: ${{ secrets.GCS_BUCKET }}
     runs-on: ubuntu-18.04
