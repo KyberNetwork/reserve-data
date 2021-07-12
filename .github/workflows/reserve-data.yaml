@@ -266,7 +266,7 @@ jobs:
         run: |
           [[ "$BRANCH" == "v3-develop" ]] && AWX_URL="$AWX_V3_DEV" || AWX_URL="$AWX_V3_STG"
 
-          CODE=$(curl -XPOST -sSfL -w "%{http_code}" --user "$awx_username:$awx_password" $AWX_URL)
+          CODE=$(curl -XPOST -sSfL -w "%{http_code}" --user "$AWX_USERNAME:$AWX_PASSWORD" $AWX_URL)
           [[ "$CODE" == 20* ]] || exit 1
 
   # deploy API docs to GCS
