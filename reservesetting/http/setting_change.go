@@ -443,7 +443,7 @@ func (s *Server) checkUpdateAssetParams(updateEntry common.UpdateAssetEntry) err
 		return errors.Wrapf(err, "failed to get asset id: %v from db ", updateEntry.AssetID)
 	}
 
-	if len(updateEntry.SanityInfo.Path) == 1 {
+	if updateEntry.SanityInfo != nil && len(*updateEntry.SanityInfo.Path) == 1 {
 		return errors.New("sanity path cannot be a single symbol")
 	}
 
