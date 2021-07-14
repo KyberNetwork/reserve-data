@@ -24,8 +24,8 @@ jobs:
         shell: bash
         id: commit_tag
         run: |
-          TAG="$(echo $GITHUB_SHA | head -c7)"
-          echo "::set-output name=value::$TAG"
+          COMMIT_HASH="$(echo $GITHUB_SHA | head -c7)"
+          echo "::set-output name=value::$COMMIT_HASH"
 
   # run lint check
   # allow branchs: all
@@ -157,9 +157,7 @@ jobs:
   deploy-awx:
     needs:
       - prepare
-      - build-next
-      - build-gateway
-      - build-setting
+      - build-docker
     if: contains(fromJson('["v3-develop", "v3-staging"]'), needs.prepare.outputs.current_branch)
     runs-on: ubuntu-18.04
     env:
