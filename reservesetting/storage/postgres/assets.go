@@ -1014,15 +1014,15 @@ func (s *Storage) updateAsset(tx *sqlx.Tx, id rtypes.AssetID, uo storage.UpdateA
 		sanityRateProvider *string
 		sanityThreshold    *float64
 	)
-	if len(uo.SanityInfo.Path) > 0 {
-		sanityRatePath = pq.Array(uo.SanityInfo.Path)
+
+	if uo.SanityInfo != nil {
+		sanityRateProvider = uo.SanityInfo.Provider
+		sanityThreshold = uo.SanityInfo.Threshold
+		if uo.SanityInfo.Path != nil {
+			sanityRatePath = pq.Array(*uo.SanityInfo.Path)
+		}
 	}
-	if uo.SanityInfo.Provider != "" {
-		sanityRateProvider = common.StringPointer(uo.SanityInfo.Provider)
-	}
-	if uo.SanityInfo.Threshold != 0 {
-		sanityThreshold = common.FloatPointer(uo.SanityInfo.Threshold)
-	}
+
 	arg := updateAssetParam{
 		ID:                    id,
 		Symbol:                uo.Symbol,
@@ -1095,7 +1095,7 @@ func (s *Storage) updateAsset(tx *sqlx.Tx, id rtypes.AssetID, uo storage.UpdateA
 	if sanityThreshold != nil {
 		updateMsgs = append(updateMsgs, fmt.Sprintf("sanity_threshold=%f", *sanityThreshold))
 	}
-	if uo.SanityInfo.Path != nil {
+	if sanityRatePath != nil {
 		updateMsgs = append(updateMsgs, fmt.Sprintf("sanity_rate_path=%v", uo.SanityInfo.Path))
 	}
 	pwi := uo.PWI
