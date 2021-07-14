@@ -1,6 +1,6 @@
 name: "Reserve Data CI"
 
-on: push
+on: [push, workflow_dispatch]
 env:
   GO111MODULE: on
   GOFLAGS: ""
@@ -188,7 +188,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Setup GCloud
-        uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        uses: google-github-actions/setup-gcloud@master
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           service_account_key: ${{ secrets.GCP_SA_KEY }}
