@@ -137,6 +137,21 @@ type UpdateStableParam struct {
 // FeedWeight is feed weight configuration for stable token feed like
 type FeedWeight map[string]float64
 
+type ZeroXPref struct {
+	RefETHAmount   float64 `json:"ref_eth_amount"`
+	ETHStep        float64 `json:"eth_step"`
+	MaxETHSizeBuy  float64 `json:"max_eth_size_buy"`
+	MaxETHSizeSell float64 `json:"max_eth_size_sell"`
+	Enabled        bool    `json:"enabled"`
+}
+type UpdateZeroXPref struct {
+	RefETHAmount   *float64 `json:"ref_eth_amount"`
+	ETHStep        *float64 `json:"eth_step"`
+	MaxETHSizeBuy  *float64 `json:"max_eth_size_buy"`
+	MaxETHSizeSell *float64 `json:"max_eth_size_sell"`
+	Enabled        *bool    `json:"enabled"`
+}
+
 // Asset represents an asset in centralized exchange, eg: ETH, KNC, Bitcoin...
 type Asset struct {
 	ID                    rtypes.AssetID      `json:"id"`
@@ -163,6 +178,7 @@ type Asset struct {
 	PriceETHAmount        float64             `json:"price_eth_amount"`
 	ExchangeETHAmount     float64             `json:"exchange_eth_amount"`
 	SanityInfo            SanityInfo          `json:"sanity_info"`
+	ZeroX                 ZeroXPref           `json:"zero_x"`
 }
 
 // IsMainQuoteAsset check if token is main coin
@@ -227,6 +243,7 @@ type CreateAssetEntry struct {
 	PriceETHAmount        float64             `json:"price_eth_amount"`
 	ExchangeETHAmount     float64             `json:"exchange_eth_amount"`
 	SanityInfo            SanityInfo          `json:"sanity_info"`
+	ZeroX                 ZeroXPref           `json:"zero_x"`
 }
 
 type SanityInfo struct {
@@ -259,6 +276,7 @@ type UpdateAssetEntry struct {
 	PriceETHAmount        *float64            `json:"price_eth_amount"`
 	ExchangeETHAmount     *float64            `json:"exchange_eth_amount"`
 	SanityInfo            *UpdateSanityInfo   `json:"sanity_info"`
+	ZeroX                 *UpdateZeroXPref    `json:"zero_x"`
 }
 
 type UpdateSanityInfo struct {

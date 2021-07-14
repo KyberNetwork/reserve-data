@@ -440,7 +440,12 @@ func assetStatements(db *sqlx.DB) (*sqlx.NamedStmt, *sqlx.Stmt, *sqlx.NamedStmt,
 		 :target_min_withdraw_threshold,
 		 :sanity_threshold,
 		 :sanity_rate_provider,  
-		 :sanity_rate_path
+		 :sanity_rate_path,
+		 :ref_eth_amount,
+		 :eth_step,
+		 :max_eth_size_buy,
+		 :max_eth_size_sell,
+		 :zerox_enabled
 		         );`
 	newAsset, err := db.PrepareNamed(newAssetQuery)
 	if err != nil {
@@ -487,10 +492,15 @@ func assetStatements(db *sqlx.DB) (*sqlx.NamedStmt, *sqlx.Stmt, *sqlx.NamedStmt,
 							assets.order_duration_millis,
 							assets.price_eth_amount,
 							assets.exchange_eth_amount,
-       				assets.target_min_withdraw_threshold,
+       						assets.target_min_withdraw_threshold,
 							assets.sanity_threshold,
 							assets.sanity_rate_provider,  
 							assets.sanity_rate_path,
+       						assets.ref_eth_amount,
+       						assets.eth_step,
+       						assets.max_eth_size_buy,
+       						assets.max_eth_size_sell,
+       						assets.zerox_enabled,
 							assets.created,
 							assets.updated
 						FROM assets
@@ -540,6 +550,14 @@ func assetStatements(db *sqlx.DB) (*sqlx.NamedStmt, *sqlx.Stmt, *sqlx.NamedStmt,
 						assets.price_eth_amount,
 						assets.exchange_eth_amount,
 					 	assets.target_min_withdraw_threshold,
+						assets.sanity_threshold,
+						assets.sanity_rate_provider,  
+						assets.sanity_rate_path,
+						assets.ref_eth_amount,
+						assets.eth_step,
+						assets.max_eth_size_buy,
+						assets.max_eth_size_sell,
+						assets.zerox_enabled,
 						assets.created,
 						assets.updated
 					ORDER BY assets.id`
@@ -601,9 +619,14 @@ func assetStatements(db *sqlx.DB) (*sqlx.NamedStmt, *sqlx.Stmt, *sqlx.NamedStmt,
 			price_eth_amount = COALESCE(:price_eth_amount,price_eth_amount),
 			exchange_eth_amount = COALESCE(:exchange_eth_amount,exchange_eth_amount),
 		    target_min_withdraw_threshold = COALESCE(:target_min_withdraw_threshold, target_min_withdraw_threshold),
-				sanity_threshold = COALESCE(:sanity_threshold, sanity_threshold),
-				sanity_rate_provider = COALESCE(:sanity_rate_provider, sanity_rate_provider),  
-				sanity_rate_path = COALESCE(:sanity_rate_path, sanity_rate_path),
+			sanity_threshold = COALESCE(:sanity_threshold, sanity_threshold),
+			sanity_rate_provider = COALESCE(:sanity_rate_provider, sanity_rate_provider),  
+			sanity_rate_path = COALESCE(:sanity_rate_path, sanity_rate_path),
+		    ref_eth_amount = COALESCE(:ref_eth_amount, ref_eth_amount),
+		    eth_step = COALESCE(:eth_step, eth_step),
+		    max_eth_size_buy = COALESCE(:max_eth_size_buy, max_eth_size_buy),
+		    max_eth_size_sell = COALESCE(:max_eth_size_sell, max_eth_size_sell),
+		    zerox_enabled = COALESCE(:zerox_enabled, zerox_enabled),
 		    updated      = now()
 		WHERE id = :id RETURNING id;
 		`
