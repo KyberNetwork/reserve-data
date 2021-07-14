@@ -75,6 +75,13 @@ curl -X POST "https://gateway.local/v3/setting-change-main" \
                 "provider": "binance",
                 "threshold": 0.05,
                 "path": ["OMG", "ETH"]
+            },
+            "zero_x": {
+              "ref_eth_amount": 1.0,
+              "eth_step": 1.1,
+              "max_eth_size_buy": 1.2,
+              "max_eth_size_sell": 1.3,
+              "enabled": true
             }
         }
     }]

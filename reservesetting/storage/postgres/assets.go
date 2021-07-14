@@ -77,6 +77,22 @@ type createAssetParams struct {
 	SanityThreshold    float64            `db:"sanity_threshold"`
 	SanityRateProvider string             `db:"sanity_rate_provider"`
 	SanityRatePath     sanityRatePathData `db:"sanity_rate_path"`
+	zeroXPref
+}
+
+type zeroXPref struct {
+	RefETHAmount   float64 `db:"ref_eth_amount"`
+	ETHStep        float64 `db:"eth_step"`
+	MaxETHSizeBuy  float64 `db:"max_eth_size_buy"`
+	MaxETHSizeSell float64 `db:"max_eth_size_sell"`
+	ZeroXEnabled   bool    `db:"zerox_enabled"`
+}
+type updateZeroXPref struct {
+	RefETHAmount   *float64 `db:"ref_eth_amount"`
+	ETHStep        *float64 `db:"eth_step"`
+	MaxETHSizeBuy  *float64 `db:"max_eth_size_buy"`
+	MaxETHSizeSell *float64 `db:"max_eth_size_sell"`
+	ZeroXEnabled   *bool    `db:"zerox_enabled"`
 }
 
 type sanityRatePathData interface {
@@ -99,7 +115,7 @@ func (s *Storage) CreateAsset(
 	stableParam *common.StableParam,
 	feedWeight *common.FeedWeight,
 	normalUpdatePerPeriod, maxImbalanceRatio float64, orderDurationMillis uint64,
-	priceETHAmount, exchangeETHAmount float64, sanityInfo common.SanityInfo,
+	priceETHAmount, exchangeETHAmount float64, sanityInfo common.SanityInfo, zPref common.ZeroXPref,
 ) (rtypes.AssetID, error) {
 	tx, err := s.db.Beginx()
 	if err != nil {
@@ -109,7 +125,7 @@ func (s *Storage) CreateAsset(
 
 	id, _, err := s.createAsset(tx, symbol, name, address, decimals, transferable,
 		setRate, rebalance, isQuote, isEnabled, pwi, rb, exchanges, target, stableParam, feedWeight,
-		normalUpdatePerPeriod, maxImbalanceRatio, orderDurationMillis, priceETHAmount, exchangeETHAmount, sanityInfo)
+		normalUpdatePerPeriod, maxImbalanceRatio, orderDurationMillis, priceETHAmount, exchangeETHAmount, sanityInfo, zPref)
 	if err != nil {
 		return 0, err
 	}
@@ -284,7 +300,7 @@ func (s *Storage) createAsset(tx *sqlx.Tx,
 	rebalance, isQuote, isEnabled bool, pwi *common.AssetPWI, rb *common.RebalanceQuadratic,
 	exchanges []common.AssetExchange, target *common.AssetTarget, stableParam *common.StableParam,
 	feedWeight *common.FeedWeight, normalUpdatePerPeriod, maxImbalanceRatio float64, orderDurationMillis uint64,
-	priceETHAmount, exchangeETHAmount float64, sanityInfo common.SanityInfo) (rtypes.AssetID, []rtypes.TradingPairID, error) {
+	priceETHAmount, exchangeETHAmount float64, sanityInfo common.SanityInfo, zPref common.ZeroXPref) (rtypes.AssetID, []rtypes.TradingPairID, error) {
 	// create new asset
 	var assetID rtypes.AssetID
 
@@ -329,6 +345,13 @@ func (s *Storage) createAsset(tx *sqlx.Tx,
 		SanityRateProvider:    sanityInfo.Provider,
 		SanityThreshold:       sanityInfo.Threshold,
 		SanityRatePath:        pq.Array(sanityInfo.Path),
+		zeroXPref: zeroXPref{
+			RefETHAmount:   zPref.RefETHAmount,
+			ETHStep:        zPref.ETHStep,
+			MaxETHSizeBuy:  zPref.MaxETHSizeBuy,
+			MaxETHSizeSell: zPref.MaxETHSizeSell,
+			ZeroXEnabled:   zPref.Enabled,
+		},
 	}
 
 	if pwi != nil {
@@ -655,6 +678,8 @@ type assetDB struct {
 	SanityRateProvider sql.NullString `db:"sanity_rate_provider"`
 	SanityPath         pq.StringArray `db:"sanity_rate_path"`
 
+	zeroXPref
+
 	Created time.Time `db:"created"`
 	Updated time.Time `db:"updated"`
 }
@@ -684,6 +709,13 @@ func (adb *assetDB) ToCommon() (common.Asset, error) {
 			Provider:  adb.SanityRateProvider.String,
 			Threshold: adb.SanityThreshold,
 			Path:      sanityPath,
+		},
+		ZeroX: common.ZeroXPref{
+			RefETHAmount:   adb.RefETHAmount,
+			ETHStep:        adb.ETHStep,
+			MaxETHSizeBuy:  adb.MaxETHSizeBuy,
+			MaxETHSizeSell: adb.MaxETHSizeSell,
+			Enabled:        adb.ZeroXEnabled,
 		},
 	}
 
@@ -1006,6 +1038,7 @@ type updateAssetParam struct {
 	SanityThreshold       *float64           `db:"sanity_threshold"`
 	SanityRateProvider    *string            `db:"sanity_rate_provider"`
 	SanityRatePath        sanityRatePathData `db:"sanity_rate_path"`
+	updateZeroXPref
 }
 
 func (s *Storage) updateAsset(tx *sqlx.Tx, id rtypes.AssetID, uo storage.UpdateAssetOpts) error {
@@ -1040,6 +1073,15 @@ func (s *Storage) updateAsset(tx *sqlx.Tx, id rtypes.AssetID, uo storage.UpdateA
 		SanityThreshold:       sanityThreshold,
 		SanityRateProvider:    sanityRateProvider,
 		SanityRatePath:        sanityRatePath,
+	}
+	if uo.ZeroX != nil {
+		arg.updateZeroXPref = updateZeroXPref{
+			RefETHAmount:   uo.ZeroX.RefETHAmount,
+			ETHStep:        uo.ZeroX.ETHStep,
+			MaxETHSizeBuy:  uo.ZeroX.MaxETHSizeBuy,
+			MaxETHSizeSell: uo.ZeroX.MaxETHSizeSell,
+			ZeroXEnabled:   uo.ZeroX.Enabled,
+		}
 	}
 
 	var updateMsgs []string

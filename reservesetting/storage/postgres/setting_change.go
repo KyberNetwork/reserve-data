@@ -198,7 +198,7 @@ func (s *Storage) applyChange(tx *sqlx.Tx, i int, entry common.SettingChangeEntr
 	case *common.CreateAssetEntry:
 		_, tradingPairIDs, err := s.createAsset(tx, e.Symbol, e.Name, e.Address, e.Decimals, e.Transferable, e.SetRate, e.Rebalance,
 			e.IsQuote, e.IsEnabled, e.PWI, e.RebalanceQuadratic, e.Exchanges, e.Target, e.StableParam, e.FeedWeight,
-			e.NormalUpdatePerPeriod, e.MaxImbalanceRatio, e.OrderDurationMillis, e.PriceETHAmount, e.ExchangeETHAmount, e.SanityInfo)
+			e.NormalUpdatePerPeriod, e.MaxImbalanceRatio, e.OrderDurationMillis, e.PriceETHAmount, e.ExchangeETHAmount, e.SanityInfo, e.ZeroX)
 		if err != nil {
 			s.l.Errorw("create asset", "index", i, "err", err)
 			return err

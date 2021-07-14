@@ -90,11 +90,19 @@ func createSampleAsset(store *postgres.Storage) (rtypes.AssetID, error) {
 			Reserve:              1.0,
 			Total:                100.0,
 			MinWithdrawThreshold: 1.0,
-		}, nil, nil, 0.1, 0.2, 10000, 1, 2, common.SanityInfo{
+		}, nil, nil, 0.1, 0.2, 10000, 1, 2,
+		common.SanityInfo{
 			Provider:  "binance",
 			Threshold: 0.5,
 			Path:      []string{"ABC", "ETH"},
-		})
+		}, common.ZeroXPref{
+			RefETHAmount:   1.0,
+			ETHStep:        2.0,
+			MaxETHSizeBuy:  3.0,
+			MaxETHSizeSell: 4.0,
+			Enabled:        true,
+		},
+	)
 	if err != nil {
 		return 0, err
 	}
@@ -266,6 +274,13 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 							OrderDurationMillis:   15000,
 							PriceETHAmount:        1,
 							ExchangeETHAmount:     2,
+							ZeroX: common.ZeroXPref{
+								RefETHAmount:   1.1,
+								ETHStep:        1.2,
+								MaxETHSizeBuy:  1.3,
+								MaxETHSizeSell: 1.4,
+								Enabled:        true,
+							},
 						},
 					},
 				},
@@ -291,6 +306,11 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 				require.Equal(t, uint64(15000), asset.OrderDurationMillis)
 				require.Equal(t, float64(1), asset.PriceETHAmount)
 				require.Equal(t, float64(2), asset.ExchangeETHAmount)
+				require.Equal(t, 1.1, asset.ZeroX.RefETHAmount)
+				require.Equal(t, 1.2, asset.ZeroX.ETHStep)
+				require.Equal(t, 1.3, asset.ZeroX.MaxETHSizeBuy)
+				require.Equal(t, 1.4, asset.ZeroX.MaxETHSizeSell)
+				require.Equal(t, true, asset.ZeroX.Enabled)
 			},
 		},
 		{
@@ -313,6 +333,13 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 								Threshold: common.FloatPointer(0.01),
 								Path:      &[]string{"ABC", "BTC", "USDT"},
 							},
+							ZeroX: &common.UpdateZeroXPref{
+								RefETHAmount:   common.FloatPointer(2.1),
+								ETHStep:        common.FloatPointer(2.2),
+								MaxETHSizeBuy:  common.FloatPointer(2.3),
+								MaxETHSizeSell: common.FloatPointer(2.4),
+								Enabled:        common.BoolPointer(false),
+							},
 						},
 					},
 				},
@@ -331,13 +358,18 @@ func TestServer_SettingChangeBasic(t *testing.T) {
 				require.Equal(t, 0.111, asset.NormalUpdatePerPeriod)
 				require.Equal(t, 0.222, asset.MaxImbalanceRatio)
 				require.Equal(t, uint64(15666), asset.OrderDurationMillis)
-				require.Equal(t, float64(1.1), asset.PriceETHAmount)
-				require.Equal(t, float64(2.2), asset.ExchangeETHAmount)
+				require.Equal(t, 1.1, asset.PriceETHAmount)
+				require.Equal(t, 2.2, asset.ExchangeETHAmount)
 				require.Equal(t, common.SanityInfo{
 					Provider:  "huobi",
 					Threshold: 0.01,
 					Path:      []string{"ABC", "BTC", "USDT"},
 				}, asset.SanityInfo)
+				require.Equal(t, 2.1, asset.ZeroX.RefETHAmount)
+				require.Equal(t, 2.2, asset.ZeroX.ETHStep)
+				require.Equal(t, 2.3, asset.ZeroX.MaxETHSizeBuy)
+				require.Equal(t, 2.4, asset.ZeroX.MaxETHSizeSell)
+				require.Equal(t, false, asset.ZeroX.Enabled)
 			},
 		},
 		{
