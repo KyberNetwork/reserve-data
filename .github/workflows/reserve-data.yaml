@@ -1,0 +1,205 @@
+name: "Reserve Data CI"
+
+on: push
+env:
+  GO111MODULE: on
+  GOFLAGS: ""
+
+jobs:
+  # prepare the outputs to serve the next phases
+  # allow branchs: all
+  prepare:
+    runs-on: ubuntu-18.04
+    outputs:
+      current_branch: ${{ steps.current_branch.outputs.value }}
+      commit_tag: ${{ steps.commit_tag.outputs.value }}
+    steps:
+      - name: Extract branch
+        shell: bash
+        id: current_branch
+        run: |
+          BRANCH="${GITHUB_REF#refs/heads/}"
+          echo "::set-output name=value::$BRANCH"
+      - name: Get Git Commit Tag
+        shell: bash
+        id: commit_tag
+        run: |
+          COMMIT_HASH="$(echo $GITHUB_SHA | head -c7)"
+          echo "::set-output name=value::$COMMIT_HASH"
+
+  # run lint check
+  # allow branchs: all
+  lint:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Golangci-lint
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: v1.39.0
+          args: -v --config .golangci.yml
+
+  # test phase
+  # allow branchs: all
+  test:
+    needs:
+      - lint
+    runs-on: ubuntu-18.04
+    # start postgresql as a container
+    services:
+      postgres:
+        image: postgres:12-alpine
+        env:
+          POSTGRES_PASSWORD: reserve_data
+          POSTGRES_USER: reserve_data
+          POSTGRES_DB: reserve_data
+        # health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # map tcp port on container to the host
+          - 5432:5432
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: "1.16.x"
+
+      - name: Get Go cache paths
+        id: cache_paths
+        run: |
+          echo "::set-output name=go-build::$(go env GOCACHE)"
+          echo "::set-output name=go-mod::$(go env GOMODCACHE)"
+
+      - name: Go Build Cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.cache_paths.outputs.go-build }}
+          key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
+
+      - name: Go Mod Cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.cache_paths.outputs.go-mod }}
+          key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
+
+      - name: Run test
+        run: go test -v -race ./...
+
+  # build and push docker image
+  # accept branchs: v3-develop, develop, v3-stagion, staging, master, v3-master
+  build-docker:
+    needs:
+      - prepare
+      - test
+    if: contains(fromJson('["v3-develop", "develop", "v3-staging", "staging", "master", "v3-master", "github-action"]'), needs.prepare.outputs.current_branch)
+    runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        image: ["reserve-data", "reserve-data-gateway", "reserve-data-setting"]
+        include:
+          - image: reserve-data
+            dockerfile: Dockerfile.next
+          - image: reserve-data-gateway
+            dockerfile: dockerfiles/Dockerfile.gateway
+          - image: reserve-data-setting
+            dockerfile: dockerfiles/Dockerfile.setting
+    env:
+      IMAGE_NAME: "kybernetwork/${{ matrix.image }}"
+      BRANCH: ${{ needs.prepare.outputs.current_branch }}
+      SHA_TAG: ${{ needs.prepare.outputs.commit_tag }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@master
+
+      - name: Docker login
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-${{ matrix.image }}-buildx
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          labels: |
+            commit=${{ github.sha }}
+          build-args: |
+            COMMIT=${{ github.sha }}
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ env.BRANCH }}
+            ${{ env.IMAGE_NAME }}:${{ env.SHA_TAG }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new
+
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+  # notify to awx server using HTTP call
+  # allow branchs: v3-develop, v3-staging
+  deploy-awx:
+    needs:
+      - prepare
+      - build-docker
+    if: contains(fromJson('["v3-develop", "v3-staging"]'), needs.prepare.outputs.current_branch)
+    runs-on: ubuntu-18.04
+    env:
+      BRANCH: ${{ needs.prepare.outputs.current_branch }}
+      AWX_USERNAME: ${{ secrets.AWX_USERNAME }}
+      AWX_PASSWORD: ${{ secrets.AWX_PASSWORD }}
+      AWX_V3_DEV: ${{ secrets.AWX_V3_DEV }}
+      AWX_V3_STG: ${{ secrets.AWX_V3_STG }}
+    steps:
+      - name: Notify to server
+        shell: bash
+        run: |
+          [[ "$BRANCH" == "v3-develop" ]] && AWX_URL="$AWX_V3_DEV" || AWX_URL="$AWX_V3_STG"
+
+          CODE=$(curl -XPOST -sSfL -w "%{http_code}" --user "$AWX_USERNAME:$AWX_PASSWORD" $AWX_URL)
+          [[ "$CODE" == 20* ]] || exit 1
+
+  # deploy API docs to GCS
+  # only branch `v3-develop`
+  deploy-docs:
+    needs:
+      - prepare
+      - test
+    if: needs.prepare.outputs.current_branch == 'v3-develop'
+    env:
+      GCS_BUCKET: ${{ secrets.GCS_BUCKET }}
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup GCloud
+        uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          export_default_credentials: true
+
+      - name: Build docs
+        run: |
+          docker run -v $PWD/apidocs/source:/slate/source:ro \
+            -v $PWD/apidocs/build:/slate/build \
+            kybernetwork/slate:latest
+
+      - name: Deploy to GCS
+        run: |
+          gsutil -m rsync -R $PWD/apidocs/build gs://$GCS_BUCKET
