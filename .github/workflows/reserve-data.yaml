@@ -91,16 +91,26 @@ jobs:
       - name: Run test
         run: go test -v -race ./...
 
-  # docker build and push kybernetwork/reserve-data
+  # build and push docker image
   # accept branchs: v3-develop, develop, v3-stagion, staging, master, v3-master
-  build-next:
+  build-docker:
     needs:
       - prepare
       - test
-    if: contains(fromJson('["v3-develop", "develop", "v3-staging", "staging", "master", "v3-master"]'), needs.prepare.outputs.current_branch)
+    if: contains(fromJson('["v3-develop", "develop", "v3-staging", "staging", "master", "v3-master", "github-action"]'), needs.prepare.outputs.current_branch)
     runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        image: ["reserve-data", "reserve-data-gateway", "reserve-data-setting"]
+        include:
+          - image: reserve-data
+            dockerfile: Dockerfile.next
+          - image: reserve-data-gateway
+            dockerfile: dockerfiles/Dockerfile.gateway
+          - image: reserve-data-setting
+            dockerfile: dockerfiles/Dockerfile.setting
     env:
-      IMAGE_NAME: kybernetwork/reserve-data
+      IMAGE_NAME: "kybernetwork/${{ matrix.image }}"
       BRANCH: ${{ needs.prepare.outputs.current_branch }}
       SHA_TAG: ${{ needs.prepare.outputs.commit_tag }}
     steps:
@@ -119,115 +129,13 @@ jobs:
         uses: actions/cache@v2
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-next-buildx
+          key: ${{ runner.os }}-${{ matrix.image }}-buildx
 
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: Dockerfile.next
-          push: true
-          labels: |
-            commit=${{ github.sha }}
-          build-args: |
-            COMMIT=${{ github.sha }}
-          tags: |
-            ${{ env.IMAGE_NAME }}:${{ env.BRANCH }}
-            ${{ env.IMAGE_NAME }}:${{ env.SHA_TAG }}
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache-new
-
-      - name: Move cache
-        run: |
-          rm -rf /tmp/.buildx-cache
-          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
-
-  # docker build and push kybernetwork/reserve-data-gateway
-  # accept branchs: v3-develop, develop, v3-stagion, staging, master, v3-master
-  build-gateway:
-    needs:
-      - prepare
-      - test
-    if: contains(fromJson('["v3-develop", "develop", "v3-staging", "staging", "master", "v3-master"]'), needs.prepare.outputs.current_branch)
-    runs-on: ubuntu-18.04
-    env:
-      IMAGE_NAME: kybernetwork/reserve-data-gateway
-      BRANCH: ${{ needs.prepare.outputs.current_branch }}
-      SHA_TAG: ${{ needs.prepare.outputs.commit_tag }}
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@master
-
-      - name: Docker login
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_TOKEN }}
-
-      - name: Cache Docker layers
-        uses: actions/cache@v2
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-gateway-buildx
-
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: dockerfiles/Dockerfile.gateway
-          push: true
-          labels: |
-            commit=${{ github.sha }}
-          build-args: |
-            COMMIT=${{ github.sha }}
-          tags: |
-            ${{ env.IMAGE_NAME }}:${{ env.BRANCH }}
-            ${{ env.IMAGE_NAME }}:${{ env.SHA_TAG }}
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache-new
-
-      - name: Move cache
-        run: |
-          rm -rf /tmp/.buildx-cache
-          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
-
-  # docker build and push kybernetwork/reserve-data-setting
-  # accept branchs: v3-develop, develop, v3-stagion, staging, master, v3-master
-  build-setting:
-    needs:
-      - prepare
-      - test
-    if: contains(fromJson('["v3-develop", "develop", "v3-staging", "staging", "master", "v3-master"]'), needs.prepare.outputs.current_branch)
-    runs-on: ubuntu-18.04
-    env:
-      IMAGE_NAME: kybernetwork/reserve-data-setting
-      BRANCH: ${{ needs.prepare.outputs.current_branch }}
-      SHA_TAG: ${{ needs.prepare.outputs.commit_tag }}
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@master
-
-      - name: Docker login
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_TOKEN }}
-
-      - name: Cache Docker layers
-        uses: actions/cache@v2
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-setting-buildx
-
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: dockerfiles/Dockerfile.setting
+          file: ${{ matrix.dockerfile }}
           push: true
           labels: |
             commit=${{ github.sha }}
