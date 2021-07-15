@@ -1,0 +1,50 @@
+version: '3'
+
+volumes:
+  postgres:
+
+services:
+  postgres:
+    image: 'postgres:11-alpine'
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: reserve_data
+      POSTGRES_USER: reserve_data
+      POSTGRES_PASSWORD: reserve_data
+    ports:
+      - '127.0.0.1:5432:5432'
+
+  reserve-core-v3:
+    build:
+      context: ./.
+      dockerfile: ./Dockerfile.next
+    command: ./reserve-core-v3
+    network_mode: host
+    environment: 
+      - KYBER_EXCHANGES=binance,binance_2,huobi
+    volumes:
+      - ./cmd/config.json:/
+    ports:
+      - "8000:8000"
+
+  reserve-core-settings:
+    build:
+      context: ./.
+      dockerfile: ./dockerfiles/Dockerfile.setting
+    command: ./reserve-core-setting
+    network_mode: host
+    environment: 
+      - KYBER_EXCHANGES=binance,binance_2,huobi
+    ports:
+      - "8002:8002"
+
+  reserve-core-gateway:
+    build:
+      context: ./.
+      dockerfile: ./dockerfiles/Dockerfile.gateway
+    command: ./reserve-core-gateway
+    network_mode: host
+    ports:
+      - "8001:8001"
+
